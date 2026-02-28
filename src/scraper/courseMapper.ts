@@ -65,7 +65,9 @@ export function processCourseMetadata(filePath: string) {
         name: kit.name,
         ekitId: kit.ekitId,
         url: kit.url,
-        fileType: kit.fileType
+        fileType: kit.fileType,
+        gcc: kit.gcc,
+        ekitType: kit.ekitType
       };
 
       insertAsset.run(assetId, courseId, "guide", kit.url, JSON.stringify(meta));

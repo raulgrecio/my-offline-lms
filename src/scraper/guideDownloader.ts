@@ -96,16 +96,46 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
   const tempDir = path.join(courseGuidesDir, ".temp_" + ekitId);
   ensureDir(tempDir);
 
-  // Extraer metadata original de la BD para sacar el nombre del archivo  
+  // Extraer metadata original de la BD para sacar el nombre del archivo
   let pdfFilename = `Course_${courseId}_Guide_${ekitId}.pdf`;
+  let assetId = `pdf_${ekitId}`; // Fallback por defecto
+  
   try {
-    const row = db.prepare("SELECT metadata FROM Course_Assets WHERE id = ?").get(`pdf_${ekitId}`) as { metadata: string } | undefined;
-    if (row && row.metadata) {
+    const rows = db.prepare("SELECT id, metadata FROM Course_Assets WHERE course_id = ? AND type = 'guide'").all(courseId) as { id: string, metadata: string }[];
+    for (const row of rows) {
+      if (!row.metadata) continue;
       const meta = JSON.parse(row.metadata);
-      if (meta.url) {
-        // e.g. "D106548GC10/D106548GC10_sg.pdf" -> "D106548GC10_sg.pdf"
-        const parts = meta.url.split('/');
-        pdfFilename = parts[parts.length - 1] || pdfFilename;
+      
+      if (meta.ekitId === ekitId) {
+        assetId = row.id; // Capturamos el ID correcto real en SQLite (ej. pdf_154711)
+        
+        if (meta.url) {
+          const parts = meta.url.split('/');
+          pdfFilename = parts[parts.length - 1] || pdfFilename;
+        } else if (meta.gcc) {
+          const isAg = meta.ekitType === "2" || meta.ekitType === 2;
+          const suffix = isAg ? "_ag" : "_sg";
+          
+          // Buscar hermanos para asignar sufijos numéricos (sg2, sg3...)
+          const siblings = rows.filter(r => {
+             if (!r.metadata) return false;
+             try {
+               const sm = JSON.parse(r.metadata);
+               return sm.gcc === meta.gcc && String(sm.ekitType) === String(meta.ekitType);
+             } catch(e) { return false; }
+          }).sort((a, b) => a.id.localeCompare(b.id));
+          
+          const idx = siblings.findIndex(s => s.id === row.id);
+          const numSuffix = idx > 0 ? String(idx + 1) : "";
+          
+          pdfFilename = `${meta.gcc}${suffix}${numSuffix}.pdf`;
+          
+        } else if (meta.name) {
+          // Si no hay gcc ni url, intentamos limpiar el nombre
+          const safeName = meta.name.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_');
+          pdfFilename = `${safeName}.pdf`;
+        }
+        break;
       }
     }
   } catch (err) {
@@ -221,7 +251,7 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
        console.log(`[GuideDownloader] ❌ Faltan páginas irreparables: ${missingPages.join(", ")}. Abortando creación de PDF.`);
        console.log(`[GuideDownloader] Las imágenes descargadas se mantienen en: ${tempDir}`);
        try {
-         db.prepare("UPDATE Course_Assets SET status = 'FAILED' WHERE id = ?").run("pdf_" + ekitId);
+         db.prepare("UPDATE Course_Assets SET status = 'FAILED' WHERE id = ?").run(assetId);
        } catch(e) {}
        await browser.close();
        return;
@@ -246,12 +276,12 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
     
     // Actualizar BD si existe
     const updateAsset = db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?");
-    updateAsset.run("pdf_" + ekitId);
+    updateAsset.run(assetId);
 
   } catch (err) {
     console.error("[GuideDownloader] ❌ Error extrayendo guía " + ekitId + ":", err);
     try {
-      db.prepare("UPDATE Course_Assets SET status = 'FAILED' WHERE id = ?").run("pdf_" + ekitId);
+      db.prepare("UPDATE Course_Assets SET status = 'FAILED' WHERE id = ?").run(assetId);
     } catch(e) {}
   } finally {
     await browser.close();
