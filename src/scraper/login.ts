@@ -17,7 +17,15 @@ export async function interactiveLogin(
   }
 
   console.log("Iniciando navegador para Auth...");
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ 
+    headless: false,
+    executablePath: process.env.CHROME_EXECUTABLE_PATH || undefined,
+    channel: process.env.CHROME_EXECUTABLE_PATH ? undefined : "chrome",
+    args: [
+      "--start-maximized",
+      "--disable-blink-features=AutomationControlled"
+    ]
+  });
   const context = await browser.newContext();
   const page = await context.newPage();
 
@@ -25,14 +33,20 @@ export async function interactiveLogin(
   console.log(
     "Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.",
   );
-  console.log(
-    `El script está esperando que aparezca el elemento: ${waitSelector}`,
-  );
-
+  console.log(`Navegando a ${targetUrl}`);
   await page.goto(targetUrl);
 
-  // Wait indefinitely for the success element
-  await page.waitForSelector(waitSelector, { timeout: 0 });
+  const rl = require("readline").createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  await new Promise<void>((resolve) => {
+    rl.question("\n👉 PRESIONA ENTER AQUÍ EN LA TERMINAL CUANDO HAYAS TERMINADO DE HACER LOGIN EN EL NAVEGADOR...\n", () => {
+      rl.close();
+      resolve();
+    });
+  });
 
   console.log(
     "Login exitoso detectado. Guardando estado de la sesión y cookies...",
@@ -60,9 +74,14 @@ export async function interactiveLogin(
   );
 }
 
+import dotenv from "dotenv";
+
+dotenv.config();
+
 // CLI test
 if (require.main === module) {
-  const url = process.argv[2] || "https://example.com/login";
-  const selector = process.argv[3] || "body"; // Require a specific selector like '#dashboard' in production
+  const url = process.env.PLATFORM_BASE_URL || "https://example.com/login";
+  const selector = process.env.LOGIN_SUCCESS_SELECTOR || "body"; 
+  console.log(`Usando URL base: ${url}`);
   interactiveLogin(url, selector).catch(console.error);
 }

@@ -20,10 +20,10 @@
 
 ## 🔜 Milestone 2: Motor de Scraping (Discovery & Mapping)
 
-- [ ] Implementar `src/scraper/mapper.ts` — scraper de Learning Paths
-  - [ ] Cargar sesión guardada (`state.json`) en Playwright
-  - [ ] Navegar a URL de Learning Path
-  - [ ] Interceptar requests XHR/JSON con `page.route()` o `page.on('response')`
+- [/] Implementar `src/scraper/mapper.ts` — scraper de Learning Paths
+  - [x] Cargar sesión guardada (`state.json`) en Playwright
+  - [x] Navegar a URL de Learning Path
+  - [/] Interceptar requests XHR/JSON con `page.route()` o `page.on('response')`
   - [ ] Extraer lista de cursos y su orden
   - [ ] Insertar en `LearningPaths` y `LearningPath_Courses` con upsert (evitar duplicados)
 - [ ] Implementar `src/scraper/courseMapper.ts` — scraper de Cursos
@@ -32,8 +32,8 @@
   - [ ] Detectar lista de Vídeos (URLs de los players)
   - [ ] Insertar en `Courses` y `Course_Assets` con status `PENDING`
 - [ ] Implementar `src/scraper/interceptor.ts` — utilidad de intercepción de red
-  - [ ] Helper para registrar/analizar respuestas JSON de la plataforma
-  - [ ] Detectar patrones de API (pagination tokens, auth headers)
+  - [x] Helper para registrar/analizar respuestas JSON de la plataforma
+  - [/] Detectar patrones de API (pagination tokens, auth headers)
 
 ## ⏳ Milestone 3: Motor de Descarga de Assets e Imágenes (Guides → PDF)
 
