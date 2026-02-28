@@ -172,20 +172,25 @@ pnpm dev
 
 Crea el fichero `data/db.sqlite` con el esquema completo.
 
-### Paso 3: Ejecutar scrapers de mapeo (Milestone 2 — 🔜 Próximo)
+### Paso 3: Ejecutar scrapers de mapeo (Milestone 2 — ✅ Implementado)
+
+Mapea un curso específico interceptando su tráfico y volcando el JSON. Posteriormente, inserta este mapeo en SQLite.
 
 ```bash
-# Aún en desarrollo
-pnpm exec ts-node src/scraper/mapper.ts <URL_LEARNING_PATH>
+# Interceptar metadatos JSON del navegador
+pnpm exec ts-node src/scraper/mapper.ts ou/course/[course-slug]/[courseId]
+
+# Volcar metadatos a SQLite
+pnpm exec ts-node src/scraper/courseMapper.ts
 ```
 
-### Paso 4: Descargar assets (Milestone 3 & 4 — 🔜 Próximo)
+### Paso 4: Descargar assets (Milestone 3 ✅ | Milestone 4 🔜)
 
 ```bash
-# Descargar guides (imágenes → PDF)
-pnpm exec ts-node src/downloader/guides.ts
+# Descargar TODAS las guides de un curso (generación de PDF optimizado con nombres originales)
+pnpm exec ts-node src/scraper/guideDownloader.ts <courseId>
 
-# Descargar vídeos y subtítulos
+# Descargar vídeos y subtítulos (Pendiente - Milestone 4)
 pnpm exec ts-node src/downloader/videos.ts
 ```
 
@@ -209,18 +214,18 @@ pnpm dev
 - [x] Login interactivo con Playwright + stealth (soporte 2FA automático)
 - [x] Guardado de sesión (`state.json`) y cookies (`cookies.txt`)
 
-### 🔜 Milestone 2 — Motor de Scraping (Discovery & Mapping)
+### ✅/🔜 Milestone 2 — Motor de Scraping (Discovery & Mapping)
 
-- [ ] Scraper de Learning Paths (intercepción XHR/JSON)
-- [ ] Scraper de Cursos (metadatos, índices de Guides y Videos)
-- [ ] Inserción iterativa en SQLite sin duplicados
+- [ ] Scraper de Learning Paths (extracción y jerarquía)
+- [x] Scraper de Cursos (metadatos, índices de Guides y Videos con intercepción XHR)
+- [x] Inserción iterativa en SQLite (nombrado inteligente por `gcc`, previniendo duplicados)
 
-### 🔜 Milestone 3 — Descarga de Guides (Imágenes → PDF)
+### ✅ Milestone 3 — Descarga de Guides (Imágenes → PDF)
 
-- [ ] Sistema de colas con `p-queue` + rate limiting
-- [ ] Reanudación y tolerancia a fallos por asset
-- [ ] Detección de orientación con `sharp` (portrait/landscape)
-- [ ] Generación de PDFs por guide con `pdfkit`
+- [x] Descarga por lotes de cursos enteros
+- [x] Reanudación y tolerancia a fallos por asset (reintentos por páginas caídas)
+- [x] Detección de orientación con `sharp` (portrait/landscape) y optimización visual (MozJPEG)
+- [x] Generación de PDFs perfectos con nombres dinámicos originales
 
 ### 🔜 Milestone 4 — Descarga de Vídeos
 
@@ -246,13 +251,13 @@ my-offline-lms/
 │   ├── db/
 │   │   └── schema.ts          # Inicialización SQLite + esquema
 │   ├── scraper/
-│   │   ├── login.ts           # ✅ Auth interactiva 2FA con Playwright
-│   │   ├── mapper.ts          # 🔜 Mapeo de Learning Paths y Cursos
-│   │   └── interceptor.ts     # 🔜 Intercepción de red XHR/JSON
+│   │   ├── login.ts           # ✅ Auth interactiva 2FA (Escape/Enter behavior)
+│   │   ├── mapper.ts          # ✅ Interceptor JSON de metadatos
+│   │   ├── courseMapper.ts    # ✅ Volcado JSON a SQLite
+│   │   └── guideDownloader.ts # ✅ Descarga de PDFs massiva con reintentos
 │   ├── downloader/
-│   │   ├── guides.ts          # 🔜 Descarga de imágenes + generación PDF
 │   │   ├── videos.ts          # 🔜 Descarga de vídeos via yt-dlp
-│   │   └── queue.ts           # 🔜 Sistema de colas p-queue
+│   │   └── queue.ts           # 🔜 Sistema de colas global
 │   ├── utils/
 │   │   ├── pdf.ts             # 🔜 Helpers de orientación y PDFKit
 │   │   └── retry.ts           # 🔜 Estrategia de reintentos
@@ -338,8 +343,8 @@ REQUEST_DELAY_MS=500
 | Milestone | Estado | Descripción |
 |-----------|--------|-------------|
 | 0 & 1 | ✅ Completo | Inicialización, DB, Auth 2FA |
-| 2 | 🔜 Próximo | Scraping y mapeo de cursos |
-| 3 | ⏳ Pendiente | Descarga de guides → PDF |
+| 2 | 🟨 Parcial | Scraping y mapeo de cursos completado. (Falta Learning Paths) |
+| 3 | ✅ Completo | Descarga de guides → PDF optimizados y nombrados |
 | 4 | ⏳ Pendiente | Descarga de vídeos y subtítulos |
 | 5 | ⏳ Pendiente | Web local React de estudio |
 

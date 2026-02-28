@@ -51,12 +51,14 @@ Diseño de esquema relacional en `/src/db/schema.ts` para crear y migrar las tab
 - Script `login.ts` en `src/scraper/`: Levanta Playwright en modo `headless: false`, inyecta credenciales base y cede control al usuario para el 2FA. Cuando detecta éxito, guarda `.auth/state.json`.
 
 ### 4. Spiders de Mapeo
-- Scripts en `/src/scraper/`: Usarán la sesión guardada para navegar "silenciosamente" e interceptar JSON/XHR con la información de los *Learning Paths* y Cursos, poblando SQLite y evitando descargar binarios.
+- Scripts en `/src/scraper/`: 
+  - `mapper.ts`: Usa la sesión guardada para navegar "silenciosamente" e interceptar las respuestas JSON de la API.
+  - `courseMapper.ts`: Procesa los JSON interceptados insertando metadatos robustos (incluyendo nomenclaturas `gcc` y numéricas) en SQLite, evitando colisiones.
 
 ### 5. Download Engine
-- Scripts en `/src/downloader/`:
-  - Worker de **PDFs**: lee tareas SQLite (`type=guide`), descarga en paralelo (`p-queue`) imágenes a `/tmp`, usa `sharp` para chequear orientación (landscape/portrait) y `pdfkit` crea el archivo en disco.
-  - Worker de **Videos**: lee tareas SQLite (`type=video`), invoca `yt-dlp` a través de `child_process.spawn()` pasando el path de cookies `.auth/cookies.txt`.
+- Scripts en `/src/scraper/` y `/src/downloader/`:
+  - Worker de **PDFs** (`guideDownloader.ts`): Lee tareas SQLite (`type=guide`), descarga en lote las guías de un curso, usa `sharp` para compresión visual MozJPEG y chequear orientación (landscape/portrait), y renderiza el fichero final con `pdfkit` asignando automáticamente los prefijos `_sg` o `_ag`.
+  - Worker de **Videos** (`videos.ts` - Pendiente): Lee tareas SQLite (`type=video`), invoca `yt-dlp` a través de `child_process.spawn()` pasando el path de cookies `.auth/cookies.txt`.
 
 ### 6. Exportación y Web Local
 - Utilizaremos Vite (React+TS) para inicializar `/offline-web`.

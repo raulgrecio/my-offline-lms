@@ -9,16 +9,16 @@
 ## Milestone 2: Motor de Scraping (Discovery & Mapping)
 
 - [ ] Implementar scraper de Learning Paths (extracción de cursos y orden).
-- [ ] Implementar scraper de Cursos (extracción de metadatos, índices de Guides y Videos).
-- [ ] Lógica de intercepción de red XHR/JSON para mapear URLs sin descargas masivas.
-- [ ] Inserción iterativa en base de datos local (evitando duplicados).
+- [x] Implementar scraper de Cursos (extracción de metadatos, índices de Guides y Videos).
+- [x] Lógica de intercepción de red XHR/JSON para mapear URLs sin descargas masivas.
+- [x] Inserción iterativa en base de datos local (evitando duplicados).
 
 ## Milestone 3: Motor de Descarga de Assets e Imágenes (Guides a PDF)
 
-- [ ] Configurar sistema de colas (`p-queue`) y cliente HTTP local.
-- [ ] Implementar lógica de reanudación y tolerancia a fallos por asset.
-- [ ] Descarga de imágenes temporales.
-- [ ] Generación de PDFs con dinámicos (evaluación de orientación con `sharp` + render con `pdfkit`).
+- [x] Configurar sistema de descargas por lotes (Batch Downloading local).
+- [x] Implementar lógica de reanudación y tolerancia a fallos (reintentos) por asset.
+- [x] Descarga de imágenes temporales.
+- [x] Generación de PDFs con dinámicos (evaluación de orientación con `sharp` + render con `pdfkit` + compresión MozJPEG + nombrado dinámico).
 
 ## Milestone 4: Motor de Descarga de Vídeos
 
