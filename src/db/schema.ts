@@ -15,7 +15,7 @@ export function initDb() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS LearningPaths (
       id TEXT PRIMARY KEY,
-      slug TEXT NOT UNIQUE,
+      slug TEXT,
       title TEXT,
       description TEXT
     );

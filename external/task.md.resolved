@@ -1,0 +1,35 @@
+# Offline LMS & Scraper Project Tasks
+
+## Milestone 0 & 1: Inicialización, Base de Datos y Autenticación
+
+- [x] Inicializar proyecto Node.js con TypeScript.
+- [x] Configurar SQLite (`better-sqlite3`) y crear el esquema de BBDD (`LearningPaths`, `Courses`, `LearningPath_Courses`, `Assets`).
+- [x] Implementar módulo de autenticación interactiva con Playwright (guardado de `auth.json`).
+
+## Milestone 2: Motor de Scraping (Discovery & Mapping)
+
+- [ ] Implementar scraper de Learning Paths (extracción de cursos y orden).
+- [ ] Implementar scraper de Cursos (extracción de metadatos, índices de Guides y Videos).
+- [ ] Lógica de intercepción de red XHR/JSON para mapear URLs sin descargas masivas.
+- [ ] Inserción iterativa en base de datos local (evitando duplicados).
+
+## Milestone 3: Motor de Descarga de Assets e Imágenes (Guides a PDF)
+
+- [ ] Configurar sistema de colas (`p-queue`) y cliente HTTP local.
+- [ ] Implementar lógica de reanudación y tolerancia a fallos por asset.
+- [ ] Descarga de imágenes temporales.
+- [ ] Generación de PDFs con dinámicos (evaluación de orientación con `sharp` + render con `pdfkit`).
+
+## Milestone 4: Motor de Descarga de Vídeos
+
+- [ ] Integrar llamada nativa a `yt-dlp` en Node.js mediante `child_process`.
+- [ ] Mapeo de resoluciones y guardado de vídeos.
+- [ ] Descarga y sincronización de subtítulos (`.vtt` / `.srt`).
+
+## Milestone 5: Web Local (React SPA)
+
+- [ ] Crear proyecto con Vite + React para la interfaz de estudio.
+- [ ] Desarrollar worker exportador de base de datos a `api.json`.
+- [ ] Crear vistas de Learning Paths y listado ordenado de Cursos.
+- [ ] Integrar visor de PDFs (`react-pdf`) y reproductor de vídeo nativo.
+- [ ] Implementar sistema de tracking de progreso visual (guardado en `localStorage`).
