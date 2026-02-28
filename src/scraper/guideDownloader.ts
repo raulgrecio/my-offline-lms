@@ -98,6 +98,7 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
 
   // Extraer metadata original de la BD para sacar el nombre del archivo
   let pdfFilename = `Course_${courseId}_Guide_${ekitId}.pdf`;
+  let isZipAsset = false;
   let assetId = `pdf_${ekitId}`; // Fallback por defecto
   
   try {
@@ -107,16 +108,19 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
       const meta = JSON.parse(row.metadata);
       
       if (meta.ekitId === ekitId) {
-        assetId = row.id; // Capturamos el ID correcto real en SQLite (ej. pdf_154711)
+        assetId = row.id;
         
+        if (meta.fileType && meta.fileType.toLowerCase() === 'zip') {
+          isZipAsset = true;
+        }
+
         if (meta.url) {
           const parts = meta.url.split('/');
           pdfFilename = parts[parts.length - 1] || pdfFilename;
-        } else if (meta.gcc) {
+        } else if (meta.gcc && !isZipAsset) {
           const isAg = meta.ekitType === "2" || meta.ekitType === 2;
           const suffix = isAg ? "_ag" : "_sg";
           
-          // Buscar hermanos para asignar sufijos numéricos (sg2, sg3...)
           const siblings = rows.filter(r => {
              if (!r.metadata) return false;
              try {
@@ -131,9 +135,8 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
           pdfFilename = `${meta.gcc}${suffix}${numSuffix}.pdf`;
           
         } else if (meta.name) {
-          // Si no hay gcc ni url, intentamos limpiar el nombre
           const safeName = meta.name.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_');
-          pdfFilename = `${safeName}.pdf`;
+          pdfFilename = isZipAsset ? `${safeName}.zip` : `${safeName}.pdf`;
         }
         break;
       }
@@ -143,9 +146,14 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
   }
 
   const pdfPath = path.join(courseGuidesDir, pdfFilename);
+  const zipPath = path.join(courseGuidesDir, pdfFilename.replace(/\.pdf$/i, '.zip'));
   
   if (fs.existsSync(pdfPath)) {
     console.log("[GuideDownloader] El PDF ya existe: " + pdfPath);
+    return;
+  }
+  if (fs.existsSync(zipPath)) {
+    console.log("[GuideDownloader] El ZIP de laboratorio ya existe: " + zipPath);
     return;
   }
 
@@ -178,8 +186,113 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
 
     console.log("[GuideDownloader] Encontrado visor base URL: " + iframeSrc);
     
-    // Analizar la base URL del iframe del object storage
-    const baseUrl = iframeSrc.split('mobile/index.html')[0].split('index.html')[0];
+    let dynamicBaseName = pdfFilename.replace(/\.pdf$/i, '');
+    let foundBetterName = false;
+    
+    // Extraer el nombre real de la carpeta (ej. D106546GC10_ag) de "media/124196222/V3/D106546GC10_ag/mobile/index.html"
+    const mediaMatch = iframeSrc.match(/\/media\/\d+\/[^\/]+\/([^\/]+)\//i);
+    if (mediaMatch && mediaMatch[1]) {
+        dynamicBaseName = mediaMatch[1];
+        foundBetterName = true;
+    }
+    
+    try {
+      // Intentar ver si el documento no es un PDF sino una página que enlaza a un ZIP (Lab Files)
+      const iframeResponse = await context.request.get(iframeSrc, { timeout: 20000 });
+      const iframeHtml = await iframeResponse.text();
+      const zipMatch = iframeHtml.match(/href=["']([^"']+\.zip)["']/i);
+      
+      if (zipMatch) {
+         const zipUrl = new URL(zipMatch[1], iframeSrc).href;
+         
+         // Intentar extraer el nombre del fichero final de la URL (ej. S1102200GC10_labs.zip)
+         const zipUrlName = new URL(zipUrl).pathname.split('/').pop() || '';
+         const zipFilename = zipUrlName || `${dynamicBaseName}.zip`;
+         const zipPath = path.join(courseGuidesDir, zipFilename);
+         
+         if (fs.existsSync(zipPath)) {
+            console.log(`[GuideDownloader] El ZIP dinámico ya existe: ${zipPath}`);
+            db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?").run(assetId);
+            await browser.close();
+            return;
+         }
+         
+         console.log(`[GuideDownloader] 📦 Documento marcado como ZIP de laboratorio en metadatos o por detección web.`);
+         console.log(`[GuideDownloader] Enlace extraído: ${zipUrl}`);
+         console.log(`[GuideDownloader] Descargando ZIP... (puede tardar un poco)`);
+         
+         const zipResp = await context.request.get(zipUrl, { timeout: 120000 }); // 2 minutos de timeout para ZIPs
+         if (zipResp.status() === 200) {
+            const zipBuffer = await zipResp.body();
+            fs.writeFileSync(zipPath, zipBuffer);
+            console.log(`[GuideDownloader] ✅ ZIP Guardado en: ${zipPath}`);
+            
+            // Renombrar temporalmente el fallback anterior si la base de datos lo requería
+            const zipPathFallback = path.join(courseGuidesDir, pdfFilename.replace(/\.pdf$/i, '.zip'));
+            if (zipFilename !== pdfFilename.replace(/\.pdf$/i, '.zip') && fs.existsSync(zipPathFallback)) {
+                try { fs.unlinkSync(zipPathFallback); } catch(e) {}
+            }
+            
+            // Guardar nombre final de archivo en metadatos para futura referencia
+            try {
+              const kitRow = db.prepare("SELECT metadata FROM Course_Assets WHERE id = ?").get(assetId) as { metadata: string };
+              if (kitRow && kitRow.metadata) {
+                const updatedMeta = JSON.parse(kitRow.metadata);
+                updatedMeta.filename = zipFilename;
+                db.prepare("UPDATE Course_Assets SET status = 'COMPLETED', metadata = ? WHERE id = ?").run(JSON.stringify(updatedMeta), assetId);
+              } else {
+                db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?").run(assetId);
+              }
+            } catch(e) { console.error("Error guardando filename en db", e); }
+            
+            try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch(e) {} // Limpiar temp sin usar
+            await browser.close();
+            return;
+         } else {
+            console.error(`[GuideDownloader] ❌ Falló la descarga del ZIP con status ${zipResp.status()}`);
+            throw new Error(`Fallo descargando link zip con status ${zipResp.status()}`);
+         }
+      } else if (isZipAsset) {
+         console.error(`[GuideDownloader] ❌ SQLite dice que es un ZIP pero no hemos encontrado enlace 'href=...zip' en el HTML del visor.`);
+         throw new Error("No se encontró enlace del ZIP en el iframe");
+      }
+    } catch(err: any) {
+       console.log(`[GuideDownloader] Error de red chequeando ZIP incrustado: ${err.message}`);
+       if (isZipAsset) {
+         throw err;
+       }
+    }
+
+    // Si encontramos un nombre dinámico mejor para el PDF, actualizamos variable
+    if (foundBetterName) {
+        pdfFilename = `${dynamicBaseName}.pdf`;
+    }
+    const finalPdfPath = path.join(courseGuidesDir, pdfFilename);
+    const finalTempDir = path.join(courseGuidesDir, ".temp_" + dynamicBaseName); // Actualizar nombre de temp
+    if (tempDir !== finalTempDir) {
+        fs.renameSync(tempDir, finalTempDir);
+    }
+    
+    if (fs.existsSync(finalPdfPath)) {
+        console.log(`[GuideDownloader] El PDF dinámico ya existe: ${finalPdfPath}`);
+        
+        try {
+          const kitRow = db.prepare("SELECT metadata FROM Course_Assets WHERE id = ?").get(assetId) as { metadata: string };
+          if (kitRow && kitRow.metadata) {
+            const updatedMeta = JSON.parse(kitRow.metadata);
+            updatedMeta.filename = pdfFilename;
+            db.prepare("UPDATE Course_Assets SET status = 'COMPLETED', metadata = ? WHERE id = ?").run(JSON.stringify(updatedMeta), assetId);
+          } else {
+            db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?").run(assetId);
+          }
+        } catch(e) { console.error("Error guardando filename en db", e); }
+
+        await browser.close();
+        return;
+    }
+
+    // Analizar la base URL del iframe del object storage para los visores de PDF
+    const baseUrl = iframeSrc.split('mobile/index.html')[0].split('index.html')[0].split(/\w+\.htm/)[0];
     
     console.log("[GuideDownloader] Descargando páginas...");
     let pageNum = 1;
@@ -192,21 +305,28 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
       
       let success = false;
       for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await context.request.get(imgUrl);
-        if (response.status() === 200) {
-          const buffer = await response.body();
-          const savePath = path.join(tempDir, String(pageNum).padStart(3, '0') + ".jpg");
-          
-          fs.writeFileSync(savePath, buffer);
-          console.log(`   -> Salvada página ${pageNum}` + (attempt > 1 ? ` (intento ${attempt})` : ""));
-          success = true;
-          break;
-        } else {
-          if (attempt === 3) {
-            console.log(`   -> Error ${response.status()} al buscar la página ${pageNum} tras 3 intentos`);
+        try {
+          const response = await context.request.get(imgUrl, { timeout: 15000 });
+          if (response.status() === 200) {
+            const buffer = await response.body();
+            const savePath = path.join(finalTempDir, String(pageNum).padStart(3, '0') + ".jpg");
+            
+            fs.writeFileSync(savePath, buffer);
+            console.log(`   -> Salvada página ${pageNum}` + (attempt > 1 ? ` (intento ${attempt})` : ""));
+            success = true;
+            break;
           } else {
-            // Espera corta antes de reintentar
-            await new Promise(r => setTimeout(r, 1000));
+            if (attempt === 3) {
+              console.log(`   -> Error ${response.status()} al buscar la página ${pageNum} tras 3 intentos`);
+            } else {
+              await new Promise(r => setTimeout(r, 1000));
+            }
+          }
+        } catch (e: any) {
+          if (attempt === 3) {
+            console.log(`   -> Fila de red (página ${pageNum}): ${e.message}`);
+          } else {
+            await new Promise(r => setTimeout(r, 2000));
           }
         }
       }
@@ -222,7 +342,7 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
     const lastPageNum = pageNum - 1 - MAX_CONSECUTIVE_MISSING;
     let missingPages: number[] = [];
     for (let i = 1; i <= lastPageNum; i++) {
-       const savePath = path.join(tempDir, String(i).padStart(3, '0') + ".jpg");
+       const savePath = path.join(finalTempDir, String(i).padStart(3, '0') + ".jpg");
        if (!fs.existsSync(savePath)) {
           missingPages.push(i);
        }
@@ -233,14 +353,19 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
        const remainingMissing: number[] = [];
        for (const missingPage of missingPages) {
           const imgUrl = baseUrl + "files/mobile/" + missingPage + ".jpg?ts=" + Date.now();
-          const response = await context.request.get(imgUrl);
-          if (response.status() === 200) {
-             const buffer = await response.body();
-             const savePath = path.join(tempDir, String(missingPage).padStart(3, '0') + ".jpg");
-             fs.writeFileSync(savePath, buffer);
-             console.log(`   -> Recuperada exitosamente página faltante ${missingPage}`);
-          } else {
-             console.log(`   -> Fallo definitivo al recuperar página ${missingPage}`);
+          try {
+             const response = await context.request.get(imgUrl, { timeout: 15000 });
+             if (response.status() === 200) {
+                const buffer = await response.body();
+                const savePath = path.join(finalTempDir, String(missingPage).padStart(3, '0') + ".jpg");
+                fs.writeFileSync(savePath, buffer);
+                console.log(`   -> Recuperada exitosamente página faltante ${missingPage}`);
+             } else {
+                console.log(`   -> Fallo definitivo al recuperar página ${missingPage}`);
+                remainingMissing.push(missingPage);
+             }
+          } catch(e) {
+             console.log(`   -> Fallo definitivo por error de red al recuperar página ${missingPage}`);
              remainingMissing.push(missingPage);
           }
        }
@@ -249,7 +374,7 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
 
     if (missingPages.length > 0) {
        console.log(`[GuideDownloader] ❌ Faltan páginas irreparables: ${missingPages.join(", ")}. Abortando creación de PDF.`);
-       console.log(`[GuideDownloader] Las imágenes descargadas se mantienen en: ${tempDir}`);
+       console.log(`[GuideDownloader] Las imágenes descargadas se mantienen en: ${finalTempDir}`);
        try {
          db.prepare("UPDATE Course_Assets SET status = 'FAILED' WHERE id = ?").run(assetId);
        } catch(e) {}
@@ -259,24 +384,35 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
 
     if (CREATE_PDF) {
       console.log("[GuideDownloader] Finalizada descarga extractora. Montando PDF...");
-      await buildPDF(tempDir, pdfPath, { optimize: OPTIMIZE_IMAGES, quality: IMAGE_QUALITY });
-      console.log("[GuideDownloader] ✅ PDF Guardado en: " + pdfPath);
+      await buildPDF(finalTempDir, finalPdfPath, { optimize: OPTIMIZE_IMAGES, quality: IMAGE_QUALITY });
+      console.log("[GuideDownloader] ✅ PDF Guardado en: " + finalPdfPath);
 
       // Limpieza o Mantenimiento de las imágenes según configuración en .env
       if (!KEEP_TEMP_IMAGES) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-        console.log("[GuideDownloader] Borrado directorio temporal: " + tempDir);
+        fs.rmSync(finalTempDir, { recursive: true, force: true });
+        console.log("[GuideDownloader] Borrado directorio temporal: " + finalTempDir);
       } else {
-        console.log("[GuideDownloader] Mantenidas las imágenes intactas en: " + tempDir);
+        console.log("[GuideDownloader] Mantenidas las imágenes intactas en: " + finalTempDir);
       }
     } else {
       console.log("[GuideDownloader] CREATE_PDF es false. Omitiendo generación de PDF.");
-      console.log("[GuideDownloader] Las imágenes generadas se mantienen en: " + tempDir);
+      console.log("[GuideDownloader] Las imágenes generadas se mantienen en: " + finalTempDir);
     }
     
-    // Actualizar BD si existe
-    const updateAsset = db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?");
-    updateAsset.run(assetId);
+    // Actualizar BD y guardar filename
+    try {
+      const kitRow = db.prepare("SELECT metadata FROM Course_Assets WHERE id = ?").get(assetId) as { metadata: string };
+      if (kitRow && kitRow.metadata) {
+        const updatedMeta = JSON.parse(kitRow.metadata);
+        updatedMeta.filename = pdfFilename;
+        db.prepare("UPDATE Course_Assets SET status = 'COMPLETED', metadata = ? WHERE id = ?").run(JSON.stringify(updatedMeta), assetId);
+      } else {
+        db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?").run(assetId);
+      }
+    } catch(errDb) {
+      console.error("[GuideDownloader] Error de base de datos final:", errDb);
+      db.prepare("UPDATE Course_Assets SET status = 'COMPLETED' WHERE id = ?").run(assetId);
+    }
 
   } catch (err) {
     console.error("[GuideDownloader] ❌ Error extrayendo guía " + ekitId + ":", err);
