@@ -12,17 +12,21 @@ chromium.use(stealthPlugin());
 
 const authFile = path.resolve(__dirname, "../../data/.auth/state.json");
 
-async function parsePlatform() {
+async function parsePlatform(coursePath?: string) {
   if (!fs.existsSync(authFile)) {
     console.error("❌ No se encontró estado de sesión. Ejecuta primero login.ts");
     process.exit(1);
   }
 
-  const targetUrl = process.env.PLATFORM_BASE_URL;
-  if (!targetUrl) {
-    console.error("❌ Define PLATFORM_BASE_URL en tu fichero .env");
+  const baseUrl = process.env.PLATFORM_BASE_URL;
+  if (!baseUrl) {
+    console.error("❌ Define PLATFORM_BASE_URL en tu fichero .env (ej. https://mylearn.oracle.com)");
     process.exit(1);
   }
+
+  const targetUrl = coursePath 
+    ? (baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl) + '/' + (coursePath.startsWith('/') ? coursePath.substring(1) : coursePath)
+    : baseUrl;
 
   console.log("🚀 Iniciando scraper de mapeo...");
   const browser = await chromium.launch({ 
@@ -43,19 +47,34 @@ async function parsePlatform() {
   setupInterceptor(page);
 
   console.log(`Navegando a ${targetUrl}`);
-  await page.goto(targetUrl, { waitUntil: "networkidle" });
+  // Cambiamos 'networkidle' por 'domcontentloaded' porque hay peticiones continuas (telemetría, etc)
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-  console.log("✅ Página cargada. Esperando unos segundos para capturar peticiones XHR asíncronas...");
+  console.log("✅ Página cargada. Haciendo click en el tab de Guides para desencadenar la carga...");
   
-  // En este punto, como es la primera vez explorando esta plataforma (Oracle Univ),
-  // vamos a dejar el navegador abierto 30 segundos para darle tiempo a hacer todas
-  // las llamadas XHR iniciales (cursos, vídeos de la pagina, metadatos, etc)
-  await page.waitForTimeout(30000);
+  try {
+    // El usuario nos dijo que el selector es #guides-tab
+    await page.waitForSelector("#guides-tab", { timeout: 15000 });
+    await page.click("#guides-tab");
+    console.log("👆 Click realizado en el tab de Guides. Esperando respuestas API...");
+  } catch (e) {
+    console.log("⚠️ No se pudo clickear el tab de Guides en los primeros 15s. Tal vez ya estaba seleccionado o no aplica a este curso.");
+  }
+
+  // Esperamos un poco para capturar peticiones XHR
+  await page.waitForTimeout(10000);
 
   console.log("⏸️  Cerrando scraper. Por favor revisa la carpeta 'data/debug/' para ver los JSON interceptados.");
   await browser.close();
 }
 
 if (require.main === module) {
-  parsePlatform().catch(console.error);
+  const args = process.argv.slice(2);
+  const coursePath = args[0];
+  if (!coursePath && !process.env.PLATFORM_BASE_URL?.includes('/course/')) {
+    console.log("Uso de extracción: ts-node src/scraper/mapper.ts <coursePath>");
+    console.log("Ej: pnpm exec ts-node src/scraper/mapper.ts ou/course/oracle-database-19c-sql-workshop/105208");
+    process.exit(1);
+  }
+  parsePlatform(coursePath).catch(console.error);
 }

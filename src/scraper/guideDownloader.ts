@@ -258,6 +258,37 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
   }
 }
 
+export async function downloadCourseGuides(courseId: string) {
+  console.log(`[BatchDownloader] Iniciando descarga masiva de guías para el curso: ${courseId}`);
+  try {
+    const rows = db.prepare("SELECT metadata FROM Course_Assets WHERE course_id = ? AND type = 'guide'").all(courseId) as { metadata: string }[];
+    
+    if (rows.length === 0) {
+      console.log(`[BatchDownloader] No se encontraron guías en la base de datos para el curso ${courseId}.`);
+      console.log("Asegúrate de haber interceptado y mapeado los metadatos primero.");
+      return;
+    }
+    
+    console.log(`[BatchDownloader] Se encontraron ${rows.length} guías. Comenzando descargas...`);
+    for (const row of rows) {
+      try {
+        const kit = JSON.parse(row.metadata);
+        if (kit && kit.ekitId) {
+          console.log(`\n======================================================`);
+          console.log(`[BatchDownloader] Descargando: ${kit.name || kit.ekitId}`);
+          await downloadGuide(courseId, kit.ekitId, kit.learnerId || "38560");
+        }
+      } catch(e) {
+        console.error(`[BatchDownloader] Error interpretando metadato:`, e);
+      }
+    }
+    console.log(`\n======================================================`);
+    console.log(`[BatchDownloader] 🎉 Finalizada la descarga de las ${rows.length} guías del curso ${courseId}.`);
+  } catch (err) {
+    console.error("[BatchDownloader] Error consultando SQLite:", err);
+  }
+}
+
 // Interfaz para ejecución por terminal
 if (require.main === module) {
   const args = process.argv.slice(2);
@@ -273,11 +304,15 @@ if (require.main === module) {
     buildPDF(tempDir, outputPath, { optimize: OPTIMIZE_IMAGES, quality: IMAGE_QUALITY })
       .then(() => console.log(`[GuideDownloader] ✅ PDF Guardado en: ${outputPath}`))
       .catch(console.error);
+  } else if (args.length === 1 && args[0] !== '--build-pdf') {
+    downloadCourseGuides(args[0]).catch(console.error);
   } else {
     if (args.length < 2) {
-      console.log("Uso de extracción: ts-node src/scraper/guideDownloader.ts <courseId> <ekitId> [learnerId]");
-      console.log("Uso de compilación manual: ts-node src/scraper/guideDownloader.ts --build-pdf <tempDir> <outputPath>");
-      console.log("Ej: ts-node src/scraper/guideDownloader.ts 77517 594144ed-4db7-453c-a110-0cb40f5b0f87");
+      console.log("Uso descargas individuales: ts-node src/scraper/guideDownloader.ts <courseId> <ekitId> [learnerId]");
+      console.log("Uso descarga masiva curso:  ts-node src/scraper/guideDownloader.ts <courseId>");
+      console.log("Uso compilación manual:     ts-node src/scraper/guideDownloader.ts --build-pdf <tempDir> <outputPath>");
+      console.log("Ej (Individual): pnpm exec ts-node src/scraper/guideDownloader.ts 77517 594144ed-4db7-453c-a110-0cb40f5b0f87");
+      console.log("Ej (Masiva):     pnpm exec ts-node src/scraper/guideDownloader.ts 77517");
       process.exit(1);
     }
     
