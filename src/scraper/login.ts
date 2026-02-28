@@ -36,42 +36,51 @@ export async function interactiveLogin(
   console.log(`Navegando a ${targetUrl}`);
   await page.goto(targetUrl);
 
-  const rl = require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+  const readline = require("readline");
+  readline.emitKeypressEvents(process.stdin);
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+
+  console.log("\n========================================================");
+  console.log("👉 PRESIONA 'ENTER' PARA GUARDAR LA SESIÓN (puedes hacerlo varias veces)");
+  console.log("👉 PRESIONA 'ESC' o 'Ctrl+C' PARA SALIR Y CERRAR EL NAVEGADOR");
+  console.log("========================================================\n");
 
   await new Promise<void>((resolve) => {
-    rl.question("\n👉 PRESIONA ENTER AQUÍ EN LA TERMINAL CUANDO HAYAS TERMINADO DE HACER LOGIN EN EL NAVEGADOR...\n", () => {
-      rl.close();
-      resolve();
+    process.stdin.on("keypress", async (str, key) => {
+      if ((key.ctrl && key.name === "c") || key.name === "escape") {
+        if (process.stdin.isTTY) process.stdin.setRawMode(false);
+        console.log("\n👋 Saliendo y cerrando navegador...");
+        resolve();
+      } else if (key.name === "return" || key.name === "enter") {
+        console.log("\n[Auth] Guardando estado de la sesión y cookies...");
+        try {
+          await context.storageState({ path: authFile });
+
+          const cookies = await context.cookies();
+          const cookiesStr = cookies
+            .map(
+              (c) =>
+                `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${c.expires}\t${c.name}\t${c.value}`,
+            )
+            .join("\n");
+
+          fs.writeFileSync(
+            path.join(authDir, "cookies.txt"),
+            `# Netscape HTTP Cookie File\n${cookiesStr}`,
+          );
+
+          console.log("✅ Sesión y cookies guardadas con éxito en data/.auth/");
+        } catch (e) {
+          console.error("❌ Error al guardar sesión:", e);
+        }
+      }
     });
   });
 
-  console.log(
-    "Login exitoso detectado. Guardando estado de la sesión y cookies...",
-  );
-
-  await context.storageState({ path: authFile });
-
-  const cookies = await context.cookies();
-  const cookiesStr = cookies
-    .map(
-      (c) =>
-        `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${c.expires}\t${c.name}\t${c.value}`,
-    )
-    .join("\n");
-
-  fs.writeFileSync(
-    path.join(authDir, "cookies.txt"),
-    `# Netscape HTTP Cookie File\n${cookiesStr}`,
-  );
-
-  console.log("Sesión y cookies guardadas con éxito en data/.auth/");
   await browser.close();
-  console.log(
-    "Puedes cerrar esta terminal o continuar con el siguiente script.",
-  );
+  console.log("Puedes cerrar esta terminal o continuar con el siguiente script.");
 }
 
 import dotenv from "dotenv";
