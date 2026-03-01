@@ -2,6 +2,7 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 import path from "path";
+import { ensureDir } from "../utils/fs";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import { db } from "../db/schema";
@@ -21,12 +22,6 @@ const KEEP_TEMP_IMAGES = process.env.KEEP_TEMP_IMAGES === "true";
 const OPTIMIZE_IMAGES = process.env.OPTIMIZE_IMAGES === "true";
 const PLATFORM_BASE_URL = process.env.PLATFORM_BASE_URL;
 
-// Helper para crear directorios si no existen
-function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
 
 export interface PDFOptions {
   optimize: boolean;

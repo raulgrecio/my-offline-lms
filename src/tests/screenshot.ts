@@ -1,0 +1,39 @@
+import { chromium } from "playwright-extra";
+import stealth from "puppeteer-extra-plugin-stealth";
+import path from "path";
+
+chromium.use(stealth());
+
+(async () => {
+    const STATE_FILE = path.resolve(__dirname, "../../data/.auth/state.json");
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ storageState: STATE_FILE });
+    const page = await context.newPage();
+    
+    console.log("Navigating...");
+    await page.goto("https://mylearn.oracle.com/ou/course/oracle-database-19c-multitenant-architecture/86212/122711", { waitUntil: "domcontentloaded" });
+    
+    console.log("Waiting 20 seconds for SPA...");
+    await page.waitForTimeout(20000); 
+    
+    console.log("Analyzing DOM...");
+    
+    // Dump iframe src attributes
+    const iframes = await page.locator("iframe").all();
+    console.log(`Found ${iframes.length} iframes:`);
+    for (let i = 0; i < iframes.length; i++) {
+        console.log(`Iframe ${i}: ${await iframes[i].getAttribute("src")}`);
+    }
+
+    const buttons = await page.evaluate(() => {
+        return Array.from((document as any).querySelectorAll('button, [role="button"], a')).map((b: any) => ({
+            tag: b.tagName,
+            className: b.className,
+            text: b.textContent?.trim().substring(0, 30)
+        })).filter(b => b.className?.toLowerCase().includes('play') || (b.text && b.text.toLowerCase().includes('play')));
+    });
+
+    console.log("Potential play buttons:", buttons);
+
+    await browser.close();
+})().catch(console.error);

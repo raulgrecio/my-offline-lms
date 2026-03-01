@@ -60,15 +60,18 @@ export async function interactiveLogin(
 
           const cookies = await context.cookies();
           const cookiesStr = cookies
-            .map(
-              (c) =>
-                `${c.domain}\tTRUE\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${c.expires}\t${c.name}\t${c.value}`,
-            )
+            .map((c) => {
+              // Netscape format: domain | include_subdomains | path | https_only | expires | name | value
+              const includeSubdomains = c.domain.startsWith('.') ? "TRUE" : "FALSE";
+              // yt-dlp/Python chokes on negative expirations. If invalid/session, we set to 0.
+              const expires = (c.expires && c.expires > 0) ? Math.round(c.expires) : 0;
+              return `${c.domain}\t${includeSubdomains}\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${expires}\t${c.name}\t${c.value}`;
+            })
             .join("\n");
 
           fs.writeFileSync(
             path.join(authDir, "cookies.txt"),
-            `# Netscape HTTP Cookie File\n${cookiesStr}`,
+            `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
           );
 
           console.log("✅ Sesión y cookies guardadas con éxito en data/.auth/");
