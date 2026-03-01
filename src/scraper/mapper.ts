@@ -12,7 +12,7 @@ chromium.use(stealthPlugin());
 
 const authFile = path.resolve(__dirname, "../../data/.auth/state.json");
 
-async function parsePlatform(coursePath?: string) {
+export async function parsePlatform(coursePath?: string) {
   if (!fs.existsSync(authFile)) {
     console.error("❌ No se encontró estado de sesión. Ejecuta primero login.ts");
     process.exit(1);
@@ -20,7 +20,7 @@ async function parsePlatform(coursePath?: string) {
 
   const baseUrl = process.env.PLATFORM_BASE_URL;
   if (!baseUrl) {
-    console.error("❌ Define PLATFORM_BASE_URL en tu fichero .env (ej. https://mylearn.oracle.com)");
+    console.error("❌ Define PLATFORM_BASE_URL en tu fichero .env (ej. https://mi-plataforma-online.com)");
     process.exit(1);
   }
 
@@ -50,15 +50,18 @@ async function parsePlatform(coursePath?: string) {
   // Cambiamos 'networkidle' por 'domcontentloaded' porque hay peticiones continuas (telemetría, etc)
   await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-  console.log("✅ Página cargada. Haciendo click en el tab de Guides para desencadenar la carga...");
-  
-  try {
-    // El usuario nos dijo que el selector es #guides-tab
-    await page.waitForSelector("#guides-tab", { timeout: 15000 });
-    await page.click("#guides-tab");
-    console.log("👆 Click realizado en el tab de Guides. Esperando respuestas API...");
-  } catch (e) {
-    console.log("⚠️ No se pudo clickear el tab de Guides en los primeros 15s. Tal vez ya estaba seleccionado o no aplica a este curso.");
+  if (targetUrl.includes("/course/")) {
+    console.log("✅ Página de curso cargada. Haciendo click en el tab de Guides para desencadenar la carga...");
+    try {
+      // El usuario nos dijo que el selector es #guides-tab
+      await page.waitForSelector("#guides-tab", { timeout: 15000 });
+      await page.click("#guides-tab");
+      console.log("👆 Click realizado en el tab de Guides. Esperando respuestas API...");
+    } catch (e) {
+      console.log("⚠️ No se pudo clickear el tab de Guides en los primeros 15s. Tal vez ya estaba seleccionado o no aplica a este curso.");
+    }
+  } else {
+    console.log("✅ Página principal/Learning Path cargada. Dejando que la API vuelque sus JSON...");
   }
 
   // Esperamos un poco para capturar peticiones XHR

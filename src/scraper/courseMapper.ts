@@ -49,7 +49,7 @@ export function processCourseMetadata(filePath: string) {
           moduleName: mod.name
         };
 
-        const targetUrl = comp.videoId ? "brightcove:" + comp.videoId : "https://mylearn.oracle.com/ou/course/" + courseSlug + "/" + courseId + "/" + comp.id;
+        const targetUrl = comp.videoId ? "brightcove:" + comp.videoId : `${process.env.PLATFORM_BASE_URL}/ou/course/` + courseSlug + "/" + courseId + "/" + comp.id;
 
         insertAsset.run(assetId, courseId, "video", targetUrl, JSON.stringify(meta));
         videosCount++;
