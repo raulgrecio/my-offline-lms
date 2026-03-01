@@ -304,29 +304,34 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
       const imgUrl = baseUrl + "files/mobile/" + pageNum + ".jpg?ts=" + Date.now();
       
       let success = false;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      const MAX_ATTEMPTS = 5;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
         try {
-          const response = await context.request.get(imgUrl, { timeout: 15000 });
+          const response = await context.request.get(imgUrl, { timeout: 20000 });
           if (response.status() === 200) {
             const buffer = await response.body();
             const savePath = path.join(finalTempDir, String(pageNum).padStart(3, '0') + ".jpg");
             
             fs.writeFileSync(savePath, buffer);
-            console.log(`   -> Salvada página ${pageNum}` + (attempt > 1 ? ` (intento ${attempt})` : ""));
+            console.log(`   -> Salvada página ${pageNum}` + (attempt > 1 ? ` (intento ${attempt}/${MAX_ATTEMPTS})` : ""));
             success = true;
             break;
           } else {
-            if (attempt === 3) {
-              console.log(`   -> Error ${response.status()} al buscar la página ${pageNum} tras 3 intentos`);
+            if (attempt === MAX_ATTEMPTS) {
+              console.log(`   -> Error ${response.status()} al buscar la página ${pageNum} tras ${MAX_ATTEMPTS} intentos`);
             } else {
-              await new Promise(r => setTimeout(r, 1000));
+              const delay = attempt * 2000;
+              console.log(`   -> Error ${response.status()} en página ${pageNum}. Reintentando en ${delay/1000}s...`);
+              await new Promise(r => setTimeout(r, delay));
             }
           }
         } catch (e: any) {
-          if (attempt === 3) {
-            console.log(`   -> Fila de red (página ${pageNum}): ${e.message}`);
+          if (attempt === MAX_ATTEMPTS) {
+            console.log(`   -> Falla de red insuperable (página ${pageNum}): ${e.message}`);
           } else {
-            await new Promise(r => setTimeout(r, 2000));
+            const delay = attempt * 2500;
+            console.log(`   -> Falla de red '${e.message}' en página ${pageNum}. Reintentando en ${delay/1000}s...`);
+            await new Promise(r => setTimeout(r, delay));
           }
         }
       }
@@ -353,19 +358,36 @@ export async function downloadGuide(courseId: string, ekitId: string, learnerId:
        const remainingMissing: number[] = [];
        for (const missingPage of missingPages) {
           const imgUrl = baseUrl + "files/mobile/" + missingPage + ".jpg?ts=" + Date.now();
-          try {
-             const response = await context.request.get(imgUrl, { timeout: 15000 });
-             if (response.status() === 200) {
-                const buffer = await response.body();
-                const savePath = path.join(finalTempDir, String(missingPage).padStart(3, '0') + ".jpg");
-                fs.writeFileSync(savePath, buffer);
-                console.log(`   -> Recuperada exitosamente página faltante ${missingPage}`);
-             } else {
-                console.log(`   -> Fallo definitivo al recuperar página ${missingPage}`);
-                remainingMissing.push(missingPage);
-             }
-          } catch(e) {
-             console.log(`   -> Fallo definitivo por error de red al recuperar página ${missingPage}`);
+          let recoverySuccess = false;
+          for (let attempt = 1; attempt <= 5; attempt++) {
+            try {
+              const response = await context.request.get(imgUrl, { timeout: 20000 });
+              if (response.status() === 200) {
+                 const buffer = await response.body();
+                 const savePath = path.join(finalTempDir, String(missingPage).padStart(3, '0') + ".jpg");
+                 fs.writeFileSync(savePath, buffer);
+                 console.log(`   -> Recuperada exitosamente página faltante ${missingPage} (intento ${attempt}/5)`);
+                 recoverySuccess = true;
+                 break;
+              } else {
+                 if (attempt === 5) {
+                    console.log(`   -> Fallo definitivo al recuperar página ${missingPage} (status ${response.status()})`);
+                 } else {
+                    const delay = attempt * 2000;
+                    await new Promise(r => setTimeout(r, delay));
+                 }
+              }
+            } catch(e) {
+               if (attempt === 5) {
+                  console.log(`   -> Fallo definitivo por error de red al recuperar página ${missingPage}`);
+               } else {
+                  const delay = attempt * 2500;
+                  console.log(`   -> Error de red en pág. ${missingPage}. Reintentando final en ${delay/1000}s...`);
+                  await new Promise(r => setTimeout(r, delay));
+               }
+            }
+          }
+          if (!recoverySuccess) {
              remainingMissing.push(missingPage);
           }
        }
