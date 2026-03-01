@@ -87,7 +87,7 @@ Para el scraping, Playwright tiene soporte nativo de Node.js con mejor integraci
 ### Sistema
 
 - **Node.js** v18 o superior → [nodejs.org](https://nodejs.org)
-- **pnpm** (gestor de paquetes) → `npm install -g pnpm`
+- **pnpm** o **npm** (gestor de paquetes) → `npm install -g pnpm` (opcional si prefieres pnpm)
 - **yt-dlp** → Para descarga de vídeos:
   ```bash
   # Linux / WSL
@@ -107,7 +107,9 @@ Si ejecutas en WSL2, Playwright necesita acceso a display o ejecutar en modo hea
 
 ```bash
 # Instalar dependencias del sistema para Playwright (Chromium)
-npx playwright install-deps chromium
+pnpm exec playwright install-deps chromium
+# o con npm:
+# npx playwright install-deps chromium
 ```
 
 ---
@@ -121,9 +123,13 @@ cd my-offline-lms
 
 # 2. Instalar dependencias Node.js
 pnpm install
+# o con npm:
+# npm install
 
 # 3. Instalar navegadores de Playwright
 pnpm exec playwright install chromium
+# o con npm:
+# npx playwright install chromium
 
 # 4. Crear directorio de datos (se crea automáticamente al ejecutar, pero puedes crearlo manualmente)
 mkdir -p data/.auth data/assets
@@ -144,6 +150,8 @@ Lanza el script de login interactivo. Se abrirá una ventana de Chromium donde d
 ```bash
 # ts-node directo (desarrollo)
 pnpm exec ts-node src/scraper/login.ts <URL_LOGIN> <SELECTOR_POST_LOGIN>
+# o con npm:
+# npx ts-node src/scraper/login.ts <URL_LOGIN> <SELECTOR_POST_LOGIN>
 
 # Ejemplo:
 pnpm exec ts-node src/scraper/login.ts https://mi-plataforma.com/login "#dashboard"
@@ -168,6 +176,10 @@ Archivos generados:
 pnpm start
 # o en modo desarrollo con hot-reload:
 pnpm dev
+
+# Equivalente en npm:
+# npm start
+# npm run dev
 ```
 
 Crea el fichero `data/db.sqlite` con el esquema completo.
@@ -179,9 +191,11 @@ Mapea un curso específico interceptando su tráfico y volcando el JSON. Posteri
 ```bash
 # Interceptar metadatos JSON del navegador
 pnpm exec ts-node src/scraper/mapper.ts ou/course/[course-slug]/[courseId]
+# o: npx ts-node src/scraper/mapper.ts ...
 
 # Volcar metadatos a SQLite
 pnpm exec ts-node src/scraper/courseMapper.ts
+# o: npx ts-node src/scraper/courseMapper.ts
 ```
 
 ### Paso 4: Descargar assets (Milestone 3 ✅ | Milestone 4 🔜)
@@ -189,9 +203,11 @@ pnpm exec ts-node src/scraper/courseMapper.ts
 ```bash
 # Descargar TODAS las guides de un curso (generación de PDF optimizado con nombres originales)
 pnpm exec ts-node src/scraper/guideDownloader.ts <courseId>
+# o: npx ts-node src/scraper/guideDownloader.ts <courseId>
 
 # Descargar vídeos y subtítulos (Pendiente - Milestone 4)
 pnpm exec ts-node src/downloader/videos.ts
+# o: npx ts-node src/downloader/videos.ts
 ```
 
 ### Paso 5: Web local de estudio (Milestone 5 — 🔜 Próximo)

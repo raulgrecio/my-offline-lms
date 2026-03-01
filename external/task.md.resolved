@@ -8,7 +8,7 @@
 
 ## Milestone 2: Motor de Scraping (Discovery & Mapping)
 
-- [ ] Implementar scraper de Learning Paths (extracción de cursos y orden).
+- [x] Implementar scraper de Learning Paths (extracción de cursos y orden).
 - [x] Implementar scraper de Cursos (extracción de metadatos, índices de Guides y Videos).
 - [x] Lógica de intercepción de red XHR/JSON para mapear URLs sin descargas masivas.
 - [x] Inserción iterativa en base de datos local (evitando duplicados).
