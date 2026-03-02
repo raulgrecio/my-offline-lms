@@ -32,7 +32,7 @@ export function processCourseMetadata(filePath: string) {
   const insertAsset = db.prepare(`
     INSERT INTO Course_Assets (id, course_id, type, url, metadata, status)
     VALUES (?, ?, ?, ?, ?, 'PENDING')
-    ON CONFLICT(id) DO NOTHING
+    ON CONFLICT(id) DO UPDATE SET metadata = excluded.metadata
   `);
 
   let videosCount = 0;
@@ -42,17 +42,18 @@ export function processCourseMetadata(filePath: string) {
   for (const mod of courseData.modules) {
     for (const comp of mod.components) {
       if (comp.typeId === "1") { // 1 = Video
+        videosCount++;
         const assetId = "video_" + comp.id;
         const meta = {
           name: comp.name,
           duration: comp.duration,
-          moduleName: mod.name
+          moduleName: mod.name,
+          orderIndex: videosCount
         };
 
         const targetUrl = comp.videoId ? "brightcove:" + comp.videoId : `${process.env.PLATFORM_BASE_URL}/ou/course/` + courseSlug + "/" + courseId + "/" + comp.id;
 
         insertAsset.run(assetId, courseId, "video", targetUrl, JSON.stringify(meta));
-        videosCount++;
       }
     }
   }

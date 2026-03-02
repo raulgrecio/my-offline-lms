@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import { requireValidSession } from "../utils/auth";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 chromium.use(stealth());
@@ -39,7 +40,8 @@ async function testVideoExtarctor(url: string) {
 
     const rawHtml = await page.content();
     console.log(`\n[HTML] Tamaño: ${rawHtml.length} bytes`);
-    
+    fs.writeFileSync(path.resolve(__dirname, "../../data/debug/test_159015.html"), rawHtml);
+
     const iframes = await page.locator('iframe').all();
     console.log(`\n[IFRAMES] Se encontraron ${iframes.length} iframes.`);
     for (const fr of iframes) {
@@ -76,4 +78,4 @@ async function testVideoExtarctor(url: string) {
   }
 }
 
-testVideoExtarctor("https://mylearn.oracle.com/ou/course/oracle-database-19c-multitenant-architecture/86212/202834").catch(console.error);
+testVideoExtarctor("https://mylearn.oracle.com/ou/course/oracle-database-19c-sql-workshop/105208/159015").catch(console.error);

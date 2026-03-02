@@ -85,6 +85,12 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
   
   // Limpiar el nombre para sistema de archivos
   let safeName = meta.name ? meta.name.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : assetId;
+  
+  if (meta.orderIndex) {
+      const prefix = String(meta.orderIndex).padStart(2, '0');
+      safeName = `${prefix}_${safeName}`;
+  }
+
   let filename = `${safeName}.mp4`;
   const outputPath = path.join(courseVideosDir, filename);
 
@@ -144,11 +150,13 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
         const videoLinkSelector = `a[href*="/${videoId}"]`;
         const linkLocator = page.locator(videoLinkSelector).first();
 
+        let playlistClicked = false;
         // 1. Intentar hacer click en la playlist
         if (await linkLocator.isVisible({ timeout: 5000 })) {
             console.log(`[VideoDownloader] 🖱️ Click en la playlist para forzar carga del reproductor HLS...`);
             await linkLocator.click();
-            await page.waitForTimeout(3000); // Darle tiempo a procesar el click de routing
+            playlistClicked = true;
+            await page.waitForTimeout(10000); // Darle tiempo a procesar el click de routing
         }
 
         console.log(`[VideoDownloader] 🖱️ Buscando botones de Play genéricos y haciendo click en el vídeo...`);
@@ -156,14 +164,19 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
         const playButton = page.locator('.vjs-big-play-button, button[aria-label="Play"]').first();
         if (await playButton.isVisible({ timeout: 2000 })) {
             console.log(`[VideoDownloader] 🖱️ Encontrado botón Start/Play, clickeando...`);
-            await playButton.click();
-        } else {
-            // 3. Fallback final: click "ciego" en la posición estimada del centro de la pantalla
-            const vp = page.viewportSize();
-            if (vp) {
-                console.log(`[VideoDownloader] 🖱️ Realizando click ciego en el área principal de vídeo para forzar Play...`);
-                // Estimando que el reproductor está en la mitad izquierda
-                await page.mouse.click(vp.width * 0.4, vp.height * 0.4);
+            await playButton.click({ force: true });
+        } else if (!playlistClicked) {
+            // 3. Fallback final: click "ciego" en componente de video en lugar de coordenadas SOLO si no hicimos click en la playlist
+            const videoArea = page.locator('.vjs-tech, video, .vjs-poster, #oudl_video_id_html5_api').first();
+            if (await videoArea.isVisible({ timeout: 2000 })) {
+                console.log(`[VideoDownloader] 🖱️ Realizando click forzado en el área del reproductor...`);
+                await videoArea.click({ force: true });
+            } else {
+                const vp = page.viewportSize();
+                if (vp) {
+                    console.log(`[VideoDownloader] 🖱️ Realizando click ciego en coordenadas como último recurso...`);
+                    await page.mouse.click(vp.width * 0.4, vp.height * 0.4);
+                }
             }
         }
     }
