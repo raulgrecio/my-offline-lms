@@ -84,10 +84,10 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
   const meta = JSON.parse(row.metadata || "{}");
   
   // Limpiar el nombre para sistema de archivos
-  let safeName = meta.name ? meta.name.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : assetId;
+  let safeName = meta.title ? meta.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : assetId;
   
-  if (meta.orderIndex) {
-      const prefix = String(meta.orderIndex).padStart(2, '0');
+  if (meta.order_index) {
+      const prefix = String(meta.order_index).padStart(2, '0');
       safeName = `${prefix}_${safeName}`;
   }
 

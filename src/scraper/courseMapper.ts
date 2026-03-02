@@ -45,10 +45,10 @@ export function processCourseMetadata(filePath: string) {
         videosCount++;
         const assetId = "video_" + comp.id;
         const meta = {
-          name: comp.name,
+          title: comp.name,
           duration: comp.duration,
           moduleName: mod.name,
-          orderIndex: videosCount
+          order_index: videosCount
         };
 
         const targetUrl = comp.videoId ? "brightcove:" + comp.videoId : `${process.env.PLATFORM_BASE_URL}/ou/course/` + courseSlug + "/" + courseId + "/" + comp.id;
