@@ -147,6 +147,14 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
 
     const videoId = row.url.split('/').pop();
     if (videoId) {
+        // 0. Click "Start Learning" / "Resume Learning" si existe (común en cursos nuevos)
+        const startLearningBtn = page.locator('#playerIdbtn').first();
+        if (await startLearningBtn.isVisible({ timeout: 5000 })) {
+            console.log(`[VideoDownloader] 🖱️ Click en botón de inicio de curso ("Start/Resume Learning")...`);
+            await startLearningBtn.click({ force: true });
+            await page.waitForTimeout(5000); // Esperar a que el reproductor se inyecte en el DOM
+        }
+
         const videoLinkSelector = `a[href*="/${videoId}"]`;
         const linkLocator = page.locator(videoLinkSelector).first();
 

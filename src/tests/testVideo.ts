@@ -49,6 +49,14 @@ async function testVideoExtarctor(url: string) {
     }
 
     console.log(`\n=== PRUEBA DE INTERACCIÓN ===`);
+
+    const startLearningBtn = page.locator('#playerIdbtn').first();
+    if (await startLearningBtn.isVisible({ timeout: 5000 })) {
+        console.log(`🖱️  Clickando en "Start/Resume Learning" para activar el curso...`);
+        await startLearningBtn.click({ force: true });
+        await page.waitForTimeout(5000);
+    }
+
     // Intento localizar y clickar algo que active el video
     const videoId = url.split('/').pop();
     if (videoId) {
@@ -78,4 +86,4 @@ async function testVideoExtarctor(url: string) {
   }
 }
 
-testVideoExtarctor("https://mylearn.oracle.com/ou/course/oracle-database-19c-sql-workshop/105208/159015").catch(console.error);
+testVideoExtarctor("https://mylearn.oracle.com/ou/course/oracle-database-19c-administration-workshop/77571/77000").catch(console.error);
