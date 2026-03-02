@@ -2,6 +2,8 @@ import { db } from "../db/schema";
 import fs from "fs";
 import path from "path";
 
+import { getAssetFilename } from "../utils/naming";
+
 const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
 
 function renameVideosForCourse(courseId: string) {
@@ -20,14 +22,13 @@ function renameVideosForCourse(courseId: string) {
     for (const row of rows) {
         const meta = JSON.parse(row.metadata || "{}");
         
-        let rawName = meta.title ? meta.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : row.id;
+        let rawName = getAssetFilename(meta.title) || row.id;
         
         if (!meta.order_index) {
             continue; // Nothing to prefix
         }
 
-        const prefix = String(meta.order_index).padStart(2, '0');
-        const prefixedName = `${prefix}_${rawName}`;
+        const prefixedName = getAssetFilename(meta.title, {index: String(meta.order_index)});
 
         // Check all files in the directory that start with rawName
         const allFiles = fs.readdirSync(courseVideosDir);

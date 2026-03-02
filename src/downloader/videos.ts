@@ -5,6 +5,7 @@ import path from "path";
 import { ensureDir } from "../utils/fs";
 import { sanitizeUrl } from "../utils/url";
 import { requireValidSession } from "../utils/auth";
+import { getAssetFilename } from "../utils/naming";
 import { spawn } from "child_process";
 import { db } from "../db/schema";
 import dotenv from "dotenv";
@@ -83,13 +84,8 @@ export async function downloadVideo(courseId: string, assetId: string, sharedCon
 
   const meta = JSON.parse(row.metadata || "{}");
   
-  // Limpiar el nombre para sistema de archivos
-  let safeName = meta.title ? meta.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : assetId;
-  
-  if (meta.order_index) {
-      const prefix = String(meta.order_index).padStart(2, '0');
-      safeName = `${prefix}_${safeName}`;
-  }
+  // Limpiar y prefijar el nombre para el sistema de archivos
+  const safeName = getAssetFilename(meta.title, {index: String(meta.order_index || '')});
 
   let filename = `${safeName}.mp4`;
   const outputPath = path.join(courseVideosDir, filename);

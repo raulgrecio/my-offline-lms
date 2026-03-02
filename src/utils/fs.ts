@@ -1,5 +1,5 @@
 import fs from "fs";
-
+import path from "path";
 /**
  * Helper para crear directorios si no existen
  */
