@@ -20,13 +20,13 @@ function renameVideosForCourse(courseId: string) {
     for (const row of rows) {
         const meta = JSON.parse(row.metadata || "{}");
         
-        let rawName = meta.name ? meta.name.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : row.id;
+        let rawName = meta.title ? meta.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/ +/g, '_') : row.id;
         
-        if (!meta.orderIndex) {
+        if (!meta.order_index) {
             continue; // Nothing to prefix
         }
 
-        const prefix = String(meta.orderIndex).padStart(2, '0');
+        const prefix = String(meta.order_index).padStart(2, '0');
         const prefixedName = `${prefix}_${rawName}`;
 
         // Check all files in the directory that start with rawName
