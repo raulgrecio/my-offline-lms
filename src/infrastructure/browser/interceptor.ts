@@ -19,8 +19,11 @@ export function setupInterceptor(page: Page) {
         const json = await response.json();
         
         // Filtramos agresivamente para que Playwright no sature el disco ni la terminal
-        // Sólo mapeamos los JSONs vitales para extraer cursos y meta de los paths
-        if (!url.includes('/content/courses/') && !url.includes('/content/learning-path/') && !url.includes('/content/stories/variants/')) {
+        const isCorePayload = url.includes('/content/courses/') || 
+                              url.includes('/content/learning-path/') || 
+                              url.includes('/content/stories/variants/') || 
+                              url.includes('ekit');
+        if (!isCorePayload) {
           return;
         }
 

@@ -87,23 +87,12 @@ export class DownloadGuides {
     try {
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       
-      let learnerId = meta.learnerId;
-      if (!learnerId) {
-         const learnerJsonPath = path.join(this.assetsBaseDir, "../.auth/learner.json");
-         if (fs.existsSync(learnerJsonPath)) {
-            try {
-              const parsed = JSON.parse(fs.readFileSync(learnerJsonPath, "utf-8"));
-              learnerId = parsed.learnerId;
-            } catch(e) {}
-         }
-      }
-
-      if (!learnerId) {
-         console.warn(`[DownloadGuides] ⚠️ Learner ID no encontrado en metadata ni en learner.json. Usando fallback por defecto (${learnerId}).`);
-      }
-      
-      const urlBase = new URL(env.PLATFORM_BASE_URL).origin; 
-      const viewerUrl = `${urlBase}/ou/ekit/${courseId}/${learnerId}/${meta.ekitId}/course`;
+      const offeringId = env.OFFERING_ID;
+      const baseUrl = env.PLATFORM_BASE_URL;
+      const viewerUrl = new URL(
+        `/ekit/${courseId}/${offeringId}/${meta.ekitId}/course`, 
+        baseUrl
+      ).href;
       
       console.log(`[DownloadGuides] Navegando al visor de la guía: ${viewerUrl}`);
       await page.goto(viewerUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
@@ -116,35 +105,52 @@ export class DownloadGuides {
       await page.goto(iframeSrc, { waitUntil: "networkidle", timeout: 45000 });
       await page.waitForTimeout(5000);
 
-      // Extract window.pdfObj.pages
-      const pagesCount = await page.evaluate(() => {
-        return (window as any).pdfObj?.pages?.length || 0;
+      // Extraer recuento total de páginas desde el Flip PDF swiper DOM
+      let pagesCount = await page.evaluate(() => {
+        let highest = 0;
+        const titles = Array.from(document.querySelectorAll('.thumbnailSwiper .title'));
+        for (const title of titles) {
+            const text = title.textContent || "";
+            const nums = text.split('-').map(n => parseInt(n.trim(), 10));
+            for (const n of nums) {
+                if (!isNaN(n) && n > highest) highest = n;
+            }
+        }
+        return highest;
       });
 
-      if (pagesCount === 0) {
-        throw new Error("No se detectaron páginas en window.pdfObj");
+      if (!pagesCount || pagesCount === 0) {
+        // Retry
+        await page.waitForTimeout(10000);
+        pagesCount = await page.evaluate(() => {
+          let highest = 0;
+          const titles = Array.from(document.querySelectorAll('.thumbnailSwiper .title'));
+          for (const title of titles) {
+              const text = title.textContent || "";
+              const nums = text.split('-').map(n => parseInt(n.trim(), 10));
+              for (const n of nums) {
+                  if (!isNaN(n) && n > highest) highest = n;
+              }
+          }
+          return highest;
+        });
       }
 
-      console.log(`[DownloadGuides] 📄 Documento cargado con ${pagesCount} páginas.`);
+      if (pagesCount === 0) {
+        throw new Error("No se detectaron páginas en la estructura thumbnailSwiper del Flip PDF");
+      }
+
+      console.log(`[DownloadGuides] 📄 Documento Flip PDF cargado con ${pagesCount} páginas.`);
+
+      let baseImgUrl = iframeSrc.replace(/\/mobile\/index\.html(\?.*)?$/i, '/files/mobile/');
+      if (!baseImgUrl.endsWith('/')) {
+         baseImgUrl += '/';
+      }
 
       for (let i = 0; i < pagesCount; i++) {
-         // Lógica de descarga de la imagen de cada página interceptando blob (Simplificada para el plan)
-         // ... (este sería el bloque detallado que ya tienes en scraper/guideDownloader.ts lines 230-360)
-         // Simularemos un retraso o llamada de inyección para mantener la demostración de la arquitectura.
+         const pageNum = i + 1;
+         const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
          
-         const imageUrl = await page.evaluate(async (pageNum: number) => {
-             return new Promise<string>((resolve) => {
-                 const originalPage = (window as any).pdfObj.pages[pageNum];
-                 const id = originalPage.id;
-                 (window as any).pdfObj.pageImageManager.getImageURL(id, (url: string) => {
-                     resolve(url);
-                 });
-             });
-         }, i);
-
-         if (!imageUrl) continue;
-         
-         // Navegar al blob o descargarlo a disco directamente.
          let buffer: number[] | null = null;
          for (let attempt = 1; attempt <= 3; attempt++) {
             try {
@@ -162,16 +168,16 @@ export class DownloadGuides {
               await downloadPage.close();
               break;
             } catch (e) {
-              console.log(`[DownloadGuides] ⚠️ Intento ${attempt} fallido bajando pág ${i+1}. Reintentando...`);
+              console.log(`[DownloadGuides] ⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
               await new Promise(r => setTimeout(r, 2000));
             }
          }
 
          if (buffer) {
-           fs.writeFileSync(path.join(tempImagesDir, `page_${String(i).padStart(4, '0')}.png`), Buffer.from(buffer));
-           console.log(`[DownloadGuides]   -> Descargada pág ${i+1}/${pagesCount}`);
+           fs.writeFileSync(path.join(tempImagesDir, `page_${String(pageNum).padStart(4, '0')}.png`), Buffer.from(buffer));
+           console.log(`[DownloadGuides]   -> Descargada pág ${pageNum}/${pagesCount}`);
          } else {
-           throw new Error(`Imposible descargar la imagen de la página ${i+1}`);
+           throw new Error(`Imposible descargar la imagen de la página ${pageNum}`);
          }
       }
 

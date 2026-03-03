@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const envSchema = z.object({
-  PLATFORM_BASE_URL: z.string().url().default("https://mylearn.oracle.com"),
+  PLATFORM_BASE_URL: z.string().url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
   LOGIN_SUCCESS_SELECTOR: z.string().default("body"),
   
@@ -14,7 +14,7 @@ const envSchema = z.object({
   CREATE_PDF: z.coerce.boolean().default(true),
   OPTIMIZE_IMAGES: z.coerce.boolean().default(true),
   IMAGE_QUALITY: z.coerce.number().int().min(1).max(100).default(80),
-  ORACLE_LEARNER_ID: z.string().optional(),
+  OFFERING_ID: z.coerce.number().int(),
 });
 
 type Env = z.infer<typeof envSchema>;

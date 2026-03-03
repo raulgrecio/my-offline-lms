@@ -4,6 +4,7 @@ import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
 import { env } from "../../config/env";
+import { toSlug } from "../../utils/url";
 
 export class SyncCourseData {
   constructor(
@@ -13,18 +14,13 @@ export class SyncCourseData {
   ) {}
 
   async execute(coursePath: string): Promise<void> {
-    const baseUrl = env.PLATFORM_BASE_URL;
-
-    let targetUrl = coursePath;
-    if (coursePath) {
-      if (!coursePath.startsWith('http')) {
-        // Form a relative path correctly, ensuring it starts with '/'
-        const rawPath = coursePath.startsWith('/') ? coursePath : `/${coursePath}`;
-        targetUrl = new URL(rawPath, baseUrl).href;
-      }
-    } else {
-      targetUrl = baseUrl;
+    if (!coursePath) {
+      throw new Error("Course path is required");
     }
+
+    console.log(`[SyncCourseData] 🎯 Course Path recibido: "${coursePath}"`);
+
+    const targetUrl = this.resolveCourseUrl(coursePath);
 
     console.log(`[SyncCourseData] 🚀 Iniciando mapeo y sincronización del curso: ${targetUrl}`);
     
@@ -69,7 +65,7 @@ export class SyncCourseData {
       const courseData = json.data;
       const courseId = courseData.id;
       const courseTitle = courseData.name;
-      const courseSlug = courseTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const courseSlug = toSlug(courseTitle);  
 
       console.log(`[SyncCourseData] 📚 Procesando y guardando Curso: ${courseTitle}`);
 
@@ -116,7 +112,6 @@ export class SyncCourseData {
               title: kit.name,
               ekitId: kit.ekitId,
               fileType: kit.fileType,
-              learnerId: kit.learnerId,
               order_index: ++pdfsCount
             },
             status: 'PENDING'
@@ -129,5 +124,21 @@ export class SyncCourseData {
       // Cleanup file so it's not processed again on subsequent runs
       try { fs.unlinkSync(filePath); } catch(e) {}
     }
+  }
+
+  private resolveCourseUrl(coursePath: string): string {
+    const baseUrl = env.PLATFORM_BASE_URL;
+
+    //course id
+    const courseId = Number(coursePath)
+    if(Number.isSafeInteger(courseId)) {
+      return new URL(`/ou/course/slug-course-name/${courseId}`, baseUrl).href;
+    }
+
+    //absolute url
+    if (coursePath.startsWith('http')) return coursePath;
+    
+    //relative url
+    return new URL(coursePath, baseUrl).href;
   }
 }

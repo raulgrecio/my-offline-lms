@@ -6,6 +6,7 @@ import { ILearningPathRepository } from "../../domain/repositories/ILearningPath
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { SyncCourseData } from "./SyncCourseData";
 import { env } from "../../config/env";
+import { toSlug } from "../../utils/url";
 
 export class SyncLearningPath {
   constructor(
@@ -50,7 +51,7 @@ export class SyncLearningPath {
 
       const pathId = lpData.id;
       const pathTitle = lpData.name;
-      const pathSlug = pathTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const pathSlug = toSlug(pathTitle);
       const pathDesc = lpData.description || "";
 
       console.log(`[SyncLearningPath] 🧭 Procesando Learning Path: ${pathTitle}`);
@@ -64,7 +65,7 @@ export class SyncLearningPath {
         if (child.typeId !== "22") continue; // 22 is Standard Course
         if (!child.id || !child.name) continue;
 
-        const courseSlug = child.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        const courseSlug = toSlug(child.name);
         
         this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
         this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });

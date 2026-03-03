@@ -1,0 +1,47 @@
+import { chromium } from "playwright-extra";
+import stealth from "puppeteer-extra-plugin-stealth";
+import path from "path";
+import fs from "fs";
+import { env } from "process";
+
+chromium.use(stealth());
+
+async function run() {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ storageState: path.resolve('data/.auth/state.json') });
+  const page = await context.newPage();
+  
+  page.on("response", async (response) => {
+    const url = response.url();
+    if (url.includes(".json") || response.headers()["content-type"]?.includes("application/json")) {
+        try {
+            const body = await response.json();
+            console.log(`[JSON Dump] ${url}`);
+            
+            // Si el body contiene ba43ef1c o ekitId o htmlViewer, guardarlo
+            const strBody = JSON.stringify(body);
+            if (strBody.includes("ekit") || strBody.includes("pdf") || strBody.includes("ba43ef1c")) {
+                const safeUrl = url.replace(/[^a-z0-9]/gi, '_');
+                fs.writeFileSync(`/tmp/intercept_${safeUrl}.json`, JSON.stringify(body, null, 2));
+                console.log(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
+            }
+        } catch(e) {}
+    }
+  });
+
+  const baseUrl = env.PLATFORM_BASE_URL;
+  const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
+  console.log("Navigating to course page:", courseUrl);
+  await page.goto(courseUrl, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(8000);
+  
+  const guidesTab = await page.$("#guides-tab");
+  if (guidesTab) {
+    console.log("Found guides tab, clicking...");
+    await guidesTab.click();
+    await page.waitForTimeout(6000);
+  }
+  
+  await browser.close();
+}
+run().catch(console.error);

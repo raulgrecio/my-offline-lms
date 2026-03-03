@@ -10,9 +10,7 @@ export class SQLiteAssetRepository implements IAssetRepository {
         ON CONFLICT(id) DO UPDATE SET 
             type=excluded.type, 
             url=excluded.url,
-            metadata=excluded.metadata,
-            status=excluded.status,
-            local_path=excluded.local_path
+            metadata=excluded.metadata
     `).run({
       id: asset.id,
       course_id: asset.courseId,

@@ -42,9 +42,9 @@ Comandos disponibles:
   try {
     switch (command) {
       case 'login': {
-        const url = env.PLATFORM_BASE_URL;
+        const baseUrl = env.PLATFORM_BASE_URL;
         const auth = new AuthSession(browserProvider);
-        await auth.interactiveLogin(url);
+        await auth.interactiveLogin(baseUrl);
         break;
       }
       case 'sync-course': {
