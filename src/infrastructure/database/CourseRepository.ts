@@ -22,6 +22,15 @@ export class SQLiteCourseRepository implements ICourseRepository {
   }
 
   getCourseAssets(courseId: string): Asset[] {
-    return db.prepare('SELECT * FROM Course_Assets WHERE course_id = ?').all(courseId) as any[];
+    const rows = db.prepare('SELECT * FROM Course_Assets WHERE course_id = ?').all(courseId) as any[];
+    return rows.map(row => ({
+      id: row.id,
+      courseId: row.course_id,
+      type: row.type,
+      url: row.url,
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      status: row.status,
+      localPath: row.local_path
+    }));
   }
 }

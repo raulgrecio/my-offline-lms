@@ -23,6 +23,24 @@ export class AuthSession {
 
     console.log(`[AuthSession] Navegando a ${targetUrl}`);
     console.log("[AuthSession] Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.");
+
+    let capturedLearnerId: string | null = null;
+    page.on("response", async (response) => {
+      if (capturedLearnerId) return; // Ya lo tenemos
+      const url = response.url();
+      if (url.includes("/api/") && response.headers()["content-type"]?.includes("application/json")) {
+        try {
+           const text = await response.text();
+           const match = text.match(/"learnerId"\s*:\s*"?(\d+)"?/);
+           if (match && match[1]) {
+             capturedLearnerId = match[1];
+             console.log(`\n[AuthSession] 🎉 ¡Learner ID capturado automáticamente de la plataforma!: ${capturedLearnerId}`);
+             this.saveLearnerId(capturedLearnerId);
+           }
+        } catch(e) {}
+      }
+    });
+
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     readline.emitKeypressEvents(process.stdin);
@@ -80,5 +98,14 @@ export class AuthSession {
 
     await this.browserProvider.close();
     console.log("Puedes cerrar esta terminal o continuar con el siguiente script.");
+  }
+
+  private saveLearnerId(learnerId: string) {
+    if (!fs.existsSync(this.authDir)) {
+      fs.mkdirSync(this.authDir, { recursive: true });
+    }
+    const learnerFile = path.join(this.authDir, "learner.json");
+    fs.writeFileSync(learnerFile, JSON.stringify({ learnerId }, null, 2));
+    console.log(`[AuthSession] ✅ Learner ID guardado de forma segura en: ${learnerFile}`);
   }
 }

@@ -55,9 +55,19 @@ export class SQLiteAssetRepository implements IAssetRepository {
   }
 
   getPendingAssets(courseId: string, type: AssetType): Asset[] {
-     return db.prepare(`
+     const rows = db.prepare(`
         SELECT * FROM Course_Assets 
         WHERE course_id = ? AND type = ? AND status != 'COMPLETED'
      `).all(courseId, type) as any[];
+
+     return rows.map(row => ({
+      id: row.id,
+      courseId: row.course_id,
+      type: row.type,
+      url: row.url,
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      status: row.status,
+      localPath: row.local_path
+    }));
   }
 }

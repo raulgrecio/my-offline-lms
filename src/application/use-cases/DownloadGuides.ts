@@ -87,7 +87,21 @@ export class DownloadGuides {
     try {
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       
-      const learnerId = "38560"; // TODO: Should probably come from ENV or Auth
+      let learnerId = meta.learnerId;
+      if (!learnerId) {
+         const learnerJsonPath = path.join(this.assetsBaseDir, "../.auth/learner.json");
+         if (fs.existsSync(learnerJsonPath)) {
+            try {
+              const parsed = JSON.parse(fs.readFileSync(learnerJsonPath, "utf-8"));
+              learnerId = parsed.learnerId;
+            } catch(e) {}
+         }
+      }
+
+      if (!learnerId) {
+         console.warn(`[DownloadGuides] ⚠️ Learner ID no encontrado en metadata ni en learner.json. Usando fallback por defecto (${learnerId}).`);
+      }
+      
       const urlBase = new URL(env.PLATFORM_BASE_URL).origin; 
       const viewerUrl = `${urlBase}/ou/ekit/${courseId}/${learnerId}/${meta.ekitId}/course`;
       

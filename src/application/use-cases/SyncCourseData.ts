@@ -116,6 +116,7 @@ export class SyncCourseData {
               title: kit.name,
               ekitId: kit.ekitId,
               fileType: kit.fileType,
+              learnerId: kit.learnerId,
               order_index: ++pdfsCount
             },
             status: 'PENDING'
