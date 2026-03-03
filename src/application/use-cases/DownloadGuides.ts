@@ -147,6 +147,9 @@ export class DownloadGuides {
          baseImgUrl += '/';
       }
 
+      // Optimización: Usamos una sola pestaña para descargar todas las imágenes y evitamos agotar el pool
+      const downloadPage = await context.newPage();
+
       for (let i = 0; i < pagesCount; i++) {
          const pageNum = i + 1;
          const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
@@ -154,7 +157,6 @@ export class DownloadGuides {
          let buffer: number[] | null = null;
          for (let attempt = 1; attempt <= 3; attempt++) {
             try {
-              const downloadPage = await context.newPage();
               await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
               buffer = await downloadPage.evaluate(async (url: string) => {
                   const res = await fetch(url);
@@ -165,21 +167,25 @@ export class DownloadGuides {
                       reader.readAsArrayBuffer(blob);
                   });
               }, imageUrl);
-              await downloadPage.close();
               break;
             } catch (e) {
               console.log(`[DownloadGuides] ⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
-              await new Promise(r => setTimeout(r, 2000));
+              await new Promise(r => setTimeout(r, 3000));
             }
          }
 
          if (buffer) {
            fs.writeFileSync(path.join(tempImagesDir, `page_${String(pageNum).padStart(4, '0')}.png`), Buffer.from(buffer));
            console.log(`[DownloadGuides]   -> Descargada pág ${pageNum}/${pagesCount}`);
+           // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
+           await new Promise(r => setTimeout(r, 200));
          } else {
+           await downloadPage.close();
            throw new Error(`Imposible descargar la imagen de la página ${pageNum}`);
          }
       }
+
+      await downloadPage.close();
 
       await page.close();
 
