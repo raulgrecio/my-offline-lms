@@ -2,7 +2,7 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
-const debugDir = path.resolve(__dirname, "../../data/debug");
+const debugDir = path.resolve(__dirname, "../../../data/debug");
 
 export function setupInterceptor(page: Page) {
   if (!fs.existsSync(debugDir)) {
@@ -18,6 +18,12 @@ export function setupInterceptor(page: Page) {
       try {
         const json = await response.json();
         
+        // Filtramos agresivamente para que Playwright no sature el disco ni la terminal
+        // Sólo mapeamos los JSONs vitales para extraer cursos y meta de los paths
+        if (!url.includes('/content/courses/') && !url.includes('/content/learning-path/') && !url.includes('/content/stories/variants/')) {
+          return;
+        }
+
         // Creamos un nombre de archivo seguro basado en la URL
         const urlObj = new URL(url);
         const safeName = urlObj.pathname.replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '');

@@ -2,7 +2,7 @@ import { chromium } from "playwright-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
-import { setupInterceptor } from "./interceptor";
+import { setupInterceptor } from "../infrastructure/browser/interceptor";
 import dotenv from "dotenv";
 
 dotenv.config();

@@ -3,12 +3,13 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { env } from "../config/env";
 
 dotenv.config();
 chromium.use(stealth());
 
 const STATE_FILE = path.resolve(__dirname, "../../data/.auth/state.json");
-const PLATFORM_URL = process.env.PLATFORM_BASE_URL || "https://mylearn.oracle.com";
+const PLATFORM_URL = env.PLATFORM_BASE_URL;
 
 /**
  * Verifica si la sesión almacenada sigue siendo válida intentando cargar
