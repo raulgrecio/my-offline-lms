@@ -10,12 +10,12 @@ async function run() {
   const context = await browser.newContext({ storageState: path.resolve('data/.auth/state.json') });
   const page = await context.newPage();
   
-  const learnerId = "124237746";
-  const courseId = "146324";
+  const offerId = "38560";
+  const courseId = "79688";
   const ekitId = "ba43ef1c-645a-40ae-833f-662e98b924bb";
   
   const baseUrl = env.PLATFORM_BASE_URL;
-  const viewerUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
+  const viewerUrl = new URL(`/ou/ekit/${courseId}/${offerId}/${ekitId}/course`, baseUrl).href;
   
   console.log(`[TEST] Navigating to: ${viewerUrl}`);
   
