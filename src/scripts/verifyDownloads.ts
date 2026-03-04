@@ -19,19 +19,28 @@ export function verifyCourseDownloads(courseId: string) {
         console.log(`   (Course not found in database)`);
     }
 
-    const assets = db.prepare("SELECT id, status, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video' ORDER BY json_extract(metadata, '$.order_index') ASC").all(courseId) as any[];
+    // Get ALL assets for the course (videos and guides)
+    const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ? ORDER BY type, json_extract(metadata, '$.order_index') ASC").all(courseId) as any[];
 
     if (assets.length === 0) {
-        console.log(`   No video assets found for this course.`);
+        console.log(`   No assets found for this course.`);
         return;
     }
 
     let missingVideos = 0;
     let missingSubtitles = 0;
+    let missingGuides = 0;
     let pendingOrFailed = 0;
+    
+    let totalVideos = 0;
+    let totalGuides = 0;
 
     for (const asset of assets) {
-        const { videoExists, vttExists, safeName } = verifyAssetFiles({
+        if (asset.type === 'video') totalVideos++;
+        if (asset.type === 'guide') totalGuides++;
+
+        const { videoExists, vttExists, guideExists, safeName } = verifyAssetFiles({
+            type: asset.type,
             courseId,
             metadataStr: asset.metadata,
             assetsBaseDir: ASSETS_BASE_DIR
@@ -46,30 +55,42 @@ export function verifyCourseDownloads(courseId: string) {
             pendingOrFailed++;
         }
 
-        if (!videoExists) {
-            statusSymbol = "❌";
-            issues.push("Missing .mp4");
-            missingVideos++;
-        }
+        if (asset.type === 'video') {
+            if (!videoExists) {
+                statusSymbol = "❌";
+                issues.push("Missing .mp4");
+                missingVideos++;
+            }
 
-        if (!vttExists && videoExists) {
-             // Only flag missing subtitles if the video itself downloaded (sometimes videos genuinely might not have subs)
-             statusSymbol = "⚠️";
-             issues.push("Missing .vtt (Subtitles)");
-             missingSubtitles++;
+            if (!vttExists && videoExists) {
+                 statusSymbol = "⚠️";
+                 issues.push("Missing .vtt (Subtitles)");
+                 missingSubtitles++;
+            }
+        } else if (asset.type === 'guide') {
+            if (!guideExists) {
+                statusSymbol = "❌";
+                issues.push("Missing .pdf");
+                missingGuides++;
+            }
         }
 
         if (issues.length > 0) {
-             console.log(`   ${statusSymbol} ${safeName}  -> [${issues.join(", ")}]`);
+             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}  -> [${issues.join(", ")}]`);
         }
     }
 
     console.log(`\n📊 Summary for Course ${courseId}:`);
-    console.log(`   Total Expected Videos: ${assets.length}`);
-    console.log(`   Successfully Downloaded (.mp4): ${assets.length - missingVideos}`);
+    console.log(`   Total Expected Videos: ${totalVideos}`);
+    console.log(`   Successfully Downloaded (.mp4): ${totalVideos - missingVideos}`);
     console.log(`   Missing Videos (.mp4): ${missingVideos}`);
     console.log(`   Missing Subtitles (.vtt): ${missingSubtitles}`);
-    if (pendingOrFailed > 0) console.log(`   Pending/Failed in DB: ${pendingOrFailed}`);
+    console.log(`   ---`);
+    console.log(`   Total Expected Guides: ${totalGuides}`);
+    console.log(`   Successfully Downloaded (.pdf): ${totalGuides - missingGuides}`);
+    console.log(`   Missing Guides (.pdf): ${missingGuides}`);
+    
+    if (pendingOrFailed > 0) console.log(`\n   ⚠️ Pending/Failed in DB: ${pendingOrFailed}`);
     console.log("---------------------------------------------------");
 }
 

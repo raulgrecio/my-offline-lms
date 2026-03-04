@@ -7,7 +7,7 @@ const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
 function resetCourse(courseId: string) {
     console.log(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
 
-    const assets = db.prepare("SELECT id, status, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video'").all(courseId) as any[];
+    const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ?").all(courseId) as any[];
 
     if (assets.length === 0) {
         return;
@@ -16,36 +16,47 @@ function resetCourse(courseId: string) {
     let resetCount = 0;
 
     for (const asset of assets) {
-        const { videoExists, vttExists, safeName } = verifyAssetFiles({
+        const { videoExists, vttExists, guideExists, safeName } = verifyAssetFiles({
+            type: asset.type,
             courseId,
             metadataStr: asset.metadata,
             assetsBaseDir: ASSETS_BASE_DIR
         });
         
-        // We want to reset it if either the video is missing OR the subtitles are missing
-        if (!videoExists || !vttExists) {
-            
-            // Only update the DB if it is not already PENDING to avoid infinite loops or overwriting downloading states unnecessarily
-            if (asset.status !== 'PENDING') {
-                 db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
-                 
-                 let reason = !videoExists ? "Missing .mp4" : "Missing .vtt";
-                 console.log(`   🔄 Resetting ${safeName} to PENDING (${reason})`);
-                 resetCount++;
+        let needsReset = false;
+        let reason = "";
+
+        if (asset.type === 'video') {
+            if (!videoExists || !vttExists) {
+                needsReset = true;
+                reason = !videoExists ? "Missing .mp4" : "Missing .vtt";
             }
+        } else if (asset.type === 'guide') {
+            if (!guideExists) {
+                needsReset = true;
+                reason = "Missing .pdf";
+            }
+        }
+        
+        // We want to reset it if it needs resetting AND is not already PENDING
+        if (needsReset && asset.status !== 'PENDING') {
+             db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
+             
+             console.log(`   🔄 Resetting [${asset.type.toUpperCase()}] ${safeName} to PENDING (${reason})`);
+             resetCount++;
         }
     }
     
     if (resetCount > 0) {
-        console.log(`   ✅ Reset ${resetCount} videos to PENDING status for Course ${courseId}.`);
+        console.log(`   ✅ Reset ${resetCount} assets to PENDING status for Course ${courseId}.`);
     } else {
-        console.log(`   No videos needed resetting in Course ${courseId}.`);
+        console.log(`   No assets needed resetting in Course ${courseId}.`);
     }
 }
 
 function resetPath(pathId: string) {
     console.log(`\n===================================================`);
-    console.log(`🚀 Resetting missing videos in Learning Path ID: ${pathId}`);
+    console.log(`🚀 Resetting missing assets in Learning Path ID: ${pathId}`);
     console.log(`===================================================`);
 
     const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
