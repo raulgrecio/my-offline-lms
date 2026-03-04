@@ -153,6 +153,16 @@ export class DownloadGuides {
       for (let i = 0; i < pagesCount; i++) {
          const pageNum = i + 1;
          const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
+         const cachedImgPath = path.join(tempImagesDir, `page_${String(pageNum).padStart(4, '0')}.png`);
+
+         // Skip if we already downloaded this page successfully in a previous run
+         if (fs.existsSync(cachedImgPath)) {
+            const stats = fs.statSync(cachedImgPath);
+            if (stats.size > 0) {
+                console.log(`[DownloadGuides]   -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
+                continue;
+            }
+         }
          
          let buffer: number[] | null = null;
          for (let attempt = 1; attempt <= 3; attempt++) {
@@ -175,7 +185,7 @@ export class DownloadGuides {
          }
 
          if (buffer) {
-           fs.writeFileSync(path.join(tempImagesDir, `page_${String(pageNum).padStart(4, '0')}.png`), Buffer.from(buffer));
+           fs.writeFileSync(cachedImgPath, Buffer.from(buffer));
            console.log(`[DownloadGuides]   -> Descargada pág ${pageNum}/${pagesCount}`);
            // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
            await new Promise(r => setTimeout(r, 200));
