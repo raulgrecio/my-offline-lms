@@ -1,6 +1,7 @@
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
+import { env } from "../../config/env";
 
 chromium.use(stealth());
 
@@ -11,7 +12,9 @@ chromium.use(stealth());
     const page = await context.newPage();
     
     console.log("Navigating...");
-    await page.goto("https://mylearn.oracle.com/ou/course/oracle-database-19c-multitenant-architecture/86212/122711", { waitUntil: "domcontentloaded" });
+    const baseUrl = env.PLATFORM_BASE_URL;
+    const coursePath = new URL(`/ou/course/oracle-database-19c-multitenant-architecture/86212/122711`, baseUrl).href
+    await page.goto(coursePath, { waitUntil: "domcontentloaded" });
     
     console.log("Waiting 20 seconds for SPA...");
     await page.waitForTimeout(20000); 

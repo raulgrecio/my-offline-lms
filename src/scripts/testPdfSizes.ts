@@ -1,12 +1,12 @@
 import path from "path";
-import { buildPDF } from "./guideDownloader";
+import { DownloadGuides } from "../application/use-cases/DownloadGuides";
 
 async function runTests() {
   const args = process.argv.slice(2);
   
   if (args.length < 1) {
-    console.log("Uso: ts-node src/scraper/testPdfSizes.ts <directorio_imagenes_crudo>");
-    console.log("Ej:  ts-node src/scraper/testPdfSizes.ts data/assets/guides/.temp_594144ed-4db7-453c-a110-0cb40f5b0f87");
+    console.log("Uso: ts-node src/scripts/testPdfSizes.ts <directorio_imagenes_crudo>");
+    console.log("Ej:  ts-node src/scripts/testPdfSizes.ts data/assets/guides/.temp_594144ed-4db7-453c-a110-0cb40f5b0f87");
     process.exit(1);
   }
 
@@ -23,6 +23,9 @@ async function runTests() {
 
   console.log(`[Test] Empezando generación de prueba de PDFs desde: ${sourceDir}`);
 
+  // Dummy de dependencias ya que buildPDF no las usa
+  const downloader = new DownloadGuides(null as any, null as any, null as any);
+
   for (const config of testConfigs) {
     const label = config.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
     const outFileName = `TEST_${ekitId}_${label}.pdf`;
@@ -34,7 +37,7 @@ async function runTests() {
 
     const startTime = Date.now();
     try {
-      await buildPDF(sourceDir, outputPath, { optimize: config.optimize, quality: config.quality });
+      await downloader.buildPDF(sourceDir, outputPath, { optimize: config.optimize, quality: config.quality });
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       console.log(`[Test] ✅ PDF generado: ${outFileName} (en ${duration}s)`);
     } catch (err) {

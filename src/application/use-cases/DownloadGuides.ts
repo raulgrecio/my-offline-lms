@@ -221,7 +221,7 @@ export class DownloadGuides {
     }
   }
 
-  private async buildPDF(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
+  public async buildPDF(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
     return new Promise((resolve, reject) => {
       const files = fs.readdirSync(sourceDir).filter(f => f.endsWith(".png")).sort();
       if (files.length === 0) {
