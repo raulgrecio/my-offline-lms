@@ -5,35 +5,43 @@ describe('DownloadPath Use Case', () => {
     const mockLearningPathRepo = {
         getCoursesForPath: vi.fn()
     } as any;
+
     const mockDownloadGuides = {
         executeForCourse: vi.fn()
     } as any;
+
     const mockDownloadVideos = {
         executeForCourse: vi.fn()
+    } as any;
+
+    const mockLogger = {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        withContext: vi.fn().mockReturnThis()
     } as any;
 
     let useCase: DownloadPath;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new DownloadPath({ 
-            learningPathRepo: mockLearningPathRepo, 
-            downloadGuides: mockDownloadGuides, 
-            downloadVideos: mockDownloadVideos 
+        useCase = new DownloadPath({
+            learningPathRepo: mockLearningPathRepo,
+            downloadGuides: mockDownloadGuides,
+            downloadVideos: mockDownloadVideos,
+            logger: mockLogger,
         });
     });
 
     it('should warn and exit if no courses found for path', async () => {
         mockLearningPathRepo.getCoursesForPath.mockReturnValue([]);
-        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         
         await useCase.execute('path123', 'all');
         
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No se encontraron cursos'));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontraron cursos'));
         expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
         expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
-        
-        consoleSpy.mockRestore();
     });
 
     it('should call both guides and videos when type is all', async () => {
@@ -48,6 +56,8 @@ describe('DownloadPath Use Case', () => {
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledTimes(2);
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledTimes(2);
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course1');
+        expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course1');
+        expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course2');
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course2');
     });
 

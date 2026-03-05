@@ -16,6 +16,7 @@ import { DiskInterceptedDataRepository } from '../infrastructure/repositories/Di
 import { DiskAuthSessionStorage } from '../infrastructure/repositories/DiskAuthSessionStorage';
 import { DiskAssetStorage } from '../infrastructure/repositories/DiskAssetStorage';
 import { YtDlpVideoDownloader } from '../infrastructure/services/YtDlpVideoDownloader';
+import { ConsoleLogger } from '../infrastructure/services/ConsoleLogger';
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ Comandos disponibles:
   }
 
   // DI Setup (Manual Instantiation)
+  const logger = new ConsoleLogger();
   const courseRepo = new SQLiteCourseRepository();
   const assetRepo = new SQLiteAssetRepository();
   const pathRepo = new SQLiteLearningPathRepository();
@@ -53,7 +55,11 @@ Comandos disponibles:
     switch (command) {
       case 'login': {
         const baseUrl = env.PLATFORM_BASE_URL;
-        const auth = new AuthSession({ browserProvider, authStorage: authSessionStorage });
+        const auth = new AuthSession({ 
+          browserProvider, 
+          authStorage: authSessionStorage,
+          logger,
+        });
         await auth.interactiveLogin(baseUrl);
         break;
       }
@@ -64,7 +70,8 @@ Comandos disponibles:
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
-          interceptedDataRepo 
+          interceptedDataRepo,
+          logger,
         });
         await sync.execute(target);
         break;
@@ -83,14 +90,16 @@ Comandos disponibles:
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
-          interceptedDataRepo 
+          interceptedDataRepo,
+          logger,
         });
         const syncPath = new SyncLearningPath({ 
           browserProvider, 
           learningPathRepo: pathRepo, 
           courseRepo, 
           syncCourseData: syncCourse, 
-          interceptedDataRepo 
+          interceptedDataRepo,
+          logger,
         });
         await syncPath.execute(pathUrl);
         break;
@@ -102,7 +111,8 @@ Comandos disponibles:
           browserProvider, 
           courseRepo, 
           assetRepo, 
-          assetStorage 
+          assetStorage,
+          logger,
         });
         await guides.executeForCourse(id);
         break;
@@ -115,7 +125,8 @@ Comandos disponibles:
           courseRepo, 
           assetRepo, 
           assetStorage, 
-          videoDownloader 
+          videoDownloader,
+          logger,
         });
         await videos.executeForCourse(id);
         break;
@@ -124,55 +135,69 @@ Comandos disponibles:
         const id = args[1];
         const type = args[2] as 'video' | 'guide' | 'all' | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
-        const guides = new DownloadGuides({
-          browserProvider,
-          courseRepo,
-          assetRepo,
-          assetStorage
-        });
-        const videos = new DownloadVideos({
+        const guides = new DownloadGuides({ 
           browserProvider,
           courseRepo,
           assetRepo,
           assetStorage,
-          videoDownloader
+          logger,
+        });
+        const videos = new DownloadVideos({ 
+          browserProvider,
+          courseRepo,
+          assetRepo,
+          assetStorage,
+          videoDownloader,
+          logger,
         });
         const downloadPath = new DownloadPath({ 
           learningPathRepo: pathRepo, 
           downloadGuides: guides, 
-          downloadVideos: videos 
+          downloadVideos: videos,
+          logger,
         });
         await downloadPath.execute(id, type || 'all');
         break;
       }
       case 'download-course': {
         const id = args[1];
+        const type = args[2] as 'video' | 'guide' | 'all' | undefined;
         if (!id) throw new Error("Falta el ID del curso.");
+
         const guides = new DownloadGuides({ 
           browserProvider,
           courseRepo,
           assetRepo,
-          assetStorage
+          assetStorage,
+          logger,
         });
         const videos = new DownloadVideos({
           browserProvider,
           courseRepo,
           assetRepo,
           assetStorage,
-          videoDownloader
+          videoDownloader,
+          logger,
         });
         
-        console.log(`\n=== INICIANDO DESCARGA COMPLETA DEL CURSO ${id} ===\n`);
-        await guides.executeForCourse(id);
-        await videos.executeForCourse(id);
-        console.log(`\n=== DESCARGA COMPLETA FINALIZADA ===\n`);
+        const effectiveType = type || 'all';
+        logger.info(`\n=== INICIANDO DESCARGA DEL CURSO ${id} (Tipo: ${effectiveType}) ===\n`, "CLI");
+        
+        if (effectiveType === 'all' || effectiveType === 'guide') {
+          await guides.executeForCourse(id);
+        }
+        if (effectiveType === 'all' || effectiveType === 'video') {
+          await videos.executeForCourse(id);
+        }
+        
+        logger.info(`================ DESCARGA FINALIZADA =================`, "");
         break;
       }
       default:
         console.log(`Comando no reconocido: ${command}`);
     }
   } catch (error) {
-    console.error("Error ejecutando comando:", error);
+    logger.error("Error ejecutando comando:", error, "CLI");
   } finally {
     await browserProvider.close();
   }

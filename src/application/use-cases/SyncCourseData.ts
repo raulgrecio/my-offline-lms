@@ -1,8 +1,10 @@
-import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { setupInterceptor } from "../../infrastructure/browser/interceptor";
-import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
+import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
+import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
+import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
 import { env } from "../../config/env";
+import { ILogger } from "../../domain/services/ILogger";
+import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { Slug } from "../../domain/value-objects/Slug";
 
 export class SyncCourseData {
@@ -10,138 +12,155 @@ export class SyncCourseData {
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
   private interceptedDataRepo: IInterceptedDataRepository;
+  private logger: ILogger;
 
   constructor(deps: {
     browserProvider: BrowserProvider,
     courseRepository: ICourseRepository,
     assetRepository: IAssetRepository,
-    interceptedDataRepo: IInterceptedDataRepository
+    interceptedDataRepo: IInterceptedDataRepository,
+    logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepository = deps.courseRepository;
     this.assetRepository = deps.assetRepository;
     this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.logger = deps.logger.withContext("SyncCourseData");
   }
 
   async execute(coursePath: string): Promise<void> {
     if (!coursePath) {
-      throw new Error("Course path is required");
+      this.logger.warn("No se proporcionó coursePath");
+      return;
     }
 
-    console.log(`[SyncCourseData] 🎯 Course Path recibido: "${coursePath}"`);
+    this.logger.info(`Course Path recibido: "${coursePath}"`);
 
     const targetUrl = this.resolveCourseUrl(coursePath);
+    this.logger.info(`Iniciando mapeo y sincronización del curso: ${targetUrl}`);
 
-    console.log(`[SyncCourseData] 🚀 Iniciando mapeo y sincronización del curso: ${targetUrl}`);
-    
-    // 1. Extraer datos (Navegador)
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
     setupInterceptor(page);
-    
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    
+
+    this.logger.info(`Navegando a: ${targetUrl}`);
+    await page.goto(targetUrl, { waitUntil: "load", timeout: 60000 });
+
     if (targetUrl.includes("/course/")) {
-      console.log("[SyncCourseData] Click en el tab de Guides para desencadenar json...");
+      this.logger.info("Click en el tab de Guides para desencadenar json...");
       try {
         await page.waitForSelector("#guides-tab", { timeout: 15000 });
         await page.click("#guides-tab");
-        console.log("[SyncCourseData] 👆 Click en Guides completado. Esperando...");
+        this.logger.info("👆 Click en Guides completado. Esperando interceptaciones...");
+        await page.waitForTimeout(3000);
       } catch (e) {
-        // Ignorar
+        this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
       }
     }
-    await page.waitForTimeout(10000); // Dar tiempo a interceptar
-    await page.close();
 
-    // 2. Procesar JSON descargado (Base de Datos)
-    this.processInterceptedData();
-  }
-
-  private processInterceptedData(): void {
-    const payloads = this.interceptedDataRepo.getPendingCourses();
+    const intercepted = this.interceptedDataRepo.getPendingCourses();
+    let courseData: any = null;
+    let selectedPayloadPath: string | null = null;
     
-    for (const payload of payloads) {
-      const json = JSON.parse(payload.content);
+    for (const payload of intercepted) {
+        try {
+            const wrapper = JSON.parse(payload.content);
+            const data = wrapper.data;
+            if (!data) continue;
 
-      if (!json.data || !json.data.id || !json.data.modules) continue;
+            const matchesSlug = data.slug && targetUrl.includes(data.slug);
+            const matchesId = data.id && targetUrl.includes(data.id.toString());
 
-      const courseData = json.data;
-      const courseId = courseData.id;
-      const courseTitle = courseData.name;
-      const courseSlug = Slug.create(courseTitle).getValue();  
-
-      console.log(`[SyncCourseData] 📚 Procesando y guardando Curso: ${courseTitle}`);
-
-      // Save Course
-      this.courseRepository.saveCourse({ id: courseId, slug: courseSlug, title: courseTitle });
-
-      let videosCount = 0;
-      let pdfsCount = 0;
-
-      // Save Videos
-      for (const mod of courseData.modules) {
-        for (const comp of mod.components) {
-          if (comp.typeId === "1") {
-            videosCount++;
-            const assetId = "video_" + comp.id;
-            const targetUrl = comp.videoId ? "brightcove:" + comp.videoId : new URL(`/ou/course/${courseSlug}/${courseId}/${comp.id}`, env.PLATFORM_BASE_URL).href;
-            
-            this.assetRepository.saveAsset({
-              id: assetId,
-              courseId: courseId,
-              type: 'video',
-              url: targetUrl,
-              metadata: {
-                title: comp.name,
-                duration: comp.duration,
-                moduleName: mod.name,
-                order_index: videosCount
-              },
-              status: 'PENDING'
-            });
-          }
+            if (matchesSlug || matchesId) {
+                courseData = data;
+                selectedPayloadPath = payload.filePath;
+                break;
+            }
+        } catch (e) {
+            // Ignorar errores de parseo
         }
-      }
+    }
 
-      // Save Guides
+    if (courseData) {
+      const courseTitle = courseData.name || courseData.title;
+      const courseId = courseData.id.toString();
+      const courseSlug = courseData.slug || Slug.create(courseTitle).getValue();
+
+      this.logger.info(`💾 Procesando y guardando Curso: ${courseTitle}`);
+      
+      this.courseRepository.saveCourse({
+        id: courseId,
+        slug: courseSlug,
+        title: courseTitle
+      });
+
+      let videoCount = 0;
+      let guideCount = 0;
+
+      // 1. Extraer Guías (eKits)
       if (courseData.eKits && Array.isArray(courseData.eKits)) {
-        for (const kit of courseData.eKits) {
+        courseData.eKits.forEach((ekit: any, index: number) => {
           this.assetRepository.saveAsset({
-            id: "pdf_" + kit.id,
+            id: ekit.ekitId,
             courseId: courseId,
             type: 'guide',
-            url: kit.url,
+            url: "",
             metadata: {
-              title: kit.name,
-              ekitId: kit.ekitId,
-              fileType: kit.fileType,
-              order_index: ++pdfsCount
+              title: ekit.name,
+              order_index: index + 1,
+              ekitId: ekit.ekitId
             },
             status: 'PENDING'
           });
-        }
+          guideCount++;
+        });
       }
 
-      console.log(`[SyncCourseData] ✅ Sincronizados ${videosCount} vídeos y ${pdfsCount} PDFs.`);
+      // 2. Extraer Vídeos (Modules -> Components)
+      if (courseData.modules && Array.isArray(courseData.modules)) {
+        let videoOrder = 1;
+        courseData.modules.forEach((mod: any) => {
+          if (mod.components && Array.isArray(mod.components)) {
+            mod.components.forEach((comp: any) => {
+              // typeId "1" suele ser lección/vídeo
+              if (comp.typeId === "1" || comp.typeId === 1) {
+                this.assetRepository.saveAsset({
+                  id: comp.id.toString(),
+                  courseId: courseId,
+                  type: 'video',
+                  url: `${targetUrl}${comp.id}`,
+                  metadata: {
+                    title: comp.name,
+                    order_index: videoOrder++,
+                    duration: comp.duration
+                  },
+                  status: 'PENDING'
+                });
+                videoCount++;
+              }
+            });
+          }
+        });
+      }
+
+      this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
       
-      this.interceptedDataRepo.deletePayload(payload.filePath);
+      if (selectedPayloadPath) {
+        this.interceptedDataRepo.deletePayload(selectedPayloadPath);
+      }
+    } else {
+      this.logger.warn("No se encontraron datos interceptados para este curso.");
     }
+
+    await this.browserProvider.close();
   }
 
-  private resolveCourseUrl(coursePath: string): string {
-    const baseUrl = env.PLATFORM_BASE_URL;
-
-    //course id
-    const courseId = Number(coursePath)
-    if(Number.isSafeInteger(courseId)) {
-      return new URL(`/ou/course/slug-course-name/${courseId}`, baseUrl).href;
+  private resolveCourseUrl(target: string): string {
+    let url = target;
+    if (!target.startsWith("http")) {
+      const baseUrl = env.PLATFORM_BASE_URL;
+      url = new URL(`/ou/course/slug/${target}`, baseUrl).href;
     }
-
-    //absolute url
-    if (coursePath.startsWith('http')) return coursePath;
-    
-    //relative url
-    return new URL(coursePath, baseUrl).href;
+    return url.endsWith('/') ? url : `${url}/`;
   }
 }

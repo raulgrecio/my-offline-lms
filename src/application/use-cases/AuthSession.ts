@@ -1,28 +1,32 @@
 import readline from "readline";
+import { ILogger } from "../../domain/services/ILogger";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
 
 export class AuthSession {
   private browserProvider: BrowserProvider;
   private authStorage: IAuthSessionStorage;
+  private logger: ILogger;
 
   constructor(deps: {
     browserProvider: BrowserProvider,
-    authStorage: IAuthSessionStorage
+    authStorage: IAuthSessionStorage,
+    logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.authStorage = deps.authStorage;
+    this.logger = deps.logger.withContext("AuthSession");
   }
 
   async interactiveLogin(targetUrl: string): Promise<void> {
     this.authStorage.ensureAuthDir();
 
-    console.log("[AuthSession] Iniciando navegador interactivo...");
+    this.logger.info(`Iniciando navegador interactivo para: ${targetUrl}`);
     const context = await this.browserProvider.getHeadfulContext(false);
     const page = await context.newPage();
 
-    console.log(`[AuthSession] Navegando a ${targetUrl}`);
-    console.log("[AuthSession] Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.");
+    this.logger.info(`Navegando a ${targetUrl}`);
+    this.logger.info("Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.");
 
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
@@ -31,22 +35,22 @@ export class AuthSession {
       process.stdin.setRawMode(true);
     }
 
-    console.log("\n========================================================");
-    console.log("👉 PRESIONA 'ENTER' PARA GUARDAR LA SESIÓN (puedes hacerlo varias veces)");
-    console.log("👉 PRESIONA 'ESC' o 'Ctrl+C' PARA SALIR Y CERRAR EL NAVEGADOR");
-    console.log("========================================================\n");
+    this.logger.info("========================================================", "");
+    this.logger.info("👉 PRESIONA 'ENTER' PARA GUARDAR LA SESIÓN (puedes hacerlo varias veces)");
+    this.logger.info("👉 PRESIONA 'ESC' o 'Ctrl+C' PARA SALIR Y CERRAR EL NAVEGADOR");
+    this.logger.info("========================================================", "");
 
     const saveSession = async () => {
-      console.log("\n[AuthSession] Guardando estado de la sesión y cookies... (Automático / Manual)");
+      this.logger.info("Guardando estado de la sesión y cookies... (Automático / Manual)");
       try {
         await context.storageState({ path: this.authStorage.getAuthFile() });
 
         const cookies = await context.cookies();
         this.authStorage.saveCookies(cookies);
 
-        console.log("✅ Sesión y cookies guardadas con éxito en data/.auth/");
+        this.logger.info("✅ Sesión y cookies guardadas con éxito en data/.auth/");
       } catch (e) {
-        console.error("❌ Error al guardar sesión:", e);
+        this.logger.error("❌ Error al guardar sesión:", e);
       }
     };
 
@@ -59,7 +63,7 @@ export class AuthSession {
       process.stdin.on("keypress", async (str, key) => {
         if ((key.ctrl && key.name === "c") || key.name === "escape") {
           if (process.stdin.isTTY) process.stdin.setRawMode(false);
-          console.log("\n👋 Saliendo y cerrando navegador...");
+          this.logger.info("Saliendo y cerrando navegador...");
           clearInterval(autoSaveInterval);
           resolve();
         } else if (key.name === "return" || key.name === "enter") {
@@ -69,6 +73,6 @@ export class AuthSession {
     });
 
     await this.browserProvider.close();
-    console.log("Puedes cerrar esta terminal o continuar con el siguiente script.");
+    this.logger.info("Puedes cerrar esta terminal o continuar con el siguiente script.");
   }
 }

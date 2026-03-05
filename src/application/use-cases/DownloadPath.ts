@@ -1,38 +1,42 @@
 import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
+import { ILogger } from "../../domain/services/ILogger";
 
 export class DownloadPath {
   private learningPathRepo: ILearningPathRepository;
   private downloadGuides: DownloadGuides;
   private downloadVideos: DownloadVideos;
+  private logger: ILogger;
 
   constructor(deps: {
     learningPathRepo: ILearningPathRepository,
     downloadGuides: DownloadGuides,
-    downloadVideos: DownloadVideos
+    downloadVideos: DownloadVideos,
+    logger: ILogger
   }) {
     this.learningPathRepo = deps.learningPathRepo;
     this.downloadGuides = deps.downloadGuides;
     this.downloadVideos = deps.downloadVideos;
+    this.logger = deps.logger.withContext("DownloadPath");
   }
 
   async execute(pathId: string, type: 'video' | 'guide' | 'all' = 'all'): Promise<void> {
-    console.log(`[DownloadPath] 🚀 Iniciando descarga para Learning Path: ${pathId}`);
+    this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);
     
     const courses = this.learningPathRepo.getCoursesForPath(pathId);
     
     if (courses.length === 0) {
-      console.log(`[DownloadPath] ⚠️ No se encontraron cursos asociados al path ${pathId}.`);
+      this.logger.info(`⚠️ No se encontraron cursos asociados al path ${pathId}.`);
       return;
     }
 
-    console.log(`[DownloadPath] 📚 Encontrados ${courses.length} cursos. Procesando tipo de descarga: ${type}...`);
+    this.logger.info(`📚 Encontrados ${courses.length} cursos. Procesando tipo de descarga: ${type}...`);
 
     for (const course of courses) {
-      console.log(`\n======================================================`);
-      console.log(`[DownloadPath] 📦 Procesando Curso [${course.orderIndex}/${courses.length}]: ${course.title} (ID: ${course.id})`);
-      console.log(`======================================================\n`);
+      this.logger.info(`======================================================`, "");
+      this.logger.info(`📦 Procesando Curso [${course.orderIndex}/${courses.length}]: ${course.title} (ID: ${course.id})`);
+      this.logger.info(`======================================================`, "");
 
       if (type === 'guide' || type === 'all') {
         await this.downloadGuides.executeForCourse(course.id);
@@ -43,8 +47,8 @@ export class DownloadPath {
       }
     }
 
-    console.log(`\n======================================================`);
-    console.log(`[DownloadPath] 🎉 ¡Descarga del Learning Path ${pathId} COMPLETADA!`);
-    console.log(`======================================================\n`);
+    this.logger.info(`======================================================`, "");
+    this.logger.info(`🎉 ¡Descarga del Learning Path ${pathId} COMPLETADA!`);
+    this.logger.info(`======================================================`, "");
   }
 }

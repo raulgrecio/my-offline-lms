@@ -36,7 +36,7 @@ describe('DiskInterceptedDataRepository', () => {
             'content_learning_path_123_pagedata.json',
             'ignore_this_file.txt',
             'content_courses_456_metadata.json'
-        ] as unknown as fs.Dirent[]);
+        ] as any);
         
         vi.mocked(fs.readFileSync).mockReturnValue('{"id": "123"}');
 
@@ -53,7 +53,7 @@ describe('DiskInterceptedDataRepository', () => {
             'content_learning_path_123_pagedata.json',
             'content_courses_789_metadata.json',
             'content_courses_999_metadata.json'
-        ] as unknown as fs.Dirent[]);
+        ] as any);
         
         vi.mocked(fs.readFileSync).mockImplementation((path) => {
             if (path.toString().includes('789')) return '{"id": "789"}';

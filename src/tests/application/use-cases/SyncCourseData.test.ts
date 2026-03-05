@@ -8,17 +8,29 @@ vi.mock('../../../infrastructure/browser/interceptor', () => ({
 describe('SyncCourseData Use Case', () => {
     const mockBrowserProvider = {
         getAuthenticatedContext: vi.fn(),
+        close: vi.fn(),
     } as any;
+    
     const mockCourseRepo = {
         saveCourse: vi.fn()
     } as any;
+    
     const mockAssetRepo = {
         saveAsset: vi.fn(),
         getCourseAssets: vi.fn().mockReturnValue([])
     } as any;
+    
     const mockInterceptedDataRepo = {
         getPendingCourses: vi.fn().mockReturnValue([]),
         deletePayload: vi.fn()
+    } as any;
+
+    const mockLogger = {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        withContext: vi.fn().mockReturnThis(),
     } as any;
 
     let useCase: SyncCourseData;
@@ -26,12 +38,32 @@ describe('SyncCourseData Use Case', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([]);
-        useCase = new SyncCourseData({ 
-            browserProvider: mockBrowserProvider, 
-            courseRepository: mockCourseRepo, 
-            assetRepository: mockAssetRepo, 
-            interceptedDataRepo: mockInterceptedDataRepo 
+        useCase = new SyncCourseData({
+            browserProvider: mockBrowserProvider,
+            courseRepository: mockCourseRepo,
+            assetRepository: mockAssetRepo,
+            interceptedDataRepo: mockInterceptedDataRepo,
+            logger: mockLogger,
         });
+    });
+
+    it('should warn and exit if no coursePath provided', async () => {
+        await useCase.execute('');
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se proporcionó coursePath'));
+        expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
+    });
+
+    it('should resolve slug to full URL', async () => {
+        const mockPage = {
+            goto: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn().mockResolvedValue(undefined),
+        } as any;
+        const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
+        mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+        await useCase.execute('my-course-slug');
+        
+        expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('/ou/course/slug/my-course-slug'), expect.anything());
     });
 
     it('should skip if context creation fails', async () => {
@@ -54,29 +86,50 @@ describe('SyncCourseData Use Case', () => {
             filePath: '/tmp/course.json',
             content: JSON.stringify({
                 data: {
-                    id: 'course123',
+                    id: '123',
                     name: 'Test Course',
                     modules: [
                         {
-                            name: 'Module 1',
+                            id: 'm1',
                             components: [
-                                { id: 'v1', typeId: '1', name: 'Video 1', videoId: 'bc1', duration: '10:00' }
+                                { id: 'v1', typeId: '1', name: 'Video 1', duration: 100 }
                             ]
                         }
                     ],
                     eKits: [
-                        { id: 'k1', name: 'Guide 1', ekitId: 'e1', url: 'http://g1', fileType: 'pdf' }
+                        { ekitId: 'g1', name: 'Guide 1' }
                     ]
                 }
             })
         };
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
 
-        // Fix: Use a URL that contains "/course/" to trigger the tab click logic
         await useCase.execute('https://platform.com/ou/course/test-course/123');
 
-        expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ id: 'course123', title: 'Test Course' }));
+        expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ id: '123', title: 'Test Course' }));
+        expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ 
+            id: 'v1', 
+            type: 'video', 
+            url: 'https://platform.com/ou/course/test-course/123/v1' 
+        }));
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(2);
+    });
+
+    it('should warn if no intercepted data matches', async () => {
+        const mockPage = {
+            goto: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn().mockResolvedValue(undefined),
+        } as any;
+        const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
+        mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([
+            { filePath: 'f1', content: JSON.stringify({ data: { id: 'other', name: 'other' } }) }
+        ]);
+
+        await useCase.execute('https://platform.com/ou/course/target-course/123');
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se encontraron datos'));
     });
 
     it('should handle guides tab click if present', async () => {

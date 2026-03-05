@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthSession } from '../../../application/use-cases/AuthSession';
-import readline from 'readline';
 
 vi.mock('readline', () => ({
     default: {
@@ -11,12 +10,22 @@ vi.mock('readline', () => ({
 describe('AuthSession Use Case', () => {
     const mockBrowserProvider = {
         getHeadfulContext: vi.fn(),
-        close: vi.fn()
+        close: vi.fn(),
     } as any;
+    
     const mockAuthStorage = {
-        ensureAuthDir: vi.fn(),
+        getAuthFile: vi.fn().mockReturnValue('/mock/state.json'),
+        getCookiesFile: vi.fn(),
         saveCookies: vi.fn(),
-        getAuthFile: vi.fn().mockReturnValue('/mock/state.json')
+        ensureAuthDir: vi.fn(),
+    } as any;
+
+    const mockLogger = {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        withContext: vi.fn().mockReturnThis(),
     } as any;
 
     let useCase: AuthSession;
@@ -25,7 +34,8 @@ describe('AuthSession Use Case', () => {
         vi.clearAllMocks();
         useCase = new AuthSession({ 
             browserProvider: mockBrowserProvider, 
-            authStorage: mockAuthStorage 
+            authStorage: mockAuthStorage,
+            logger: mockLogger,
         });
         
         // Mock stdin

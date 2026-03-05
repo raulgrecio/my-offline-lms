@@ -6,6 +6,7 @@ import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { SyncCourseData } from "./SyncCourseData";
 import { env } from "../../config/env";
 import { Slug } from "../../domain/value-objects/Slug";
+import { ILogger } from "../../domain/services/ILogger";
 
 export class SyncLearningPath {
   private browserProvider: BrowserProvider;
@@ -13,24 +14,27 @@ export class SyncLearningPath {
   private courseRepo: ICourseRepository;
   private syncCourseData: SyncCourseData;
   private interceptedDataRepo: IInterceptedDataRepository;
+  private logger: ILogger;
 
   constructor(deps: {
     browserProvider: BrowserProvider,
     learningPathRepo: ILearningPathRepository,
     courseRepo: ICourseRepository,
     syncCourseData: SyncCourseData,
-    interceptedDataRepo: IInterceptedDataRepository
+    interceptedDataRepo: IInterceptedDataRepository,
+    logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.learningPathRepo = deps.learningPathRepo;
     this.courseRepo = deps.courseRepo;
     this.syncCourseData = deps.syncCourseData;
     this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.logger = deps.logger.withContext("SyncLearningPath");
   }
 
   async execute(targetUrl: string): Promise<void> {
-    console.log(`[SyncLearningPath] 🚀 Iniciando mapeo y sincronización de ruta: ${targetUrl}`);
-    
+    this.logger.info(`Iniciando mapeo y sincronización de ruta: ${targetUrl}`);
+
     // 1. Extraer datos (Navegador)
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
@@ -38,7 +42,7 @@ export class SyncLearningPath {
     
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
     
-    console.log("[SyncLearningPath] Esperando a que el proveedor envíe el listado de courses...");
+    this.logger.info("Esperando a que el proveedor envíe el listado de courses...");
     await page.waitForTimeout(10000); 
     await page.close();
 
@@ -60,7 +64,7 @@ export class SyncLearningPath {
       const pathSlug = Slug.create(pathTitle).getValue();
       const pathDesc = lpData.description || "";
 
-      console.log(`[SyncLearningPath] 🧭 Procesando Learning Path: ${pathTitle}`);
+      this.logger.info(`🧭 Procesando Learning Path: ${pathTitle}`);
 
       this.learningPathRepo.saveLearningPath({ id: pathId, slug: pathSlug, title: pathTitle, description: pathDesc });
 
@@ -77,7 +81,7 @@ export class SyncLearningPath {
         this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });
 
         // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
-        console.log(`[SyncLearningPath] 📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
+        this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
         const baseUrl = env.PLATFORM_BASE_URL;
         const courseUrl = new URL(`/ou/course/${courseSlug}/${child.id}`, baseUrl).href;
         await this.syncCourseData.execute(courseUrl);
@@ -86,7 +90,7 @@ export class SyncLearningPath {
         coursesAdded++;
       }
 
-      console.log(`[SyncLearningPath] ✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
+      this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
       
       this.interceptedDataRepo.deletePayload(payload.filePath);
     }

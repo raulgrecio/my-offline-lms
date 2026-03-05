@@ -1,53 +1,58 @@
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
+import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
+import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
 import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
 import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { env } from "../../config/env";
+import { ILogger } from "../../domain/services/ILogger";
 
 export class DownloadGuides {
   private browserProvider: BrowserProvider;
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
+  private logger: ILogger;
   private keepTempImages: boolean;
 
   constructor(deps: {
     browserProvider: BrowserProvider,
     courseRepo: ICourseRepository,
     assetRepo: IAssetRepository,
-    assetStorage: IAssetStorage
+    assetStorage: IAssetStorage,
+    logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepo = deps.courseRepo;
     this.assetRepo = deps.assetRepo;
     this.assetStorage = deps.assetStorage;
+    this.logger = deps.logger.withContext("DownloadGuides");
     this.keepTempImages = env.KEEP_TEMP_IMAGES;
   }
 
   async executeForCourse(courseId: string): Promise<void> {
-    console.log(`[DownloadGuides] Iniciando descarga de guías para el curso: ${courseId}`);
+    this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
     
     const pendingGuides = this.assetRepo.getPendingAssets(courseId, 'guide');
     if (pendingGuides.length === 0) {
-      console.log(`[DownloadGuides] No hay guías pendientes para el curso ${courseId}.`);
+      this.logger.info(`No hay guías pendientes para el curso ${courseId}.`);
       return;
     }
 
-    console.log(`[DownloadGuides] ⏳ Encontradas ${pendingGuides.length} guías pendientes. Comenzando...`);
+    this.logger.info(`⏳ Encontradas ${pendingGuides.length} guías pendientes. Comenzando...`);
     
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
     const context = await this.browserProvider.getAuthenticatedContext();
 
     for (let i = 0; i < pendingGuides.length; i++) {
-        console.log(`\n======================================================`);
-        console.log(`[DownloadGuides] Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
+        this.logger.info(`======================================================`, '');
+        this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await this.downloadSingleGuide(pendingGuides[i].id, pendingGuides[i].courseId, context);
         await new Promise(r => setTimeout(r, 2000));
     }
 
     await this.browserProvider.close();
-    console.log(`\n======================================================`);
-    console.log(`[DownloadGuides] 🎉 Finalizada la descarga de guías del curso ${courseId}.`);
+    this.logger.info(`======================================================`, '');
+    this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
 
   public async downloadSingleGuide(assetId: string, courseId: string, sharedContext?: any): Promise<void> {
@@ -67,7 +72,7 @@ export class DownloadGuides {
     const outputPath = `${courseGuidesDir}/${filename}`;
 
     if (this.assetStorage.assetExists(outputPath)) {
-      console.log(`[DownloadGuides] La guía ya existe: ${outputPath}`);
+      this.logger.info(`La guía ya existe: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...meta, filename }, outputPath);
       return;
     }
@@ -90,15 +95,15 @@ export class DownloadGuides {
         baseUrl
       ).href;
       
-      console.log(`[DownloadGuides] Navegando al visor de la guía: ${viewerUrl}`);
+      this.logger.info(`Navegando al visor de la guía: ${viewerUrl}`);
       await page.goto(viewerUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
       
       const iframeElement = await page.waitForSelector("#ekitIframe", { timeout: 30000 });
       const iframeSrc = await iframeElement?.getAttribute("src");
       if (!iframeSrc) throw new Error("No se pudo extraer el atributo src de #ekitIframe");
 
-      console.log("[DownloadGuides] 🪟 Encontrado visor base URL dentro de iframe. Redirigiendo navegador interno...");
-      await page.goto(iframeSrc, { waitUntil: "networkidle", timeout: 45000 });
+      this.logger.info("🪟 Encontrado visor base URL dentro de iframe. Redirigiendo navegador interno...");
+      await page.goto(iframeSrc, { waitUntil: "load", timeout: 45000 });
       await page.waitForTimeout(5000);
 
       // Extraer recuento total de páginas desde el Flip PDF swiper DOM
@@ -136,7 +141,7 @@ export class DownloadGuides {
         throw new Error("No se detectaron páginas en la estructura thumbnailSwiper del Flip PDF");
       }
 
-      console.log(`[DownloadGuides] 📄 Documento Flip PDF cargado con ${pagesCount} páginas.`);
+      this.logger.info(`📄 Documento Flip PDF cargado con ${pagesCount} páginas.`);
 
       let baseImgUrl = iframeSrc.replace(/\/mobile\/index\.html(\?.*)?$/i, '/files/mobile/');
       if (!baseImgUrl.endsWith('/')) {
@@ -155,7 +160,7 @@ export class DownloadGuides {
          if (this.assetStorage.assetExists(cachedImgPath)) {
             const size = this.assetStorage.getTempImageSize(cachedImgPath);
             if (size > 0) {
-                console.log(`[DownloadGuides]   -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
+                this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
                 continue;
             }
          }
@@ -175,14 +180,14 @@ export class DownloadGuides {
               }, imageUrl);
               break;
             } catch (e) {
-              console.log(`[DownloadGuides] ⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
+              this.logger.info(`⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
               await new Promise(r => setTimeout(r, 3000));
             }
          }
 
          if (buffer) {
            this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
-           console.log(`[DownloadGuides]   -> Descargada pág ${pageNum}/${pagesCount}`);
+           this.logger.info(`  -> Descargada pág ${pageNum}/${pagesCount}`);
            // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
            await new Promise(r => setTimeout(r, 200));
          } else {
@@ -195,18 +200,18 @@ export class DownloadGuides {
 
       await page.close();
 
-      console.log(`[DownloadGuides] Construyendo PDF...`);
+      this.logger.info(`Construyendo PDF...`);
       await this.assetStorage.buildPDFFromImages(tempImagesDir, outputPath);
 
       if (!this.keepTempImages) {
         this.assetStorage.removeTempDir(tempImagesDir);
       }
 
-      console.log(`[DownloadGuides] ✅ Guía guardada en: ${outputPath}`);
+      this.logger.info(`✅ Guía guardada en: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...meta, filename }, outputPath);
 
     } catch (err) {
-      console.error(`[DownloadGuides] ❌ Error extrayendo guía:`, err);
+      this.logger.error(`❌ Error extrayendo guía:`, err);
       this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {
       if (!sharedContext) {
