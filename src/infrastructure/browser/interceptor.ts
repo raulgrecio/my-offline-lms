@@ -1,6 +1,8 @@
 import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
+import { getAssetFilename } from "../../utils/naming";
+
 
 const debugDir = path.resolve(__dirname, "../../../data/debug");
 
@@ -18,10 +20,11 @@ export function setupInterceptor(page: Page) {
       try {
         const json = await response.json();
         
-        // Filtramos agresivamente para que Playwright no sature el disco ni la terminal
-        const isCorePayload = url.includes('/content/courses/') || 
-                              url.includes('/content/learning-path/') || 
-                              url.includes('/content/stories/variants/') || 
+       // Filtramos agresivamente para que Playwright no sature el disco ni la terminal
+        console.log(`[Interceptor Trace] Evaluando JSON: ${url}`);
+        const isCorePayload = url.includes('-content/courses/') || 
+                              url.includes('-content/learning-path/') || 
+                              url.includes('-content/stories/variants/') || 
                               url.includes('ekit');
         if (!isCorePayload) {
           return;
