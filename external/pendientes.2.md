@@ -1,0 +1,5 @@
+- cambiar el sistema de constructructores a con nombres por posicion a constructores con nombres por parametros, para que sea mas legible y mantenible el codigo 
+- completar los test para tener una cobertura del 80-90%
+- verificar o agregar un metodo que verifique que cuando haya terminado una descarga de un curso o un path, realmente se completo todas las descargas solicitadas, ya bien sean de tipo video, guide o all
+- implementar un metodo de logging que permita sustituir los consoles.log, definir niveles de log (DEBUG, INFO, WARN, ERROR), si hay una libreria respetada y ligera mejor
+- como es un sistema que puede ser altamente cambiante en cuanto a la estructura de la pagina, se debe implementar un sistema de monitoreo que permita detectar cambios en la estructura de la pagina y notificar al usuario
