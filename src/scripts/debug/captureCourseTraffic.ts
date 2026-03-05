@@ -2,7 +2,8 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
-import { env } from "process";
+import { env } from "../../config/env";
+import { getAssetFilename } from "../../utils/naming";
 
 chromium.use(stealth());
 
@@ -20,8 +21,9 @@ async function run() {
             
             // Si el body contiene ba43ef1c o ekitId o htmlViewer, guardarlo
             const strBody = JSON.stringify(body);
-            if (strBody.includes("ekit") || strBody.includes("pdf") || strBody.includes("ba43ef1c")) {
-                const safeUrl = url.replace(/[^a-z0-9]/gi, '_');
+            if (strBody.includes("transcript") || strBody.includes("vtt") || strBody.includes("ba43ef1c")) {
+                const urlObj = new URL(url);
+                const safeUrl = getAssetFilename(urlObj.pathname.replace(/\//g, ' '));
                 fs.writeFileSync(`/tmp/intercept_${safeUrl}.json`, JSON.stringify(body, null, 2));
                 console.log(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
             }
