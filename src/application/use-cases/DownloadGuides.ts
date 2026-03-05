@@ -1,28 +1,18 @@
-import path from "path";
-import fs from "fs";
-import PDFDocument from "pdfkit";
-import sharp from "sharp";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
-import { ensureDir } from "../../utils/fs";
-import { getAssetFilename } from "../../utils/naming";
+import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
+import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { env } from "../../config/env";
 
-export interface PDFOptions {
-  optimize: boolean;
-  quality: number;
-}
-
 export class DownloadGuides {
-  private assetsBaseDir: string;
   private keepTempImages: boolean;
 
   constructor(
     private browserProvider: BrowserProvider,
     private courseRepo: ICourseRepository,
-    private assetRepo: IAssetRepository
+    private assetRepo: IAssetRepository,
+    private assetStorage: IAssetStorage
   ) {
-    this.assetsBaseDir = path.resolve(__dirname, "../../../data/assets");
     this.keepTempImages = env.KEEP_TEMP_IMAGES;
   }
 
@@ -62,14 +52,13 @@ export class DownloadGuides {
       return;
     }
 
-    const courseGuidesDir = path.join(this.assetsBaseDir, String(courseId), "guides");
-    ensureDir(courseGuidesDir);
+    const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guides');
 
-    const safeName = getAssetFilename(meta.title || meta.name || 'guide', {index: String(meta.order_index || '')});
+    const safeName = AssetNamingService.generateSafeFilename(meta.title || meta.name || 'guide', meta.order_index);
     const filename = `${safeName}.pdf`;
-    const outputPath = path.join(courseGuidesDir, filename);
+    const outputPath = `${courseGuidesDir}/${filename}`;
 
-    if (fs.existsSync(outputPath)) {
+    if (this.assetStorage.assetExists(outputPath)) {
       console.log(`[DownloadGuides] La guía ya existe: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...meta, filename }, outputPath);
       return;
@@ -81,8 +70,7 @@ export class DownloadGuides {
     }
 
     const page = await context.newPage();
-    const tempImagesDir = path.join(courseGuidesDir, `temp_${assetId}`);
-    ensureDir(tempImagesDir);
+    const tempImagesDir = this.assetStorage.ensureTempDir(courseId, assetId);
 
     try {
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
@@ -153,12 +141,12 @@ export class DownloadGuides {
       for (let i = 0; i < pagesCount; i++) {
          const pageNum = i + 1;
          const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
-         const cachedImgPath = path.join(tempImagesDir, `page_${String(pageNum).padStart(4, '0')}.png`);
+         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;
 
          // Skip if we already downloaded this page successfully in a previous run
-         if (fs.existsSync(cachedImgPath)) {
-            const stats = fs.statSync(cachedImgPath);
-            if (stats.size > 0) {
+         if (this.assetStorage.assetExists(cachedImgPath)) {
+            const size = this.assetStorage.getTempImageSize(cachedImgPath);
+            if (size > 0) {
                 console.log(`[DownloadGuides]   -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
                 continue;
             }
@@ -185,7 +173,7 @@ export class DownloadGuides {
          }
 
          if (buffer) {
-           fs.writeFileSync(cachedImgPath, Buffer.from(buffer));
+           this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
            console.log(`[DownloadGuides]   -> Descargada pág ${pageNum}/${pagesCount}`);
            // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
            await new Promise(r => setTimeout(r, 200));
@@ -200,10 +188,10 @@ export class DownloadGuides {
       await page.close();
 
       console.log(`[DownloadGuides] Construyendo PDF...`);
-      await this.buildPDF(tempImagesDir, outputPath);
+      await this.assetStorage.buildPDFFromImages(tempImagesDir, outputPath);
 
       if (!this.keepTempImages) {
-        fs.rmSync(tempImagesDir, { recursive: true, force: true });
+        this.assetStorage.removeTempDir(tempImagesDir);
       }
 
       console.log(`[DownloadGuides] ✅ Guía guardada en: ${outputPath}`);
@@ -221,38 +209,5 @@ export class DownloadGuides {
     }
   }
 
-  public async buildPDF(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const files = fs.readdirSync(sourceDir).filter(f => f.endsWith(".png")).sort();
-      if (files.length === 0) {
-        return reject(new Error("No hay imágenes para crear PDF"));
-      }
 
-      const doc = new PDFDocument({ autoFirstPage: false });
-      const stream = fs.createWriteStream(outputPath);
-      doc.pipe(stream);
-
-      (async () => {
-        try {
-          for (const file of files) {
-            const imgPath = path.join(sourceDir, file);
-            if (options.optimize) {
-              const optBuffer = await sharp(imgPath).jpeg({ quality: options.quality }).toBuffer();
-              const meta = await sharp(optBuffer).metadata();
-              doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
-              doc.image(optBuffer, 0, 0, { width: meta.width, height: meta.height });
-            } else {
-              const meta = await sharp(imgPath).metadata();
-              doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
-              doc.image(imgPath, 0, 0, { width: meta.width, height: meta.height });
-            }
-          }
-          doc.end();
-        } catch(e) { reject(e); }
-      })();
-
-      stream.on("finish", () => resolve());
-      stream.on("error", (e) => reject(e));
-    });
-  }
 }

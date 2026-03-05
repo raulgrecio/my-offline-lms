@@ -2,7 +2,7 @@ import { db } from "../db/schema";
 import fs from "fs";
 import path from "path";
 
-import { getAssetFilename } from "../utils/naming";
+import { AssetNamingService } from "../domain/services/AssetNamingService";
 
 const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
 
@@ -22,13 +22,13 @@ function renameVideosForCourse(courseId: string) {
     for (const row of rows) {
         const meta = JSON.parse(row.metadata || "{}");
         
-        let rawName = getAssetFilename(meta.title) || row.id;
+        let rawName = AssetNamingService.generateSafeFilename(meta.title) || row.id;
         
         if (!meta.order_index) {
             continue; // Nothing to prefix
         }
 
-        const prefixedName = getAssetFilename(meta.title, {index: String(meta.order_index)});
+        const prefixedName = AssetNamingService.generateSafeFilename(meta.title, meta.order_index);
 
         // Check all files in the directory that start with rawName
         const allFiles = fs.readdirSync(courseVideosDir);

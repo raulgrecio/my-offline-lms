@@ -1,7 +1,6 @@
 import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
-import { getAssetFilename } from "../../utils/naming";
 
 
 const debugDir = path.resolve(__dirname, "../../../data/debug");

@@ -3,7 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 import { env } from "../../config/env";
-import { getAssetFilename } from "../../utils/naming";
+import { AssetNamingService } from "../../domain/services/AssetNamingService";
 
 chromium.use(stealth());
 
@@ -23,7 +23,7 @@ async function run() {
             const strBody = JSON.stringify(body);
             if (strBody.includes("transcript") || strBody.includes("vtt") || strBody.includes("ba43ef1c")) {
                 const urlObj = new URL(url);
-                const safeUrl = getAssetFilename(urlObj.pathname.replace(/\//g, ' '));
+                const safeUrl = AssetNamingService.generateSafeFilename(urlObj.pathname.replace(/\//g, ' '));
                 fs.writeFileSync(`/tmp/intercept_${safeUrl}.json`, JSON.stringify(body, null, 2));
                 console.log(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
             }

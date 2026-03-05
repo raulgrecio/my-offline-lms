@@ -1,5 +1,5 @@
 import path from "path";
-import { DownloadGuides } from "../application/use-cases/DownloadGuides";
+import { DiskAssetStorage } from "../infrastructure/repositories/DiskAssetStorage";
 
 async function runTests() {
   const args = process.argv.slice(2);
@@ -23,8 +23,8 @@ async function runTests() {
 
   console.log(`[Test] Empezando generación de prueba de PDFs desde: ${sourceDir}`);
 
-  // Dummy de dependencias ya que buildPDF no las usa
-  const downloader = new DownloadGuides(null as any, null as any, null as any);
+  // Use the new infrastructure storage implementation
+  const storage = new DiskAssetStorage();
 
   for (const config of testConfigs) {
     const label = config.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
@@ -37,7 +37,7 @@ async function runTests() {
 
     const startTime = Date.now();
     try {
-      await downloader.buildPDF(sourceDir, outputPath, { optimize: config.optimize, quality: config.quality });
+      await storage.buildPDFFromImages(sourceDir, outputPath, { optimize: config.optimize, quality: config.quality });
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       console.log(`[Test] ✅ PDF generado: ${outFileName} (en ${duration}s)`);
     } catch (err) {

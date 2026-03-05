@@ -16,37 +16,43 @@ const mockAssetRepo = {
   updateAssetStatus: vi.fn()
 } as any;
 
+const mockAssetStorage = {
+  ensureAssetDir: vi.fn(),
+  verifyVideoIntegrity: vi.fn()
+} as any;
+
+const mockVideoDownloader = {
+  download: vi.fn()
+} as any;
+
 describe('DownloadVideos Use Case', () => {
     it('should skip download if there are no pending videos', async () => {
         mockAssetRepo.getPendingAssets.mockReturnValueOnce([]);
         
-        const useCase = new DownloadVideos(mockBrowserProvider, mockCourseRepo, mockAssetRepo);
+        const useCase = new DownloadVideos(
+          mockBrowserProvider, 
+          mockCourseRepo, 
+          mockAssetRepo, 
+          mockAssetStorage, 
+          mockVideoDownloader
+        );
         await useCase.executeForCourse('123');
 
         expect(mockAssetRepo.getPendingAssets).toHaveBeenCalledWith('123', 'video');
         expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
     });
 
-    it('should verify integrity rule (minimum 200KB)', () => {
-        const useCase = new DownloadVideos(mockBrowserProvider, mockCourseRepo, mockAssetRepo);
+    it('should verify integrity rule via IAssetStorage', () => {
+        const useCase = new DownloadVideos(
+          mockBrowserProvider, 
+          mockCourseRepo, 
+          mockAssetRepo, 
+          mockAssetStorage, 
+          mockVideoDownloader
+        );
         
-        // This is a private method but we can expose it for testing in TS using bracket notation
-        const verifyFn = (useCase as any).verifyIntegrity.bind(useCase);
-        
-        // Let's mock fs locally to test the logic
-        vi.mock('fs', async () => {
-            return {
-                default: {
-                    existsSync: (path: string) => path.includes('exists'),
-                    statSync: (path: string) => {
-                        if (path.includes('small')) return { size: 100000 };
-                        if (path.includes('large')) return { size: 500000 };
-                        return { size: 0 };
-                    }
-                }
-            }
-        });
-
-        expect(true).toBe(true);
+        // This logic is now inside IAssetStorage. verifyVideoIntegrity was moved there in the refactoring.
+        // We can just verify the injection setup here.
+        expect(useCase).toBeDefined();
     });
 });

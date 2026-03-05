@@ -1,21 +1,15 @@
-import fs from "fs";
-import path from "path";
 import readline from "readline";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
+import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
 
 export class AuthSession {
-  private authDir: string;
-  private authFile: string;
-
-  constructor(private browserProvider: BrowserProvider) {
-    this.authDir = path.resolve(__dirname, "../../../data/.auth");
-    this.authFile = path.join(this.authDir, "state.json");
-  }
+  constructor(
+    private browserProvider: BrowserProvider,
+    private authStorage: IAuthSessionStorage
+  ) {}
 
   async interactiveLogin(targetUrl: string): Promise<void> {
-    if (!fs.existsSync(this.authDir)) {
-      fs.mkdirSync(this.authDir, { recursive: true });
-    }
+    this.authStorage.ensureAuthDir();
 
     console.log("[AuthSession] Iniciando navegador interactivo...");
     const context = await this.browserProvider.getHeadfulContext(false);
@@ -39,21 +33,10 @@ export class AuthSession {
     const saveSession = async () => {
       console.log("\n[AuthSession] Guardando estado de la sesión y cookies... (Automático / Manual)");
       try {
-        await context.storageState({ path: this.authFile });
+        await context.storageState({ path: this.authStorage.getAuthFile() });
 
         const cookies = await context.cookies();
-        const cookiesStr = cookies
-          .map((c: any) => {
-            const includeSubdomains = c.domain.startsWith('.') ? "TRUE" : "FALSE";
-            const expires = (c.expires && c.expires > 0) ? Math.round(c.expires) : 0;
-            return `${c.domain}\t${includeSubdomains}\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${expires}\t${c.name}\t${c.value}`;
-          })
-          .join("\n");
-
-        fs.writeFileSync(
-          path.join(this.authDir, "cookies.txt"),
-          `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
-        );
+        this.authStorage.saveCookies(cookies);
 
         console.log("✅ Sesión y cookies guardadas con éxito en data/.auth/");
       } catch (e) {

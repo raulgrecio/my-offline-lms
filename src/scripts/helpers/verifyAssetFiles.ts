@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
-import { getAssetFilename } from "../../utils/naming";
+import { AssetNamingService } from "../../domain/services/AssetNamingService";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.
  */
 export function verifyAssetFiles({ type, courseId, metadataStr, assetsBaseDir }: { type: string, courseId: string, metadataStr: string, assetsBaseDir: string }): { videoExists?: boolean, vttExists?: boolean, guideExists?: boolean, expectedPath: string, safeName: string } {
     const meta = JSON.parse(metadataStr || "{}");
-    const safeName = getAssetFilename(meta.title, {index: String(meta.order_index || '')});
+    const safeName = AssetNamingService.generateSafeFilename(meta.title, meta.order_index);
 
     if (type === 'guide') {
         const courseGuidesDir = path.join(assetsBaseDir, courseId, "guides");

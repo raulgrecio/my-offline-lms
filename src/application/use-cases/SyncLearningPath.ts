@@ -1,19 +1,19 @@
-import fs from "fs";
-import path from "path";
+import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { SyncCourseData } from "./SyncCourseData";
 import { env } from "../../config/env";
-import { toSlug } from "../../utils/url";
+import { Slug } from "../../domain/value-objects/Slug";
 
 export class SyncLearningPath {
   constructor(
     private browserProvider: BrowserProvider,
     private learningPathRepo: ILearningPathRepository,
     private courseRepo: ICourseRepository,
-    private syncCourseData: SyncCourseData
+    private syncCourseData: SyncCourseData,
+    private interceptedDataRepo: IInterceptedDataRepository
   ) {}
 
   async execute(targetUrl: string): Promise<void> {
@@ -35,23 +35,17 @@ export class SyncLearningPath {
   }
 
   private async processInterceptedData(): Promise<void> {
-    const debugDir = path.resolve(__dirname, "../../../data/debug");
-    if (!fs.existsSync(debugDir)) return;
-
-    const files = fs.readdirSync(debugDir)
-      .filter(f => f.includes("content_learning_path_") && f.endsWith("_pagedata.json"));
+    const payloads = this.interceptedDataRepo.getPendingLearningPaths();
     
-    for (const file of files) {
-      const filePath = path.join(debugDir, file);
-      const content = fs.readFileSync(filePath, "utf-8");
-      const json = JSON.parse(content);
+    for (const payload of payloads) {
+      const json = JSON.parse(payload.content);
 
       const lpData = json.data?.lpPageData;
       if (!lpData || !lpData.id || !lpData.containerChildren) continue;
 
       const pathId = lpData.id;
       const pathTitle = lpData.name;
-      const pathSlug = toSlug(pathTitle);
+      const pathSlug = Slug.create(pathTitle).getValue();
       const pathDesc = lpData.description || "";
 
       console.log(`[SyncLearningPath] 🧭 Procesando Learning Path: ${pathTitle}`);
@@ -65,7 +59,7 @@ export class SyncLearningPath {
         if (child.typeId !== "22") continue; // 22 is Standard Course
         if (!child.id || !child.name) continue;
 
-        const courseSlug = toSlug(child.name);
+        const courseSlug = Slug.create(child.name).getValue();
         
         this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
         this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });
@@ -82,8 +76,7 @@ export class SyncLearningPath {
 
       console.log(`[SyncLearningPath] ✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
       
-      // Cleanup file so it's not processed again
-      try { fs.unlinkSync(filePath); } catch(e) {}
+      this.interceptedDataRepo.deletePayload(payload.filePath);
     }
   }
 }

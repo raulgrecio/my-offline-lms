@@ -1,0 +1,18 @@
+# Clean Architecture Refactoring - File System Access
+
+- [x] Create Domain Interfaces
+- [x] Create Infrastructure Implementations
+- [x] Refactor Application Use Cases
+- [x] Update Dependency Injection (Scripts)
+- [x] Verify Types / Build
+
+# Refactor Utilities to Domain
+
+- [x] Create [Slug](file:///home/rgr/source/my-offline-lms/src/domain/value-objects/Slug.ts#1-27) Value Object
+- [x] Create [PlatformUrl](file:///home/rgr/source/my-offline-lms/src/domain/value-objects/PlatformUrl.ts#1-20) Value Object
+- [x] Create [AssetNamingService](file:///home/rgr/source/my-offline-lms/src/domain/services/AssetNamingService.ts#1-17) Domain Service
+- [x] Replace `getAssetFilename` occurrences
+- [x] Replace `sanitizeUrl` occurrences
+- [x] Replace `toSlug` occurrences
+- [x] Refactor Tests
+- [x] Delete `src/utils` folder

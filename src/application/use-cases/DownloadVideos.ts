@@ -1,24 +1,19 @@
-import path from "path";
-import fs from "fs";
-import { spawn } from "child_process";
 import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
+import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
+import { IVideoDownloader } from "../../domain/services/IVideoDownloader";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { ensureDir } from "../../utils/fs";
-import { sanitizeUrl } from "../../utils/url";
-import { getAssetFilename } from "../../utils/naming";
+import { PlatformUrl } from "../../domain/value-objects/PlatformUrl";
+import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { BrowserContext } from "playwright";
 
 export class DownloadVideos {
-  private assetsBaseDir: string;
-  private cookiesFile: string;
-
   constructor(
     private browserProvider: BrowserProvider,
     private courseRepo: ICourseRepository,
-    private assetRepo: IAssetRepository
+    private assetRepo: IAssetRepository,
+    private assetStorage: IAssetStorage,
+    private videoDownloader: IVideoDownloader
   ) {
-    this.assetsBaseDir = path.resolve(__dirname, "../../../data/assets");
-    this.cookiesFile = path.resolve(__dirname, "../../../data/.auth/cookies.txt");
   }
 
   async executeForCourse(courseId: string): Promise<void> {
@@ -51,17 +46,16 @@ export class DownloadVideos {
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'video') return;
 
-    const courseVideosDir = path.join(this.assetsBaseDir, String(courseId), "videos");
-    ensureDir(courseVideosDir);
+    const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'videos');
 
-    const safeName = getAssetFilename(asset.metadata.title, {index: String(asset.metadata.order_index || '')});
+    const safeName = AssetNamingService.generateSafeFilename(asset.metadata.title, asset.metadata.order_index);
     const filename = `${safeName}.mp4`;
-    const outputPath = path.join(courseVideosDir, filename);
+    const outputPath = `${courseVideosDir}/${filename}`;
 
     // [INTEGRITY CHECK] Verificamos si existe el .mp4 y el .vtt si se esperaba
     // yt-dlp guarda los subs incrustados y puede dejarlos sueltos. 
     // Por Clean Architecture, validaremos que al menos el mp4 tiene un tamaño aceptable (>1MB por ejemplo, o simplemente que existe si no fuimos estrictos).
-    if (this.verifyIntegrity(outputPath)) {
+    if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
         console.log(`[DownloadVideos] [Integridad] El vídeo y sus componentes ya parecen existir correctamente: ${outputPath}`);
         this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename });
         return;
@@ -82,7 +76,7 @@ export class DownloadVideos {
       }
     });
 
-    const cleanUrl = sanitizeUrl(asset.url);
+    const cleanUrl = PlatformUrl.create(asset.url).getValue();
     try {
         await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
         await page.waitForTimeout(18000); 
@@ -106,10 +100,10 @@ export class DownloadVideos {
         this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
         await page.close(); // Liberar memoria de playwright antes de yt-dlp
 
-        await this.execYtDlp(targetDownloadUrl, outputPath, cleanUrl);
+        await this.videoDownloader.download(targetDownloadUrl, outputPath, cleanUrl);
 
         // Verificamos tras la descarga!
-        if (this.verifyIntegrity(outputPath)) {
+        if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
             console.log(`[DownloadVideos] ✅ Vídeo completado y verificado: ${outputPath}`);
             this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
         } else {
@@ -129,49 +123,5 @@ export class DownloadVideos {
     }
   }
 
-  private verifyIntegrity(videoPath: string): boolean {
-    // Regla de Negocio: Para marcar un video COMPLETED, el .mp4 debe existir y pesar al menos 200KB.
-    // También validaremos si existen subtítulos asociados (opcional dependiendo si la plataforma falló en proveerlos, 
-    // pero por ahora solo exigiremos que el archivo no esté corrupto/vacío).
-    if (!fs.existsSync(videoPath)) return false;
-    const stats = fs.statSync(videoPath);
-    if (stats.size < 200000) return false; // less than 200KB is definitely a failed dash manifest disguised as mp4
-    return true;
-  }
 
-  private async execYtDlp(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const args = [
-        "--cookies", this.cookiesFile,
-        "-o", outputPath,
-        "-f", "bestvideo+bestaudio/best",
-        "--merge-output-format", "mp4",
-        "--write-subs",
-        "--write-auto-subs",
-        "--sub-langs", "es.*,en.*",
-        "--embed-subs"
-      ];
-      if (referer) args.push("--referer", referer);
-      args.push(url);
-
-      const ytDlpProcess = spawn("yt-dlp", args, { stdio: "inherit" });
-      
-      ytDlpProcess.on("close", (code) => {
-          if (code === 0) {
-              resolve();
-          } else {
-              if (retryCount < 3) {
-                  const delay = 5000 * (retryCount + 1); // Exponential-ish backoff: 5s, 10s, 15s
-                  console.log(`[DownloadVideos] ⚠️ yt-dlp devolvió error ${code}. Reintentando en ${delay/1000} segundos... (Intento ${retryCount + 1}/3)`);
-                  setTimeout(() => {
-                      this.execYtDlp(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
-                  }, delay);
-              } else {
-                  reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
-              }
-          }
-      });
-      ytDlpProcess.on("error", (err) => reject(err));
-    });
-  }
 }

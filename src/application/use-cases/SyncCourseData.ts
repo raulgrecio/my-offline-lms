@@ -1,16 +1,16 @@
-import fs from "fs";
-import path from "path";
+import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ICourseRepository, IAssetRepository } from "../../domain/repositories/ICourseRepository";
 import { env } from "../../config/env";
-import { toSlug } from "../../utils/url";
+import { Slug } from "../../domain/value-objects/Slug";
 
 export class SyncCourseData {
   constructor(
     private browserProvider: BrowserProvider,
     private courseRepository: ICourseRepository,
-    private assetRepository: IAssetRepository
+    private assetRepository: IAssetRepository,
+    private interceptedDataRepo: IInterceptedDataRepository
   ) {}
 
   async execute(coursePath: string): Promise<void> {
@@ -49,23 +49,17 @@ export class SyncCourseData {
   }
 
   private processInterceptedData(): void {
-    const debugDir = path.resolve(__dirname, "../../../data/debug");
-    if (!fs.existsSync(debugDir)) return;
-
-    const files = fs.readdirSync(debugDir)
-      .filter(f => f.includes("content_courses_") && f.endsWith("metadata.json"));
+    const payloads = this.interceptedDataRepo.getPendingCourses();
     
-    for (const file of files) {
-      const filePath = path.join(debugDir, file);
-      const content = fs.readFileSync(filePath, "utf-8");
-      const json = JSON.parse(content);
+    for (const payload of payloads) {
+      const json = JSON.parse(payload.content);
 
       if (!json.data || !json.data.id || !json.data.modules) continue;
 
       const courseData = json.data;
       const courseId = courseData.id;
       const courseTitle = courseData.name;
-      const courseSlug = toSlug(courseTitle);  
+      const courseSlug = Slug.create(courseTitle).getValue();  
 
       console.log(`[SyncCourseData] 📚 Procesando y guardando Curso: ${courseTitle}`);
 
@@ -121,8 +115,7 @@ export class SyncCourseData {
 
       console.log(`[SyncCourseData] ✅ Sincronizados ${videosCount} vídeos y ${pdfsCount} PDFs.`);
       
-      // Cleanup file so it's not processed again on subsequent runs
-      try { fs.unlinkSync(filePath); } catch(e) {}
+      this.interceptedDataRepo.deletePayload(payload.filePath);
     }
   }
 

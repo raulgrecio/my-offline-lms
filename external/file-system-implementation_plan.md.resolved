@@ -1,0 +1,37 @@
+# Refactoring Remaining Utilities to Domain-Driven Design (DDD)
+
+We are eliminating the generic `src/utils/` directory to strictly adhere to Clean Architecture/DDD. We will migrate the remaining functions (`auth.ts`, `naming.ts`, `url.ts`) to appropriate semantic locations.
+
+## Proposed Changes
+
+### Deletion of Obsolete Code
+
+#### [DELETE] `src/utils/`
+- Once all external references are updated, remove the entire generic utility folder.
+
+### Domain Layer Additions
+
+#### [NEW] `src/domain/value-objects/Slug.ts`
+- **Purpose**: Encapsulate the logic of converting strings to URL-friendly slugs (currently `toSlug` in `url.ts`).
+- **Implementation**: A Value Object class that takes a string, normalizes it, removes accents, and formats it.
+- **Usage**: Update `SyncLearningPath` and `SyncCourseData` to use `Slug.create(text).value`.
+
+#### [NEW] `src/domain/value-objects/PlatformUrl.ts`
+- **Purpose**: Encapsulate URL sanitization rules specific to the platform (currently `sanitizeUrl` in `url.ts`).
+- **Implementation**: A Value Object that throws if the URL is completely invalid, and exposes a sanitized string (removing double slashes).
+- **Usage**: Update `DownloadVideos` and tests to use this instead of `sanitizeUrl()`.
+
+#### [NEW] `src/domain/services/AssetNamingService.ts`
+- **Purpose**: Encapsulate the complex business rules for naming downloaded asset files sequentially and safely (currently `getAssetFilename` in `naming.ts`).
+- **Implementation**: A stateless Domain Service with a static method or instance method `generateSafeFilename(metadataTitle, orderIndex)`.
+- **Usage**: Update instances in `DownloadGuides`, `DownloadVideos`, `renameVideos.ts`, `verifyAssetFiles.ts`, `captureCourseTraffic.ts`, and `interceptor.ts`.
+
+### Testing Updates
+
+#### [MODIFY] `src/tests/utils/utils.test.ts`
+- Rename to `src/tests/domain/value-objects/Slug.test.ts` / `PlatformUrl.test.ts` / `AssetNamingService.test.ts` as appropriate, adapting the existing test suite to the new classes.
+
+### Final Clean Up
+
+#### [DELETE] `src/utils/`
+- Once all external references are updated, remove the entire generic utility folder.
