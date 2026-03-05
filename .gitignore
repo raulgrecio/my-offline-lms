@@ -23,6 +23,9 @@ data/.auth/
 data/api.json
 data/assets/
 
+# Coverage
+coverage/
+
 # Enviroment
 .env
 .env.local
