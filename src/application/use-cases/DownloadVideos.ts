@@ -106,7 +106,7 @@ export class DownloadVideos {
         this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
         await page.close(); // Liberar memoria de playwright antes de yt-dlp
 
-        await this.runYtDlp(targetDownloadUrl, outputPath, cleanUrl);
+        await this.execYtDlp(targetDownloadUrl, outputPath, cleanUrl);
 
         // Verificamos tras la descarga!
         if (this.verifyIntegrity(outputPath)) {
@@ -139,7 +139,7 @@ export class DownloadVideos {
     return true;
   }
 
-  private async runYtDlp(url: string, outputPath: string, referer?: string): Promise<void> {
+  private async execYtDlp(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
     return new Promise((resolve, reject) => {
       const args = [
         "--cookies", this.cookiesFile,
@@ -155,7 +155,22 @@ export class DownloadVideos {
       args.push(url);
 
       const ytDlpProcess = spawn("yt-dlp", args, { stdio: "inherit" });
-      ytDlpProcess.on("close", (code) => code === 0 ? resolve() : reject(new Error(`yt-dlp error ${code}`)));
+      
+      ytDlpProcess.on("close", (code) => {
+          if (code === 0) {
+              resolve();
+          } else {
+              if (retryCount < 3) {
+                  const delay = 5000 * (retryCount + 1); // Exponential-ish backoff: 5s, 10s, 15s
+                  console.log(`[DownloadVideos] ⚠️ yt-dlp devolvió error ${code}. Reintentando en ${delay/1000} segundos... (Intento ${retryCount + 1}/3)`);
+                  setTimeout(() => {
+                      this.execYtDlp(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
+                  }, delay);
+              } else {
+                  reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
+              }
+          }
+      });
       ytDlpProcess.on("error", (err) => reject(err));
     });
   }
