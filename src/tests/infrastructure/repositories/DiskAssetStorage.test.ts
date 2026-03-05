@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DiskAssetStorage } from '../../../infrastructure/repositories/DiskAssetStorage';
 import fs from 'fs';
-import path from 'path';
 
 vi.mock('fs');
 vi.mock('path', async () => {
@@ -13,8 +12,29 @@ vi.mock('path', async () => {
         }
     };
 });
-vi.mock('pdfkit', () => ({ default: vi.fn() }));
-vi.mock('sharp', () => ({ default: vi.fn() }));
+
+// Mock pdfkit as a constructor
+vi.mock('pdfkit', () => {
+    return {
+        default: vi.fn().mockImplementation(function() {
+            return {
+                addPage: vi.fn().mockReturnThis(),
+                image: vi.fn().mockReturnThis(),
+                pipe: vi.fn().mockReturnThis(),
+                end: vi.fn().mockReturnThis()
+            };
+        })
+    };
+});
+
+// Mock sharp
+vi.mock('sharp', () => ({
+    default: vi.fn().mockReturnValue({
+        metadata: vi.fn().mockResolvedValue({ width: 100, height: 100 }),
+        jpeg: vi.fn().mockReturnThis(),
+        toBuffer: vi.fn().mockResolvedValue(Buffer.from('mock'))
+    })
+}));
 
 describe('DiskAssetStorage', () => {
     const mockBaseDir = '/mock/assets';
@@ -78,5 +98,39 @@ describe('DiskAssetStorage', () => {
         vi.mocked(fs.existsSync).mockReturnValue(true);
         vi.mocked(fs.statSync).mockReturnValue({ size: 100 } as fs.Stats);
         expect(storage.getTempImageSize('/mock/test.png')).toBe(100);
+    });
+
+    it('should throw error if no images found for PDF', async () => {
+        vi.mocked(fs.readdirSync).mockReturnValue([] as any);
+        await expect(storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf'))
+            .rejects.toThrow('No hay imágenes para crear PDF');
+    });
+
+    it('should successfully build a PDF from images', async () => {
+        const mockImgFiles = ['page1.png', 'page2.png'] as any;
+        vi.mocked(fs.readdirSync).mockReturnValue(mockImgFiles);
+        
+        const mockWriteStream = new (require('events').EventEmitter)();
+        vi.mocked(fs.createWriteStream).mockReturnValue(mockWriteStream as any);
+        
+        const promise = storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf', { optimize: false, quality: 80 });
+        
+        mockWriteStream.emit('finish');
+        
+        await expect(promise).resolves.toBeUndefined();
+    });
+
+    it('should successfully build an optimized PDF from images', async () => {
+        const mockImgFiles = ['page1.png'] as any;
+        vi.mocked(fs.readdirSync).mockReturnValue(mockImgFiles);
+        
+        const mockWriteStream = new (require('events').EventEmitter)();
+        vi.mocked(fs.createWriteStream).mockReturnValue(mockWriteStream as any);
+        
+        const promise = storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf', { optimize: true, quality: 50 });
+        
+        mockWriteStream.emit('finish');
+        
+        await expect(promise).resolves.toBeUndefined();
     });
 });

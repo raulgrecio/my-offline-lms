@@ -11,8 +11,8 @@ if (!fs.existsSync(dataDir)) {
 
 export const db = new Database(dbPath, { verbose: console.log });
 
-export function initDb() {
-  db.exec(`
+export function initDb(database = db) {
+  database.exec(`
     CREATE TABLE IF NOT EXISTS LearningPaths (
       id TEXT PRIMARY KEY,
       slug TEXT,

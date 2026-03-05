@@ -69,11 +69,11 @@ export class DownloadGuides {
       context = await this.browserProvider.getAuthenticatedContext();
     }
 
-    const page = await context.newPage();
-    const tempImagesDir = this.assetStorage.ensureTempDir(courseId, assetId);
-
+    let page = null;
     try {
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
+      page = await context.newPage();
+      const tempImagesDir = this.assetStorage.ensureTempDir(courseId, assetId);
       
       const offeringId = env.OFFERING_ID;
       const baseUrl = env.PLATFORM_BASE_URL;
@@ -203,7 +203,7 @@ export class DownloadGuides {
     } finally {
       if (!sharedContext) {
         await this.browserProvider.close();
-      } else {
+      } else if (page) {
         await page.close().catch(() => {});
       }
     }
