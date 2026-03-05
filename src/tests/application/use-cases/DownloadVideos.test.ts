@@ -64,13 +64,13 @@ describe('DownloadVideos Use Case', () => {
             if (typeof fn === 'function') fn();
             return { unref: () => {} } as any;
         });
-        useCase = new DownloadVideos(
-            mockBrowserProvider, 
-            mockCourseRepo, 
-            mockAssetRepo, 
-            mockAssetStorage, 
-            mockVideoDownloader
-        );
+        useCase = new DownloadVideos({
+            browserProvider: mockBrowserProvider, 
+            courseRepo: mockCourseRepo, 
+            assetRepo: mockAssetRepo, 
+            assetStorage: mockAssetStorage, 
+            videoDownloader: mockVideoDownloader
+        });
     });
 
     it('should process pending videos and download them', async () => {

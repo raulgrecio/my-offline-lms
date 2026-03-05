@@ -3,10 +3,16 @@ import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
 
 export class AuthSession {
-  constructor(
-    private browserProvider: BrowserProvider,
-    private authStorage: IAuthSessionStorage
-  ) {}
+  private browserProvider: BrowserProvider;
+  private authStorage: IAuthSessionStorage;
+
+  constructor(deps: {
+    browserProvider: BrowserProvider,
+    authStorage: IAuthSessionStorage
+  }) {
+    this.browserProvider = deps.browserProvider;
+    this.authStorage = deps.authStorage;
+  }
 
   async interactiveLogin(targetUrl: string): Promise<void> {
     this.authStorage.ensureAuthDir();

@@ -5,14 +5,22 @@ import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { env } from "../../config/env";
 
 export class DownloadGuides {
+  private browserProvider: BrowserProvider;
+  private courseRepo: ICourseRepository;
+  private assetRepo: IAssetRepository;
+  private assetStorage: IAssetStorage;
   private keepTempImages: boolean;
 
-  constructor(
-    private browserProvider: BrowserProvider,
-    private courseRepo: ICourseRepository,
-    private assetRepo: IAssetRepository,
-    private assetStorage: IAssetStorage
-  ) {
+  constructor(deps: {
+    browserProvider: BrowserProvider,
+    courseRepo: ICourseRepository,
+    assetRepo: IAssetRepository,
+    assetStorage: IAssetStorage
+  }) {
+    this.browserProvider = deps.browserProvider;
+    this.courseRepo = deps.courseRepo;
+    this.assetRepo = deps.assetRepo;
+    this.assetStorage = deps.assetStorage;
     this.keepTempImages = env.KEEP_TEMP_IMAGES;
   }
 

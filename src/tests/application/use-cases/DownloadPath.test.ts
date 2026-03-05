@@ -16,7 +16,11 @@ describe('DownloadPath Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new DownloadPath(mockLearningPathRepo, mockDownloadGuides, mockDownloadVideos);
+        useCase = new DownloadPath({ 
+            learningPathRepo: mockLearningPathRepo, 
+            downloadGuides: mockDownloadGuides, 
+            downloadVideos: mockDownloadVideos 
+        });
     });
 
     it('should warn and exit if no courses found for path', async () => {

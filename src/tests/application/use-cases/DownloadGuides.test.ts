@@ -35,7 +35,12 @@ describe('DownloadGuides Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new DownloadGuides(mockBrowserProvider, mockCourseRepo, mockAssetRepo, mockAssetStorage);
+        useCase = new DownloadGuides({ 
+            browserProvider: mockBrowserProvider, 
+            courseRepo: mockCourseRepo, 
+            assetRepo: mockAssetRepo, 
+            assetStorage: mockAssetStorage 
+        });
     });
 
     it('should skip download if guide already exists', async () => {

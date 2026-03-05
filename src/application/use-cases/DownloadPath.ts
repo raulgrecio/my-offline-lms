@@ -3,11 +3,19 @@ import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 
 export class DownloadPath {
-  constructor(
-    private learningPathRepo: ILearningPathRepository,
-    private downloadGuides: DownloadGuides,
-    private downloadVideos: DownloadVideos
-  ) {}
+  private learningPathRepo: ILearningPathRepository;
+  private downloadGuides: DownloadGuides;
+  private downloadVideos: DownloadVideos;
+
+  constructor(deps: {
+    learningPathRepo: ILearningPathRepository,
+    downloadGuides: DownloadGuides,
+    downloadVideos: DownloadVideos
+  }) {
+    this.learningPathRepo = deps.learningPathRepo;
+    this.downloadGuides = deps.downloadGuides;
+    this.downloadVideos = deps.downloadVideos;
+  }
 
   async execute(pathId: string, type: 'video' | 'guide' | 'all' = 'all'): Promise<void> {
     console.log(`[DownloadPath] 🚀 Iniciando descarga para Learning Path: ${pathId}`);

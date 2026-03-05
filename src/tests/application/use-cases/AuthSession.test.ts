@@ -23,7 +23,10 @@ describe('AuthSession Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new AuthSession(mockBrowserProvider, mockAuthStorage);
+        useCase = new AuthSession({ 
+            browserProvider: mockBrowserProvider, 
+            authStorage: mockAuthStorage 
+        });
         
         // Mock stdin
         (process.stdin as any).isTTY = true;

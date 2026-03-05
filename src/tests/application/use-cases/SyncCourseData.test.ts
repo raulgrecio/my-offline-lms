@@ -26,7 +26,12 @@ describe('SyncCourseData Use Case', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([]);
-        useCase = new SyncCourseData(mockBrowserProvider, mockCourseRepo, mockAssetRepo, mockInterceptedDataRepo);
+        useCase = new SyncCourseData({ 
+            browserProvider: mockBrowserProvider, 
+            courseRepository: mockCourseRepo, 
+            assetRepository: mockAssetRepo, 
+            interceptedDataRepo: mockInterceptedDataRepo 
+        });
     });
 
     it('should skip if context creation fails', async () => {

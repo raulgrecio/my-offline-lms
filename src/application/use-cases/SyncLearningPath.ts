@@ -8,13 +8,25 @@ import { env } from "../../config/env";
 import { Slug } from "../../domain/value-objects/Slug";
 
 export class SyncLearningPath {
-  constructor(
-    private browserProvider: BrowserProvider,
-    private learningPathRepo: ILearningPathRepository,
-    private courseRepo: ICourseRepository,
-    private syncCourseData: SyncCourseData,
-    private interceptedDataRepo: IInterceptedDataRepository
-  ) {}
+  private browserProvider: BrowserProvider;
+  private learningPathRepo: ILearningPathRepository;
+  private courseRepo: ICourseRepository;
+  private syncCourseData: SyncCourseData;
+  private interceptedDataRepo: IInterceptedDataRepository;
+
+  constructor(deps: {
+    browserProvider: BrowserProvider,
+    learningPathRepo: ILearningPathRepository,
+    courseRepo: ICourseRepository,
+    syncCourseData: SyncCourseData,
+    interceptedDataRepo: IInterceptedDataRepository
+  }) {
+    this.browserProvider = deps.browserProvider;
+    this.learningPathRepo = deps.learningPathRepo;
+    this.courseRepo = deps.courseRepo;
+    this.syncCourseData = deps.syncCourseData;
+    this.interceptedDataRepo = deps.interceptedDataRepo;
+  }
 
   async execute(targetUrl: string): Promise<void> {
     console.log(`[SyncLearningPath] 🚀 Iniciando mapeo y sincronización de ruta: ${targetUrl}`);

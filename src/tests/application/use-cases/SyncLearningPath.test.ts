@@ -29,13 +29,13 @@ describe('SyncLearningPath Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new SyncLearningPath(
-            mockBrowserProvider, 
-            mockLearningPathRepo, 
-            mockCourseRepo, 
-            mockSyncCourseUseCase, 
-            mockInterceptedDataRepo
-        );
+        useCase = new SyncLearningPath({ 
+            browserProvider: mockBrowserProvider, 
+            learningPathRepo: mockLearningPathRepo, 
+            courseRepo: mockCourseRepo, 
+            syncCourseData: mockSyncCourseUseCase as any, 
+            interceptedDataRepo: mockInterceptedDataRepo 
+        });
     });
 
     it('should process pending learning paths and courses', async () => {

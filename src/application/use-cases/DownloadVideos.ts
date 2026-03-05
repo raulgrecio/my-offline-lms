@@ -7,13 +7,24 @@ import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { BrowserContext } from "playwright";
 
 export class DownloadVideos {
-  constructor(
-    private browserProvider: BrowserProvider,
-    private courseRepo: ICourseRepository,
-    private assetRepo: IAssetRepository,
-    private assetStorage: IAssetStorage,
-    private videoDownloader: IVideoDownloader
-  ) {
+  private browserProvider: BrowserProvider;
+  private courseRepo: ICourseRepository;
+  private assetRepo: IAssetRepository;
+  private assetStorage: IAssetStorage;
+  private videoDownloader: IVideoDownloader;
+
+  constructor(deps: {
+    browserProvider: BrowserProvider,
+    courseRepo: ICourseRepository,
+    assetRepo: IAssetRepository,
+    assetStorage: IAssetStorage,
+    videoDownloader: IVideoDownloader
+  }) {
+    this.browserProvider = deps.browserProvider;
+    this.courseRepo = deps.courseRepo;
+    this.assetRepo = deps.assetRepo;
+    this.assetStorage = deps.assetStorage;
+    this.videoDownloader = deps.videoDownloader;
   }
 
   async executeForCourse(courseId: string): Promise<void> {

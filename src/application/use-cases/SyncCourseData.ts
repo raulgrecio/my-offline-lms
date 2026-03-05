@@ -6,12 +6,22 @@ import { env } from "../../config/env";
 import { Slug } from "../../domain/value-objects/Slug";
 
 export class SyncCourseData {
-  constructor(
-    private browserProvider: BrowserProvider,
-    private courseRepository: ICourseRepository,
-    private assetRepository: IAssetRepository,
-    private interceptedDataRepo: IInterceptedDataRepository
-  ) {}
+  private browserProvider: BrowserProvider;
+  private courseRepository: ICourseRepository;
+  private assetRepository: IAssetRepository;
+  private interceptedDataRepo: IInterceptedDataRepository;
+
+  constructor(deps: {
+    browserProvider: BrowserProvider,
+    courseRepository: ICourseRepository,
+    assetRepository: IAssetRepository,
+    interceptedDataRepo: IInterceptedDataRepository
+  }) {
+    this.browserProvider = deps.browserProvider;
+    this.courseRepository = deps.courseRepository;
+    this.assetRepository = deps.assetRepository;
+    this.interceptedDataRepo = deps.interceptedDataRepo;
+  }
 
   async execute(coursePath: string): Promise<void> {
     if (!coursePath) {
