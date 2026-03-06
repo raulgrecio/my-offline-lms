@@ -29,6 +29,11 @@ describe('SyncLearningPath Use Case', () => {
         deletePayload: vi.fn()
     } as any;
 
+    const mockUrlProvider = {
+        resolveLearningPathUrl: vi.fn(url => url),
+        getCourseUrl: vi.fn((slug, id) => `url://${slug}/${id}`)
+    } as any;
+
     const mockLogger = {
         info: vi.fn(),
         warn: vi.fn(),
@@ -47,6 +52,7 @@ describe('SyncLearningPath Use Case', () => {
             courseRepo: mockCourseRepo,
             syncCourseData: mockSyncCourseUseCase,
             interceptedDataRepo: mockInterceptedDataRepo,
+            urlProvider: mockUrlProvider,
             logger: mockLogger
         });
     });
@@ -123,4 +129,28 @@ describe('SyncLearningPath Use Case', () => {
         expect(mockCourseRepo.saveCourse).toHaveBeenCalledTimes(1);
         expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ id: 'c1' }));
     });
+
+    it('should handle learning path without description', async () => {
+        const mockPayload = {
+            filePath: 'f2',
+            content: JSON.stringify({
+                data: {
+                    lpPageData: {
+                        id: 'lp2',
+                        name: 'No Desc Path',
+                        containerChildren: [] // description missing
+                    }
+                }
+            })
+        };
+        mockInterceptedDataRepo.getPendingLearningPaths.mockReturnValue([mockPayload]);
+
+        await (useCase as any).processInterceptedData();
+
+        expect(mockLearningPathRepo.saveLearningPath).toHaveBeenCalledWith(expect.objectContaining({ 
+            id: 'lp2', 
+            description: '' 
+        }));
+    });
+
 });

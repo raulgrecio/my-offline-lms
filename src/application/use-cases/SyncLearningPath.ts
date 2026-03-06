@@ -4,9 +4,9 @@ import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { SyncCourseData } from "./SyncCourseData";
-import { env } from "../../config/env";
 import { Slug } from "../../domain/value-objects/Slug";
 import { ILogger } from "../../domain/services/ILogger";
+import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
 
 export class SyncLearningPath {
   private browserProvider: BrowserProvider;
@@ -14,6 +14,7 @@ export class SyncLearningPath {
   private courseRepo: ICourseRepository;
   private syncCourseData: SyncCourseData;
   private interceptedDataRepo: IInterceptedDataRepository;
+  private urlProvider: IPlatformUrlProvider;
   private logger: ILogger;
 
   constructor(deps: {
@@ -22,6 +23,7 @@ export class SyncLearningPath {
     courseRepo: ICourseRepository,
     syncCourseData: SyncCourseData,
     interceptedDataRepo: IInterceptedDataRepository,
+    urlProvider: IPlatformUrlProvider,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
@@ -29,10 +31,12 @@ export class SyncLearningPath {
     this.courseRepo = deps.courseRepo;
     this.syncCourseData = deps.syncCourseData;
     this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.urlProvider = deps.urlProvider;
     this.logger = deps.logger.withContext("SyncLearningPath");
   }
 
-  async execute(targetUrl: string): Promise<void> {
+  async execute(target: string): Promise<void> {
+    const targetUrl = this.urlProvider.resolveLearningPathUrl(target);
     this.logger.info(`Iniciando mapeo y sincronización de ruta: ${targetUrl}`);
 
     // 1. Extraer datos (Navegador)
@@ -82,8 +86,7 @@ export class SyncLearningPath {
 
         // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
         this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
-        const baseUrl = env.PLATFORM_BASE_URL;
-        const courseUrl = new URL(`/ou/course/${courseSlug}/${child.id}`, baseUrl).href;
+        const courseUrl = this.urlProvider.getCourseUrl(courseSlug, child.id);
         await this.syncCourseData.execute(courseUrl);
 
         orderIndex++;

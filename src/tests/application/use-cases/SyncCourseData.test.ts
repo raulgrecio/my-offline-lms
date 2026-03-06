@@ -33,6 +33,14 @@ describe('SyncCourseData Use Case', () => {
         withContext: vi.fn().mockReturnThis(),
     } as any;
 
+    const mockUrlProvider = {
+        resolveCourseUrl: vi.fn(url => {
+            const resolved = url.startsWith('http') ? url : `https://platform.com/ou/course/slug/${url}`;
+            return resolved.endsWith('/') ? resolved : `${resolved}/`;
+        }),
+        getCourseUrl: vi.fn((slug, id) => `https://platform.com/ou/course/${slug}/${id}`)
+    } as any;
+
     let useCase: SyncCourseData;
 
     beforeEach(() => {
@@ -43,6 +51,7 @@ describe('SyncCourseData Use Case', () => {
             courseRepository: mockCourseRepo,
             assetRepository: mockAssetRepo,
             interceptedDataRepo: mockInterceptedDataRepo,
+            urlProvider: mockUrlProvider,
             logger: mockLogger,
         });
     });
@@ -113,6 +122,64 @@ describe('SyncCourseData Use Case', () => {
             url: 'https://platform.com/ou/course/test-course/123/v1' 
         }));
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle course data with missing modules or eKits', async () => {
+        const mockPage = {
+            goto: vi.fn(),
+            close: vi.fn(),
+            waitForSelector: vi.fn().mockResolvedValue({}),
+            click: vi.fn()
+        } as any;
+        const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
+        mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+        const mockPayload = {
+            filePath: 'f1',
+            content: JSON.stringify({
+                data: { id: '123', name: 'Simple Course' } // No modules, no eKits
+            })
+        };
+        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
+
+        await useCase.execute('https://platform.com/ou/course/simple-course/123');
+
+        expect(mockCourseRepo.saveCourse).toHaveBeenCalled();
+        expect(mockAssetRepo.saveAsset).not.toHaveBeenCalled();
+    });
+
+    it('should filter non-video components', async () => {
+        const mockPage = {
+            goto: vi.fn(),
+            close: vi.fn(),
+            waitForSelector: vi.fn().mockResolvedValue({}),
+            click: vi.fn()
+        } as any;
+        const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
+        mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+        const mockPayload = {
+            filePath: 'f2',
+            content: JSON.stringify({
+                data: {
+                    id: '123',
+                    name: 'Mixed Components',
+                    modules: [{
+                        id: 'm1',
+                        components: [
+                            { id: 'v1', typeId: '1', name: 'Video' },
+                            { id: 'o1', typeId: '99', name: 'Other' }
+                        ]
+                    }]
+                }
+            })
+        };
+        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
+
+        await useCase.execute('https://platform.com/ou/course/mixed/123');
+
+        expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(1);
+        expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ id: 'v1' }));
     });
 
     it('should warn if no intercepted data matches', async () => {

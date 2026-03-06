@@ -19,6 +19,7 @@ import { YtDlpVideoDownloader } from '../infrastructure/services/YtDlpVideoDownl
 import { ConsoleLogger } from '../infrastructure/services/ConsoleLogger';
 import { DownloadCourse } from '../application/use-cases/DownloadCourse';
 import { DownloadType } from '../domain/models/DownloadType';
+import { OraclePlatformUrlProvider } from '../infrastructure/services/OraclePlatformUrlProvider';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ Comandos disponibles:
   const authSessionStorage = new DiskAuthSessionStorage();
   const assetStorage = new DiskAssetStorage();
   const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);
+  const urlProvider = new OraclePlatformUrlProvider();
 
   try {
     switch (command) {
@@ -74,6 +76,7 @@ Comandos disponibles:
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
           interceptedDataRepo,
+          urlProvider,
           logger,
         });
         await syncCourse.execute(target);
@@ -83,17 +86,12 @@ Comandos disponibles:
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
         
-        let pathUrl = target;
-        if (/^\d+$/.test(target)) {
-           const baseUrl = env.PLATFORM_BASE_URL;
-           pathUrl = new URL(`/ou/learning-path/path/${target}`, baseUrl).href;
-        }
-        
         const syncCourse = new SyncCourseData({ 
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
           interceptedDataRepo,
+          urlProvider,
           logger,
         });
         const syncPath = new SyncLearningPath({ 
@@ -102,9 +100,10 @@ Comandos disponibles:
           courseRepo, 
           syncCourseData: syncCourse, 
           interceptedDataRepo,
+          urlProvider,
           logger,
         });
-        await syncPath.execute(pathUrl);
+        await syncPath.execute(target);
         break;
       }
       case 'download-guides': {

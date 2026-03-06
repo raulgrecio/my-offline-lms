@@ -2,16 +2,17 @@ import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
 import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
-import { env } from "../../config/env";
 import { ILogger } from "../../domain/services/ILogger";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { Slug } from "../../domain/value-objects/Slug";
+import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
 
 export class SyncCourseData {
   private browserProvider: BrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
   private interceptedDataRepo: IInterceptedDataRepository;
+  private urlProvider: IPlatformUrlProvider;
   private logger: ILogger;
 
   constructor(deps: {
@@ -19,12 +20,14 @@ export class SyncCourseData {
     courseRepository: ICourseRepository,
     assetRepository: IAssetRepository,
     interceptedDataRepo: IInterceptedDataRepository,
+    urlProvider: IPlatformUrlProvider,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepository = deps.courseRepository;
     this.assetRepository = deps.assetRepository;
     this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.urlProvider = deps.urlProvider;
     this.logger = deps.logger.withContext("SyncCourseData");
   }
 
@@ -36,7 +39,7 @@ export class SyncCourseData {
 
     this.logger.info(`Course Path recibido: "${coursePath}"`);
 
-    const targetUrl = this.resolveCourseUrl(coursePath);
+    const targetUrl = this.urlProvider.resolveCourseUrl(coursePath);
     this.logger.info(`Iniciando mapeo y sincronización del curso: ${targetUrl}`);
 
     const context = await this.browserProvider.getAuthenticatedContext();
@@ -152,15 +155,5 @@ export class SyncCourseData {
       this.logger.warn("No se encontraron datos interceptados para este curso.");
     }
 
-    await this.browserProvider.close();
-  }
-
-  private resolveCourseUrl(target: string): string {
-    let url = target;
-    if (!target.startsWith("http")) {
-      const baseUrl = env.PLATFORM_BASE_URL;
-      url = new URL(`/ou/course/slug/${target}`, baseUrl).href;
-    }
-    return url.endsWith('/') ? url : `${url}/`;
   }
 }
