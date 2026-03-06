@@ -22,7 +22,7 @@ export function initDb(database = db) {
 
     CREATE TABLE IF NOT EXISTS Courses (
       id TEXT PRIMARY KEY,
-      slug TEXT UNIQUE,
+      slug TEXT,
       title TEXT
     );
 
