@@ -2,6 +2,7 @@ import { ILearningPathRepository } from "../../domain/repositories/ILearningPath
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 import { ILogger } from "../../domain/services/ILogger";
+import { DownloadType } from "../../domain/models/DownloadType";
 
 export class DownloadPath {
   private learningPathRepo: ILearningPathRepository;
@@ -21,7 +22,7 @@ export class DownloadPath {
     this.logger = deps.logger.withContext("DownloadPath");
   }
 
-  async execute(pathId: string, type: 'video' | 'guide' | 'all' = 'all'): Promise<void> {
+  async execute(pathId: string, type: DownloadType = 'all'): Promise<void> {
     this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);
     
     const courses = this.learningPathRepo.getCoursesForPath(pathId);

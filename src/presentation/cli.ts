@@ -17,6 +17,8 @@ import { DiskAuthSessionStorage } from '../infrastructure/repositories/DiskAuthS
 import { DiskAssetStorage } from '../infrastructure/repositories/DiskAssetStorage';
 import { YtDlpVideoDownloader } from '../infrastructure/services/YtDlpVideoDownloader';
 import { ConsoleLogger } from '../infrastructure/services/ConsoleLogger';
+import { DownloadCourse } from '../application/use-cases/DownloadCourse';
+import { DownloadType } from '../domain/models/DownloadType';
 
 dotenv.config();
 
@@ -66,14 +68,15 @@ Comandos disponibles:
       case 'sync-course': {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
-        const sync = new SyncCourseData({ 
+        
+        const syncCourse = new SyncCourseData({ 
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
           interceptedDataRepo,
           logger,
         });
-        await sync.execute(target);
+        await syncCourse.execute(target);
         break;
       }
       case 'sync-path': {
@@ -133,8 +136,9 @@ Comandos disponibles:
       }
       case 'download-path': {
         const id = args[1];
-        const type = args[2] as 'video' | 'guide' | 'all' | undefined;
+        const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
+
         const guides = new DownloadGuides({ 
           browserProvider,
           courseRepo,
@@ -156,12 +160,13 @@ Comandos disponibles:
           downloadVideos: videos,
           logger,
         });
+
         await downloadPath.execute(id, type || 'all');
         break;
       }
       case 'download-course': {
         const id = args[1];
-        const type = args[2] as 'video' | 'guide' | 'all' | undefined;
+        const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del curso.");
 
         const guides = new DownloadGuides({ 
@@ -180,17 +185,14 @@ Comandos disponibles:
           logger,
         });
         
-        const effectiveType = type || 'all';
-        logger.info(`\n=== INICIANDO DESCARGA DEL CURSO ${id} (Tipo: ${effectiveType}) ===\n`, "CLI");
-        
-        if (effectiveType === 'all' || effectiveType === 'guide') {
-          await guides.executeForCourse(id);
-        }
-        if (effectiveType === 'all' || effectiveType === 'video') {
-          await videos.executeForCourse(id);
-        }
-        
-        logger.info(`================ DESCARGA FINALIZADA =================`, "");
+        const downloadCourse = new DownloadCourse({ 
+          courseRepo,
+          downloadGuides: guides, 
+          downloadVideos: videos,
+          logger,
+        });
+
+        await downloadCourse.execute(id, type || 'all');
         break;
       }
       default:

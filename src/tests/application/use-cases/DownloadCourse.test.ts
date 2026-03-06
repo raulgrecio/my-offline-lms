@@ -1,0 +1,75 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { DownloadCourse } from '../../../application/use-cases/DownloadCourse';
+import { DownloadType } from '../../../domain/models/DownloadType';
+
+describe('DownloadCourse Use Case', () => {
+    const mockCourseRepo = {
+        getCourseById: vi.fn()
+    } as any;
+
+    const mockDownloadGuides = {
+        executeForCourse: vi.fn()
+    } as any;
+
+    const mockDownloadVideos = {
+        executeForCourse: vi.fn()
+    } as any;
+
+    const mockLogger = {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        withContext: vi.fn().mockReturnThis()
+    } as any;
+
+    let useCase: DownloadCourse;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        useCase = new DownloadCourse({
+            courseRepo: mockCourseRepo,
+            downloadGuides: mockDownloadGuides,
+            downloadVideos: mockDownloadVideos,
+            logger: mockLogger,
+        });
+    });
+
+    it('should log and exit if course not found', async () => {
+        mockCourseRepo.getCourseById.mockReturnValue(null);
+        
+        await useCase.execute('course123', 'all');
+        
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontró el curso'));
+        expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
+        expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+    });
+
+    it('should call both guides and videos when type is all', async () => {
+        const mockCourse = { id: 'course1', title: 'Course 1' };
+        mockCourseRepo.getCourseById.mockReturnValue(mockCourse);
+        
+        await useCase.execute('course1', 'all');
+        
+        expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course1');
+        expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course1');
+    });
+
+    it('should only call guides download when type is guide', async () => {
+        mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
+        
+        await useCase.execute('c1', 'guide');
+        
+        expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('c1');
+        expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+    });
+
+    it('should only call videos download when type is video', async () => {
+        mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
+        
+        await useCase.execute('c1', 'video');
+        
+        expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('c1');
+        expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
+    });
+});
