@@ -3,7 +3,7 @@ import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
 import { IVideoDownloader } from "../../domain/services/IVideoDownloader";
 import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { PlatformUrl } from "../../domain/value-objects/PlatformUrl";
+import { INamingService } from "../../domain/services/INamingService";
 import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { BrowserContext } from "playwright";
 import { ILogger } from "../../domain/services/ILogger";
@@ -14,21 +14,24 @@ export class DownloadVideos {
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
   private videoDownloader: IVideoDownloader;
+  private namingService: INamingService;
   private logger: ILogger;
 
   constructor(deps: {
     browserProvider: BrowserProvider,
-    courseRepo: ICourseRepository,
-    assetRepo: IAssetRepository,
+    courseRepository: ICourseRepository,
+    assetRepository: IAssetRepository,
     assetStorage: IAssetStorage,
     videoDownloader: IVideoDownloader,
+    namingService: INamingService,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
-    this.courseRepo = deps.courseRepo;
-    this.assetRepo = deps.assetRepo;
+    this.courseRepo = deps.courseRepository;
+    this.assetRepo = deps.assetRepository;
     this.assetStorage = deps.assetStorage;
     this.videoDownloader = deps.videoDownloader;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("DownloadVideos");
   }
 
@@ -64,7 +67,7 @@ export class DownloadVideos {
 
     const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'videos');
 
-    const safeName = AssetNamingService.generateSafeFilename(asset.metadata.title, asset.metadata.order_index);
+    const safeName = this.namingService.generateSafeFilename(asset.metadata.title, asset.metadata.order_index);
     const filename = `${safeName}.mp4`;
     const outputPath = `${courseVideosDir}/${filename}`;
 
@@ -95,7 +98,7 @@ export class DownloadVideos {
         }
       });
 
-      const cleanUrl = PlatformUrl.create(asset.url).getValue();
+      const cleanUrl = this.namingService.cleanUrl(asset.url);
       
       await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
       await page.waitForTimeout(18000); 

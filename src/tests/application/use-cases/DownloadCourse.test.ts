@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadCourse } from '../../../application/use-cases/DownloadCourse';
+import { AssetNamingService } from '../../../domain/services/AssetNamingService';
 import { DownloadType } from '../../../domain/models/DownloadType';
 
 describe('DownloadCourse Use Case', () => {
@@ -31,6 +32,7 @@ describe('DownloadCourse Use Case', () => {
             courseRepo: mockCourseRepo,
             downloadGuides: mockDownloadGuides,
             downloadVideos: mockDownloadVideos,
+            namingService: new AssetNamingService(),
             logger: mockLogger,
         });
     });

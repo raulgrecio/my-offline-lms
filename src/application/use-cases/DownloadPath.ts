@@ -3,22 +3,30 @@ import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 import { ILogger } from "../../domain/services/ILogger";
 import { DownloadType } from "../../domain/models/DownloadType";
+import { INamingService } from "../../domain/services/INamingService";
+import { SyncLearningPath } from "./SyncLearningPath";
 
 export class DownloadPath {
   private learningPathRepo: ILearningPathRepository;
+  private syncLearningPath: SyncLearningPath;
   private downloadGuides: DownloadGuides;
   private downloadVideos: DownloadVideos;
+  private namingService: INamingService;
   private logger: ILogger;
 
   constructor(deps: {
     learningPathRepo: ILearningPathRepository,
+    syncLearningPath: SyncLearningPath,
     downloadGuides: DownloadGuides,
     downloadVideos: DownloadVideos,
+    namingService: INamingService,
     logger: ILogger
   }) {
     this.learningPathRepo = deps.learningPathRepo;
+    this.syncLearningPath = deps.syncLearningPath;
     this.downloadGuides = deps.downloadGuides;
     this.downloadVideos = deps.downloadVideos;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("DownloadPath");
   }
 

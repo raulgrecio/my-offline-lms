@@ -2,6 +2,7 @@ import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 import { ILogger } from "../../domain/services/ILogger";
+import { INamingService } from "../../domain/services/INamingService";
 import { DownloadType } from "../../domain/models/DownloadType";
 
 
@@ -9,17 +10,20 @@ export class DownloadCourse {
   private courseRepo: ICourseRepository;
   private downloadGuides: DownloadGuides;
   private downloadVideos: DownloadVideos;
+  private namingService: INamingService;
   private logger: ILogger;
 
   constructor(deps: {
     courseRepo: ICourseRepository,
     downloadGuides: DownloadGuides,
     downloadVideos: DownloadVideos,
+    namingService: INamingService,
     logger: ILogger
   }) {
     this.courseRepo = deps.courseRepo;
     this.downloadGuides = deps.downloadGuides;
     this.downloadVideos = deps.downloadVideos;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("DownloadCourse");
   }
 

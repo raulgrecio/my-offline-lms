@@ -2,7 +2,7 @@ import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
 import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
-import { AssetNamingService } from "../../domain/services/AssetNamingService";
+import { INamingService } from "../../domain/services/INamingService";
 import { env } from "../../config/env";
 import { ILogger } from "../../domain/services/ILogger";
 
@@ -11,6 +11,7 @@ export class DownloadGuides {
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
+  private namingService: INamingService;
   private logger: ILogger;
   private keepTempImages: boolean;
 
@@ -19,12 +20,14 @@ export class DownloadGuides {
     courseRepo: ICourseRepository,
     assetRepo: IAssetRepository,
     assetStorage: IAssetStorage,
+    namingService: INamingService,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepo = deps.courseRepo;
     this.assetRepo = deps.assetRepo;
     this.assetStorage = deps.assetStorage;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("DownloadGuides");
     this.keepTempImages = env.KEEP_TEMP_IMAGES;
   }
@@ -67,7 +70,7 @@ export class DownloadGuides {
 
     const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guides');
 
-    const safeName = AssetNamingService.generateSafeFilename(meta.title || meta.name || 'guide', meta.order_index);
+    const safeName = this.namingService.generateSafeFilename(meta.title || meta.name || 'guide', meta.order_index);
     const filename = `${safeName}.pdf`;
     const outputPath = `${courseGuidesDir}/${filename}`;
 

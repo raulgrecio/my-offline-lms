@@ -21,9 +21,10 @@ async function run() {
             
             // Si el body contiene ba43ef1c o ekitId o htmlViewer, guardarlo
             const strBody = JSON.stringify(body);
+            const namingService = new AssetNamingService();
             if (strBody.includes("transcript") || strBody.includes("vtt") || strBody.includes("ba43ef1c")) {
                 const urlObj = new URL(url);
-                const safeUrl = AssetNamingService.generateSafeFilename(urlObj.pathname.replace(/\//g, ' '));
+                const safeUrl = namingService.generateSafeFilename(urlObj.pathname.replace(/\//g, ' '));
                 fs.writeFileSync(`/tmp/intercept_${safeUrl}.json`, JSON.stringify(body, null, 2));
                 console.log(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
             }

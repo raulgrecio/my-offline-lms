@@ -4,9 +4,9 @@ import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { SyncCourseData } from "./SyncCourseData";
-import { Slug } from "../../domain/value-objects/Slug";
 import { ILogger } from "../../domain/services/ILogger";
 import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
+import { INamingService } from "../../domain/services/INamingService";
 
 export class SyncLearningPath {
   private browserProvider: BrowserProvider;
@@ -15,6 +15,7 @@ export class SyncLearningPath {
   private syncCourseData: SyncCourseData;
   private interceptedDataRepo: IInterceptedDataRepository;
   private urlProvider: IPlatformUrlProvider;
+  private namingService: INamingService;
   private logger: ILogger;
 
   constructor(deps: {
@@ -24,6 +25,7 @@ export class SyncLearningPath {
     syncCourseData: SyncCourseData,
     interceptedDataRepo: IInterceptedDataRepository,
     urlProvider: IPlatformUrlProvider,
+    namingService: INamingService,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
@@ -32,6 +34,7 @@ export class SyncLearningPath {
     this.syncCourseData = deps.syncCourseData;
     this.interceptedDataRepo = deps.interceptedDataRepo;
     this.urlProvider = deps.urlProvider;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncLearningPath");
   }
 
@@ -65,7 +68,7 @@ export class SyncLearningPath {
 
       const pathId = lpData.id;
       const pathTitle = lpData.name;
-      const pathSlug = Slug.create(pathTitle).getValue();
+      const pathSlug = this.namingService.slugify(pathTitle);
       const pathDesc = lpData.description || "";
 
       this.logger.info(`🧭 Procesando Learning Path: ${pathTitle}`);
@@ -79,7 +82,7 @@ export class SyncLearningPath {
         if (child.typeId !== "22") continue; // 22 is Standard Course
         if (!child.id || !child.name) continue;
 
-        const courseSlug = Slug.create(child.name).getValue();
+        const courseSlug = this.namingService.slugify(child.name);
         
         this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
         this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });

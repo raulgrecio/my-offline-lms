@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadPath } from '../../../application/use-cases/DownloadPath';
+import { AssetNamingService } from '../../../domain/services/AssetNamingService';
 
 describe('DownloadPath Use Case', () => {
     const mockLearningPathRepo = {
         getCoursesForPath: vi.fn()
+    } as any;
+
+    const mockSyncLearningPath = {
+        execute: vi.fn()
     } as any;
 
     const mockDownloadGuides = {
@@ -28,8 +33,10 @@ describe('DownloadPath Use Case', () => {
         vi.clearAllMocks();
         useCase = new DownloadPath({
             learningPathRepo: mockLearningPathRepo,
+            syncLearningPath: mockSyncLearningPath,
             downloadGuides: mockDownloadGuides,
             downloadVideos: mockDownloadVideos,
+            namingService: new AssetNamingService(),
             logger: mockLogger,
         });
     });

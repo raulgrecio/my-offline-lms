@@ -3,9 +3,9 @@ import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
 import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
 import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
 import { ILogger } from "../../domain/services/ILogger";
-import { setupInterceptor } from "../../infrastructure/browser/interceptor";
-import { Slug } from "../../domain/value-objects/Slug";
 import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
+import { setupInterceptor } from "../../infrastructure/browser/interceptor";
+import { INamingService } from "../../domain/services/INamingService";
 
 export class SyncCourseData {
   private browserProvider: BrowserProvider;
@@ -13,6 +13,7 @@ export class SyncCourseData {
   private assetRepository: IAssetRepository;
   private interceptedDataRepo: IInterceptedDataRepository;
   private urlProvider: IPlatformUrlProvider;
+  private namingService: INamingService;
   private logger: ILogger;
 
   constructor(deps: {
@@ -21,13 +22,15 @@ export class SyncCourseData {
     assetRepository: IAssetRepository,
     interceptedDataRepo: IInterceptedDataRepository,
     urlProvider: IPlatformUrlProvider,
-    logger: ILogger
+    namingService: INamingService,
+    logger: ILogger,
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepository = deps.courseRepository;
     this.assetRepository = deps.assetRepository;
     this.interceptedDataRepo = deps.interceptedDataRepo;
     this.urlProvider = deps.urlProvider;
+    this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncCourseData");
   }
 
@@ -87,7 +90,7 @@ export class SyncCourseData {
     if (courseData) {
       const courseTitle = courseData.name || courseData.title;
       const courseId = courseData.id.toString();
-      const courseSlug = courseData.slug || Slug.create(courseTitle).getValue();
+      const courseSlug = courseData.slug || this.namingService.slugify(courseTitle);
 
       this.logger.info(`💾 Procesando y guardando Curso: ${courseTitle}`);
       

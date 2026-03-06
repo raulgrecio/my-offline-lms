@@ -11,6 +11,7 @@ import { SyncLearningPath } from '../application/use-cases/SyncLearningPath';
 import { DownloadGuides } from '../application/use-cases/DownloadGuides';
 import { DownloadVideos } from '../application/use-cases/DownloadVideos';
 import { DownloadPath } from '../application/use-cases/DownloadPath';
+import { AssetNamingService } from '../domain/services/AssetNamingService';
 
 import { DiskInterceptedDataRepository } from '../infrastructure/repositories/DiskInterceptedDataRepository';
 import { DiskAuthSessionStorage } from '../infrastructure/repositories/DiskAuthSessionStorage';
@@ -54,6 +55,7 @@ Comandos disponibles:
   const assetStorage = new DiskAssetStorage();
   const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);
   const urlProvider = new OraclePlatformUrlProvider();
+  const namingService = new AssetNamingService();
 
   try {
     switch (command) {
@@ -77,6 +79,7 @@ Comandos disponibles:
           assetRepository: assetRepo, 
           interceptedDataRepo,
           urlProvider,
+          namingService,
           logger,
         });
         await syncCourse.execute(target);
@@ -92,6 +95,7 @@ Comandos disponibles:
           assetRepository: assetRepo, 
           interceptedDataRepo,
           urlProvider,
+          namingService,
           logger,
         });
         const syncPath = new SyncLearningPath({ 
@@ -101,6 +105,7 @@ Comandos disponibles:
           syncCourseData: syncCourse, 
           interceptedDataRepo,
           urlProvider,
+          namingService,
           logger,
         });
         await syncPath.execute(target);
@@ -114,6 +119,7 @@ Comandos disponibles:
           courseRepo, 
           assetRepo, 
           assetStorage,
+          namingService,
           logger,
         });
         await guides.executeForCourse(id);
@@ -124,10 +130,11 @@ Comandos disponibles:
         if (!id) throw new Error("Falta el ID del curso.");
         const videos = new DownloadVideos({ 
           browserProvider, 
-          courseRepo, 
-          assetRepo, 
+          courseRepository: courseRepo, 
+          assetRepository: assetRepo, 
           assetStorage, 
           videoDownloader,
+          namingService,
           logger,
         });
         await videos.executeForCourse(id);
@@ -138,25 +145,48 @@ Comandos disponibles:
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
 
+        const syncCourse = new SyncCourseData({ 
+          browserProvider, 
+          courseRepository: courseRepo, 
+          assetRepository: assetRepo, 
+          interceptedDataRepo,
+          urlProvider,
+          namingService,
+          logger,
+        });
+        const syncPath = new SyncLearningPath({ 
+          browserProvider, 
+          learningPathRepo: pathRepo, 
+          courseRepo, 
+          syncCourseData: syncCourse, 
+          interceptedDataRepo,
+          urlProvider,
+          namingService,
+          logger,
+        });
         const guides = new DownloadGuides({ 
           browserProvider,
           courseRepo,
           assetRepo,
           assetStorage,
+          namingService,
           logger,
         });
         const videos = new DownloadVideos({ 
           browserProvider,
-          courseRepo,
-          assetRepo,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
           assetStorage,
           videoDownloader,
+          namingService,
           logger,
         });
         const downloadPath = new DownloadPath({ 
           learningPathRepo: pathRepo, 
+          syncLearningPath: syncPath,
           downloadGuides: guides, 
           downloadVideos: videos,
+          namingService,
           logger,
         });
 
@@ -173,14 +203,16 @@ Comandos disponibles:
           courseRepo,
           assetRepo,
           assetStorage,
+          namingService,
           logger,
         });
         const videos = new DownloadVideos({
           browserProvider,
-          courseRepo,
-          assetRepo,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
           assetStorage,
           videoDownloader,
+          namingService,
           logger,
         });
         
@@ -188,6 +220,7 @@ Comandos disponibles:
           courseRepo,
           downloadGuides: guides, 
           downloadVideos: videos,
+          namingService,
           logger,
         });
 
@@ -195,10 +228,10 @@ Comandos disponibles:
         break;
       }
       default:
-        console.log(`Comando no reconocido: ${command}`);
+        console.log(`Comando desconocido: ${command}`);
     }
-  } catch (error) {
-    logger.error("Error ejecutando comando:", error, "CLI");
+  } catch (err: any) {
+    logger.error("Error ejecutando comando:", err.message);
   } finally {
     await browserProvider.close();
   }

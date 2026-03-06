@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SyncLearningPath } from '../../../application/use-cases/SyncLearningPath';
+import { AssetNamingService } from '../../../domain/services/AssetNamingService';
 
 vi.mock('../../../infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
@@ -53,6 +54,7 @@ describe('SyncLearningPath Use Case', () => {
             syncCourseData: mockSyncCourseUseCase,
             interceptedDataRepo: mockInterceptedDataRepo,
             urlProvider: mockUrlProvider,
+            namingService: new AssetNamingService(),
             logger: mockLogger
         });
     });

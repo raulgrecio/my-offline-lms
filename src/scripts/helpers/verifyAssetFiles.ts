@@ -7,7 +7,8 @@ import { AssetNamingService } from "../../domain/services/AssetNamingService";
  */
 export function verifyAssetFiles({ type, courseId, metadataStr, assetsBaseDir }: { type: string, courseId: string, metadataStr: string, assetsBaseDir: string }): { videoExists?: boolean, vttExists?: boolean, guideExists?: boolean, expectedPath: string, safeName: string } {
     const meta = JSON.parse(metadataStr || "{}");
-    const safeName = AssetNamingService.generateSafeFilename(meta.title, meta.order_index);
+    const namingService = new AssetNamingService();
+    const safeName = namingService.generateSafeFilename(meta.title, meta.order_index);
 
     if (type === 'guide') {
         const courseGuidesDir = path.join(assetsBaseDir, courseId, "guides");

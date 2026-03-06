@@ -1,11 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadVideos } from '../../../application/use-cases/DownloadVideos';
+import { AssetNamingService } from '../../../domain/services/AssetNamingService';
 
-vi.mock('../../../domain/services/AssetNamingService', () => ({
-    AssetNamingService: {
-        generateSafeFilename: vi.fn().mockReturnValue('01_Video_1')
-    }
-}));
+
 
 describe('DownloadVideos Use Case', () => {
     let callCount = 0;
@@ -92,10 +89,11 @@ describe('DownloadVideos Use Case', () => {
 
         useCase = new DownloadVideos({
             browserProvider: mockBrowserProvider, 
-            courseRepo: mockCourseRepo, 
-            assetRepo: mockAssetRepo, 
+            courseRepository: mockCourseRepo,
+            assetRepository: mockAssetRepo, 
             assetStorage: mockAssetStorage, 
             videoDownloader: mockVideoDownloader,
+            namingService: new AssetNamingService(),
             logger: mockRootLogger,
         });
     });
