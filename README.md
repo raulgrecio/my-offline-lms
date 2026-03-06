@@ -1,154 +1,176 @@
 # my-offline-lms
 
-> Plataforma personal para descargar y estudiar offline materiales de cursos online (PDFs, vídeos, transcripciones) con arquitectura limpia (Clean Architecture) y CLI unificado.
+> A personal project to sync and download course materials (PDFs, Videos, Transcripts) for offline study, built with Clean Architecture and a unified CLI.
 
 ---
 
-## Tabla de Contenidos
+## Code Coverage
 
-1. [Descripción](#descripción)
-2. [Arquitectura (Clean Architecture)](#arquitectura)
-3. [Stack Tecnológico](#stack-tecnológico)
-4. [Prerrequisitos](#prerrequisitos)
-5. [Instalación](#instalación)
-6. [Guía de Uso (CLI)](#guía-de-uso)
-7. [Estructura de Directorios](#estructura-de-directorios)
-8. [Variables de Entorno](#variables-de-entorno)
+![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
+
+The project maintains a solid test suite with over **92% line coverage** across the core logic, ensuring reliability in complex synchronization and download flows.
 
 ---
 
-## Descripción
+## 🎓 Personal Project & Acknowledgements
 
-`my-offline-lms` es una herramienta robusta diseñada para sincronizar y descargar contenido educativo de plataformas como Oracle University. Utiliza Playwright para la interceptación de tráfico y automatización, y SQLite como base de datos persistente para gestionar el estado de las descargas.
+This is a personal hobby project created to facilitate offline learning. 
 
----
-
-## Arquitectura
-
-El proyecto sigue los principios de **Arquitectura Limpia (Clean Architecture)**:
-
-- **src/domain**: Núcleo del negocio. Entidades, Value Objects e interfaces de servicios/repositorios. Sin dependencias externas.
-- **src/application**: Casos de uso (Login, Sync, Download). Contiene la lógica de coordinación de la aplicación.
-- **src/infrastructure**: Implementaciones técnicas. DB (SQLite), Browser (Playwright), Servicios (yt-dlp, Filesystem).
-- **src/presentation**: Interfaz de entrada. Actualmente implementado como una CLI en `cli.ts`.
+I would like to express my sincere gratitude to [**Oracle University**](https://mylearn.oracle.com/ou/home). This tool was developed while I was preparing for several Oracle certifications, and it has been instrumental in helping me successfully earn them. The quality of Oracle's educational materials is exceptional, and this project simply aims to make that content more accessible for offline study environments.
 
 ---
 
-## Stack Tecnológico
+## Table of Contents
+
+1. [Description](#description)
+2. [Architecture](#architecture)
+3. [Tech Stack](#tech-stack)
+4. [Prerequisites](#prerequisites)
+5. [Installation](#installation)
+6. [Usage Guide (CLI)](#usage-guide)
+7. [Directory Structure](#directory-structure)
+8. [Environment Variables](#environment-variables)
+9. [License](#license)
+
+---
+
+## Description
+
+`my-offline-lms` is a robust tool designed to synchronize and download educational content from platforms like Oracle University. It leverages Playwright for traffic interception and automation, and SQLite for persistent state management.
+
+**Key Features:**
+- **Clean Architecture**: Organized by Use Cases, Domain, and Infrastructure.
+- **Unified CLI**: Single entry point for all operations.
+- **Resilient**: Automatic resuming of downloads and error handling.
+- **High-Quality PDFs**: Optimized PDF generation from interactive image-based viewers.
+
+---
+
+## Architecture
+
+The project follows **Clean Architecture** principles:
+
+- **src/domain**: Core business logic. Entities, Value Objects, and Repository/Service interfaces. No external dependencies.
+- **src/application**: Use Cases (Login, Sync, Download). Orchestrates the flow of data.
+- **src/infrastructure**: Technical implementations. Database (SQLite), Browser (Playwright), Services (yt-dlp, Filesystem).
+- **src/presentation**: Entry point. Currently a unified CLI in `cli.ts`.
+
+---
+
+## Tech Stack
 
 - **Runtime**: Node.js 18+
-- **Lenguaje**: TypeScript
-- **Automatización**: Playwright + playwright-extra (Stealth)
-- **Base de Datos**: better-sqlite3
-- **Descarga de Vídeos**: yt-dlp
-- **Procesamiento**: sharp (imágenes) & pdfkit (PDFs)
+- **Language**: TypeScript
+- **Automation**: Playwright + playwright-extra (Stealth)
+- **Database**: better-sqlite3
+- **Video Downloader**: yt-dlp
+- **Processing**: sharp (images) & pdfkit (PDFs)
 - **Testing**: Vitest
 
 ---
 
-## Prerrequisitos
+## Prerequisites
 
-### Sistema
+### System
 - **Node.js**: v18+
-- **pnpm**: Recomendado (`npm install -g pnpm`)
-- **yt-dlp**: Necesario para vídeos.
+- **pnpm**: Recommended (`npm install -g pnpm`)
+- **yt-dlp**: Required for videos.
   ```bash
   sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
   sudo chmod a+rx /usr/local/bin/yt-dlp
   ```
-- **ffmpeg**: Necesario para el procesado de vídeo.
+- **ffmpeg**: Required for video processing.
   ```bash
   sudo apt update && sudo apt install -y ffmpeg
   ```
 
 ---
 
-## Instalación
+## Installation
 
-1. **Clonar e instalar**:
+1. **Clone and Install**:
    ```bash
    pnpm install
    pnpm exec playwright install chromium
    ```
 
-2. **Configurar Entorno**:
+2. **Setup Environment**:
    ```bash
    cp .env.example .env
-   # Configura PLATFORM_BASE_URL y otras variables en el .env
+   # Configure PLATFORM_BASE_URL and other variables in .env
    ```
 
 ---
 
-## Guía de Uso
+## Usage Guide
 
-Todas las acciones se ejecutan mediante el comando `pnpm cli`.
+All actions are performed through the `pnpm cli` command.
 
-### 1. Autenticación
-Debes realizar el login manualmente en la ventana que se abre (incluyendo 2FA).
+### 1. Authentication
+Perform the login manually in the browser window that appears (including 2FA).
 ```bash
 pnpm cli login
 ```
-*Esto genera la sesión en `data/.auth/` que será usada por el resto de comandos.*
+*This saves the session in `data/.auth/` for future use.*
 
-### 2. Sincronización (Mapping)
-Carga los metadatos de un curso o una ruta completa en la base de datos local.
+### 2. Synchronization (Mapping)
+Loads course or Learning Path metadata into the local database without downloading files.
 ```bash
-# Sincronizar un curso individual
-pnpm cli sync-course <URL_O_SLUG>
+# Sync an individual course
+pnpm cli sync-course <URL_OR_SLUG>
 
-# Sincronizar un Learning Path completo
-pnpm cli sync-path <URL_O_ID>
+# Sync a complete Learning Path
+pnpm cli sync-path <URL_OR_ID>
 ```
 
-### 3. Descarga
-Descarga los recursos reales (PDFs y Vídeos). Soporta reanudación automática.
+### 3. Downloading
+Download the actual assets (PDFs and Videos) after syncing.
 ```bash
-# Descargar TODO lo pendiente de un curso
-pnpm cli download-course <ID_CURSO>
+# Download everything pending for a course
+pnpm cli download-course <COURSE_ID>
 
-# Descargar solo vídeos de un curso
-pnpm cli download-course <ID_CURSO> video
+# Download only videos for a course
+pnpm cli download-course <COURSE_ID> video
 
-# Descargar solo guías de un curso
-pnpm cli download-course <ID_CURSO> guide
+# Download only guides for a course
+pnpm cli download-course <COURSE_ID> guide
 
-# Descargar una ruta completa (Learning Path)
-pnpm cli download-path <ID_PATH> [all|video|guide]
+# Download a full Learning Path
+pnpm cli download-path <PATH_ID> [all|video|guide]
 ```
 
 ---
 
-## Estructura de Directorios (Source)
+## Directory Structure (Source)
 
 ```
 src/
 ├── application/
-│   └── use-cases/      # Implementación de la lógica de negocio (Sync, Download...)
-├── config/             # Configuración de variables de entorno (Zod)
-├── db/                 # Inicialización y esquema de SQLite
-├── domain/             # Modelos, interfaces y lógica pura de dominio
-├── infrastructure/     # Implementaciones (Browser, Database, Repositorios, Servicios)
+│   └── use-cases/      # Business logic implementation (Sync, Download...)
+├── config/             # Environment variables configuration (Zod)
+├── db/                 # SQLite initialization and schema
+├── domain/             # Entities, interfaces, and pure domain logic
+├── infrastructure/     # Technical implementations (Browser, DB, Repos, Services)
 ├── presentation/       # CLI Entrypoint (cli.ts)
-└── tests/              # Suite de tests (Vitest)
+└── tests/              # Test suite (Vitest)
 ```
 
 ---
 
-## Persistencia de Datos
+## Data Persistence
 
 ```
 data/
-├── .auth/              # Cookies y estado de sesión (Playwright / yt-dlp)
-├── assets/             # PDFs y Vídeos finales organizados por curso
-├── debug/              # Payloads JSON interceptados para depuración
-└── db.sqlite           # Base de datos central (Cursos, Assets, Estado)
+├── .auth/              # Cookies and session state
+├── assets/             # Final PDFs and Videos organized by course
+├── debug/              # Intercepted JSON payloads for debugging
+└── db.sqlite           # Central Database
 ```
 
 ---
 
-## Variables de Entorno (.env)
+## License
 
-- `PLATFORM_BASE_URL`: URL principal de la plataforma.
-- `DOWNLOAD_CONCURRENCY`: Número de descargas simultáneas.
-- `OFFERING_ID`: ID requerido para el visor de guías (eKits).
-- `LOGIN_SUCCESS_SELECTOR`: Selector usado para validar el login.
+This project is licensed under the [MIT License](LICENSE).
+In addition to the license terms, please respect the Terms of Service of the platforms you access. 
+This tool is for personal and educational use only.
