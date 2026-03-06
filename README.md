@@ -1,372 +1,154 @@
 # my-offline-lms
 
-> Plataforma personal para descargar y estudiar offline materiales de cursos online (guides en PDF, vídeos, transcripciones) con autenticación automática 2FA y web local de estudio.
+> Plataforma personal para descargar y estudiar offline materiales de cursos online (PDFs, vídeos, transcripciones) con arquitectura limpia (Clean Architecture) y CLI unificado.
 
 ---
 
 ## Tabla de Contenidos
 
-1. [Descripción del Proyecto](#descripción-del-proyecto)
-2. [Arquitectura](#arquitectura)
+1. [Descripción](#descripción)
+2. [Arquitectura (Clean Architecture)](#arquitectura)
 3. [Stack Tecnológico](#stack-tecnológico)
 4. [Prerrequisitos](#prerrequisitos)
 5. [Instalación](#instalación)
-6. [Uso](#uso)
-7. [Fases del Proyecto](#fases-del-proyecto)
-8. [Estructura de Directorios](#estructura-de-directorios)
-9. [Base de Datos](#base-de-datos)
-10. [Variables de Entorno](#variables-de-entorno)
-11. [Roadmap](#roadmap)
+6. [Guía de Uso (CLI)](#guía-de-uso)
+7. [Estructura de Directorios](#estructura-de-directorios)
+8. [Variables de Entorno](#variables-de-entorno)
 
 ---
 
-## Descripción del Proyecto
+## Descripción
 
-`my-offline-lms` es una herramienta personal de scraping y descarga masiva para extraer materiales educativos de una plataforma online con autenticación (login + 2FA) y construir una plataforma local de estudio offline. El sistema está diseñado con:
-
-- **Descargas paralelas** controladas (p-queue)
-- **Reanudación de descargas** (estado en SQLite)
-- **Tolerancia a fallos** y reintentos automáticos
-- **Ejecución incremental** sin re-descargar assets completados
+`my-offline-lms` es una herramienta robusta diseñada para sincronizar y descargar contenido educativo de plataformas como Oracle University. Utiliza Playwright para la interceptación de tráfico y automatización, y SQLite como base de datos persistente para gestionar el estado de las descargas.
 
 ---
 
 ## Arquitectura
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     CLI / Entrypoint                         │
-│                      (src/index.ts)                          │
-└───────────────┬─────────────────┬───────────────┬───────────┘
-                │                 │               │
-    ┌───────────▼──────┐ ┌────────▼──────┐ ┌─────▼──────────┐
-    │   Scraper Layer  │ │  Download     │ │   Offline Web  │
-    │  (Playwright +   │ │  Engine       │ │   (React/Vite) │
-    │   Stealth)       │ │  (p-queue +   │ │                │
-    │                  │ │  yt-dlp)      │ │                │
-    └───────────┬──────┘ └────────┬──────┘ └─────┬──────────┘
-                │                 │               │
-    ┌───────────▼─────────────────▼───────────────▼───────────┐
-    │                   SQLite (better-sqlite3)                 │
-    │                  data/db.sqlite                           │
-    └─────────────────────────────────────────────────────────┘
-```
+El proyecto sigue los principios de **Arquitectura Limpia (Clean Architecture)**:
 
-**Flujo de datos principal:**
-
-1. `login.ts` → Playwright abre el navegador, el usuario hace login + 2FA → se guardan `state.json` y `cookies.txt` en `data/.auth/`
-2. **Scrapers de mapeo** → Usan la sesión guardada para interceptar XHR/JSON → insertan metadatos en SQLite (sin descargar binarios)
-3. **Download Engine** → Lee tareas `PENDING` de SQLite → descarga en paralelo → actualiza estado a `COMPLETED`/`FAILED`
-4. **Web local** → Lee `api.json` exportado desde SQLite → sirve PDFs, vídeos y transcripciones localmente
+- **src/domain**: Núcleo del negocio. Entidades, Value Objects e interfaces de servicios/repositorios. Sin dependencias externas.
+- **src/application**: Casos de uso (Login, Sync, Download). Contiene la lógica de coordinación de la aplicación.
+- **src/infrastructure**: Implementaciones técnicas. DB (SQLite), Browser (Playwright), Servicios (yt-dlp, Filesystem).
+- **src/presentation**: Interfaz de entrada. Actualmente implementado como una CLI en `cli.ts`.
 
 ---
 
 ## Stack Tecnológico
 
-| Capa | Tecnología | Justificación |
-|------|-----------|---------------|
-| Runtime | **Node.js 18+** | Primera opción por rendimiento I/O asíncrono y ecosistema |
-| Lenguaje | **TypeScript** | Type-safety, mejor DX, detección de errores en compilación |
-| Navegación/Scraping | **Playwright + playwright-extra** | Más robusto que Puppeteer; soporte de contextos multi-tab y intercepción de red |
-| Anti-bot | **puppeteer-extra-plugin-stealth** | Enmascara señales de automatización (WebDriver, navigator.plugins…) |
-| Base de datos | **better-sqlite3** | SQLite síncrono, sin servidor, ideal para estado local; WAL mode para escrituras concurrentes |
-| Paralelización | **p-queue** | Cola de concurrencia con rate limiting y prioridades; simple y probada |
-| Procesado de imágenes | **sharp** | Detecta orientación EXIF; resize en memoria antes de pasar a PDFKit |
-| Generación de PDF | **pdfkit** | Genera PDFs streaming; manejo correcto de páginas landscape/portrait |
-| Descarga de vídeos | **yt-dlp** (subprocess) | Estándar de facto; soporta HLS/DASH, subtítulos `.vtt`/`.srt`, cookies Netscape |
-| Web local | **Vite + React + TS** | SPA ligera; `react-pdf` para visor, video nativo HTML5 |
-
-### Por qué Node.js sobre Python
-
-Para el scraping, Playwright tiene soporte nativo de Node.js con mejor integración de async/await. Python sería redundante salvo que yt-dlp no pueda invocarse via subprocess (lo puede). La única excepción es `ffmpeg` (dependencia de sistema, no de lenguaje).
+- **Runtime**: Node.js 18+
+- **Lenguaje**: TypeScript
+- **Automatización**: Playwright + playwright-extra (Stealth)
+- **Base de Datos**: better-sqlite3
+- **Descarga de Vídeos**: yt-dlp
+- **Procesamiento**: sharp (imágenes) & pdfkit (PDFs)
+- **Testing**: Vitest
 
 ---
 
 ## Prerrequisitos
 
 ### Sistema
-
-- **Node.js** v18 o superior → [nodejs.org](https://nodejs.org)
-- **pnpm** o **npm** (gestor de paquetes) → `npm install -g pnpm` (opcional si prefieres pnpm)
-- **yt-dlp** → Para descarga de vídeos:
+- **Node.js**: v18+
+- **pnpm**: Recomendado (`npm install -g pnpm`)
+- **yt-dlp**: Necesario para vídeos.
   ```bash
-  # Linux / WSL
   sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
   sudo chmod a+rx /usr/local/bin/yt-dlp
   ```
-- **ffmpeg** → Requerido por yt-dlp para muxing vídeo+audio:
+- **ffmpeg**: Necesario para el procesado de vídeo.
   ```bash
-  # Ubuntu / WSL
   sudo apt update && sudo apt install -y ffmpeg
   ```
-- **Playwright Browsers** → Se instala en el paso de instalación
-
-### Para WSL2
-
-Si ejecutas en WSL2, Playwright necesita acceso a display o ejecutar en modo headed con VcXsrv/WSLg. Asegúrate de tener habilitado WSLg o configura `DISPLAY` correctamente.
-
-```bash
-# Instalar dependencias del sistema para Playwright (Chromium)
-pnpm exec playwright install-deps chromium
-# o con npm:
-# npx playwright install-deps chromium
-```
 
 ---
 
 ## Instalación
 
+1. **Clonar e instalar**:
+   ```bash
+   pnpm install
+   pnpm exec playwright install chromium
+   ```
+
+2. **Configurar Entorno**:
+   ```bash
+   cp .env.example .env
+   # Configura PLATFORM_BASE_URL y otras variables en el .env
+   ```
+
+---
+
+## Guía de Uso
+
+Todas las acciones se ejecutan mediante el comando `pnpm cli`.
+
+### 1. Autenticación
+Debes realizar el login manualmente en la ventana que se abre (incluyendo 2FA).
 ```bash
-# 1. Clonar el repositorio
-git clone <repo-url> my-offline-lms
-cd my-offline-lms
-
-# 2. Instalar dependencias Node.js
-pnpm install
-# o con npm:
-# npm install
-
-# 3. Instalar navegadores de Playwright
-pnpm exec playwright install chromium
-# o con npm:
-# npx playwright install chromium
-
-# 4. Crear directorio de datos (se crea automáticamente al ejecutar, pero puedes crearlo manualmente)
-mkdir -p data/.auth data/assets
-
-# 5. Copiar y configurar variables de entorno
-cp .env.example .env
-# Editar .env con la URL base de la plataforma
+pnpm cli login
 ```
+*Esto genera la sesión en `data/.auth/` que será usada por el resto de comandos.*
 
----
-
-## Uso
-
-### Paso 1: Autenticación (Milestone 1 — ✅ Implementado)
-
-Lanza el script de login interactivo. Se abrirá una ventana de Chromium donde deberás hacer el login manualmente (incluyendo el 2FA). Una vez detectada la sesión, se guardan las cookies automáticamente.
-
+### 2. Sincronización (Mapping)
+Carga los metadatos de un curso o una ruta completa en la base de datos local.
 ```bash
-# ts-node directo (desarrollo)
-pnpm exec ts-node src/scraper/login.ts <URL_LOGIN> <SELECTOR_POST_LOGIN>
-# o con npm:
-# npx ts-node src/scraper/login.ts <URL_LOGIN> <SELECTOR_POST_LOGIN>
+# Sincronizar un curso individual
+pnpm cli sync-course <URL_O_SLUG>
 
-# Ejemplo:
-pnpm exec ts-node src/scraper/login.ts https://mi-plataforma.com/login "#dashboard"
+# Sincronizar un Learning Path completo
+pnpm cli sync-path <URL_O_ID>
 ```
 
-**Salida esperada:**
-```
-Iniciando navegador para Auth...
-Navegando a https://mi-plataforma.com/login
-Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.
-Login exitoso detectado. Guardando estado de la sesión y cookies...
-Sesión y cookies guardadas con éxito en data/.auth/
-```
-
-Archivos generados:
-- `data/.auth/state.json` → Sesión Playwright (localStorage, sessionStorage, cookies)
-- `data/.auth/cookies.txt` → Cookies formato Netscape (para yt-dlp)
-
-### Paso 2: Inicializar base de datos
-
+### 3. Descarga
+Descarga los recursos reales (PDFs y Vídeos). Soporta reanudación automática.
 ```bash
-pnpm start
-# o en modo desarrollo con hot-reload:
-pnpm dev
+# Descargar TODO lo pendiente de un curso
+pnpm cli download-course <ID_CURSO>
 
-# Equivalente en npm:
-# npm start
-# npm run dev
-```
+# Descargar solo vídeos de un curso
+pnpm cli download-course <ID_CURSO> video
 
-Crea el fichero `data/db.sqlite` con el esquema completo.
+# Descargar solo guías de un curso
+pnpm cli download-course <ID_CURSO> guide
 
-### Paso 3: Ejecutar scrapers de mapeo (Milestone 2 — ✅ Implementado)
-
-Mapea un curso específico interceptando su tráfico y volcando el JSON. Posteriormente, inserta este mapeo en SQLite.
-
-```bash
-# Interceptar metadatos JSON del navegador
-pnpm exec ts-node src/scraper/mapper.ts ou/course/[course-slug]/[courseId]
-# o: npx ts-node src/scraper/mapper.ts ...
-
-# Volcar metadatos a SQLite
-pnpm exec ts-node src/scraper/courseMapper.ts
-# o: npx ts-node src/scraper/courseMapper.ts
-```
-
-### Paso 4: Descargar assets (Milestone 3 ✅ | Milestone 4 🔜)
-
-```bash
-# Descargar TODAS las guides de un curso (generación de PDF optimizado con nombres originales)
-pnpm exec ts-node src/scraper/guideDownloader.ts <courseId>
-# o: npx ts-node src/scraper/guideDownloader.ts <courseId>
-
-# Descargar vídeos y subtítulos (Pendiente - Milestone 4)
-pnpm exec ts-node src/downloader/videos.ts
-# o: npx ts-node src/downloader/videos.ts
-```
-
-### Paso 5: Web local de estudio (Milestone 5 — 🔜 Próximo)
-
-```bash
-cd offline-web
-pnpm install
-pnpm dev
-# Abre http://localhost:5173
+# Descargar una ruta completa (Learning Path)
+pnpm cli download-path <ID_PATH> [all|video|guide]
 ```
 
 ---
 
-## Fases del Proyecto
-
-### ✅ Milestone 0 & 1 — Inicialización y Autenticación
-
-- [x] Proyecto Node.js + TypeScript configurado
-- [x] SQLite (`better-sqlite3`) con esquema relacional
-- [x] Login interactivo con Playwright + stealth (soporte 2FA automático)
-- [x] Guardado de sesión (`state.json`) y cookies (`cookies.txt`)
-
-### ✅/🔜 Milestone 2 — Motor de Scraping (Discovery & Mapping)
-
-- [ ] Scraper de Learning Paths (extracción y jerarquía)
-- [x] Scraper de Cursos (metadatos, índices de Guides y Videos con intercepción XHR)
-- [x] Inserción iterativa en SQLite (nombrado inteligente por `gcc`, previniendo duplicados)
-
-### ✅ Milestone 3 — Descarga de Guides (Imágenes → PDF)
-
-- [x] Descarga por lotes de cursos enteros
-- [x] Reanudación y tolerancia a fallos por asset (reintentos por páginas caídas)
-- [x] Detección de orientación con `sharp` (portrait/landscape) y optimización visual (MozJPEG)
-- [x] Generación de PDFs perfectos con nombres dinámicos originales
-
-### 🔜 Milestone 4 — Descarga de Vídeos
-
-- [ ] Invocación de `yt-dlp` via `child_process.spawn()`
-- [ ] Descarga de vídeo + subtítulos sincronizados
-- [ ] Estado tracked en SQLite (evita redescargas)
-
-### 🔜 Milestone 5 — Web Local de Estudio (React SPA)
-
-- [ ] Proyecto Vite + React + TypeScript
-- [ ] Exportador de SQLite → `api.json`
-- [ ] Vistas: Learning Paths → Cursos → Assets
-- [ ] Visor de PDFs (`react-pdf`) y reproductor de vídeo nativo
-- [ ] Progreso de estudio en `localStorage`
-
----
-
-## Estructura de Directorios
+## Estructura de Directorios (Source)
 
 ```
-my-offline-lms/
-├── src/
-│   ├── db/
-│   │   └── schema.ts          # Inicialización SQLite + esquema
-│   ├── scraper/
-│   │   ├── login.ts           # ✅ Auth interactiva 2FA (Escape/Enter behavior)
-│   │   ├── mapper.ts          # ✅ Interceptor JSON de metadatos
-│   │   ├── courseMapper.ts    # ✅ Volcado JSON a SQLite
-│   │   └── guideDownloader.ts # ✅ Descarga de PDFs massiva con reintentos
-│   ├── downloader/
-│   │   ├── videos.ts          # 🔜 Descarga de vídeos via yt-dlp
-│   │   └── queue.ts           # 🔜 Sistema de colas global
-│   ├── utils/
-│   │   ├── pdf.ts             # 🔜 Helpers de orientación y PDFKit
-│   │   └── retry.ts           # 🔜 Estrategia de reintentos
-│   └── index.ts               # ✅ Entry point + inicialización BD
-├── offline-web/               # 🔜 SPA React/Vite
-├── data/
-│   ├── .auth/
-│   │   ├── state.json         # Sesión Playwright (generado en runtime)
-│   │   └── cookies.txt        # Cookies Netscape para yt-dlp (generado)
-│   ├── db.sqlite              # Base de datos local (generado en runtime)
-│   └── assets/
-│       ├── learning-paths/
-│       └── courses/
-├── external/
-│   ├── peticion_inicial.md    # Especificación original del proyecto
-│   ├── implementation_plan.md.resolved
-│   └── task.md.resolved
-├── package.json
-├── tsconfig.json
-├── .env.example
-├── .gitignore
-└── README.md
+src/
+├── application/
+│   └── use-cases/      # Implementación de la lógica de negocio (Sync, Download...)
+├── config/             # Configuración de variables de entorno (Zod)
+├── db/                 # Inicialización y esquema de SQLite
+├── domain/             # Modelos, interfaces y lógica pura de dominio
+├── infrastructure/     # Implementaciones (Browser, Database, Repositorios, Servicios)
+├── presentation/       # CLI Entrypoint (cli.ts)
+└── tests/              # Suite de tests (Vitest)
 ```
 
 ---
 
-## Base de Datos
-
-Esquema SQLite en `src/db/schema.ts`:
+## Persistencia de Datos
 
 ```
-LearningPaths          Courses
-──────────────         ──────────────
-id TEXT PK             id TEXT PK
-slug TEXT              slug TEXT UNIQUE
-title TEXT             title TEXT
-description TEXT
-        │                    │
-        └──────┬─────────────┘
-               │
-    LearningPath_Courses
-    ────────────────────
-    path_id TEXT FK
-    course_id TEXT FK
-    order_index INTEGER
-               │
-               │
-        Course_Assets
-        ─────────────────────────────
-        id TEXT PK
-        course_id TEXT FK
-        type TEXT (guide | video)
-        url TEXT
-        metadata JSON
-        status TEXT (PENDING | DOWNLOADING | COMPLETED | FAILED)
-        local_path TEXT
+data/
+├── .auth/              # Cookies y estado de sesión (Playwright / yt-dlp)
+├── assets/             # PDFs y Vídeos finales organizados por curso
+├── debug/              # Payloads JSON interceptados para depuración
+└── db.sqlite           # Base de datos central (Cursos, Assets, Estado)
 ```
 
 ---
 
-## Variables de Entorno
+## Variables de Entorno (.env)
 
-Crea un `.env` en la raíz del proyecto (copia desde `.env.example`):
-
-```env
-# URL base de la plataforma de cursos
-PLATFORM_BASE_URL=https://mi-plataforma-online.com
-
-# Selector CSS que indica login exitoso (ej: el dashboard post-login)
-LOGIN_SUCCESS_SELECTOR=#dashboard
-
-# Concurrencia de descargas paralelas (recomendado: 3-5)
-DOWNLOAD_CONCURRENCY=4
-
-# Delay entre requests en ms (respetar rate limits de la plataforma)
-REQUEST_DELAY_MS=500
-```
-
----
-
-## Roadmap
-
-| Milestone | Estado | Descripción |
-|-----------|--------|-------------|
-| 0 & 1 | ✅ Completo | Inicialización, DB, Auth 2FA |
-| 2 | 🟨 Parcial | Scraping y mapeo de cursos completado. (Falta Learning Paths) |
-| 3 | ✅ Completo | Descarga de guides → PDF optimizados y nombrados |
-| 4 | ⏳ Pendiente | Descarga de vídeos y subtítulos |
-| 5 | ⏳ Pendiente | Web local React de estudio |
-
----
-
-## Notas de Seguridad
-
-- Las cookies y credenciales se guardan en `data/.auth/` que está en `.gitignore`. **Nunca subas este directorio a un repositorio.**
-- Este proyecto es para uso **personal y educativo** únicamente. Respeta los términos de servicio de la plataforma que uses.
+- `PLATFORM_BASE_URL`: URL principal de la plataforma.
+- `DOWNLOAD_CONCURRENCY`: Número de descargas simultáneas.
+- `OFFERING_ID`: ID requerido para el visor de guías (eKits).
+- `LOGIN_SUCCESS_SELECTOR`: Selector usado para validar el login.

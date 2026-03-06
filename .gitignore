@@ -26,6 +26,9 @@ data/assets/
 # Coverage
 coverage/
 
+# External documentation
+external/
+
 # Enviroment
 .env
 .env.local
