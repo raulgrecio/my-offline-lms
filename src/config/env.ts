@@ -14,7 +14,6 @@ const envSchema = z.object({
   CREATE_PDF: z.coerce.boolean().default(true),
   OPTIMIZE_IMAGES: z.coerce.boolean().default(true),
   IMAGE_QUALITY: z.coerce.number().int().min(1).max(100).default(80),
-  OFFERING_ID: z.coerce.number().int(),
 });
 
 type Env = z.infer<typeof envSchema>;

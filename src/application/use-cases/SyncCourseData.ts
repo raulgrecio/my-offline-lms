@@ -34,7 +34,7 @@ export class SyncCourseData {
     this.logger = deps.logger.withContext("SyncCourseData");
   }
 
-  async execute(coursePath: string): Promise<void> {
+  async execute(coursePath: string, offeringId?: string): Promise<void> {
     if (!coursePath) {
       this.logger.warn("No se proporcionó coursePath");
       return;
@@ -103,6 +103,20 @@ export class SyncCourseData {
       let videoCount = 0;
       let guideCount = 0;
 
+      //0. Extract offeringId from course metadata URL if possible
+      let finalOfferingId = offeringId;
+      if (!offeringId && selectedPayloadPath) {
+        const payload = intercepted.find(p => p.filePath === selectedPayloadPath);
+        if (payload) {
+          const wrapper = JSON.parse(payload.content);
+          const extractedId = this.namingService.extractOfferingId(wrapper.url);
+          if (extractedId) {
+            finalOfferingId = extractedId;
+            this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
+          }
+        }
+      }
+
       // 1. Extraer Guías (eKits)
       if (courseData.eKits && Array.isArray(courseData.eKits)) {
         courseData.eKits.forEach((ekit: any, index: number) => {
@@ -114,7 +128,8 @@ export class SyncCourseData {
             metadata: {
               title: ekit.name,
               order_index: index + 1,
-              ekitId: ekit.ekitId
+              ekitId: ekit.ekitId,
+              offeringId: finalOfferingId
             },
             status: 'PENDING'
           });

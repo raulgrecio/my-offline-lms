@@ -97,7 +97,7 @@ The project follows **Clean Architecture** principles:
 2. **Setup Environment**:
    ```bash
    cp .env.example .env
-   # Configure PLATFORM_BASE_URL and other variables in .env
+   # IMPORTANT: *Configure PLATFORM_BASE_URL (famous name database url) and other variables in .env *
    ```
 
 ---

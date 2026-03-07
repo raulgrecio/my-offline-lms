@@ -78,6 +78,9 @@ export class SyncLearningPath {
       let orderIndex = 1;
       let coursesAdded = 0;
 
+      // Extraer offeringId del URL del payload (ej: .../learning-path/35573/148510/...)
+      const offeringId = this.namingService.extractOfferingId(json.url);
+
       for (const child of lpData.containerChildren) {
         if (child.typeId !== "22") continue; // 22 is Standard Course
         if (!child.id || !child.name) continue;
@@ -90,7 +93,9 @@ export class SyncLearningPath {
         // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
         this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
         const courseUrl = this.urlProvider.getCourseUrl(courseSlug, child.id);
-        await this.syncCourseData.execute(courseUrl);
+        
+        // Pasamos el offeringId si lo tenemos para ayudar a SyncCourseData a ser más preciso
+        await this.syncCourseData.execute(courseUrl, offeringId || undefined);
 
         orderIndex++;
         coursesAdded++;

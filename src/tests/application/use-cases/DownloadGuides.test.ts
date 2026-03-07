@@ -74,9 +74,9 @@ describe('DownloadGuides Use Case', () => {
 
     it('should skip download if guide already exists', async () => {
         mockAssetRepo.getPendingAssets.mockReturnValue([
-            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1 }, url: 'http://g1' }
+            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, url: 'http://g1' }
         ]);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
         mockAssetStorage.assetExists.mockReturnValue(true);
         mockAssetStorage.getTempImageSize.mockReturnValue(100);
 
@@ -103,12 +103,12 @@ describe('DownloadGuides Use Case', () => {
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
         mockAssetRepo.getPendingAssets.mockReturnValue([
-            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1 }, courseId: 'c1' }
+            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, courseId: 'c1' }
         ]);
         mockAssetRepo.getAssetById.mockReturnValue({ 
             id: 'g1', 
             type: 'guide', 
-            metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1 },
+            metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' },
             courseId: 'c1'
         });
         mockAssetStorage.assetExists.mockReturnValue(false);
@@ -138,8 +138,8 @@ describe('DownloadGuides Use Case', () => {
         };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' }, courseId: 'c1' }]);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' } });
+        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' }]);
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
         
         await useCase.executeForCourse('c1');
 
@@ -162,8 +162,8 @@ describe('DownloadGuides Use Case', () => {
         };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' }, courseId: 'c1' }]);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' } });
+        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' }]);
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
         
         await useCase.executeForCourse('c1');
 
@@ -183,8 +183,8 @@ describe('DownloadGuides Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1' }, courseId: 'c1' }]);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T' } });
+        mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' }]);
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
 
         await useCase.executeForCourse('c1');
 
@@ -202,7 +202,7 @@ describe('DownloadGuides Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
 
         await useCase.downloadSingleGuide('g1', 'c1');
 

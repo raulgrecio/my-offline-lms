@@ -91,7 +91,11 @@ export class DownloadGuides {
       page = await context.newPage();
       const tempImagesDir = this.assetStorage.ensureTempDir(courseId, assetId);
       
-      const offeringId = env.OFFERING_ID;
+      const offeringId = meta.offeringId;
+      if (!offeringId) {
+        throw new Error(`❌ No se encontró el offeringId para la guía ${assetId}. Asegúrese de haber sincronizado el curso correctamente.`);
+      }
+
       const baseUrl = env.PLATFORM_BASE_URL;
       const viewerUrl = new URL(
         `/ekit/${courseId}/${offeringId}/${meta.ekitId}/course`, 
