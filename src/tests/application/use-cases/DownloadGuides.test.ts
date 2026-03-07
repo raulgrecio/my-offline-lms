@@ -211,7 +211,7 @@ describe('DownloadGuides Use Case', () => {
 
         mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
 
-        await useCase.downloadSingleGuide('g1', 'c1');
+        await useCase.downloadSingleGuide({assetId: 'g1', courseId: 'c1'});
 
         expect(mockBrowserProvider.close).toHaveBeenCalled();
     });

@@ -8,10 +8,10 @@
     "cli": "ts-node src/presentation/cli.ts",
     "dev": "nodemon src/presentation/cli.ts",
     "build": "tsc",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest src",
+    "test:run": "vitest run src",
+    "test:watch": "vitest watch src",
+    "test:coverage": "vitest run --coverage src"
   },
   "dependencies": {
     "better-sqlite3": "^11.1.2",

@@ -65,8 +65,8 @@ describe('SyncCourse Use Case', () => {
     });
 
     it('should warn and exit if no coursePath provided', async () => {
-        await useCase.execute('');
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se proporcionó coursePath'));
+        await useCase.execute({courseUrl: ''});
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se proporcionó courseUrl'));
         expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
     });
 
@@ -78,14 +78,14 @@ describe('SyncCourse Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        await useCase.execute('my-course-slug');
+        await useCase.execute({courseUrl: 'my-course-slug'});
         
         expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('/ou/course/path/my-course-slug'), expect.anything());
     });
 
     it('should skip if context creation fails', async () => {
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(null);
-        await expect(useCase.execute('http://course-url')).rejects.toThrow();
+        await expect(useCase.execute({courseUrl: 'http://course-url'})).rejects.toThrow();
     });
 
     it('should process pending courses from intercepted data', async () => {
@@ -121,7 +121,7 @@ describe('SyncCourse Use Case', () => {
         };
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
 
-        await useCase.execute('https://platform.com/ou/course/test-course/123');
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test-course/123'});
 
         expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ id: '123', title: 'Test Course' }));
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ 
@@ -150,7 +150,7 @@ describe('SyncCourse Use Case', () => {
         };
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
 
-        await useCase.execute('https://platform.com/ou/course/simple-course/123');
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/simple-course/123'});
 
         expect(mockCourseRepo.saveCourse).toHaveBeenCalled();
         expect(mockAssetRepo.saveAsset).not.toHaveBeenCalled();
@@ -184,7 +184,7 @@ describe('SyncCourse Use Case', () => {
         };
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
 
-        await useCase.execute('https://platform.com/ou/course/mixed/123');
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/mixed/123'});
 
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(1);
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ id: 'v1' }));
@@ -202,7 +202,7 @@ describe('SyncCourse Use Case', () => {
             { filePath: 'f1', content: JSON.stringify({ data: { id: 'other', name: 'other' } }) }
         ]);
 
-        await useCase.execute('https://platform.com/ou/course/target-course/123');
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/target-course/123'});
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se encontraron datos'));
     });
@@ -219,7 +219,7 @@ describe('SyncCourse Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        await useCase.execute('https://platform.com/ou/course/test-course/123');
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test-course/123'});
 
         expect(mockPage.waitForSelector).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, expect.anything());
         expect(mockPage.click).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);

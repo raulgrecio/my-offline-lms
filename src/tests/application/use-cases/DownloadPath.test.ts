@@ -44,7 +44,7 @@ describe('DownloadPath Use Case', () => {
     it('should warn and exit if no courses found for path', async () => {
         mockLearningPathRepo.getCoursesForPath.mockReturnValue([]);
         
-        await useCase.execute('path123', 'all');
+        await useCase.execute({pathInput: 'path123', type: 'all'});
         
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontraron cursos'));
         expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
@@ -58,7 +58,7 @@ describe('DownloadPath Use Case', () => {
         ];
         mockLearningPathRepo.getCoursesForPath.mockReturnValue(mockCourses);
         
-        await useCase.execute('path123', 'all');
+        await useCase.execute({pathInput: 'path123', type: 'all'});
         
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledTimes(2);
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledTimes(2);
@@ -71,7 +71,7 @@ describe('DownloadPath Use Case', () => {
     it('should only call guides download when type is guide', async () => {
         mockLearningPathRepo.getCoursesForPath.mockReturnValue([{ id: 'c1', title: 'T1', orderIndex: 1 }]);
         
-        await useCase.execute('p1', 'guide');
+        await useCase.execute({pathInput: 'p1', type: 'guide'});
         
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('c1');
         expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe('DownloadPath Use Case', () => {
     it('should only call videos download when type is video', async () => {
         mockLearningPathRepo.getCoursesForPath.mockReturnValue([{ id: 'c1', title: 'T1', orderIndex: 1 }]);
         
-        await useCase.execute('p1', 'video');
+        await useCase.execute({pathInput: 'p1', type: 'video'});
         
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('c1');
         expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();

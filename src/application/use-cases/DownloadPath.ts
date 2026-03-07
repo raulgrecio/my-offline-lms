@@ -30,7 +30,7 @@ export class DownloadPath {
     this.logger = deps.logger.withContext("DownloadPath");
   }
 
-  async execute(pathInput: string, type: DownloadType = 'all'): Promise<void> {
+  async execute({pathInput, type = 'all'}: {pathInput: string, type: DownloadType}): Promise<void> {
     const pathId = this.namingService.extractIdFromInput(pathInput);
     
     this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);

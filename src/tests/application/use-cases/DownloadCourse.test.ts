@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadCourse } from '../../../application/use-cases/DownloadCourse';
 import { AssetNamingService } from '../../../domain/services/AssetNamingService';
-import { DownloadType } from '../../../domain/models/DownloadType';
 
 describe('DownloadCourse Use Case', () => {
     const mockCourseRepo = {
@@ -40,7 +39,7 @@ describe('DownloadCourse Use Case', () => {
     it('should log and exit if course not found', async () => {
         mockCourseRepo.getCourseById.mockReturnValue(null);
         
-        await useCase.execute('course123', 'all');
+        await useCase.execute({courseInput: 'course123', type: 'all'});
         
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontró el curso'));
         expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
@@ -51,7 +50,7 @@ describe('DownloadCourse Use Case', () => {
         const mockCourse = { id: 'course1', title: 'Course 1' };
         mockCourseRepo.getCourseById.mockReturnValue(mockCourse);
         
-        await useCase.execute('course1', 'all');
+        await useCase.execute({courseInput: 'course1', type: 'all'});
         
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course1');
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course1');
@@ -60,7 +59,7 @@ describe('DownloadCourse Use Case', () => {
     it('should only call guides download when type is guide', async () => {
         mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
         
-        await useCase.execute('c1', 'guide');
+        await useCase.execute({courseInput: 'c1', type: 'guide'});
         
         expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('c1');
         expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
@@ -69,7 +68,7 @@ describe('DownloadCourse Use Case', () => {
     it('should only call videos download when type is video', async () => {
         mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
         
-        await useCase.execute('c1', 'video');
+        await useCase.execute({courseInput: 'c1', type: 'video'});
         
         expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('c1');
         expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();

@@ -54,7 +54,7 @@ export class DownloadGuides {
     for (let i = 0; i < pendingGuides.length; i++) {
         this.logger.info(`======================================================`, '');
         this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
-        await this.downloadSingleGuide(pendingGuides[i].id, pendingGuides[i].courseId, context);
+        await this.downloadSingleGuide({assetId: pendingGuides[i].id, courseId: pendingGuides[i].courseId, sharedContext: context});
         await new Promise(r => setTimeout(r, 2000));
     }
 
@@ -63,7 +63,7 @@ export class DownloadGuides {
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
 
-  public async downloadSingleGuide(assetId: string, courseId: string, sharedContext?: any): Promise<void> {
+  public async downloadSingleGuide({assetId, courseId, sharedContext}: {assetId: string, courseId: string, sharedContext?: any}): Promise<void> {
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'guide') return;
 

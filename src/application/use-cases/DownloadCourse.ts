@@ -27,7 +27,7 @@ export class DownloadCourse {
     this.logger = deps.logger.withContext("DownloadCourse");
   }
 
-  async execute(courseInput: string, type: DownloadType = 'all'): Promise<void> {
+  async execute({courseInput, type = 'all'}: {courseInput: string, type: DownloadType}): Promise<void> {
     const courseId = this.namingService.extractIdFromInput(courseInput);
     
     this.logger.info(`🚀 Iniciando descarga para curso: ${courseId}`);

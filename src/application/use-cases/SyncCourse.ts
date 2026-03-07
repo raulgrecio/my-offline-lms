@@ -35,15 +35,15 @@ export class SyncCourse {
     this.logger = deps.logger.withContext("SyncCourse");
   }
 
-  async execute(coursePath: string, offeringId?: string): Promise<void> {
-    if (!coursePath) {
-      this.logger.warn("No se proporcionó coursePath");
+  async execute({courseUrl, offeringId}: {courseUrl: string, offeringId?: string}): Promise<void> {
+    if (!courseUrl) {
+      this.logger.warn("No se proporcionó courseUrl");
       return;
     }
 
-    this.logger.info(`Course Path recibido: "${coursePath}"`);
+    this.logger.info(`Course Path recibido: "${courseUrl}"`);
 
-    const targetUrl = this.urlProvider.resolveCourseUrl(coursePath);
+    const targetUrl = this.urlProvider.resolveCourseUrl(courseUrl);
     this.logger.info(`Iniciando mapeo y sincronización del curso: ${targetUrl}`);
 
     const context = await this.browserProvider.getAuthenticatedContext();

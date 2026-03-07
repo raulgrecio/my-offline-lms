@@ -82,7 +82,7 @@ Comandos disponibles:
           namingService,
           logger,
         });
-        await syncCourse.execute(target);
+        await syncCourse.execute({courseUrl: target});
         break;
       }
       case 'sync-path': {
@@ -192,7 +192,7 @@ Comandos disponibles:
           logger,
         });
 
-        await downloadPath.execute(id, type || 'all');
+        await downloadPath.execute({pathInput: id, type: type || 'all'});
         break;
       }
       case 'download-course': {
@@ -227,7 +227,7 @@ Comandos disponibles:
           logger,
         });
 
-        await downloadCourse.execute(id, type || 'all');
+        await downloadCourse.execute({courseInput: id, type: type || 'all'});
         break;
       }
       default:
