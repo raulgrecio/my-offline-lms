@@ -51,7 +51,7 @@ describe('SyncLearningPath Use Case', () => {
             browserProvider: mockBrowserProvider,
             learningPathRepo: mockLearningPathRepo,
             courseRepo: mockCourseRepo,
-            syncCourseData: mockSyncCourseUseCase,
+            syncCourse: mockSyncCourseUseCase,
             interceptedDataRepo: mockInterceptedDataRepo,
             urlProvider: mockUrlProvider,
             namingService: new AssetNamingService(),

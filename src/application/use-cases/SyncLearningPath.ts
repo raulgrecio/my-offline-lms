@@ -3,7 +3,7 @@ import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
-import { SyncCourseData } from "./SyncCourseData";
+import { SyncCourse } from "./SyncCourse";
 import { ILogger } from "../../domain/services/ILogger";
 import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
 import { INamingService } from "../../domain/services/INamingService";
@@ -12,7 +12,7 @@ export class SyncLearningPath {
   private browserProvider: BrowserProvider;
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
-  private syncCourseData: SyncCourseData;
+  private syncCourse: SyncCourse;
   private interceptedDataRepo: IInterceptedDataRepository;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
@@ -22,7 +22,7 @@ export class SyncLearningPath {
     browserProvider: BrowserProvider,
     learningPathRepo: ILearningPathRepository,
     courseRepo: ICourseRepository,
-    syncCourseData: SyncCourseData,
+    syncCourse: SyncCourse,
     interceptedDataRepo: IInterceptedDataRepository,
     urlProvider: IPlatformUrlProvider,
     namingService: INamingService,
@@ -31,7 +31,7 @@ export class SyncLearningPath {
     this.browserProvider = deps.browserProvider;
     this.learningPathRepo = deps.learningPathRepo;
     this.courseRepo = deps.courseRepo;
-    this.syncCourseData = deps.syncCourseData;
+    this.syncCourse = deps.syncCourse;
     this.interceptedDataRepo = deps.interceptedDataRepo;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
@@ -79,7 +79,7 @@ export class SyncLearningPath {
       let coursesAdded = 0;
 
       // Extraer offeringId del URL del payload (ej: .../learning-path/35573/148510/...)
-      const offeringId = this.namingService.extractOfferingId(json.url);
+      const offeringId = this.namingService.extractOfferingId(json.url) || undefined;
 
       for (const child of lpData.containerChildren) {
         if (child.typeId !== "22") continue; // 22 is Standard Course
@@ -94,8 +94,8 @@ export class SyncLearningPath {
         this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
         const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
         
-        // Pasamos el offeringId si lo tenemos para ayudar a SyncCourseData a ser más preciso
-        await this.syncCourseData.execute(courseUrl, offeringId || undefined);
+        // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
+        await this.syncCourse.execute(courseUrl, offeringId);
 
         orderIndex++;
         coursesAdded++;

@@ -8,7 +8,7 @@ import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { INamingService } from "../../domain/services/INamingService";
 import { PLATFORM } from "../../config/platform";
 
-export class SyncCourseData {
+export class SyncCourse {
   private browserProvider: BrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
@@ -32,7 +32,7 @@ export class SyncCourseData {
     this.interceptedDataRepo = deps.interceptedDataRepo;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("SyncCourseData");
+    this.logger = deps.logger.withContext("SyncCourse");
   }
 
   async execute(coursePath: string, offeringId?: string): Promise<void> {

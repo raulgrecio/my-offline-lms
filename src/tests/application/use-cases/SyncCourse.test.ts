@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SyncCourseData } from '../../../application/use-cases/SyncCourseData';
+import { SyncCourse } from '../../../application/use-cases/SyncCourse';
 import { AssetNamingService } from '../../../domain/services/AssetNamingService';
 import { PLATFORM } from '../../../config/platform';
 
@@ -7,7 +7,7 @@ vi.mock('../../../infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
 }));
 
-describe('SyncCourseData Use Case', () => {
+describe('SyncCourse Use Case', () => {
     const mockBrowserProvider = {
         getAuthenticatedContext: vi.fn(),
         close: vi.fn(),
@@ -48,12 +48,12 @@ describe('SyncCourseData Use Case', () => {
         getGuideViewerUrl: vi.fn(({courseId, offeringId, ekitId}) => `https://platform.com/ekit/${courseId}/${offeringId}/${ekitId}/course`)
     } as any;
 
-    let useCase: SyncCourseData;
+    let useCase: SyncCourse;
 
     beforeEach(() => {
         vi.clearAllMocks();
         mockInterceptedDataRepo.getPendingCourses.mockReturnValue([]);
-        useCase = new SyncCourseData({
+        useCase = new SyncCourse({
             browserProvider: mockBrowserProvider,
             courseRepository: mockCourseRepo,
             assetRepository: mockAssetRepo,

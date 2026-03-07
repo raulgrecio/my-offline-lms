@@ -6,7 +6,7 @@ import { SQLiteAssetRepository } from '../infrastructure/database/AssetRepositor
 import { SQLiteLearningPathRepository } from '../infrastructure/database/LearningPathRepository';
 
 import { AuthSession } from '../application/use-cases/AuthSession';
-import { SyncCourseData } from '../application/use-cases/SyncCourseData';
+import { SyncCourse } from '../application/use-cases/SyncCourse';
 import { SyncLearningPath } from '../application/use-cases/SyncLearningPath';
 import { DownloadGuides } from '../application/use-cases/DownloadGuides';
 import { DownloadVideos } from '../application/use-cases/DownloadVideos';
@@ -73,7 +73,7 @@ Comandos disponibles:
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
         
-        const syncCourse = new SyncCourseData({ 
+        const syncCourse = new SyncCourse({ 
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
@@ -89,7 +89,7 @@ Comandos disponibles:
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
         
-        const syncCourse = new SyncCourseData({ 
+        const syncCourse = new SyncCourse({ 
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
@@ -102,7 +102,7 @@ Comandos disponibles:
           browserProvider, 
           learningPathRepo: pathRepo, 
           courseRepo, 
-          syncCourseData: syncCourse, 
+          syncCourse, 
           interceptedDataRepo,
           urlProvider,
           namingService,
@@ -146,7 +146,7 @@ Comandos disponibles:
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
 
-        const syncCourse = new SyncCourseData({ 
+        const syncCourse = new SyncCourse({ 
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
@@ -159,7 +159,7 @@ Comandos disponibles:
           browserProvider, 
           learningPathRepo: pathRepo, 
           courseRepo, 
-          syncCourseData: syncCourse, 
+          syncCourse, 
           interceptedDataRepo,
           urlProvider,
           namingService,
