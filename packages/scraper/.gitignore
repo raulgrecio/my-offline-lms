@@ -1,0 +1,11 @@
+# Datos privados del scraper (auth, assets descargados, debug)
+data/
+
+# Coverage de tests
+coverage/
+
+# Build
+dist/
+
+# Entorno local
+.env

@@ -1,0 +1,39 @@
+{
+  "name": "@my-offline-lms/scraper",
+  "version": "1.0.0",
+  "description": "Offline LMS Scraper CLI",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "cli": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "dev": "nodemon -x ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "build": "tsc",
+    "test": "vitest src",
+    "test:run": "vitest run src",
+    "test:watch": "vitest watch src",
+    "test:coverage": "vitest run --coverage src"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.1.2",
+    "dotenv": "^17.3.1",
+    "p-queue": "^8.0.1",
+    "pdfkit": "^0.15.0",
+    "playwright": "^1.45.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "sharp": "^0.33.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.14.9",
+    "@types/pdfkit": "^0.13.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
+  }
+}

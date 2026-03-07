@@ -6,6 +6,7 @@ node_modules/
 # Build output
 dist/
 build/
+.astro/
 
 # IDE and Editor
 .idea/
@@ -29,7 +30,7 @@ coverage/
 # External documentation
 external/
 
-# Enviroment
+# Environment files (each package has its own .env)
 .env
 .env.local
 .env.development.local
