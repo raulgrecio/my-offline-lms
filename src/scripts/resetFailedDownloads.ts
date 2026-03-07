@@ -2,8 +2,7 @@ import path from "path";
 
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-
-const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
+import { ASSETS_DIR } from "@config/paths";
 
 function resetCourse(courseId: string) {
     console.log(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
@@ -21,7 +20,7 @@ function resetCourse(courseId: string) {
             type: asset.type,
             courseId,
             metadataStr: asset.metadata,
-            assetsBaseDir: ASSETS_BASE_DIR
+            assetsBaseDir: ASSETS_DIR
         });
         
         let needsReset = false;

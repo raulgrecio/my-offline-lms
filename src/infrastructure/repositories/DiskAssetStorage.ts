@@ -4,12 +4,13 @@ import PDFDocument from "pdfkit";
 import sharp from "sharp";
 
 import { IAssetStorage, PDFOptions } from "@domain/repositories/IAssetStorage";
+import { ASSETS_DIR } from "@config/paths";
 
 export class DiskAssetStorage implements IAssetStorage {
   private assetsBaseDir: string;
 
   constructor(baseDir?: string) {
-    this.assetsBaseDir = baseDir || path.resolve(__dirname, '../../../data/assets');
+    this.assetsBaseDir = baseDir || ASSETS_DIR;
   }
 
   ensureAssetDir(courseId: string, assetType: 'guides' | 'videos'): string {

@@ -3,11 +3,10 @@ import path from "path";
 
 import { db } from "@db/schema";
 import { AssetNamingService } from "@domain/services/AssetNamingService";
-
-const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
+import { ASSETS_DIR } from "@config/paths";
 
 function renameVideosForCourse(courseId: string) {
-    const courseVideosDir = path.join(ASSETS_BASE_DIR, courseId, "videos");
+    const courseVideosDir = path.join(ASSETS_DIR, courseId, "videos");
     if (!fs.existsSync(courseVideosDir)) {
         console.error(`No folder found at ${courseVideosDir}`);
         return;

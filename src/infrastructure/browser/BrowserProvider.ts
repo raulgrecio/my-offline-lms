@@ -2,9 +2,9 @@ import { chromium } from "playwright-extra";
 import { Browser, BrowserContext } from "playwright";
 import stealth from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
-import path from "path";
 
 import { env } from "@config/env";
+import { AUTH_STATE } from "@config/paths";
 
 chromium.use(stealth());
 
@@ -14,7 +14,7 @@ export class BrowserProvider {
   private readonly stateFile: string;
 
   constructor() {
-    this.stateFile = path.resolve(__dirname, "../../../data/.auth/state.json");
+    this.stateFile = AUTH_STATE;
   }
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */

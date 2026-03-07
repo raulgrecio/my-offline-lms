@@ -2,8 +2,9 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
+import { DEBUG_DIR } from "@config/paths";
 
-const debugDir = path.resolve(__dirname, "../../../data/debug");
+const debugDir = DEBUG_DIR;
 
 export function setupInterceptor(page: Page) {
   if (!fs.existsSync(debugDir)) {

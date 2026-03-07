@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
+
 import { IAuthSessionStorage } from "@domain/repositories/IAuthSessionStorage";
+import { AUTH_DIR } from "@config/paths";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string;
@@ -8,7 +10,7 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private cookiesFile: string;
 
   constructor(baseDir?: string) {
-    this.authDir = baseDir || path.resolve(__dirname, "../../../data/.auth");
+    this.authDir = baseDir || AUTH_DIR;
     this.authFile = path.join(this.authDir, "state.json");
     this.cookiesFile = path.join(this.authDir, "cookies.txt");
   }

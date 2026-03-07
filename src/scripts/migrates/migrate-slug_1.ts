@@ -1,8 +1,7 @@
 import Database from "better-sqlite3";
-import path from "path";
 
-const dbPath = path.resolve(__dirname, "../../../data/db.sqlite");
-const db = new Database(dbPath, { verbose: console.log });
+import { DB_PATH } from "@config/paths";
+const db = new Database(DB_PATH, { verbose: console.log });
 
 console.log("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");
 

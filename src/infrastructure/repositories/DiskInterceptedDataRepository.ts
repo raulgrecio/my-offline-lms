@@ -1,12 +1,14 @@
 import fs from "fs";
 import path from "path";
+
 import { IInterceptedDataRepository, InterceptedPayload } from "@domain/repositories/IInterceptedDataRepository";
+import { DEBUG_DIR } from "@config/paths";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private debugDir: string;
 
   constructor(baseDir?: string) {
-    this.debugDir = baseDir || path.resolve(__dirname, "../../../data/debug");
+    this.debugDir = baseDir || DEBUG_DIR;
   }
 
   private initDir(): void {
