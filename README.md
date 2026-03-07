@@ -141,19 +141,24 @@ pnpm cli download-path <PATH_ID> [all|video|guide]
 
 ---
 
-## Directory Structure (Source)
+### Source Code (`src/`)
 
-```
-src/
-├── application/
-│   └── use-cases/      # Business logic implementation (Sync, Download...)
-├── config/             # Environment variables configuration (Zod)
-├── db/                 # SQLite initialization and schema
-├── domain/             # Entities, interfaces, and pure domain logic
-├── infrastructure/     # Technical implementations (Browser, DB, Repos, Services)
-├── presentation/       # CLI Entrypoint (cli.ts)
-└── tests/              # Test suite (Vitest)
-```
+- **application/**: Use Cases (Login, Sync, Download). Orchestrates the flow of data.
+- **config/**: Technical configuration.
+  - [`env.ts`](file:///home/rgr/source/my-offline-lms/src/config/env.ts): Environment variables validation (Zod).
+  - [`paths.ts`](file:///home/rgr/source/my-offline-lms/src/config/paths.ts): **Centralized directory paths**. Resolves `PROJECT_ROOT` and defines `DATA_DIR`, `AUTH_DIR`, `ASSETS_DIR`, etc.
+  - [`platform.ts`](file:///home/rgr/source/my-offline-lms/src/config/platform.ts): **Platform-specific constants**. Includes CSS selectors, URL patterns, and logic overrides for the LMS platform.
+- **db/**: SQLite initialization and schema definition.
+- **domain/**: Core business logic. Entities, interfaces, and pure domain services (e.g., `AssetNamingService`).
+- **infrastructure/**: Technical implementations (Browser automation, SQLite Repositories, yt-dlp service).
+- **presentation/**: CLI entry point (`cli.ts`).
+- **tests/**: Complete test suite using Vitest.
+
+---
+
+## Directory Structure (Data)
+
+The project uses a `data/` folder at the root to persist state and downloads. These paths are managed via `src/config/paths.ts`.
 
 ---
 
