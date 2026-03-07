@@ -115,34 +115,12 @@ export class DownloadGuides {
       await page.waitForTimeout(5000);
 
       // Extraer recuento total de páginas desde el Flip PDF swiper DOM
-      let pagesCount = await page.evaluate((selector: string) => {
-        let highest = 0;
-        const titles = Array.from(document.querySelectorAll(selector));
-        for (const title of titles) {
-            const text = title.textContent || "";
-            const nums = text.split('-').map(n => parseInt(n.trim(), 10));
-            for (const n of nums) {
-                if (!isNaN(n) && n > highest) highest = n;
-            }
-        }
-        return highest;
-      }, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
+      let pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
 
       if (!pagesCount || pagesCount === 0) {
         // Retry
         await page.waitForTimeout(10000);
-        pagesCount = await page.evaluate((selector: string) => {
-          let highest = 0;
-          const titles = Array.from(document.querySelectorAll(selector));
-          for (const title of titles) {
-              const text = title.textContent || "";
-              const nums = text.split('-').map(n => parseInt(n.trim(), 10));
-              for (const n of nums) {
-                  if (!isNaN(n) && n > highest) highest = n;
-              }
-          }
-          return highest;
-        }, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
+        pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
       }
 
       if (pagesCount === 0) {
@@ -174,15 +152,7 @@ export class DownloadGuides {
          for (let attempt = 1; attempt <= 3; attempt++) {
             try {
               await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
-              buffer = await downloadPage.evaluate(async (url: string) => {
-                  const res = await fetch(url);
-                  const blob = await res.blob();
-                  return new Promise<number[]>((resolve) => {
-                      const reader = new FileReader();
-                      reader.onload = () => resolve(Array.from(new Uint8Array(reader.result as ArrayBuffer)));
-                      reader.readAsArrayBuffer(blob);
-                  });
-              }, imageUrl);
+              buffer = await downloadPage.evaluate(DownloadGuides.downloadImageAsArray, imageUrl);
               break;
             } catch (e) {
               this.logger.info(`⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
@@ -228,4 +198,34 @@ export class DownloadGuides {
   }
 
 
+  /**
+   * Lógica interna del navegador para extraer el número máximo de páginas.
+   * Se extrae a un método estático para poder ser testeado unitariamente.
+   */
+  public static extractHighestPageNumber(selector: string): number {
+    let highest = 0;
+    const titles = Array.from(document.querySelectorAll(selector));
+    for (const title of titles) {
+        const text = title.textContent || "";
+        const nums = text.split('-').map(n => parseInt(n.trim(), 10));
+        for (const n of nums) {
+            if (!isNaN(n) && n > highest) highest = n;
+        }
+    }
+    return highest;
+  }
+
+  /**
+   * Lógica interna del navegador para descargar una imagen como array de bytes.
+   * Se extrae a un método estático para poder ser testeado unitariamente.
+   */
+  public static async downloadImageAsArray(url: string): Promise<number[]> {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise<number[]>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(Array.from(new Uint8Array(reader.result as ArrayBuffer)));
+        reader.readAsArrayBuffer(blob);
+    });
+  }
 }
