@@ -28,7 +28,7 @@ async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
 
-  if (!command) {
+  if (!command || command === '--help' || command === '-h') {
     console.log(`
 Uso: pnpm cli <comando> [argumentos]
 
