@@ -92,7 +92,7 @@ export class SyncLearningPath {
 
         // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
         this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
-        const courseUrl = this.urlProvider.getCourseUrl(courseSlug, child.id);
+        const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
         
         // Pasamos el offeringId si lo tenemos para ayudar a SyncCourseData a ser más preciso
         await this.syncCourseData.execute(courseUrl, offeringId || undefined);

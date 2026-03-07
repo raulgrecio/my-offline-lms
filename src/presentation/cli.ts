@@ -120,6 +120,7 @@ Comandos disponibles:
           assetRepo, 
           assetStorage,
           namingService,
+          urlProvider,
           logger,
         });
         await guides.executeForCourse(id);
@@ -170,6 +171,7 @@ Comandos disponibles:
           assetRepo,
           assetStorage,
           namingService,
+          urlProvider,
           logger,
         });
         const videos = new DownloadVideos({ 
@@ -204,6 +206,7 @@ Comandos disponibles:
           assetRepo,
           assetStorage,
           namingService,
+          urlProvider,
           logger,
         });
         const videos = new DownloadVideos({

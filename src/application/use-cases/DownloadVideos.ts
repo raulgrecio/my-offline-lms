@@ -7,6 +7,7 @@ import { INamingService } from "../../domain/services/INamingService";
 import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { BrowserContext } from "playwright";
 import { ILogger } from "../../domain/services/ILogger";
+import { PLATFORM } from "../../config/platform";
 
 export class DownloadVideos {
   private browserProvider: BrowserProvider;
@@ -105,13 +106,13 @@ export class DownloadVideos {
 
       const videoId = asset.url.split('/').pop();
       if (videoId) {
-          const startLearningBtn = page.locator('#playerIdbtn').first();
+          const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
           if (await startLearningBtn.isVisible({ timeout: 5000 })) {
               await startLearningBtn.click({ force: true });
               await page.waitForTimeout(5000);
           }
           // Trigger routing/player
-          const playButton = page.locator('.vjs-big-play-button, button[aria-label="Play"]').first();
+          const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
           if (await playButton.isVisible({ timeout: 4000 })) await playButton.click({ force: true });
       }
 

@@ -5,6 +5,8 @@ import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
 import { INamingService } from "../../domain/services/INamingService";
 import { env } from "../../config/env";
 import { ILogger } from "../../domain/services/ILogger";
+import { PLATFORM } from "../../config/platform";
+import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
 
 export class DownloadGuides {
   private browserProvider: BrowserProvider;
@@ -12,6 +14,7 @@ export class DownloadGuides {
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
   private namingService: INamingService;
+  private urlProvider: IPlatformUrlProvider;
   private logger: ILogger;
   private keepTempImages: boolean;
 
@@ -21,6 +24,7 @@ export class DownloadGuides {
     assetRepo: IAssetRepository,
     assetStorage: IAssetStorage,
     namingService: INamingService,
+    urlProvider: IPlatformUrlProvider,
     logger: ILogger
   }) {
     this.browserProvider = deps.browserProvider;
@@ -28,6 +32,7 @@ export class DownloadGuides {
     this.assetRepo = deps.assetRepo;
     this.assetStorage = deps.assetStorage;
     this.namingService = deps.namingService;
+    this.urlProvider = deps.urlProvider;
     this.logger = deps.logger.withContext("DownloadGuides");
     this.keepTempImages = env.KEEP_TEMP_IMAGES;
   }
@@ -96,27 +101,23 @@ export class DownloadGuides {
         throw new Error(`❌ No se encontró el offeringId para la guía ${assetId}. Asegúrese de haber sincronizado el curso correctamente.`);
       }
 
-      const baseUrl = env.PLATFORM_BASE_URL;
-      const viewerUrl = new URL(
-        `/ekit/${courseId}/${offeringId}/${meta.ekitId}/course`, 
-        baseUrl
-      ).href;
+      const viewerUrl = this.urlProvider.getGuideViewerUrl({ courseId, offeringId, ekitId: meta.ekitId });
       
       this.logger.info(`Navegando al visor de la guía: ${viewerUrl}`);
       await page.goto(viewerUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
       
-      const iframeElement = await page.waitForSelector("#ekitIframe", { timeout: 30000 });
+      const iframeElement = await page.waitForSelector(PLATFORM.SELECTORS.GUIDE.IFRAME, { timeout: 30000 });
       const iframeSrc = await iframeElement?.getAttribute("src");
-      if (!iframeSrc) throw new Error("No se pudo extraer el atributo src de #ekitIframe");
+      if (!iframeSrc) throw new Error(`No se pudo extraer el atributo src de ${PLATFORM.SELECTORS.GUIDE.IFRAME}`);
 
       this.logger.info("🪟 Encontrado visor base URL dentro de iframe. Redirigiendo navegador interno...");
       await page.goto(iframeSrc, { waitUntil: "load", timeout: 45000 });
       await page.waitForTimeout(5000);
 
       // Extraer recuento total de páginas desde el Flip PDF swiper DOM
-      let pagesCount = await page.evaluate(() => {
+      let pagesCount = await page.evaluate((selector: string) => {
         let highest = 0;
-        const titles = Array.from(document.querySelectorAll('.thumbnailSwiper .title'));
+        const titles = Array.from(document.querySelectorAll(selector));
         for (const title of titles) {
             const text = title.textContent || "";
             const nums = text.split('-').map(n => parseInt(n.trim(), 10));
@@ -125,14 +126,14 @@ export class DownloadGuides {
             }
         }
         return highest;
-      });
+      }, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
 
       if (!pagesCount || pagesCount === 0) {
         // Retry
         await page.waitForTimeout(10000);
-        pagesCount = await page.evaluate(() => {
+        pagesCount = await page.evaluate((selector: string) => {
           let highest = 0;
-          const titles = Array.from(document.querySelectorAll('.thumbnailSwiper .title'));
+          const titles = Array.from(document.querySelectorAll(selector));
           for (const title of titles) {
               const text = title.textContent || "";
               const nums = text.split('-').map(n => parseInt(n.trim(), 10));
@@ -141,19 +142,16 @@ export class DownloadGuides {
               }
           }
           return highest;
-        });
+        }, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
       }
 
       if (pagesCount === 0) {
-        throw new Error("No se detectaron páginas en la estructura thumbnailSwiper del Flip PDF");
+        throw new Error(`No se detectaron páginas en la estructura ${PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES} del Flip PDF`);
       }
 
       this.logger.info(`📄 Documento Flip PDF cargado con ${pagesCount} páginas.`);
 
-      let baseImgUrl = iframeSrc.replace(/\/mobile\/index\.html(\?.*)?$/i, '/files/mobile/');
-      if (!baseImgUrl.endsWith('/')) {
-         baseImgUrl += '/';
-      }
+      const baseImgUrl = this.urlProvider.getGuideImageBaseUrl(iframeSrc);
 
       // Optimización: Usamos una sola pestaña para descargar todas las imágenes y evitamos agotar el pool
       const downloadPage = await context.newPage();

@@ -2,7 +2,11 @@ import { z } from 'zod';
 import dotenv from 'dotenv';
 
 // Load variables if they haven't been loaded yet by the entrypoint
-dotenv.config();
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test' });
+} else {
+  dotenv.config();
+}
 
 const envSchema = z.object({
   PLATFORM_BASE_URL: z.string().url(),

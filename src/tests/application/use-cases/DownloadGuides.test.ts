@@ -49,6 +49,12 @@ describe('DownloadGuides Use Case', () => {
             withContext: vi.fn().mockReturnThis(),
         };
 
+        const mockUrlProvider = {
+            getGuideViewerUrl: vi.fn().mockReturnValue('http://mock-viewer'),
+            getVideoAssetUrl: vi.fn().mockReturnValue('http://mock-video'),
+            getGuideImageBaseUrl: vi.fn(src => src.replace('/mobile/index.html', '/files/mobile/')),
+        } as any;
+
         // Mock global setTimeout to avoid delays in tests
         vi.spyOn(global, 'setTimeout').mockImplementation((fn: any) => {
             if (typeof fn === 'function') fn();
@@ -61,6 +67,7 @@ describe('DownloadGuides Use Case', () => {
             assetRepo: mockAssetRepo, 
             assetStorage: mockAssetStorage,
             namingService: new AssetNamingService(),
+            urlProvider: mockUrlProvider,
             logger: mockLogger,
         });
     });

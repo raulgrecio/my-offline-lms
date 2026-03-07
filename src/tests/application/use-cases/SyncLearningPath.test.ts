@@ -32,7 +32,7 @@ describe('SyncLearningPath Use Case', () => {
 
     const mockUrlProvider = {
         resolveLearningPathUrl: vi.fn(url => url),
-        getCourseUrl: vi.fn((slug, id) => `url://${slug}/${id}`)
+        getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`)
     } as any;
 
     const mockLogger = {

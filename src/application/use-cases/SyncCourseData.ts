@@ -6,6 +6,7 @@ import { ILogger } from "../../domain/services/ILogger";
 import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
 import { setupInterceptor } from "../../infrastructure/browser/interceptor";
 import { INamingService } from "../../domain/services/INamingService";
+import { PLATFORM } from "../../config/platform";
 
 export class SyncCourseData {
   private browserProvider: BrowserProvider;
@@ -55,8 +56,8 @@ export class SyncCourseData {
     if (targetUrl.includes("/course/")) {
       this.logger.info("Click en el tab de Guides para desencadenar json...");
       try {
-        await page.waitForSelector("#guides-tab", { timeout: 15000 });
-        await page.click("#guides-tab");
+        await page.waitForSelector(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, { timeout: 15000 });
+        await page.click(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
         this.logger.info("👆 Click en Guides completado. Esperando interceptaciones...");
         await page.waitForTimeout(3000);
       } catch (e) {
@@ -144,12 +145,12 @@ export class SyncCourseData {
           if (mod.components && Array.isArray(mod.components)) {
             mod.components.forEach((comp: any) => {
               // typeId "1" suele ser lección/vídeo
-              if (comp.typeId === "1" || comp.typeId === 1) {
+              if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
                 this.assetRepository.saveAsset({
                   id: comp.id.toString(),
                   courseId: courseId,
                   type: 'video',
-                  url: `${targetUrl}${comp.id}`,
+                  url: this.urlProvider.getVideoAssetUrl({courseUrl: targetUrl, assetId: comp.id.toString()}),
                   metadata: {
                     title: comp.name,
                     order_index: videoOrder++,

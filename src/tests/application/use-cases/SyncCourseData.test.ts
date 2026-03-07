@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SyncCourseData } from '../../../application/use-cases/SyncCourseData';
 import { AssetNamingService } from '../../../domain/services/AssetNamingService';
+import { PLATFORM } from '../../../config/platform';
 
 vi.mock('../../../infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
@@ -36,10 +37,15 @@ describe('SyncCourseData Use Case', () => {
 
     const mockUrlProvider = {
         resolveCourseUrl: vi.fn(url => {
-            const resolved = url.startsWith('http') ? url : `https://platform.com/ou/course/slug/${url}`;
+            const resolved = url.startsWith('http') ? url : `https://platform.com/ou/course/path/${url}`;
             return resolved.endsWith('/') ? resolved : `${resolved}/`;
         }),
-        getCourseUrl: vi.fn((slug, id) => `https://platform.com/ou/course/${slug}/${id}`)
+        getCourseUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/course/${slug}/${id}`),
+        getVideoAssetUrl: vi.fn(({courseUrl, assetId}) => {
+            const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
+            return `${base}${assetId}`;
+        }),
+        getGuideViewerUrl: vi.fn(({courseId, offeringId, ekitId}) => `https://platform.com/ekit/${courseId}/${offeringId}/${ekitId}/course`)
     } as any;
 
     let useCase: SyncCourseData;
@@ -74,7 +80,7 @@ describe('SyncCourseData Use Case', () => {
 
         await useCase.execute('my-course-slug');
         
-        expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('/ou/course/slug/my-course-slug'), expect.anything());
+        expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('/ou/course/path/my-course-slug'), expect.anything());
     });
 
     it('should skip if context creation fails', async () => {
@@ -215,7 +221,7 @@ describe('SyncCourseData Use Case', () => {
 
         await useCase.execute('https://platform.com/ou/course/test-course/123');
 
-        expect(mockPage.waitForSelector).toHaveBeenCalledWith('#guides-tab', expect.anything());
-        expect(mockPage.click).toHaveBeenCalledWith('#guides-tab');
+        expect(mockPage.waitForSelector).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, expect.anything());
+        expect(mockPage.click).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
     });
 });
