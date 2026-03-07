@@ -1,26 +1,27 @@
 import dotenv from 'dotenv';
-import { env } from '../config/env';
-import { browserProvider } from '../infrastructure/browser/BrowserProvider';
-import { SQLiteCourseRepository } from '../infrastructure/database/CourseRepository';
-import { SQLiteAssetRepository } from '../infrastructure/database/AssetRepository';
-import { SQLiteLearningPathRepository } from '../infrastructure/database/LearningPathRepository';
+import { env } from '@config/env';
 
-import { AuthSession } from '../application/use-cases/AuthSession';
-import { SyncCourse } from '../application/use-cases/SyncCourse';
-import { SyncLearningPath } from '../application/use-cases/SyncLearningPath';
-import { DownloadGuides } from '../application/use-cases/DownloadGuides';
-import { DownloadVideos } from '../application/use-cases/DownloadVideos';
-import { DownloadPath } from '../application/use-cases/DownloadPath';
-import { AssetNamingService } from '../domain/services/AssetNamingService';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { DownloadType } from '@domain/models/DownloadType';
 
-import { DiskInterceptedDataRepository } from '../infrastructure/repositories/DiskInterceptedDataRepository';
-import { DiskAuthSessionStorage } from '../infrastructure/repositories/DiskAuthSessionStorage';
-import { DiskAssetStorage } from '../infrastructure/repositories/DiskAssetStorage';
-import { YtDlpVideoDownloader } from '../infrastructure/services/YtDlpVideoDownloader';
-import { ConsoleLogger } from '../infrastructure/services/ConsoleLogger';
-import { DownloadCourse } from '../application/use-cases/DownloadCourse';
-import { DownloadType } from '../domain/models/DownloadType';
-import { OraclePlatformUrlProvider } from '../infrastructure/services/OraclePlatformUrlProvider';
+import { browserProvider } from '@infrastructure/browser/BrowserProvider';
+import { SQLiteCourseRepository } from '@infrastructure/database/CourseRepository';
+import { SQLiteAssetRepository } from '@infrastructure/database/AssetRepository';
+import { SQLiteLearningPathRepository } from '@infrastructure/database/LearningPathRepository';
+import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
+import { DiskAuthSessionStorage } from '@infrastructure/repositories/DiskAuthSessionStorage';
+import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage';
+import { YtDlpVideoDownloader } from '@infrastructure/services/YtDlpVideoDownloader';
+import { ConsoleLogger } from '@infrastructure/services/ConsoleLogger';
+import { DownloadCourse } from '@application/use-cases/DownloadCourse';
+import { OraclePlatformUrlProvider } from '@infrastructure/services/OraclePlatformUrlProvider';
+
+import { AuthSession } from '@application/use-cases/AuthSession';
+import { SyncCourse } from '@application/use-cases/SyncCourse';
+import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
+import { DownloadGuides } from '@application/use-cases/DownloadGuides';
+import { DownloadVideos } from '@application/use-cases/DownloadVideos';
+import { DownloadPath } from '@application/use-cases/DownloadPath';
 
 dotenv.config();
 

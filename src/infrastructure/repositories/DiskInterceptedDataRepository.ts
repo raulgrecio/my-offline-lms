@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { IInterceptedDataRepository, InterceptedPayload } from "../../domain/repositories/IInterceptedDataRepository";
+import { IInterceptedDataRepository, InterceptedPayload } from "@domain/repositories/IInterceptedDataRepository";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private debugDir: string;

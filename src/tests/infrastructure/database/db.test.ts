@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { db, initDb } from '../../../db/schema';
+import { db, initDb } from '@db/schema';
 
 describe('Database Baseline', () => {
     beforeAll(() => {

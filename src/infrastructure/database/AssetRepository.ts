@@ -1,6 +1,6 @@
-import { db } from '../../db/schema';
-import { Asset, AssetStatus, AssetType } from '../../domain/models/Asset';
-import { IAssetRepository } from '../../domain/repositories/IAssetRepository';
+import { db } from '@db/schema';
+import { Asset, AssetStatus, AssetType } from '@domain/models/Asset';
+import { IAssetRepository } from '@domain/repositories/IAssetRepository';
 
 export class SQLiteAssetRepository implements IAssetRepository {
   saveAsset(asset: Asset): void {

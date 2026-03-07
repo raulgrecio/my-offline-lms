@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { OraclePlatformUrlProvider } from '../../../infrastructure/services/OraclePlatformUrlProvider';
-import { env } from '../../../config/env';
+import { OraclePlatformUrlProvider } from '@infrastructure/services/OraclePlatformUrlProvider';
+import { env } from '@config/env';
 
 describe('OraclePlatformUrlProvider', () => {
     const provider = new OraclePlatformUrlProvider();

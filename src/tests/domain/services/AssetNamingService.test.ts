@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AssetNamingService } from '../../../domain/services/AssetNamingService';
-import { env } from '../../../config/env';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { env } from '@config/env';
 
 describe('AssetNamingService', () => {
   let service: AssetNamingService;

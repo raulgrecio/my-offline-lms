@@ -1,12 +1,12 @@
-import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
-import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
-import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
-import { INamingService } from "../../domain/services/INamingService";
-import { env } from "../../config/env";
-import { ILogger } from "../../domain/services/ILogger";
-import { PLATFORM } from "../../config/platform";
-import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
+import { env } from "@config/env";
+import { ICourseRepository } from "@domain/repositories/ICourseRepository";
+import { IAssetRepository } from "@domain/repositories/IAssetRepository";
+import { IAssetStorage } from "@domain/repositories/IAssetStorage";
+import { INamingService } from "@domain/services/INamingService";
+import { ILogger } from "@domain/services/ILogger";
+import { PLATFORM } from "@config/platform";
+import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
+import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 
 export class DownloadGuides {
   private browserProvider: BrowserProvider;

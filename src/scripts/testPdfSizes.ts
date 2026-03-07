@@ -1,5 +1,6 @@
 import path from "path";
-import { DiskAssetStorage } from "../infrastructure/repositories/DiskAssetStorage";
+
+import { DiskAssetStorage } from "@infrastructure/repositories/DiskAssetStorage";
 
 async function runTests() {
   const args = process.argv.slice(2);

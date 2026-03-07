@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
-import { IVideoDownloader } from "../../domain/services/IVideoDownloader";
-import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
+import { IVideoDownloader } from "@domain/services/IVideoDownloader";
+import { IAuthSessionStorage } from "@domain/repositories/IAuthSessionStorage";
 
 export class YtDlpVideoDownloader implements IVideoDownloader {
   constructor(private authSessionStorage: IAuthSessionStorage) {}

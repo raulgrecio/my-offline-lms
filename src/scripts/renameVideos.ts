@@ -1,8 +1,8 @@
-import { db } from "../db/schema";
 import fs from "fs";
 import path from "path";
 
-import { AssetNamingService } from "../domain/services/AssetNamingService";
+import { db } from "@db/schema";
+import { AssetNamingService } from "@domain/services/AssetNamingService";
 
 const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
 

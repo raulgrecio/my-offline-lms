@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadGuides } from '../../../application/use-cases/DownloadGuides';
-import { AssetNamingService } from '../../../domain/services/AssetNamingService';
+import { DownloadGuides } from '@application/use-cases/DownloadGuides';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
 
 
 

@@ -1,10 +1,9 @@
-import { db } from "../db/schema";
 import path from "path";
+
+import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 
 const ASSETS_BASE_DIR = path.resolve(__dirname, "../../data/assets");
-
-
 
 /**
  * Verifies all downloaded videos for a specific course.

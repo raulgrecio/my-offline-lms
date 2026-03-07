@@ -1,9 +1,10 @@
-import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
+import { ICourseRepository } from "@domain/repositories/ICourseRepository";
+import { ILogger } from "@domain/services/ILogger";
+import { INamingService } from "@domain/services/INamingService";
+import { DownloadType } from "@domain/models/DownloadType";
+
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
-import { ILogger } from "../../domain/services/ILogger";
-import { INamingService } from "../../domain/services/INamingService";
-import { DownloadType } from "../../domain/models/DownloadType";
 
 
 export class DownloadCourse {

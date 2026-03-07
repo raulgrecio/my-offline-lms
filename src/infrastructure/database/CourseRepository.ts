@@ -1,7 +1,7 @@
-import { db } from '../../db/schema';
-import { Course } from '../../domain/models/Course';
-import { Asset, AssetType } from '../../domain/models/Asset';
-import { ICourseRepository } from '../../domain/repositories/ICourseRepository';
+import { db } from '@db/schema';
+import { Course } from '@domain/models/Course';
+import { Asset } from '@domain/models/Asset';
+import { ICourseRepository } from '@domain/repositories/ICourseRepository';
 
 export class SQLiteCourseRepository implements ICourseRepository {
   saveCourse(course: Course): void {

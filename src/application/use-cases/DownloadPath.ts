@@ -1,9 +1,10 @@
-import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
+import { ILearningPathRepository } from "@domain/repositories/ILearningPathRepository";
+import { ILogger } from "@domain/services/ILogger";
+import { DownloadType } from "@domain/models/DownloadType";
+import { INamingService } from "@domain/services/INamingService";
+
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
-import { ILogger } from "../../domain/services/ILogger";
-import { DownloadType } from "../../domain/models/DownloadType";
-import { INamingService } from "../../domain/services/INamingService";
 import { SyncLearningPath } from "./SyncLearningPath";
 
 export class DownloadPath {

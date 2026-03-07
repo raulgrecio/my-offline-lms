@@ -1,12 +1,13 @@
-import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
-import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { setupInterceptor } from "../../infrastructure/browser/interceptor";
-import { ILearningPathRepository } from "../../domain/repositories/ILearningPathRepository";
-import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
+import { IInterceptedDataRepository } from "@domain/repositories/IInterceptedDataRepository";
+import { ILearningPathRepository } from "@domain/repositories/ILearningPathRepository";
+import { ICourseRepository } from "@domain/repositories/ICourseRepository";
+import { ILogger } from "@domain/services/ILogger";
+import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
+import { INamingService } from "@domain/services/INamingService";
+import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
+import { setupInterceptor } from "@infrastructure/browser/interceptor";
+
 import { SyncCourse } from "./SyncCourse";
-import { ILogger } from "../../domain/services/ILogger";
-import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
-import { INamingService } from "../../domain/services/INamingService";
 
 export class SyncLearningPath {
   private browserProvider: BrowserProvider;

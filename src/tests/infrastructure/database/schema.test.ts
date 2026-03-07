@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { initDb } from '../../../db/schema';
+import { initDb } from '@db/schema';
 import Database from 'better-sqlite3';
 
 describe('Database Schema', () => {

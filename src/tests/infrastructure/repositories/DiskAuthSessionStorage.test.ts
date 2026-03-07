@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { DiskAuthSessionStorage } from '../../../infrastructure/repositories/DiskAuthSessionStorage';
+import { DiskAuthSessionStorage } from '@infrastructure/repositories/DiskAuthSessionStorage';
 import fs from 'fs';
 import path from 'path';
 

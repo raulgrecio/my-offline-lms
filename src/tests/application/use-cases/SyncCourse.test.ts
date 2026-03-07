@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SyncCourse } from '../../../application/use-cases/SyncCourse';
-import { AssetNamingService } from '../../../domain/services/AssetNamingService';
-import { PLATFORM } from '../../../config/platform';
+import { SyncCourse } from '@application/use-cases/SyncCourse';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { PLATFORM } from '@config/platform';
 
-vi.mock('../../../infrastructure/browser/interceptor', () => ({
+vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
 }));
 

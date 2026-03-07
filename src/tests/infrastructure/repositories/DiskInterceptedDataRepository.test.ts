@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DiskInterceptedDataRepository } from '../../../infrastructure/repositories/DiskInterceptedDataRepository';
+import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
 import fs from 'fs';
 
 vi.mock('fs');

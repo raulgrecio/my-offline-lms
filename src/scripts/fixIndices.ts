@@ -1,4 +1,4 @@
-import { db } from "../db/schema";
+import { db } from "@db/schema";
 
 const courseId = process.argv[2] || "77517";
 

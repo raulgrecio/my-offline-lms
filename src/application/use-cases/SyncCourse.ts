@@ -1,12 +1,12 @@
-import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
-import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
-import { IInterceptedDataRepository } from "../../domain/repositories/IInterceptedDataRepository";
-import { ILogger } from "../../domain/services/ILogger";
-import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
-import { setupInterceptor } from "../../infrastructure/browser/interceptor";
-import { INamingService } from "../../domain/services/INamingService";
-import { PLATFORM } from "../../config/platform";
+import { PLATFORM } from "@config/platform";
+import { ICourseRepository } from "@domain/repositories/ICourseRepository";
+import { IAssetRepository } from "@domain/repositories/IAssetRepository";
+import { IInterceptedDataRepository } from "@domain/repositories/IInterceptedDataRepository";
+import { ILogger } from "@domain/services/ILogger";
+import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
+import { INamingService } from "@domain/services/INamingService";
+import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
+import { setupInterceptor } from "@infrastructure/browser/interceptor";
 
 export class SyncCourse {
   private browserProvider: BrowserProvider;

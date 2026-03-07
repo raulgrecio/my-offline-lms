@@ -3,7 +3,8 @@ import { Browser, BrowserContext } from "playwright";
 import stealth from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 import path from "path";
-import { env } from "../../config/env";
+
+import { env } from "@config/env";
 
 chromium.use(stealth());
 

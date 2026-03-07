@@ -2,7 +2,7 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
-import { env } from "../../config/env";
+import { env } from "@config/env";
 
 chromium.use(stealth());
 

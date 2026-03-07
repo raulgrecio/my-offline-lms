@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadCourse } from '../../../application/use-cases/DownloadCourse';
-import { AssetNamingService } from '../../../domain/services/AssetNamingService';
+import { DownloadCourse } from '@application/use-cases/DownloadCourse';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
 
 describe('DownloadCourse Use Case', () => {
     const mockCourseRepo = {

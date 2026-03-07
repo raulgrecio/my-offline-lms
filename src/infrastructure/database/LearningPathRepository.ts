@@ -1,7 +1,7 @@
-import { db } from '../../db/schema';
-import { LearningPath, LearningPathCourse } from '../../domain/models/LearningPath';
-import { Course } from '../../domain/models/Course';
-import { ILearningPathRepository } from '../../domain/repositories/ILearningPathRepository';
+import { db } from '@db/schema';
+import { LearningPath, LearningPathCourse } from '@domain/models/LearningPath';
+import { Course } from '@domain/models/Course';
+import { ILearningPathRepository } from '@domain/repositories/ILearningPathRepository';
 
 export class SQLiteLearningPathRepository implements ILearningPathRepository {
   saveLearningPath(path: LearningPath): void {

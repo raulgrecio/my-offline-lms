@@ -4,9 +4,9 @@
   "description": "Offline LMS Scraper",
   "main": "src/index.js",
   "scripts": {
-    "start": "ts-node src/presentation/cli.ts",
-    "cli": "ts-node src/presentation/cli.ts",
-    "dev": "nodemon src/presentation/cli.ts",
+    "start": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "cli": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "dev": "nodemon -x ts-node -r tsconfig-paths/register src/presentation/cli.ts",
     "build": "tsc",
     "test": "vitest src",
     "test:run": "vitest run src",
@@ -31,7 +31,9 @@
     "@vitest/coverage-v8": "^4.0.18",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.3",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18"
   }
 }

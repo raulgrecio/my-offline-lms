@@ -11,7 +11,7 @@ describe('Environment Configuration', () => {
 
     process.env.PLATFORM_BASE_URL = 'not-a-url';
 
-    await import('../../config/env');
+    await import('@config/env');
 
     expect(mockConsoleError).toHaveBeenCalled();
     expect(exitSpy).not.toHaveBeenCalled();
@@ -31,7 +31,7 @@ describe('Environment Configuration', () => {
 
     process.env.PLATFORM_BASE_URL = 'not-a-url';
 
-    await import('../../config/env');
+    await import('@config/env');
 
     expect(mockConsoleError).toHaveBeenCalled();
 

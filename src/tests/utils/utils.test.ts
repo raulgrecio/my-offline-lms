@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AssetNamingService } from '../../domain/services/AssetNamingService';
+import { AssetNamingService } from '@domain/services/AssetNamingService';
 
 describe('AssetNamingService', () => {
     const namingService = new AssetNamingService();

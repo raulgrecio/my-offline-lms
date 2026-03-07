@@ -1,13 +1,13 @@
-import { IAssetRepository } from "../../domain/repositories/IAssetRepository";
-import { ICourseRepository } from "../../domain/repositories/ICourseRepository";
-import { IAssetStorage } from "../../domain/repositories/IAssetStorage";
-import { IVideoDownloader } from "../../domain/services/IVideoDownloader";
-import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { INamingService } from "../../domain/services/INamingService";
-import { AssetNamingService } from "../../domain/services/AssetNamingService";
 import { BrowserContext } from "playwright";
-import { ILogger } from "../../domain/services/ILogger";
-import { PLATFORM } from "../../config/platform";
+
+import { PLATFORM } from "@config/platform";
+import { IAssetRepository } from "@domain/repositories/IAssetRepository";
+import { ICourseRepository } from "@domain/repositories/ICourseRepository";
+import { IAssetStorage } from "@domain/repositories/IAssetStorage";
+import { IVideoDownloader } from "@domain/services/IVideoDownloader";
+import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
+import { INamingService } from "@domain/services/INamingService";
+import { ILogger } from "@domain/services/ILogger";
 
 export class DownloadVideos {
   private browserProvider: BrowserProvider;

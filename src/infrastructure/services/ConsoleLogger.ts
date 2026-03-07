@@ -1,4 +1,4 @@
-import { ILogger } from "../../domain/services/ILogger";
+import { ILogger } from "@domain/services/ILogger";
 
 export class ConsoleLogger implements ILogger {
   constructor(private readonly defaultContext?: string) {}

@@ -2,7 +2,8 @@ import fs from "fs";
 import path from "path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
-import { IAssetStorage, PDFOptions } from "../../domain/repositories/IAssetStorage";
+
+import { IAssetStorage, PDFOptions } from "@domain/repositories/IAssetStorage";
 
 export class DiskAssetStorage implements IAssetStorage {
   private assetsBaseDir: string;

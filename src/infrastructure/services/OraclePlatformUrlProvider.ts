@@ -1,6 +1,6 @@
-import { IPlatformUrlProvider } from "../../domain/services/IPlatformUrlProvider";
-import { env } from "../../config/env";
-import { PLATFORM } from "../../config/platform";
+import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
+import { env } from "@config/env";
+import { PLATFORM } from "@config/platform";
 
 export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
   private readonly baseUrl: string;

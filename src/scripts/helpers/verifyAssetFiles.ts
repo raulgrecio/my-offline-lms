@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AssetNamingService } from "../../domain/services/AssetNamingService";
+import { AssetNamingService } from "@domain/services/AssetNamingService";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.

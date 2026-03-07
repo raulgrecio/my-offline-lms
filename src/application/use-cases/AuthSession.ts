@@ -1,7 +1,7 @@
 import readline from "readline";
-import { ILogger } from "../../domain/services/ILogger";
-import { BrowserProvider } from "../../infrastructure/browser/BrowserProvider";
-import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
+import { ILogger } from "@domain/services/ILogger";
+import { IAuthSessionStorage } from "@domain/repositories/IAuthSessionStorage";
+import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 
 export class AuthSession {
   private browserProvider: BrowserProvider;

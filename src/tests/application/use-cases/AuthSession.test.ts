@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthSession } from '../../../application/use-cases/AuthSession';
+import { AuthSession } from '@application/use-cases/AuthSession';
 
 vi.mock('readline', () => ({
     default: {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DiskAssetStorage } from '../../../infrastructure/repositories/DiskAssetStorage';
+import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage';
 import fs from 'fs';
 
 vi.mock('fs');

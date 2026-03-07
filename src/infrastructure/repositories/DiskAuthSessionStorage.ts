@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { IAuthSessionStorage } from "../../domain/repositories/IAuthSessionStorage";
+import { IAuthSessionStorage } from "@domain/repositories/IAuthSessionStorage";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string;
