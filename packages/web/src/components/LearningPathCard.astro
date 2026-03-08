@@ -1,0 +1,76 @@
+---
+import ProgressBadge from './ProgressBadge.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  description: string;
+  courseCount: number;
+  completedCount?: number;
+  isActive?: boolean;
+}
+
+const { id, title, description, courseCount, completedCount = 0, isActive = false } = Astro.props;
+
+const progress = courseCount > 0 ? Math.round((completedCount / courseCount) * 100) : 0;
+const status = completedCount === courseCount && courseCount > 0
+  ? 'completed'
+  : completedCount > 0
+  ? 'in_progress'
+  : 'not_started';
+---
+
+<a
+  href={`/learning-paths/${id}`}
+  class="card block p-5 group"
+  style="text-decoration: none; position: relative;"
+>
+  {isActive && (
+    <div
+      class="absolute top-3 right-3"
+      title="LP activa"
+      style="font-size: 0.7rem; color: var(--color-oracle-400);"
+    >
+      ▶ Activo
+    </div>
+  )}
+
+  <!-- Icon + Title -->
+  <div class="flex items-start gap-3 mb-3">
+    <div
+      class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+      style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+    >
+      🎓
+    </div>
+    <div class="flex-1 min-w-0">
+      <h3
+        class="font-semibold text-sm leading-snug mb-1 line-clamp-2 transition-colors"
+        style="color: var(--color-text-primary);"
+      >
+        {title}
+      </h3>
+      <ProgressBadge status={status} />
+    </div>
+  </div>
+
+  <!-- Description -->
+  {description && (
+    <p class="text-xs leading-relaxed line-clamp-3 mb-4" style="color: var(--color-text-secondary);" set:html={description.replace(/<[^>]*>/g, ' ').trim().slice(0, 200)} />
+  )}
+
+  <!-- Progress bar + count -->
+  <div class="mt-auto">
+    <div class="flex items-center justify-between mb-1.5">
+      <span class="text-xs" style="color: var(--color-text-muted);">
+        {completedCount} / {courseCount} cursos
+      </span>
+      <span class="text-xs font-semibold" style="color: var(--color-oracle-400);">
+        {progress}%
+      </span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-bar-fill" style={`width: ${progress}%`}></div>
+    </div>
+  </div>
+</a>

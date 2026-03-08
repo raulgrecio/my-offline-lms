@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* ─── Oracle Design System Theme ────────────────────────────────────────── */
+@theme {
+  /* Brand colors — Oracle Red primary */
+  --color-oracle-50:  #fff1ef;
+  --color-oracle-100: #ffe0db;
+  --color-oracle-200: #ffc5bc;
+  --color-oracle-300: #ff9d8d;
+  --color-oracle-400: #ff6751;
+  --color-oracle-500: #f83b20;
+  --color-oracle-600: #c74634;  /* Oracle brand red */
+  --color-oracle-700: #a8311f;
+  --color-oracle-800: #8b2919;
+  --color-oracle-900: #73231a;
+  --color-oracle-950: #3f0e0a;
+
+  /* Surface / Dark backgrounds */
+  --color-surface-950: #0a0c11;
+  --color-surface-900: #0f1117;
+  --color-surface-800: #161b27;
+  --color-surface-700: #1e2535;
+  --color-surface-600: #28334a;
+  --color-surface-500: #3a4861;
+
+  /* Text */
+  --color-text-primary:   #f0f2f7;
+  --color-text-secondary: #a0aec0;
+  --color-text-muted:     #64748b;
+
+  /* Status */
+  --color-status-completed:   #22c55e;
+  --color-status-in-progress: #f59e0b;
+  --color-status-not-started: #64748b;
+  --color-status-failed:      #ef4444;
+
+  /* Typography */
+  --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
+
+  /* Radius */
+  --radius-card: 0.75rem;
+  --radius-badge: 9999px;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-950);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface-900);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-600);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-oracle-600);
+  }
+}
+
+/* ─── Components ─────────────────────────────────────────────────────────── */
+@layer components {
+  /* Card */
+  .card {
+    background-color: var(--color-surface-800);
+    border: 1px solid var(--color-surface-600);
+    border-radius: var(--radius-card);
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    border-color: var(--color-oracle-600);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(199, 70, 52, 0.12);
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-badge);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .badge-completed {
+    background-color: color-mix(in srgb, var(--color-status-completed) 15%, transparent);
+    color: var(--color-status-completed);
+  }
+  .badge-in-progress {
+    background-color: color-mix(in srgb, var(--color-status-in-progress) 15%, transparent);
+    color: var(--color-status-in-progress);
+  }
+  .badge-not-started {
+    background-color: color-mix(in srgb, var(--color-status-not-started) 15%, transparent);
+    color: var(--color-status-not-started);
+  }
+  .badge-failed {
+    background-color: color-mix(in srgb, var(--color-status-failed) 15%, transparent);
+    color: var(--color-status-failed);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background-color: var(--color-surface-600);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-oracle-600), var(--color-oracle-400));
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+  }
+
+  /* Button primary */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    background-color: var(--color-oracle-600);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-oracle-700);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Button ghost */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-surface-600);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+    text-decoration: none;
+  }
+  .btn-ghost:hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-oracle-600);
+    background-color: color-mix(in srgb, var(--color-oracle-600) 8%, transparent);
+  }
+
+  /* Section title */
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--color-surface-700);
+  }
+}

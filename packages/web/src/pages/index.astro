@@ -1,0 +1,133 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LearningPathCard from '../components/LearningPathCard.astro';
+import CourseCard from '../components/CourseCard.astro';
+import {
+  getAllLearningPaths,
+  getAllCourses,
+  getAllCourseProgress,
+  getCoursesForPath,
+  getLastWatchedAsset,
+  getActiveLearningPath,
+  getCourseById,
+} from '../lib/db';
+
+const learningPaths = getAllLearningPaths();
+const courses = getAllCourses();
+const allProgress = getAllCourseProgress();
+const lastWatched = getLastWatchedAsset();
+const activePathId = getActiveLearningPath();
+
+// Build progress map
+const progressMap = new Map(allProgress.map(p => [p.courseId, p.status]));
+
+// LP completion counts
+const lpStats = await Promise.all(
+  learningPaths.map(async (lp) => {
+    const lpCourses = getCoursesForPath(lp.id);
+    const completed = lpCourses.filter(c => progressMap.get(c.id) === 'completed').length;
+    return { ...lp, courseCount: lpCourses.length, completedCount: completed };
+  })
+);
+
+// Last watched course title
+let lastWatchedCourse = lastWatched ? getCourseById(lastWatched.courseId) : null;
+---
+
+<Layout title="Inicio" description="Tu catálogo de aprendizaje offline">
+
+  <!-- ─── Continue Watching ─────────────────────────────────────── -->
+  {lastWatched && (
+    <section class="mb-10">
+      <div
+        class="rounded-xl overflow-hidden"
+        style="background: linear-gradient(135deg, var(--color-surface-800) 0%, color-mix(in srgb, var(--color-oracle-600) 8%, var(--color-surface-800)) 100%); border: 1px solid color-mix(in srgb, var(--color-oracle-600) 25%, transparent);"
+      >
+        <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div
+            class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+            style="background-color: color-mix(in srgb, var(--color-oracle-600) 20%, transparent);"
+          >
+            ▶
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-semibold uppercase tracking-widest mb-1" style="color: var(--color-oracle-400);">
+              Continuar viendo
+            </div>
+            <h2 class="font-bold text-lg leading-snug mb-1 truncate" style="color: var(--color-text-primary);">
+              {lastWatched.metadata?.title ?? 'Vídeo'}
+            </h2>
+            {lastWatchedCourse && (
+              <p class="text-sm" style="color: var(--color-text-secondary);">
+                {lastWatchedCourse.title}
+              </p>
+            )}
+          </div>
+          <a
+            href={`/courses/${lastWatched.courseId}`}
+            class="btn-primary shrink-0"
+          >
+            Continuar →
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- ─── Learning Paths ─────────────────────────────────────────── -->
+  {lpStats.length > 0 && (
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="section-title">🎓 Learning Paths</h2>
+        <a href="/learning-paths" class="btn-ghost text-xs">Ver todos →</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {lpStats.map(lp => (
+          <LearningPathCard
+            id={lp.id}
+            title={lp.title}
+            description={lp.description}
+            courseCount={lp.courseCount}
+            completedCount={lp.completedCount}
+            isActive={lp.id === activePathId}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- ─── All Courses ────────────────────────────────────────────── -->
+  {courses.length > 0 && (
+    <section>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="section-title">📚 Todos los cursos</h2>
+        <a href="/courses" class="btn-ghost text-xs">Ver todos →</a>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {courses.slice(0, 8).map(course => (
+          <CourseCard
+            id={course.id}
+            title={course.title}
+            status={progressMap.get(course.id) ?? 'not_started'}
+          />
+        ))}
+      </div>
+      {courses.length > 8 && (
+        <div class="mt-4 text-center">
+          <a href="/courses" class="btn-ghost">Ver los {courses.length} cursos →</a>
+        </div>
+      )}
+    </section>
+  )}
+
+  <!-- Empty state -->
+  {courses.length === 0 && learningPaths.length === 0 && (
+    <div class="text-center py-24">
+      <div class="text-5xl mb-4">📭</div>
+      <h2 class="text-xl font-bold mb-2" style="color: var(--color-text-primary);">Sin contenido descargado</h2>
+      <p class="text-sm" style="color: var(--color-text-secondary);">
+        Ejecuta el scraper para descargar cursos y learning paths.
+      </p>
+    </div>
+  )}
+</Layout>

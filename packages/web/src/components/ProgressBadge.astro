@@ -1,0 +1,25 @@
+---
+interface Props {
+  status: 'not_started' | 'in_progress' | 'completed' | 'COMPLETED' | 'FAILED' | 'PENDING' | 'DOWNLOADING';
+}
+
+const { status } = Astro.props;
+
+const normalized = status?.toUpperCase();
+
+const config: Record<string, { cls: string; label: string; dot: string }> = {
+  COMPLETED: { cls: 'badge badge-completed', label: 'Completado', dot: '●' },
+  IN_PROGRESS: { cls: 'badge badge-in-progress', label: 'En progreso', dot: '●' },
+  NOT_STARTED: { cls: 'badge badge-not-started', label: 'Sin iniciar', dot: '○' },
+  FAILED: { cls: 'badge badge-failed', label: 'Error', dot: '✕' },
+  PENDING: { cls: 'badge badge-not-started', label: 'Pendiente', dot: '○' },
+  DOWNLOADING: { cls: 'badge badge-in-progress', label: 'Descargando', dot: '⟳' },
+};
+
+const cfg = config[normalized] ?? config['NOT_STARTED'];
+---
+
+<span class={cfg.cls}>
+  <span aria-hidden="true">{cfg.dot}</span>
+  {cfg.label}
+</span>

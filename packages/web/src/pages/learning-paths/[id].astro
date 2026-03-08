@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CourseCard from '../../components/CourseCard.astro';
+import ProgressBadge from '../../components/ProgressBadge.astro';
+import {
+  getLearningPathById,
+  getCoursesForPath,
+  getAllCourseProgress,
+  setActiveLearningPath,
+} from '../../lib/db';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/learning-paths');
+
+// Set this as the active LP when visiting
+setActiveLearningPath(id);
+
+const path = getLearningPathById(id);
+if (!path) return Astro.redirect('/learning-paths');
+
+const courses = getCoursesForPath(id);
+const allProgress = getAllCourseProgress();
+const progressMap = new Map(allProgress.map(p => [p.courseId, p.status]));
+
+const completedCount = courses.filter(c => progressMap.get(c.id) === 'completed').length;
+const progress = courses.length > 0 ? Math.round((completedCount / courses.length) * 100) : 0;
+---
+
+<Layout title={path.title} description={path.description}>
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-xs mb-6" style="color: var(--color-text-muted);">
+    <a href="/" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Inicio</a>
+    <span>›</span>
+    <a href="/learning-paths" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Learning Paths</a>
+    <span>›</span>
+    <span style="color: var(--color-text-secondary);">{path.title}</span>
+  </nav>
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-start gap-4 mb-4">
+      <div
+        class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+        style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+      >
+        🎓
+      </div>
+      <div class="flex-1 min-w-0">
+        <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2" style="color: var(--color-text-primary);">
+          {path.title}
+        </h1>
+        <ProgressBadge
+          status={completedCount === courses.length && courses.length > 0 ? 'completed' : completedCount > 0 ? 'in_progress' : 'not_started'}
+        />
+      </div>
+    </div>
+
+    {path.description && (
+      <p class="text-sm leading-relaxed mb-6" style="color: var(--color-text-secondary);" set:html={path.description} />
+    )}
+
+    <!-- Progress summary -->
+    <div
+      class="rounded-lg p-4"
+      style="background-color: var(--color-surface-800); border: 1px solid var(--color-surface-600);"
+    >
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium" style="color: var(--color-text-secondary);">
+          Progreso del learning path
+        </span>
+        <span class="text-sm font-bold" style="color: var(--color-oracle-400);">
+          {completedCount} / {courses.length} cursos
+        </span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" style={`width: ${progress}%`}></div>
+      </div>
+      <div class="text-right text-xs mt-1" style="color: var(--color-text-muted);">
+        {progress}% completado
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider mb-8" />
+
+  <!-- Course list -->
+  <div>
+    <h2 class="section-title mb-5">📚 Cursos del path ({courses.length})</h2>
+    {courses.length > 0 ? (
+      <div class="flex flex-col gap-3">
+        {courses.map(course => (
+          <CourseCard
+            id={course.id}
+            title={course.title}
+            status={progressMap.get(course.id) ?? 'not_started'}
+            orderIndex={course.orderIndex}
+          />
+        ))}
+      </div>
+    ) : (
+      <p style="color: var(--color-text-muted);">Sin cursos asignados a este path.</p>
+    )}
+  </div>
+</Layout>

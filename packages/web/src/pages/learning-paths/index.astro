@@ -1,0 +1,47 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import LearningPathCard from '../../components/LearningPathCard.astro';
+import { getAllLearningPaths, getAllCourseProgress, getCoursesForPath, getActiveLearningPath } from '../../lib/db';
+
+const learningPaths = getAllLearningPaths();
+const allProgress = getAllCourseProgress();
+const activePathId = getActiveLearningPath();
+const progressMap = new Map(allProgress.map(p => [p.courseId, p.status]));
+
+const lpStats = learningPaths.map(lp => {
+  const lpCourses = getCoursesForPath(lp.id);
+  const completed = lpCourses.filter(c => progressMap.get(c.id) === 'completed').length;
+  return { ...lp, courseCount: lpCourses.length, completedCount: completed };
+});
+---
+
+<Layout title="Learning Paths">
+  <div class="mb-8">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-1" style="color: var(--color-text-primary);">
+      🎓 Learning Paths
+    </h1>
+    <p class="text-sm" style="color: var(--color-text-secondary);">
+      {lpStats.length} paths disponibles
+    </p>
+  </div>
+
+  {lpStats.length > 0 ? (
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {lpStats.map(lp => (
+        <LearningPathCard
+          id={lp.id}
+          title={lp.title}
+          description={lp.description}
+          courseCount={lp.courseCount}
+          completedCount={lp.completedCount}
+          isActive={lp.id === activePathId}
+        />
+      ))}
+    </div>
+  ) : (
+    <div class="text-center py-24">
+      <div class="text-5xl mb-4">📭</div>
+      <p style="color: var(--color-text-secondary);">Sin learning paths descargados.</p>
+    </div>
+  )}
+</Layout>

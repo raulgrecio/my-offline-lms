@@ -1,0 +1,238 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProgressBadge from '../../components/ProgressBadge.astro';
+import VideoPlayer from '../../components/VideoPlayer';
+import {
+  getCourseById,
+  getCourseAssets,
+  getCourseProgress,
+  getVideoProgress,
+} from '../../lib/db';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/courses');
+
+const course = getCourseById(id);
+if (!course) return Astro.redirect('/courses');
+
+const allAssets = getCourseAssets(id);
+const videos = allAssets
+  .filter(a => a.type === 'video' && a.status === 'COMPLETED' && a.localPath)
+  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+
+const guides = allAssets
+  .filter(a => a.type === 'guide' && a.status === 'COMPLETED' && a.localPath)
+  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+
+const courseProgress = getCourseProgress(id);
+
+// Pre-fetch all video progress
+const videoProgressMap = new Map(
+  videos.map(v => [v.id, getVideoProgress(v.id)])
+);
+
+// Find the first video
+const _firstVideoId = videos[0]?.id ?? null;
+
+// Generate file:// URL for local assets
+function localUrl(localPath: string): string {
+  // Strip leading /home/... to a relative /assets/... if needed
+  // We serve files from /data via a static route
+  return `/local-asset?path=${encodeURIComponent(localPath)}`;
+}
+
+function subtitleUrl(videoLocalPath: string): string | undefined {
+  const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
+  // Check if .vtt sibling exists — we just pass it; the player handles missing gracefully
+  return `/local-asset?path=${encodeURIComponent(base + '.vtt')}`;
+}
+---
+
+<Layout title={course.title}>
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-xs mb-6" style="color: var(--color-text-muted);">
+    <a href="/" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Inicio</a>
+    <span>›</span>
+    <a href="/courses" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Cursos</a>
+    <span>›</span>
+    <span style="color: var(--color-text-secondary);">{course.title}</span>
+  </nav>
+
+  <!-- Course header -->
+  <div class="flex flex-col sm:flex-row items-start gap-4 mb-8">
+    <div
+      class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+      style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+    >
+      📚
+    </div>
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2" style="color: var(--color-text-primary);">
+        {course.title}
+      </h1>
+      <div class="flex items-center gap-3 flex-wrap">
+        <ProgressBadge status={courseProgress?.status ?? 'not_started'} />
+        <span class="text-xs" style="color: var(--color-text-muted);">
+          {videos.length} vídeos · {guides.length} guías
+        </span>
+      </div>
+    </div>
+    <!-- Mark complete button -->
+    <button
+      id="btn-complete"
+      data-course-id={id}
+      class="btn-primary shrink-0 sm:self-start"
+      data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
+    >
+      {courseProgress?.status === 'completed' ? '✓ Completado' : '✓ Marcar completado'}
+    </button>
+  </div>
+
+  <hr class="divider mb-8" />
+
+  <!-- ─── Videos ──────────────────────────────────────────────────────── -->
+  {videos.length > 0 && (
+    <section class="mb-10">
+      <h2 class="section-title mb-5">🎬 Vídeos ({videos.length})</h2>
+
+      <div class="flex flex-col lg:flex-row gap-6">
+
+        <!-- Player panel -->
+        <div class="flex-1 min-w-0">
+          <div id="player-container">
+            {videos[0] && (
+              <VideoPlayer
+                client:load
+                assetId={videos[0].id}
+                src={localUrl(videos[0].localPath!)}
+                title={videos[0].metadata?.title ?? videos[0].id}
+                subtitleSrc={subtitleUrl(videos[0].localPath!)}
+                initialPosition={videoProgressMap.get(videos[0].id)?.positionSec ?? 0}
+              />
+            )}
+          </div>
+          <p id="player-title" class="text-sm font-medium mt-3" style="color: var(--color-text-secondary);">
+            {videos[0]?.metadata?.title ?? ''}
+          </p>
+        </div>
+
+        <!-- Video list -->
+        <div
+          class="lg:w-80 xl:w-96 overflow-y-auto rounded-xl"
+          style="background-color: var(--color-surface-800); border: 1px solid var(--color-surface-600); max-height: 400px;"
+        >
+          <div class="p-3 border-b text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted); border-color: var(--color-surface-700);">
+            Playlist
+          </div>
+          {videos.map((v, i) => {
+            const vp = videoProgressMap.get(v.id);
+            const isDone = vp?.completed;
+            return (
+              <button
+                class="video-item w-full text-left flex items-start gap-3 p-3 transition-colors"
+                style={`border-bottom: 1px solid var(--color-surface-700); background: none; cursor: pointer;`}
+                data-src={localUrl(v.localPath!)}
+                data-asset-id={v.id}
+                data-title={v.metadata?.title ?? v.id}
+                data-subtitle={subtitleUrl(v.localPath!)}
+                data-position={vp?.positionSec ?? 0}
+              >
+                <div
+                  class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5"
+                  style={isDone
+                    ? 'background-color: color-mix(in srgb, var(--color-status-completed) 20%, transparent); color: var(--color-status-completed);'
+                    : 'background-color: var(--color-surface-700); color: var(--color-text-muted);'}
+                >
+                  {isDone ? '✓' : i + 1}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs leading-snug line-clamp-2" style="color: var(--color-text-secondary);">
+                    {v.metadata?.title ?? `Vídeo ${i + 1}`}
+                  </p>
+                  {vp && !vp.completed && vp.positionSec > 0 && (
+                    <p class="text-xs mt-0.5" style="color: var(--color-oracle-400);">
+                      ⏸ {Math.floor(vp.positionSec / 60)}:{String(Math.floor(vp.positionSec % 60)).padStart(2,'0')}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- ─── Guides ──────────────────────────────────────────────────────── -->
+  {guides.length > 0 && (
+    <section>
+      <h2 class="section-title mb-5">📄 Guías ({guides.length})</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {guides.map((g, i) => (
+          <a
+            href={localUrl(g.localPath!)}
+            target="_blank"
+            rel="noopener"
+            class="card flex items-center gap-3 p-4"
+            style="text-decoration: none;"
+          >
+            <div
+              class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+              style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+            >
+              📄
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium line-clamp-2" style="color: var(--color-text-primary);">
+                {g.metadata?.title ?? g.metadata?.filename ?? `Guía ${i + 1}`}
+              </p>
+              <span class="text-xs" style="color: var(--color-text-muted);">PDF</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {videos.length === 0 && guides.length === 0 && (
+    <div class="text-center py-16">
+      <div class="text-4xl mb-3">⏳</div>
+      <p style="color: var(--color-text-secondary);">Sin assets descargados para este curso.</p>
+    </div>
+  )}
+</Layout>
+
+<script>
+  // ─── Video playlist switching ────────────────────────────────────────────
+  // Since VideoPlayer is a React island, we reload Astro to switch videos
+  // (full page nav with query param is clean enough for local SSR)
+  document.querySelectorAll<HTMLButtonElement>('.video-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const assetId = btn.dataset.assetId!;
+      const url = new URL(window.location.href);
+      url.searchParams.set('v', assetId);
+      window.location.href = url.toString();
+    });
+  });
+
+  // ─── Mark complete button ─────────────────────────────────────────────
+  const btnComplete = document.getElementById('btn-complete') as HTMLButtonElement | null;
+  btnComplete?.addEventListener('click', async () => {
+    const courseId = btnComplete.dataset.courseId!;
+    const isCompleted = btnComplete.dataset.completed === 'true';
+    const newStatus = isCompleted ? 'in_progress' : 'completed';
+
+    const res = await fetch('/api/progress/course', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId, status: newStatus }),
+    });
+
+    if (res.ok) {
+      window.location.reload();
+    }
+  });
+</script>
