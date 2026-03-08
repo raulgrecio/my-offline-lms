@@ -39,6 +39,7 @@ describe('DownloadGuides Use Case', () => {
             getTempImageSize: vi.fn().mockReturnValue(0),
             buildPDFFromImages: vi.fn().mockResolvedValue(undefined),
             removeTempDir: vi.fn(),
+            findExistingAsset: vi.fn(),
         };
 
         mockLogger = {
@@ -331,6 +332,152 @@ describe('DownloadGuides Use Case', () => {
             const result = await DownloadGuides.downloadImageAsArray('http://test.com');
             expect(result).toEqual([1, 2, 3]);
             vi.unstubAllGlobals();
+        });
+    });
+
+    describe('PDF Transformation & Filename Recognition', () => {
+        const courseId = '77517';
+        const assetId = 'pdf_61371';
+        const tempDir = `/mock/temp/${courseId}/${assetId}`;
+        const outputDir = `/mock/assets/${courseId}/guides`;
+        const filename = '01_Test_Guide.pdf';
+        const outputPath = `${outputDir}/${filename}`;
+
+        it('should complete PDF transformation from existing temporary images', async () => {
+            // Arrange
+            const asset = {
+                id: assetId,
+                courseId: courseId,
+                type: 'guide',
+                metadata: {
+                    title: 'Test Guide',
+                    ekitId: 'ekit-123',
+                    order_index: 1,
+                    offeringId: 'off-456'
+                }
+            };
+            mockAssetRepo.getAssetById.mockReturnValue(asset);
+            mockAssetStorage.ensureTempDir.mockReturnValue(tempDir);
+            mockAssetStorage.ensureAssetDir.mockReturnValue(outputDir);
+            
+            // Simulate that the output PDF DOES NOT exist yet
+            mockAssetStorage.assetExists.mockImplementation((path: string) => {
+                if (path === outputPath) return false;
+                if (path.includes('page_')) return true; // Images exist
+                return false;
+            });
+
+            mockAssetStorage.getTempImageSize.mockReturnValue(1000);
+
+            // Mock browser interactions
+            const mockPage = {
+                goto: vi.fn().mockResolvedValue(undefined),
+                waitForTimeout: vi.fn(),
+                waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://iframe-src') }),
+                evaluate: vi.fn().mockResolvedValueOnce(2), // 2 pages total
+                close: vi.fn().mockResolvedValue(undefined),
+            };
+            const mockContext = { 
+                newPage: vi.fn().mockResolvedValue(mockPage), 
+                close: vi.fn() 
+            };
+            mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+            // Act
+            await useCase.downloadSingleGuide({ assetId, courseId });
+
+            // Assert
+            expect(mockAssetStorage.assetExists).toHaveBeenCalledWith(expect.stringContaining('page_0001.png'));
+            expect(mockPage.evaluate).not.toHaveBeenCalledWith(expect.any(Function), expect.stringContaining('.jpg'));
+            expect(mockAssetStorage.buildPDFFromImages).toHaveBeenCalledWith(tempDir, outputPath);
+            expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+                assetId,
+                expect.objectContaining({ filename }),
+                outputPath
+            );
+        });
+
+        it('should complete even if some images are missing but then downloaded', async () => {
+            // Arrange
+            const asset = {
+                id: assetId,
+                courseId: courseId,
+                type: 'guide',
+                metadata: {
+                    title: 'Test Guide',
+                    ekitId: 'ekit-123',
+                    order_index: 1,
+                    offeringId: 'off-456'
+                }
+            };
+            mockAssetRepo.getAssetById.mockReturnValue(asset);
+            mockAssetStorage.ensureTempDir.mockReturnValue(tempDir);
+            mockAssetStorage.ensureAssetDir.mockReturnValue(outputDir);
+            
+            mockAssetStorage.assetExists.mockImplementation((path: string) => {
+                if (path === outputPath) return false;
+                if (path.includes('page_0001')) return true; // Page 1 exists
+                if (path.includes('page_0002')) return false; // Page 2 missing
+                return false;
+            });
+
+            mockAssetStorage.getTempImageSize.mockReturnValue(1000);
+
+            const mockPage = {
+                goto: vi.fn().mockResolvedValue(undefined),
+                waitForTimeout: vi.fn(),
+                waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://iframe-src') }),
+                evaluate: vi.fn()
+                    .mockResolvedValueOnce(2) // 2 pages total
+                    .mockResolvedValueOnce([1, 2, 3]), // Page 2 download buffer
+                close: vi.fn().mockResolvedValue(undefined),
+            };
+            const mockContext = { 
+                newPage: vi.fn().mockResolvedValue(mockPage), 
+                close: vi.fn() 
+            };
+            mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+            // Act
+            await useCase.downloadSingleGuide({ assetId, courseId });
+
+            // Assert
+            expect(mockAssetStorage.writeTempImage).toHaveBeenCalled(); 
+            expect(mockAssetStorage.buildPDFFromImages).toHaveBeenCalled();
+            expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalled();
+        });
+
+        it('should skip download if PDF already exists with original filename (meta.filename)', async () => {
+            // Arrange
+            const originalFilename = 'D106548GC10_sg.pdf';
+            const asset = {
+                id: assetId,
+                courseId: courseId,
+                type: 'guide',
+                metadata: {
+                    title: 'Test Guide',
+                    ekitId: 'ekit-123',
+                    order_index: 1,
+                    offeringId: 'off-456',
+                    filename: originalFilename 
+                }
+            };
+            mockAssetRepo.getAssetById.mockReturnValue(asset);
+            
+            const existingPath = `/external/path/${courseId}/guides/${originalFilename}`;
+            mockAssetStorage.findExistingAsset.mockReturnValue(existingPath);
+
+            // Act
+            await useCase.downloadSingleGuide({ assetId, courseId });
+
+            // Assert
+            expect(mockAssetStorage.findExistingAsset).toHaveBeenCalledWith(courseId, 'guides', originalFilename);
+            expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+                assetId,
+                asset.metadata,
+                existingPath
+            );
+            expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
         });
     });
 });

@@ -1,12 +1,16 @@
+import path from "path";
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { ASSETS_DIR } from "@config/paths";
+import { SQLiteAssetRepository } from "@infrastructure/database/AssetRepository";
+
+const assetRepository = new SQLiteAssetRepository();
 
 /**
  * Verifies all downloaded videos for a specific course.
  */
-export function verifyCourseDownloads(courseId: string) {
-    console.log(`\n🔍 Verifying downloads for Course ID: ${courseId}`);
+export function verifyCourseDownloads({ courseId, repair }: { courseId: string, repair?: boolean }) {
+    console.log(`\n🔍 Verifying downloads for Course ID: ${courseId}${repair ? ' [MODE: REPAIR]' : ''}`);
     
     const courseRows = db.prepare("SELECT title FROM Courses WHERE id = ?").get(courseId) as { title: string } | undefined;
     if (courseRows) {
@@ -16,18 +20,15 @@ export function verifyCourseDownloads(courseId: string) {
     }
 
     // Get ALL assets for the course (videos and guides)
-    const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ? ORDER BY type, json_extract(metadata, '$.order_index') ASC").all(courseId) as any[];
+    const assets = db.prepare("SELECT id, type, status, metadata, local_path FROM Course_Assets WHERE course_id = ? ORDER BY type, json_extract(metadata, '$.order_index') ASC").all(courseId) as any[];
 
     if (assets.length === 0) {
         console.log(`   No assets found for this course.`);
         return;
     }
 
-    let missingVideos = 0;
-    let missingSubtitles = 0;
-    let missingGuides = 0;
-    let pendingOrFailed = 0;
-    
+    let missingFiles = 0;
+    let healedCount = 0;
     let totalVideos = 0;
     let totalGuides = 0;
 
@@ -35,67 +36,67 @@ export function verifyCourseDownloads(courseId: string) {
         if (asset.type === 'video') totalVideos++;
         if (asset.type === 'guide') totalGuides++;
 
-        const { videoExists, vttExists, guideExists, safeName } = verifyAssetFiles({
+        const { videoExists, vttExists, guideExists, actualPath, safeName } = verifyAssetFiles({
             type: asset.type,
             courseId,
             metadataStr: asset.metadata,
-            assetsBaseDir: ASSETS_DIR
+            localPath: asset.local_path
         });
         
+        let found = (asset.type === 'video' && videoExists) || (asset.type === 'guide' && guideExists);
         let statusSymbol = "✅";
         let issues = [];
+        let locationNote = "";
 
-        if (asset.status !== 'COMPLETED') {
-            statusSymbol = "⏳";
-            issues.push(`DB Status: ${asset.status}`);
-            pendingOrFailed++;
+        if (actualPath && !actualPath.includes(ASSETS_DIR)) {
+            locationNote = ` [Ubicación: ${path.dirname(actualPath)}]`;
         }
 
-        if (asset.type === 'video') {
-            if (!videoExists) {
-                statusSymbol = "❌";
-                issues.push("Missing .mp4");
-                missingVideos++;
-            }
+        if (asset.status !== 'COMPLETED') {
+            if (found && repair) {
+                // HEAL: Update database using repository
+                assetRepository.updateAssetCompletion(asset.id, JSON.parse(asset.metadata), actualPath);
 
-            if (!vttExists && videoExists) {
-                 statusSymbol = "⚠️";
-                 issues.push("Missing .vtt (Subtitles)");
-                 missingSubtitles++;
+                statusSymbol = "🩹";
+                issues.push("HEALED (Marked as COMPLETED)");
+                healedCount++;
+            } else {
+                statusSymbol = "⏳";
+                issues.push(`DB Status: ${asset.status}`);
             }
-        } else if (asset.type === 'guide') {
-            if (!guideExists) {
-                statusSymbol = "❌";
-                issues.push("Missing .pdf");
-                missingGuides++;
-            }
+        }
+
+        if (!found) {
+            statusSymbol = "❌";
+            issues.push(`Missing ${asset.type === 'video' ? '.mp4' : '.pdf'}`);
+            missingFiles++;
+        } else if (asset.type === 'video' && !vttExists) {
+             statusSymbol = "⚠️";
+             issues.push("Missing .vtt (Subtitles)");
         }
 
         if (issues.length > 0) {
-             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}  -> [${issues.join(", ")}]`);
+             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}  -> [${issues.join(", ")}]`);
+        } else if (locationNote) {
+             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}`);
         }
     }
 
     console.log(`\n📊 Summary for Course ${courseId}:`);
-    console.log(`   Total Expected Videos: ${totalVideos}`);
-    console.log(`   Successfully Downloaded (.mp4): ${totalVideos - missingVideos}`);
-    console.log(`   Missing Videos (.mp4): ${missingVideos}`);
-    console.log(`   Missing Subtitles (.vtt): ${missingSubtitles}`);
-    console.log(`   ---`);
-    console.log(`   Total Expected Guides: ${totalGuides}`);
-    console.log(`   Successfully Downloaded (.pdf): ${totalGuides - missingGuides}`);
-    console.log(`   Missing Guides (.pdf): ${missingGuides}`);
+    console.log(`   Total Assets: ${assets.length} (${totalVideos} vids, ${totalGuides} guides)`);
+    console.log(`   Found on disk: ${assets.length - missingFiles}`);
+    console.log(`   Missing on disk: ${missingFiles}`);
+    if (healedCount > 0) console.log(`   ✨ Healed in DB: ${healedCount}`);
     
-    if (pendingOrFailed > 0) console.log(`\n   ⚠️ Pending/Failed in DB: ${pendingOrFailed}`);
     console.log("---------------------------------------------------");
 }
 
 /**
  * Verifies all downloaded videos for all courses within a learning path.
  */
-export function verifyPathDownloads(pathId: string) {
+export function verifyPathDownloads({ pathId, repair = false }: { pathId: string, repair?: boolean }) {
     console.log(`\n===================================================`);
-    console.log(`🚀 Verifying Learning Path ID: ${pathId}`);
+    console.log(`🚀 Verifying Learning Path ID: ${pathId}${repair ? ' [MODE: REPAIR]' : ''}`);
     console.log(`===================================================`);
 
     const pathRows = db.prepare("SELECT title FROM LearningPaths WHERE id = ?").get(pathId) as { title: string } | undefined;
@@ -111,7 +112,7 @@ export function verifyPathDownloads(pathId: string) {
     }
 
     for (const course of courses) {
-        verifyCourseDownloads(course.course_id);
+        verifyCourseDownloads({courseId: course.course_id, repair});
     }
 }
 
@@ -120,18 +121,19 @@ if (require.main === module) {
     const args = process.argv.slice(2);
     if (args.length < 2) {
         console.log("Usage:");
-        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts course <courseId>");
-        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts path <pathId>");
+        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts course <courseId> [--repair]");
+        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts path <pathId> [--repair]");
         process.exit(1);
     }
 
     const type = args[0];
     const targetId = args[1];
+    const repair = args.includes("--repair");
 
     if (type === "course") {
-        verifyCourseDownloads(targetId);
+        verifyCourseDownloads({courseId: targetId, repair});
     } else if (type === "path") {
-        verifyPathDownloads(targetId);
+        verifyPathDownloads({pathId: targetId, repair});
     } else {
         console.log("Unknown command. Use 'course' or 'path'.");
     }

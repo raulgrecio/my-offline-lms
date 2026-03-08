@@ -4,13 +4,22 @@ import PDFDocument from "pdfkit";
 import sharp from "sharp";
 
 import { IAssetStorage, PDFOptions } from "@domain/repositories/IAssetStorage";
-import { ASSETS_DIR } from "@config/paths";
+import { ASSETS_DIR, MONOREPO_ROOT, ASSET_PATHS_CONFIG } from "@config/paths";
+import { AssetPathResolver } from "@core/assets/domain/services/AssetPathResolver";
+import { NodeFileSystem } from "@core/assets/infrastructure/adapters/NodeFileSystem";
 
 export class DiskAssetStorage implements IAssetStorage {
   private assetsBaseDir: string;
+  private resolver: AssetPathResolver;
 
   constructor(baseDir?: string) {
     this.assetsBaseDir = baseDir || ASSETS_DIR;
+    const fsAdapter = new NodeFileSystem();
+    this.resolver = new AssetPathResolver({
+      configPath: ASSET_PATHS_CONFIG,
+      monorepoRoot: MONOREPO_ROOT,
+      fs: fsAdapter,
+    });
   }
 
   ensureAssetDir(courseId: string, assetType: 'guides' | 'videos'): string {
@@ -37,12 +46,22 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   assetExists(filePath: string): boolean {
-    return fs.existsSync(filePath);
+    if (fs.existsSync(filePath)) return true;
+    // Tenta encontrar em outras localizações se a original falhar
+    return this.resolver.resolveExistingPath(filePath) !== null;
+  }
+
+  /**
+   * Encuentra el path real de un asset buscando en todas las ubicaciones configuradas.
+   */
+  findExistingAsset(courseId: string, assetType: 'guides' | 'videos', filename: string): string | null {
+    return this.resolver.findAsset(courseId, assetType, filename);
   }
 
   verifyVideoIntegrity(videoPath: string): boolean {
-    if (!fs.existsSync(videoPath)) return false;
-    const stats = fs.statSync(videoPath);
+    const actualPath = this.resolver.resolveExistingPath(videoPath) || videoPath;
+    if (!fs.existsSync(actualPath)) return false;
+    const stats = fs.statSync(actualPath);
     if (stats.size < 200000) return false;
     return true;
   }

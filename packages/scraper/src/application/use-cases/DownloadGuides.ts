@@ -85,6 +85,16 @@ export class DownloadGuides {
       return;
     }
 
+    // RESERVA: Si el metadata ya tiene un filename (ej: de una sync previa u otro scraper), buscarlo en todas las rutas
+    if (meta.filename) {
+      const existingPath = this.assetStorage.findExistingAsset(courseId, 'guides', meta.filename);
+      if (existingPath) {
+        this.logger.info(`La guía ya existe (nombre en meta): ${existingPath}`);
+        this.assetRepo.updateAssetCompletion(assetId, meta, existingPath);
+        return;
+      }
+    }
+
     let context = sharedContext;
     if (!context) {
       context = await this.browserProvider.getAuthenticatedContext();

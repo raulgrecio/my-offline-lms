@@ -3,6 +3,11 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import fs from 'fs';
 import path from 'path';
+import { AssetPathResolver } from '@core/assets/domain/services/AssetPathResolver';
+import { NodeFileSystem } from '@core/assets/infrastructure/adapters/NodeFileSystem';
+
+const MONOREPO_ROOT = path.resolve(process.cwd(), "..", "..");
+const CONFIG_PATH = path.join(MONOREPO_ROOT, "data", "asset-paths.json");
 
 const MIME_MAP: Record<string, string> = {
   '.mp4':  'video/mp4',
@@ -16,6 +21,13 @@ const MIME_MAP: Record<string, string> = {
   '.png':  'image/png',
 };
 
+const fsAdapter = new NodeFileSystem();
+const resolver = new AssetPathResolver({
+  configPath: CONFIG_PATH,
+  monorepoRoot: MONOREPO_ROOT,
+  fs: fsAdapter,
+});
+
 export const GET: APIRoute = async ({ url }) => {
   const filePath = url.searchParams.get('path');
 
@@ -23,10 +35,11 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response('Missing path parameter', { status: 400 });
   }
 
-  // Security: disallow path traversal
-  const resolved = path.resolve(filePath);
-  if (!fs.existsSync(resolved)) {
-    return new Response('File not found', { status: 404 });
+  // Resolver: first try raw path, then search in other roots
+  const resolved = resolver.resolveExistingPath(filePath);
+
+  if (!resolved) {
+    return new Response('File not found at any location', { status: 404 });
   }
 
   const ext = path.extname(resolved).toLowerCase();
@@ -35,9 +48,8 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const stat = fs.statSync(resolved);
     const fileSize = stat.size;
-    const rangeHeader = url.searchParams.get('_range'); // unused with this approach
 
-    // For video files, support range requests via native stream
+    // Stream the file directly
     const buffer = fs.readFileSync(resolved);
 
     return new Response(buffer, {

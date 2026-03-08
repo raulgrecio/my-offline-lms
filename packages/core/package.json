@@ -1,0 +1,18 @@
+{
+  "name": "@my-offline-lms/core",
+  "version": "1.0.0",
+  "description": "Core business logic and shared services for My Offline LMS",
+  "main": "src/index.ts",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "path-browserify": "^1.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "@types/node": "^20.14.9",
+    "vitest": "^4.0.18"
+  }
+}
