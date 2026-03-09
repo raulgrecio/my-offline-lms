@@ -7,4 +7,5 @@ export interface IInterceptedDataRepository {
   getPendingLearningPaths(): InterceptedPayload[];
   getPendingCourses(): InterceptedPayload[];
   deletePayload(filePath: string): void;
+  markAsProcessed(filePath: string): void;
 }

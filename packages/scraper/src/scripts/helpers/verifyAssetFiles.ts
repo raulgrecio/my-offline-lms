@@ -11,7 +11,7 @@ import { MONOREPO_ROOT, ASSET_PATHS_CONFIG } from "@config/paths";
 export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: { type: 'guide' | 'video', courseId: string, metadataStr: string, localPath?: string }): { videoExists?: boolean, vttExists?: boolean, guideExists?: boolean, expectedPath: string, actualPath?: string, safeName: string } {
     const meta = JSON.parse(metadataStr || "{}");
     const namingService = new AssetNamingService();
-    const safeName = namingService.generateSafeFilename(meta.title, meta.order_index);
+    const safeName = namingService.generateSafeFilename(meta.name, meta.order_index);
     
     const fsAdapter = new NodeFileSystem();
     const resolver = new AssetPathResolver({

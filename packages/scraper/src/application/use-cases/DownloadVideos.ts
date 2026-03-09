@@ -68,7 +68,7 @@ export class DownloadVideos {
 
     const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'videos');
 
-    const safeName = this.namingService.generateSafeFilename(asset.metadata.title, asset.metadata.order_index);
+    const safeName = this.namingService.generateSafeFilename(asset.metadata.name, asset.metadata.order_index);
     const filename = `${safeName}.mp4`;
     const outputPath = `${courseVideosDir}/${filename}`;
 

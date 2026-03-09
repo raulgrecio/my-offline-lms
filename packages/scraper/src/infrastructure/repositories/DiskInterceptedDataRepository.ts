@@ -22,7 +22,7 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
   }
 
   getPendingCourses(): InterceptedPayload[] {
-    return this.getPayloads("content_courses_", "metadata.json");
+    return this.getPayloads("courses_", "metadata.json");
   }
 
   private getPayloads(prefix: string, suffix: string): InterceptedPayload[] {
@@ -44,6 +44,17 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
       }
     } catch (e) {
       console.warn(`[DiskInterceptedDataRepository] Could not delete ${filePath}`);
+    }
+  }
+
+  markAsProcessed(filePath: string): void {
+    try {
+      if (fs.existsSync(filePath)) {
+        const newPath = `${filePath}.processed`;
+        fs.renameSync(filePath, newPath);
+      }
+    } catch (e) {
+      console.warn(`[DiskInterceptedDataRepository] Could not mark as processed ${filePath}`);
     }
   }
 }

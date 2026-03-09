@@ -15,7 +15,7 @@ for (const row of rows) {
         meta.order_index = index;
         
         db.prepare("UPDATE Course_Assets SET metadata = ? WHERE id = ?").run(JSON.stringify(meta), row.id);
-        console.log(`Updated ${row.id} with order_index: ${index} (${meta.title})`);
+        console.log(`Updated ${row.id} with order_index: ${index} (${meta.name})`);
     } else {
         console.log(`Skipped ${row.id}, already has order_index: ${meta.order_index}`);
     }

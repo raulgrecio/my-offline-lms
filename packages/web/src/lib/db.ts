@@ -65,7 +65,7 @@ export interface Asset {
   type: "video" | "guide";
   url: string;
   metadata: {
-    title: string;
+    name: string;
     order_index?: number | string;
     filename?: string;
     [key: string]: unknown;

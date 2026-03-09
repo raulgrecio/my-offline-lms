@@ -42,7 +42,7 @@ describe('verifyAssetFiles', () => {
 
     it('should prioritize meta.filename for guides', () => {
         const metadata = JSON.stringify({
-            title: 'Test Guide',
+            name: 'Test Guide',
             order_index: 1,
             filename: 'custom-name.pdf'
         });
@@ -58,7 +58,7 @@ describe('verifyAssetFiles', () => {
 
     it('should prioritize meta.filename for videos', () => {
         const metadata = JSON.stringify({
-            title: 'Test Video',
+            name: 'Test Video',
             order_index: 1,
             filename: 'custom-name.mp4'
         });
@@ -74,7 +74,7 @@ describe('verifyAssetFiles', () => {
 
     it('should fallback to safeName if meta.filename is missing (guides)', () => {
         const metadata = JSON.stringify({
-            title: 'Test Guide',
+            name: 'Test Guide',
             order_index: 1
         });
 
@@ -89,7 +89,7 @@ describe('verifyAssetFiles', () => {
 
     it('should fallback to safeName if meta.filename is missing (videos)', () => {
         const metadata = JSON.stringify({
-            title: 'Test Video',
+            name: 'Test Video',
             order_index: 1
         });
 

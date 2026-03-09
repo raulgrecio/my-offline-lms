@@ -92,4 +92,33 @@ describe('DiskInterceptedDataRepository', () => {
         
         consoleSpy.mockRestore();
     });
+
+    describe('markAsProcessed', () => {
+        it('should rename payload when marking as processed', () => {
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            const filePath = '/mock/debug/file.json';
+            repo.markAsProcessed(filePath);
+            expect(fs.renameSync).toHaveBeenCalledWith(filePath, `${filePath}.processed`);
+        });
+
+        it('should not rename if payload does not exist', () => {
+            vi.mocked(fs.existsSync).mockReturnValue(false);
+            repo.markAsProcessed('/mock/debug/non_existent.json');
+            expect(fs.renameSync).not.toHaveBeenCalled();
+        });
+
+        it('should catch and log warning if rename fails', () => {
+            vi.mocked(fs.existsSync).mockReturnValue(true);
+            vi.mocked(fs.renameSync).mockImplementation(() => {
+                throw new Error('Lock error');
+            });
+            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            
+            repo.markAsProcessed('/mock/debug/locked.json');
+            
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not mark as processed'));
+            consoleSpy.mockRestore();
+        });
+    });
 });
+

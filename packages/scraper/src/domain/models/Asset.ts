@@ -2,19 +2,41 @@ export type AssetType = 'guide' | 'video';
 export type AssetStatus = 'PENDING' | 'DOWNLOADING' | 'COMPLETED' | 'FAILED';
 
 export interface AssetMetadata {
-  title: string;
+  name: string;
   order_index?: number | string;
-  ekitId?: string; // used for guides
   filename?: string;
-  [key: string]: any;
 }
 
-export interface Asset {
+export interface GuideMetadata extends AssetMetadata {
+  id: string;
+  ekitId: string;
+  gcc?: string;
+  ekitType?: string;
+  typeId?: string;
+  offeringId?: string;
+}
+
+export interface VideoMetadata extends AssetMetadata {
+  duration?: number;
+}
+
+interface BaseAsset {
   id: string;
   courseId: string;
   type: AssetType;
   url: string;
-  metadata: AssetMetadata;
   status: AssetStatus;
   localPath?: string;
 }
+
+export interface GuideAsset extends BaseAsset {
+  type: 'guide';
+  metadata: GuideMetadata;
+}
+
+export interface VideoAsset extends BaseAsset {
+  type: 'video';
+  metadata: VideoMetadata;
+}
+
+export type Asset = GuideAsset | VideoAsset;

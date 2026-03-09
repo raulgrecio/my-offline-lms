@@ -82,7 +82,7 @@ describe('DownloadGuides Use Case', () => {
 
     it('should skip download if guide already exists', async () => {
         mockAssetRepo.getPendingAssets.mockReturnValue([
-            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, url: 'http://g1' }
+            { id: 'g1', type: 'guide', metadata: { name: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, url: 'http://g1' }
         ]);
         mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
         mockAssetStorage.assetExists.mockReturnValue(true);
@@ -111,12 +111,12 @@ describe('DownloadGuides Use Case', () => {
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
         mockAssetRepo.getPendingAssets.mockReturnValue([
-            { id: 'g1', type: 'guide', metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, courseId: 'c1' }
+            { id: 'g1', type: 'guide', metadata: { name: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, courseId: 'c1' }
         ]);
         mockAssetRepo.getAssetById.mockReturnValue({ 
             id: 'g1', 
             type: 'guide', 
-            metadata: { title: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' },
+            metadata: { name: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' },
             courseId: 'c1'
         });
         mockAssetStorage.assetExists.mockReturnValue(false);
@@ -192,7 +192,7 @@ describe('DownloadGuides Use Case', () => {
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
         mockAssetRepo.getPendingAssets.mockReturnValue([{ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' }]);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', name: 'T', offeringId: 'off1' } });
 
         await useCase.executeForCourse('c1');
 
@@ -210,7 +210,7 @@ describe('DownloadGuides Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', name: 'T', offeringId: 'off1' } });
 
         await useCase.downloadSingleGuide({assetId: 'g1', courseId: 'c1'});
 
@@ -227,7 +227,7 @@ describe('DownloadGuides Use Case', () => {
         };
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', name: 'T', offeringId: 'off1' } });
 
         await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' });
 
@@ -245,7 +245,7 @@ describe('DownloadGuides Use Case', () => {
         };
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
-        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', title: 'T', offeringId: 'off1' } });
+        mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', name: 'T', offeringId: 'off1' } });
 
         // First call for assetExists(outputPath) -> false
         // Second call for cachedImgPath -> true
@@ -350,7 +350,7 @@ describe('DownloadGuides Use Case', () => {
                 courseId: courseId,
                 type: 'guide',
                 metadata: {
-                    title: 'Test Guide',
+                    name: 'Test Guide',
                     ekitId: 'ekit-123',
                     order_index: 1,
                     offeringId: 'off-456'
@@ -404,7 +404,7 @@ describe('DownloadGuides Use Case', () => {
                 courseId: courseId,
                 type: 'guide',
                 metadata: {
-                    title: 'Test Guide',
+                    name: 'Test Guide',
                     ekitId: 'ekit-123',
                     order_index: 1,
                     offeringId: 'off-456'
@@ -455,7 +455,7 @@ describe('DownloadGuides Use Case', () => {
                 courseId: courseId,
                 type: 'guide',
                 metadata: {
-                    title: 'Test Guide',
+                    name: 'Test Guide',
                     ekitId: 'ekit-123',
                     order_index: 1,
                     offeringId: 'off-456',
@@ -478,6 +478,105 @@ describe('DownloadGuides Use Case', () => {
                 existingPath
             );
             expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
+        });
+        it('should use gcc and ekitType to generate original filename if available in metadata', async () => {
+            // Arrange
+            const courseId = '150265';
+            const assetId = 'guide_123';
+            const expectedFilename = 'D1111043GC10_sg.pdf';
+            const expectedOutputPath = `/mock/assets/${courseId}/guides/${expectedFilename}`;
+            
+            const asset = {
+                id: assetId,
+                courseId: courseId,
+                type: 'guide',
+                metadata: {
+                    name: 'Test Guide',
+                    ekitId: 'ekit-123',
+                    order_index: 1,
+                    offeringId: 'off-456',
+                    gcc: 'D1111043GC10',
+                    ekitType: '1'
+                }
+            };
+            mockAssetRepo.getAssetById.mockReturnValue(asset);
+            mockAssetStorage.ensureAssetDir.mockReturnValue(`/mock/assets/${courseId}/guides`);
+            mockAssetStorage.ensureTempDir.mockReturnValue(`/mock/temp/foo`);
+            mockAssetStorage.assetExists.mockReturnValue(false);
+
+            const mockPage = {
+                goto: vi.fn().mockResolvedValue(undefined),
+                waitForTimeout: vi.fn(),
+                waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://iframe-src') }),
+                evaluate: vi.fn().mockResolvedValueOnce(1).mockResolvedValueOnce([1, 2, 3]), // 1 page total, and image data
+                close: vi.fn().mockResolvedValue(undefined),
+            };
+            const mockContext = { 
+                newPage: vi.fn().mockResolvedValue(mockPage), 
+                close: vi.fn() 
+            };
+            mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+            // Act
+            await useCase.downloadSingleGuide({ assetId, courseId });
+
+            // Assert
+            expect(mockAssetStorage.buildPDFFromImages).toHaveBeenCalledWith(`/mock/temp/foo`, expectedOutputPath);
+            expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+                assetId,
+                expect.objectContaining({ filename: expectedFilename }),
+                expectedOutputPath
+            );
+        });
+
+        it('should use gcc and ekitType to generate original filename for Activity Guide (ekitType 2)', async () => {
+            // Arrange
+            const courseId = '150265';
+            const assetId = 'guide_124';
+            const expectedFilename = 'D1111043GC10_ag.pdf';
+            const expectedOutputPath = `/mock/assets/${courseId}/guides/${expectedFilename}`;
+            
+            const asset = {
+                id: assetId,
+                courseId: courseId,
+                type: 'guide',
+                metadata: {
+                    name: 'Test Activity Guide',
+                    ekitId: 'ekit-124',
+                    order_index: 2,
+                    offeringId: 'off-456',
+                    gcc: 'D1111043GC10',
+                    ekitType: '2'
+                }
+            };
+            mockAssetRepo.getAssetById.mockReturnValue(asset);
+            mockAssetStorage.ensureAssetDir.mockReturnValue(`/mock/assets/${courseId}/guides`);
+            mockAssetStorage.ensureTempDir.mockReturnValue(`/mock/temp/foo2`);
+            mockAssetStorage.assetExists.mockReturnValue(false);
+
+            const mockPage = {
+                goto: vi.fn().mockResolvedValue(undefined),
+                waitForTimeout: vi.fn(),
+                waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://iframe-src') }),
+                evaluate: vi.fn().mockResolvedValueOnce(1).mockResolvedValueOnce([1, 2, 3]), // 1 page total, and image data
+                close: vi.fn().mockResolvedValue(undefined),
+            };
+            const mockContext = { 
+                newPage: vi.fn().mockResolvedValue(mockPage), 
+                close: vi.fn() 
+            };
+            mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+            // Act
+            await useCase.downloadSingleGuide({ assetId, courseId });
+
+            // Assert
+            expect(mockAssetStorage.buildPDFFromImages).toHaveBeenCalledWith(`/mock/temp/foo2`, expectedOutputPath);
+            expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+                assetId,
+                expect.objectContaining({ filename: expectedFilename }),
+                expectedOutputPath
+            );
         });
     });
 });

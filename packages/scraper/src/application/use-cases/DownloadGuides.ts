@@ -73,10 +73,21 @@ export class DownloadGuides {
       return;
     }
 
+    
+    let baseName;
+    if (meta.gcc) {
+      const ekitTypeStr = meta.ekitType ? String(meta.ekitType) : "";
+      const suffix = ekitTypeStr === "1" ? "_sg" : (ekitTypeStr === "2" ? "_ag" : "");
+      baseName = `${meta.gcc}${suffix}`;
+    }
+    
+    if (!baseName) {
+      this.logger.warn(`No se pudo generar un nombre base para la guía ${assetId}.`);
+      baseName = this.namingService.generateSafeFilename(meta.name || 'guide', meta.order_index);
+    }
+    
+    const filename = `${baseName}.pdf`;
     const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guides');
-
-    const safeName = this.namingService.generateSafeFilename(meta.title || meta.name || 'guide', meta.order_index);
-    const filename = `${safeName}.pdf`;
     const outputPath = `${courseGuidesDir}/${filename}`;
 
     if (this.assetStorage.assetExists(outputPath)) {

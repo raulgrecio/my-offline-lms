@@ -20,15 +20,8 @@ export function setupInterceptor(page: Page) {
       try {
         const json = await response.json();
         
-       // Filtramos agresivamente para que Playwright no sature el disco ni la terminal
-        console.log(`[Interceptor Trace] Evaluando JSON: ${url}`);
-        const isCorePayload = url.includes('-content/courses/') || 
-                              url.includes('-content/learning-path/') || 
-                              url.includes('-content/stories/variants/') || 
-                              url.includes('ekit');
-        if (!isCorePayload) {
-          return;
-        }
+        // Removed aggressive filtering to capture all JSONs and find where the original guide filename is
+
 
         // Creamos un nombre de archivo seguro basado en la URL
         const urlObj = new URL(url);

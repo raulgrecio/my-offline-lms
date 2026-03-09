@@ -108,14 +108,14 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 client:load
                 assetId={videos[0].id}
                 src={localUrl(videos[0].localPath!)}
-                title={videos[0].metadata?.title ?? videos[0].id}
+                title={videos[0].metadata?.name ?? videos[0].id}
                 subtitleSrc={subtitleUrl(videos[0].localPath!)}
                 initialPosition={videoProgressMap.get(videos[0].id)?.positionSec ?? 0}
               />
             )}
           </div>
           <p id="player-title" class="text-sm font-medium mt-3" style="color: var(--color-text-secondary);">
-            {videos[0]?.metadata?.title ?? ''}
+            {videos[0]?.metadata?.name ?? ''}
           </p>
         </div>
 
@@ -136,7 +136,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 style={`border-bottom: 1px solid var(--color-surface-700); background: none; cursor: pointer;`}
                 data-src={localUrl(v.localPath!)}
                 data-asset-id={v.id}
-                data-title={v.metadata?.title ?? v.id}
+                data-title={v.metadata?.name ?? v.id}
                 data-subtitle={subtitleUrl(v.localPath!)}
                 data-position={vp?.positionSec ?? 0}
               >
@@ -150,7 +150,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs leading-snug line-clamp-2" style="color: var(--color-text-secondary);">
-                    {v.metadata?.title ?? `Vídeo ${i + 1}`}
+                    {v.metadata?.name ?? `Vídeo ${i + 1}`}
                   </p>
                   {vp && !vp.completed && vp.positionSec > 0 && (
                     <p class="text-xs mt-0.5" style="color: var(--color-oracle-400);">
@@ -187,7 +187,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium line-clamp-2" style="color: var(--color-text-primary);">
-                {g.metadata?.title ?? g.metadata?.filename ?? `Guía ${i + 1}`}
+                {g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
               </p>
               <span class="text-xs" style="color: var(--color-text-muted);">PDF</span>
             </div>

@@ -4,7 +4,7 @@ import { AssetNamingService } from '@domain/services/AssetNamingService';
 import { PLATFORM } from '@config/platform';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
-    setupInterceptor: vi.fn()
+    setupInterceptor: vi.fn(),
 }));
 
 describe('SyncCourse Use Case', () => {
@@ -14,17 +14,18 @@ describe('SyncCourse Use Case', () => {
     } as any;
     
     const mockCourseRepo = {
-        saveCourse: vi.fn()
+        saveCourse: vi.fn(),
     } as any;
     
     const mockAssetRepo = {
         saveAsset: vi.fn(),
-        getCourseAssets: vi.fn().mockReturnValue([])
+        getCourseAssets: vi.fn().mockReturnValue([]),
     } as any;
     
     const mockInterceptedDataRepo = {
         getPendingCourses: vi.fn().mockReturnValue([]),
-        deletePayload: vi.fn()
+        deletePayload: vi.fn(),
+        markAsProcessed: vi.fn(),
     } as any;
 
     const mockLogger = {
@@ -45,7 +46,7 @@ describe('SyncCourse Use Case', () => {
             const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
             return `${base}${assetId}`;
         }),
-        getGuideViewerUrl: vi.fn(({courseId, offeringId, ekitId}) => `https://platform.com/ekit/${courseId}/${offeringId}/${ekitId}/course`)
+        getGuideViewerUrl: vi.fn(({courseId, offeringId, ekitId}) => `https://platform.com/ekit/${courseId}/${offeringId}/${ekitId}/course`),
     } as any;
 
     let useCase: SyncCourse;
@@ -94,7 +95,7 @@ describe('SyncCourse Use Case', () => {
             waitForTimeout: vi.fn().mockResolvedValue(undefined),
             close: vi.fn().mockResolvedValue(undefined),
             $: vi.fn().mockResolvedValue({ click: vi.fn() }),
-            waitForSelector: vi.fn().mockResolvedValue({})
+            waitForSelector: vi.fn().mockResolvedValue({}),
         } as any;
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
@@ -127,7 +128,11 @@ describe('SyncCourse Use Case', () => {
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ 
             id: 'v1', 
             type: 'video', 
-            url: 'https://platform.com/ou/course/test-course/123/v1' 
+            url: 'https://platform.com/ou/course/test-course/123/v1',
+            metadata: expect.objectContaining({
+                name: 'Video 1',
+                duration: 100
+            })
         }));
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(2);
     });
@@ -137,7 +142,7 @@ describe('SyncCourse Use Case', () => {
             goto: vi.fn(),
             close: vi.fn(),
             waitForSelector: vi.fn().mockResolvedValue({}),
-            click: vi.fn()
+            click: vi.fn(),
         } as any;
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
@@ -161,7 +166,7 @@ describe('SyncCourse Use Case', () => {
             goto: vi.fn(),
             close: vi.fn(),
             waitForSelector: vi.fn().mockResolvedValue({}),
-            click: vi.fn()
+            click: vi.fn(),
         } as any;
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
@@ -223,5 +228,65 @@ describe('SyncCourse Use Case', () => {
 
         expect(mockPage.waitForSelector).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, expect.anything());
         expect(mockPage.click).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
+    });
+
+    it('should merge metadata from multiple intercepted payloads for the same course', async () => {
+        const mockPage = {
+            goto: vi.fn().mockResolvedValue(undefined),
+            waitForTimeout: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn().mockResolvedValue(undefined),
+            waitForSelector: vi.fn().mockResolvedValue({}),
+            click: vi.fn().mockResolvedValue(undefined),
+        } as any;
+        const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
+        mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+        const payload1 = {
+            filePath: 'p1.json',
+            content: JSON.stringify({
+                url: 'https://platform.com/api/v1/course/123?offeringId=12345',
+                data: {
+                    id: '123',
+                    name: 'Test Course',
+                    eKits: [
+                        { id: '244297', ekitId: 'uuid-sg', name: 'Student Guide' }
+                    ]
+                }
+            })
+        };
+
+        const payload2 = {
+            filePath: 'p2.json',
+            content: JSON.stringify({
+                data: {
+                    id: '123',
+                    eKits: [
+                        { id: '244297', gcc: 'D1111043GC10', ekitType: '1' }
+                    ]
+                }
+            })
+        };
+
+        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([payload1, payload2]);
+
+        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test/123'});
+
+        // Verify saveAsset was called with merged data
+        // assetId should be the numeric id '244297'
+        expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({
+            id: '244297',
+            metadata: expect.objectContaining({
+                id: '244297',
+                ekitId: 'uuid-sg',
+                name: 'Student Guide',
+                gcc: 'D1111043GC10',
+                ekitType: '1',
+                offeringId: '12345',
+            })
+        }));
+
+        // Verify both payloads were marked as processed (renamed)
+        expect(mockInterceptedDataRepo.markAsProcessed).toHaveBeenCalledWith('p1.json');
+        expect(mockInterceptedDataRepo.markAsProcessed).toHaveBeenCalledWith('p2.json');
     });
 });

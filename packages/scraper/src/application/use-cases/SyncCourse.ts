@@ -66,9 +66,10 @@ export class SyncCourse {
     }
 
     const intercepted = this.interceptedDataRepo.getPendingCourses();
-    let courseData: any = null;
-    let selectedPayloadPath: string | null = null;
+    const matchingPayloads: any[] = [];
+    const processedPayloadPaths: string[] = [];
     
+    // 1. Identificar todos los payloads que corresponden a este curso
     for (const payload of intercepted) {
         try {
             const wrapper = JSON.parse(payload.content);
@@ -79,100 +80,179 @@ export class SyncCourse {
             const matchesId = data.id && targetUrl.includes(data.id.toString());
 
             if (matchesSlug || matchesId) {
-                courseData = data;
-                selectedPayloadPath = payload.filePath;
-                break;
+                matchingPayloads.push(wrapper);
+                processedPayloadPaths.push(payload.filePath);
             }
         } catch (e) {
-            // Ignorar errores de parseo
+            this.logger.warn(`Error parseando payload: ${payload.filePath}`);
         }
     }
 
-    if (courseData) {
-      const courseTitle = courseData.name || courseData.title;
-      const courseId = courseData.id.toString();
-      const courseSlug = courseData.slug || this.namingService.slugify(courseTitle);
-
-      this.logger.info(`💾 Procesando y guardando Curso: ${courseTitle}`);
+    if (matchingPayloads.length > 0) {
+      // 2. Fusionar datos básicos del curso
+      const firstData = matchingPayloads[0].data;
+      const courseId = firstData.id.toString();
+      let courseTitle = firstData.name || firstData.title;
       
+      // Buscar el mejor título disponible en todos los payloads
+      for (const p of matchingPayloads) {
+          const t = p.data.name || p.data.title;
+          if (t && t.length > (courseTitle?.length || 0)) {
+              courseTitle = t;
+          }
+      }
+
+      this.logger.info(`💾 Fusionando metadatos para Curso: ${courseTitle} (${courseId})`);
+      
+      const courseSlug = firstData.slug || this.namingService.slugify(courseTitle);
       this.courseRepository.saveCourse({
         id: courseId,
         slug: courseSlug,
         title: courseTitle
       });
 
-      let videoCount = 0;
-      let guideCount = 0;
-
-      //0. Extract offeringId from course metadata URL if possible
+      // Mapas para almacenar assets fusionados
+      const ekitsMap = new Map<string, any>();
+      const videosMap = new Map<string, any>();
       let finalOfferingId = offeringId;
-      if (!offeringId && selectedPayloadPath) {
-        const payload = intercepted.find(p => p.filePath === selectedPayloadPath);
-        if (payload) {
-          const wrapper = JSON.parse(payload.content);
-          const extractedId = this.namingService.extractOfferingId(wrapper.url);
-          if (extractedId) {
-            finalOfferingId = extractedId;
-            this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
+
+      // 3. Iterar por todos los payloads para fusionar assets
+      for (const wrapper of matchingPayloads) {
+          const data = wrapper.data;
+          
+          // Extraer offeringId de la URL del payload si no lo tenemos
+          if (!finalOfferingId) {
+              const extractedId = this.namingService.extractOfferingId(wrapper.url);
+              if (extractedId) {
+                  finalOfferingId = extractedId;
+                  this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
+              }
           }
-        }
+
+          // A. Fusionar eKits (Guías)
+          if (data.eKits && Array.isArray(data.eKits)) {
+              data.eKits.forEach((ekit: any) => {
+                  const numericId = ekit.id?.toString();
+                  const uuid = ekit.ekitId;
+                  
+                  if (!numericId && !uuid) return;
+
+                  // Buscar si ya existe por cualquiera de los dos IDs
+                  let existing = null;
+                  if (numericId && ekitsMap.has(`num_${numericId}`)) {
+                      existing = ekitsMap.get(`num_${numericId}`);
+                  } else if (uuid && ekitsMap.has(`uuid_${uuid}`)) {
+                      existing = ekitsMap.get(`uuid_${uuid}`);
+                  }
+
+                  if (!existing) {
+                      existing = { id: numericId, ekitId: uuid };
+                      // Registrar en ambos mapas si están presentes
+                      if (numericId) ekitsMap.set(`num_${numericId}`, existing);
+                      if (uuid) ekitsMap.set(`uuid_${uuid}`, existing);
+                  } else {
+                      // Si ya existía, pero ahora tenemos el otro ID, actualizar mapas
+                      if (numericId && !existing.id) {
+                          existing.id = numericId;
+                          ekitsMap.set(`num_${numericId}`, existing);
+                      }
+                      if (uuid && !existing.ekitId) {
+                          existing.ekitId = uuid;
+                          ekitsMap.set(`uuid_${uuid}`, existing);
+                      }
+                  }
+                  
+                  // Fusionar campos (solo si el nuevo tiene valor valioso)
+                  if (ekit.name) existing.name = ekit.name;
+                  if (ekit.gcc) existing.gcc = ekit.gcc;
+                  if (ekit.ekitType) existing.ekitType = ekit.ekitType;
+                  if (ekit.typeId) existing.typeId = ekit.typeId;
+                  if (ekit.offeringId) existing.offeringId = ekit.offeringId;
+              });
+          }
+
+          // B. Fusionar Vídeos (Modules -> Components)
+          if (data.modules && Array.isArray(data.modules)) {
+            data.modules.forEach((mod: any) => {
+              if (mod.components && Array.isArray(mod.components)) {
+                mod.components.forEach((comp: any) => {
+                  if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
+                    const vidId = comp.id.toString();
+                    if (!videosMap.has(vidId)) {
+                        videosMap.set(vidId, {
+                            id: vidId,
+                            name: comp.name || comp.title,
+                            duration: comp.duration
+                        });
+                    } else {
+                        const existing = videosMap.get(vidId);
+                        if (!existing.name && (comp.name || comp.title)) existing.name = comp.name || comp.title;
+                        if (!existing.duration && comp.duration) existing.duration = comp.duration;
+                    }
+                  }
+                });
+              }
+            });
+          }
       }
 
-      // 1. Extraer Guías (eKits)
-      if (courseData.eKits && Array.isArray(courseData.eKits)) {
-        courseData.eKits.forEach((ekit: any, index: number) => {
+      // 4. Guardar assets fusionados en la DB
+      let guideCount = 0;
+      let videoCount = 0;
+
+      // Obtener lista única de eKits (un Mapa puede tener el mismo objeto bajo 'num_' y 'uuid_')
+      const uniqueEkits = Array.from(new Set(ekitsMap.values()));
+
+      // Guardar Guías
+      uniqueEkits.forEach((ekit, index) => {
+          // El usuario prefiere el ID numérico como PK en Course_Assets.
+          // El UUID (ekitId) se guarda en metadatos para el visor.
+          const assetId = ekit.id; 
+          
           this.assetRepository.saveAsset({
-            id: ekit.ekitId,
+            id: assetId,
             courseId: courseId,
             type: 'guide',
             url: "",
             metadata: {
-              title: ekit.name,
+              name: ekit.name || `Guide ${index + 1}`,
+              id: ekit.id, // numeric id
+              ekitId: ekit.ekitId, // UUID (ahora explícitamente en meta)
+              typeId: ekit.typeId,
+              ekitType: ekit.ekitType,
+              gcc: ekit.gcc,
+              offeringId: ekit.offeringId || finalOfferingId,
               order_index: index + 1,
-              ekitId: ekit.ekitId,
-              offeringId: finalOfferingId
             },
             status: 'PENDING'
           });
           guideCount++;
-        });
-      }
+      });
 
-      // 2. Extraer Vídeos (Modules -> Components)
-      if (courseData.modules && Array.isArray(courseData.modules)) {
-        let videoOrder = 1;
-        courseData.modules.forEach((mod: any) => {
-          if (mod.components && Array.isArray(mod.components)) {
-            mod.components.forEach((comp: any) => {
-              // typeId "1" suele ser lección/vídeo
-              if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
-                this.assetRepository.saveAsset({
-                  id: comp.id.toString(),
-                  courseId: courseId,
-                  type: 'video',
-                  url: this.urlProvider.getVideoAssetUrl({courseUrl: targetUrl, assetId: comp.id.toString()}),
-                  metadata: {
-                    title: comp.name,
-                    order_index: videoOrder++,
-                    duration: comp.duration
-                  },
-                  status: 'PENDING'
-                });
-                videoCount++;
-              }
-            });
-          }
+      // Guardar Vídeos
+      Array.from(videosMap.values()).forEach((video, index) => {
+        this.assetRepository.saveAsset({
+          id: video.id,
+          courseId: courseId,
+          type: 'video',
+          url: this.urlProvider.getVideoAssetUrl({courseUrl: targetUrl, assetId: video.id}),
+          metadata: {
+            name: video.name || `Video ${index + 1}`,
+            order_index: index + 1,
+            duration: video.duration
+          },
+          status: 'PENDING'
         });
-      }
+        videoCount++;
+      });
 
       this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
       
-      if (selectedPayloadPath) {
-        this.interceptedDataRepo.deletePayload(selectedPayloadPath);
-      }
-    } else {
-      this.logger.warn("No se encontraron datos interceptados para este curso.");
-    }
+      // 5. Marcar como procesados (renombrar en lugar de borrar)
+      processedPayloadPaths.forEach(p => this.interceptedDataRepo.markAsProcessed(p));
 
+    } else {
+      this.logger.warn("No se encontraron datos interceptados válidos para este curso.");
+    }
   }
 }

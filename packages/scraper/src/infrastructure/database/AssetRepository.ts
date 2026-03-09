@@ -44,7 +44,7 @@ export class SQLiteAssetRepository implements IAssetRepository {
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       status: row.status,
       localPath: row.local_path
-    };
+    } as Asset;
   }
 
   countAssetsByCourseId(courseId: string): number {
@@ -66,6 +66,6 @@ export class SQLiteAssetRepository implements IAssetRepository {
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       status: row.status,
       localPath: row.local_path
-    }));
+    } as Asset));
   }
 }

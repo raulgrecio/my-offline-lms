@@ -22,13 +22,13 @@ function renameVideosForCourse(courseId: string) {
         const meta = JSON.parse(row.metadata || "{}");
         
         const namingService = new AssetNamingService();
-        let rawName = namingService.generateSafeFilename(meta.title) || row.id;
+        let rawName = namingService.generateSafeFilename(meta.name) || row.id;
         
         if (!meta.order_index) {
             continue; // Nothing to prefix
         }
 
-        const prefixedName = namingService.generateSafeFilename(meta.title, meta.order_index);
+        const prefixedName = namingService.generateSafeFilename(meta.name, meta.order_index);
 
         // Check all files in the directory that start with rawName
         const allFiles = fs.readdirSync(courseVideosDir);
