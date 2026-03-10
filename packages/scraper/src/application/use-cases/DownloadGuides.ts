@@ -69,7 +69,7 @@ export class DownloadGuides {
 
     const meta = asset.metadata;
     if (!meta.ekitId) {
-      console.warn(`[DownloadGuides] No hay ekitId válido para ${assetId}. Saltando.`);
+      this.logger.warn(`No hay ekitId válido para ${assetId}. Saltando.`);
       return;
     }
 

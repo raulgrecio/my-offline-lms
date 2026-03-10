@@ -43,15 +43,19 @@ describe('OraclePlatformUrlProvider', () => {
     });
 
     describe('resolveLearningPathUrl', () => {
-        it('should resolve a numeric ID to a full path URL', () => {
+        it('should resolve a numeric ID to a full path URL and extract pathId', () => {
             const result = provider.resolveLearningPathUrl('12345');
-            expect(result).toBe(new URL('ou/learning-path/path/12345', env.PLATFORM_BASE_URL).href);
+            expect(result).toBe(new URL('ou/learning-path/path/12345/', env.PLATFORM_BASE_URL).href);
         });
 
-        it('should return a non-numeric string (like a full URL) as is', () => {
-            const url = new URL('https://some-other-url.com/path').href;
+        it('should extract pathId from a full learning path URL', () => {
+            const url = new URL('ou/learning-path/some-slug/148510', env.PLATFORM_BASE_URL).href;
             const result = provider.resolveLearningPathUrl(url);
-            expect(result).toBe(url);
+            expect(result).toBe(url + '/');
+        });
+
+        it('should throw an error if pathId cannot be extracted', () => {
+            expect(() => provider.resolveLearningPathUrl('malformed-url')).toThrow('No se pudo extraer el ID del learning path');
         });
     });
 

@@ -1,8 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage';
 import fs from 'fs';
+import path from 'path';
 
-vi.mock('fs');
+vi.mock('fs', async () => {
+    const actual = await vi.importActual<typeof import('fs')>('fs');
+    return {
+        default: {
+            ...actual,
+            existsSync: vi.fn(),
+            mkdirSync: vi.fn(),
+            rmSync: vi.fn(),
+            statSync: vi.fn(),
+            writeFileSync: vi.fn(),
+            readdirSync: vi.fn(),
+            createWriteStream: vi.fn(),
+            readFileSync: vi.fn()
+        }
+    };
+});
 vi.mock('path', async () => {
     const actual = await vi.importActual<typeof import('path')>('path');
     return {
@@ -42,6 +58,9 @@ describe('DiskAssetStorage', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        // Fallback default for existsSync and readFileSync to avoid AssetPathResolver errors
+        vi.mocked(fs.existsSync).mockReturnValue(false); 
+        vi.mocked(fs.readFileSync).mockReturnValue('{}');
         storage = new DiskAssetStorage(mockBaseDir);
     });
 
