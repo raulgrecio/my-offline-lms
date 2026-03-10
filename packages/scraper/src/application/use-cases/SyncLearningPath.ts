@@ -96,7 +96,7 @@ export class SyncLearningPath {
         const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
         
         // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
-        await this.syncCourse.execute({courseUrl, offeringId});
+        await this.syncCourse.execute({courseInput: courseUrl, offeringId});
 
         orderIndex++;
         coursesAdded++;

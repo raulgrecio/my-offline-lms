@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SyncCourse } from '@application/use-cases/SyncCourse';
+
 import { AssetNamingService } from '@domain/services/AssetNamingService';
 import { PLATFORM } from '@config/platform';
+import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
+import { ILogger } from '@domain/services/ILogger';
+import { SyncCourse } from '@application/use-cases/SyncCourse';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn(),
@@ -23,37 +26,36 @@ describe('SyncCourse Use Case', () => {
     } as any;
     
     const mockInterceptedDataRepo = {
-        getPendingCourses: vi.fn().mockReturnValue([]),
+        getPendingForCourse: vi.fn().mockReturnValue([]),
         deletePayload: vi.fn(),
         markAsProcessed: vi.fn(),
     } as any;
 
-    const mockLogger = {
+    const mockLogger: ILogger = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         withContext: vi.fn().mockReturnThis(),
-    } as any;
+    };
 
-    const mockUrlProvider = {
-        resolveCourseUrl: vi.fn(url => {
-            const resolved = url.startsWith('http') ? url : `https://platform.com/ou/course/path/${url}`;
-            return resolved.endsWith('/') ? resolved : `${resolved}/`;
-        }),
+    const mockUrlProvider: IPlatformUrlProvider = {
+        resolveCourseUrl: vi.fn(target => ({ url: target, courseId: '123' })),
+        resolveLearningPathUrl: vi.fn(url => url),
         getCourseUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/course/${slug}/${id}`),
         getVideoAssetUrl: vi.fn(({courseUrl, assetId}) => {
             const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
             return `${base}${assetId}`;
         }),
         getGuideViewerUrl: vi.fn(({courseId, offeringId, ekitId}) => `https://platform.com/ekit/${courseId}/${offeringId}/${ekitId}/course`),
-    } as any;
+        getGuideImageBaseUrl: vi.fn(src => src),
+    };
 
     let useCase: SyncCourse;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([]);
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([]);
         useCase = new SyncCourse({
             browserProvider: mockBrowserProvider,
             courseRepository: mockCourseRepo,
@@ -65,28 +67,27 @@ describe('SyncCourse Use Case', () => {
         });
     });
 
-    it('should warn and exit if no coursePath provided', async () => {
-        await useCase.execute({courseUrl: ''});
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se proporcionó courseUrl'));
+    it('should warn and exit if no courseInput provided', async () => {
+        await useCase.execute({courseInput: ''});
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('No se proporcionó courseUrl'));
         expect(mockBrowserProvider.getAuthenticatedContext).not.toHaveBeenCalled();
     });
 
-    it('should resolve slug to full URL', async () => {
+    it('should use base course URL from real platform provider', async () => {
         const mockPage = {
             goto: vi.fn().mockResolvedValue(undefined),
-            close: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn(),
         } as any;
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        await useCase.execute({courseUrl: 'my-course-slug'});
-        
-        expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('/ou/course/path/my-course-slug'), expect.anything());
+        await useCase.execute({courseInput: '150265'});
+        expect(mockPage.goto).toHaveBeenCalledWith(expect.stringContaining('150265'), expect.anything());
     });
 
     it('should skip if context creation fails', async () => {
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(null);
-        await expect(useCase.execute({courseUrl: 'http://course-url'})).rejects.toThrow();
+        await expect(useCase.execute({courseInput: 'http://course-url'})).rejects.toThrow();
     });
 
     it('should process pending courses from intercepted data', async () => {
@@ -120,9 +121,9 @@ describe('SyncCourse Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test-course/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/test-course/123'});
 
         expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ id: '123', title: 'Test Course' }));
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ 
@@ -153,9 +154,9 @@ describe('SyncCourse Use Case', () => {
                 data: { id: '123', name: 'Simple Course' } // No modules, no eKits
             })
         };
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/simple-course/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/simple-course/123'});
 
         expect(mockCourseRepo.saveCourse).toHaveBeenCalled();
         expect(mockAssetRepo.saveAsset).not.toHaveBeenCalled();
@@ -187,9 +188,9 @@ describe('SyncCourse Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/mixed/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/mixed/123'});
 
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(1);
         expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({ id: 'v1' }));
@@ -203,11 +204,11 @@ describe('SyncCourse Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([
             { filePath: 'f1', content: JSON.stringify({ data: { id: 'other', name: 'other' } }) }
         ]);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/target-course/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/target-course/123'});
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No se encontraron datos'));
     });
@@ -224,7 +225,7 @@ describe('SyncCourse Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test-course/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/test-course/123'});
 
         expect(mockPage.waitForSelector).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, expect.anything());
         expect(mockPage.click).toHaveBeenCalledWith(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
@@ -267,9 +268,9 @@ describe('SyncCourse Use Case', () => {
             })
         };
 
-        mockInterceptedDataRepo.getPendingCourses.mockReturnValue([payload1, payload2]);
+        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([payload1, payload2]);
 
-        await useCase.execute({courseUrl: 'https://platform.com/ou/course/test/123'});
+        await useCase.execute({courseInput: 'https://platform.com/ou/course/test/123'});
 
         // Verify saveAsset was called with merged data
         // assetId should be the numeric id '244297'

@@ -9,15 +9,38 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
     this.baseUrl = env.PLATFORM_BASE_URL;
   }
 
-  resolveCourseUrl(target: string): string {
+  resolveCourseUrl(target: string): { url: string, courseId: string } {
     let url = target;
-    if (!target.startsWith("http")) {
+    let courseId: string | undefined;
+
+    // 1. Intentar extraer ID si parece una URL o path basándonos en el patrón configurado
+    const pattern = PLATFORM.URL_PATTERNS.COURSE_PATH
+      .replace('{slug}', '[^/]+')
+      .replace('{id}', '(\\d+)');
+    const regex = new RegExp(pattern, 'i');
+    
+    const match = target.match(regex);
+    if (match) {
+      courseId = match[1];
+      if (!target.startsWith("http")) {
+        url = new URL(target, this.baseUrl).href;
+      }
+    }
+    // 2. Si es solo un número, es el ID directo
+    else if (/^\d+$/.test(target)) {
+      courseId = target;
       const path = PLATFORM.URL_PATTERNS.COURSE_PATH
         .replace('{slug}', "path")
         .replace('{id}', target);
       url = new URL(path, this.baseUrl).href;
     }
-    return url.endsWith('/') ? url : `${url}/`;
+
+    if (!courseId) {
+      throw new Error(`No se pudo extraer el ID del curso de: "${target}"`);
+    }
+
+    const finalUrl = url.endsWith('/') ? url : `${url}/`;
+    return { url: finalUrl, courseId };
   }
 
   resolveLearningPathUrl(target: string): string {

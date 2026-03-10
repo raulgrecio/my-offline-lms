@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 
 import { DEBUG_DIR } from "@config/paths";
+import { PLATFORM } from "@config/platform";
 
 const debugDir = DEBUG_DIR;
 
@@ -20,8 +21,16 @@ export function setupInterceptor(page: Page) {
       try {
         const json = await response.json();
         
+        /*
         // Removed aggressive filtering to capture all JSONs and find where the original guide filename is
-
+        const isCorePayload = (PLATFORM.INTERCEPTOR.FILTER_API as readonly (string | RegExp)[]).some(pattern => 
+          typeof pattern === "string" ? url.includes(pattern) : pattern.test(url)
+        );
+        
+        if (!isCorePayload) {
+          return;
+        }
+        */
 
         // Creamos un nombre de archivo seguro basado en la URL
         const urlObj = new URL(url);

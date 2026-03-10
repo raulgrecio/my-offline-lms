@@ -35,37 +35,41 @@ export class SyncCourse {
     this.logger = deps.logger.withContext("SyncCourse");
   }
 
-  async execute({courseUrl, offeringId}: {courseUrl: string, offeringId?: string}): Promise<void> {
-    if (!courseUrl) {
-      this.logger.warn("No se proporcionó courseUrl");
+  async execute({courseInput, offeringId}: {courseInput: string, offeringId?: string}): Promise<void> {
+    if (!courseInput) {
+      this.logger.error("No se proporcionó courseUrl");
       return;
     }
 
-    this.logger.info(`Course Path recibido: "${courseUrl}"`);
+    this.logger.info(`Course Path recibido: "${courseInput}"`);
 
-    const targetUrl = this.urlProvider.resolveCourseUrl(courseUrl);
-    this.logger.info(`Iniciando mapeo y sincronización del curso: ${targetUrl}`);
+    const { url, courseId } = this.urlProvider.resolveCourseUrl(courseInput);
+
+    if (!url || !courseId) {
+      this.logger.error(`No se pudo resolver la URL o el ID del curso: ${courseInput}`);
+      return;
+    }
+
+    this.logger.info(`Iniciando mapeo y sincronización del curso: ${url} (ID: ${courseId})`);
 
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
     setupInterceptor(page);
 
-    this.logger.info(`Navegando a: ${targetUrl}`);
-    await page.goto(targetUrl, { waitUntil: "load", timeout: 60000 });
+    this.logger.info(`Navegando a: ${url}`);
+    await page.goto(url, { waitUntil: "load", timeout: 60000 });
 
-    if (targetUrl.includes("/course/")) {
-      this.logger.info("Click en el tab de Guides para desencadenar json...");
-      try {
-        await page.waitForSelector(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, { timeout: 15000 });
-        await page.click(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
-        this.logger.info("👆 Click en Guides completado. Esperando interceptaciones...");
-        await page.waitForTimeout(3000);
-      } catch (e) {
-        this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
-      }
+    this.logger.info("Click en el tab de Guides para desencadenar json...");
+    try {
+      await page.waitForSelector(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, { timeout: 15000 });
+      await page.click(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
+      this.logger.info("👆 Click en Guides completado. Esperando interceptaciones (7s)...");
+      await page.waitForTimeout(7000);
+    } catch (e) {
+      this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
     }
 
-    const intercepted = this.interceptedDataRepo.getPendingCourses();
+    const intercepted = this.interceptedDataRepo.getPendingForCourse(courseId);
     const matchingPayloads: any[] = [];
     const processedPayloadPaths: string[] = [];
     
@@ -76,8 +80,8 @@ export class SyncCourse {
             const data = wrapper.data;
             if (!data) continue;
 
-            const matchesSlug = data.slug && targetUrl.includes(data.slug);
-            const matchesId = data.id && targetUrl.includes(data.id.toString());
+            const matchesSlug = data.slug && url.includes(data.slug);
+            const matchesId = data.id && url.includes(data.id.toString());
 
             if (matchesSlug || matchesId) {
                 matchingPayloads.push(wrapper);
@@ -235,7 +239,7 @@ export class SyncCourse {
           id: video.id,
           courseId: courseId,
           type: 'video',
-          url: this.urlProvider.getVideoAssetUrl({courseUrl: targetUrl, assetId: video.id}),
+          url: this.urlProvider.getVideoAssetUrl({courseUrl: url, assetId: video.id}),
           metadata: {
             name: video.name || `Video ${index + 1}`,
             order_index: index + 1,

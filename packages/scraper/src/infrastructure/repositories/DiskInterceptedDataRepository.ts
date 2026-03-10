@@ -3,6 +3,7 @@ import path from "path";
 
 import { IInterceptedDataRepository, InterceptedPayload } from "@domain/repositories/IInterceptedDataRepository";
 import { DEBUG_DIR } from "@config/paths";
+import { PLATFORM } from "@config/platform";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private debugDir: string;
@@ -10,31 +11,37 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
   constructor(baseDir?: string) {
     this.debugDir = baseDir || DEBUG_DIR;
   }
-
+  
   private initDir(): void {
     if (!fs.existsSync(this.debugDir)) {
       fs.mkdirSync(this.debugDir, { recursive: true });
     }
   }
-
+ 
   getPendingLearningPaths(): InterceptedPayload[] {
-    return this.getPayloads("content_learning_path_", "_pagedata.json");
+    return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH);
   }
 
   getPendingCourses(): InterceptedPayload[] {
-    return this.getPayloads("courses_", "metadata.json");
+    return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.COURSE);
   }
 
-  private getPayloads(prefix: string, suffix: string): InterceptedPayload[] {
+  private getPayloads(pattern: RegExp, id?: string): InterceptedPayload[] {
     this.initDir();
-    const files = fs.readdirSync(this.debugDir)
-      .filter(f => f.includes(prefix) && f.endsWith(suffix));
+    let files = fs.readdirSync(this.debugDir)
+      .filter(
+        file => pattern.test(file) && (!id || file.includes(id))
+      );
 
     return files.map(file => {
       const filePath = path.join(this.debugDir, file);
       const content = fs.readFileSync(filePath, "utf-8");
       return { filePath, content };
     });
+  }
+
+  getPendingForCourse(courseId: string): InterceptedPayload[] {
+    return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.COURSE, courseId);
   }
 
   deletePayload(filePath: string): void {
@@ -46,7 +53,7 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
       console.warn(`[DiskInterceptedDataRepository] Could not delete ${filePath}`);
     }
   }
-
+  
   markAsProcessed(filePath: string): void {
     try {
       if (fs.existsSync(filePath)) {

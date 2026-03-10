@@ -67,6 +67,25 @@ describe('DiskInterceptedDataRepository', () => {
         expect(result[1].filePath).toBe('/mock/debug/content_courses_999_metadata.json');
     });
 
+    it('should return pending courses filtered by identifier', () => {
+        vi.mocked(fs.existsSync).mockReturnValue(true);
+        vi.mocked(fs.readdirSync).mockReturnValue([
+            'content_learning_path_123_pagedata.json',
+            'content_courses_789_metadata.json',
+            'content_courses_999_metadata.json'
+        ] as any);
+        
+        vi.mocked(fs.readFileSync).mockImplementation((path) => {
+            if (path.toString().includes('789')) return '{"id": "789"}';
+            return '{"id": "999"}';
+        });
+
+        const result = repo.getPendingForCourse('789');
+
+        expect(result).toHaveLength(1);
+        expect(result[0].filePath).toBe('/mock/debug/content_courses_789_metadata.json');
+    });
+
     it('should delete payload if it exists', () => {
         vi.mocked(fs.existsSync).mockReturnValue(true);
         repo.deletePayload('/mock/debug/file.json');

@@ -83,7 +83,7 @@ Comandos disponibles:
           namingService,
           logger,
         });
-        await syncCourse.execute({courseUrl: target});
+        await syncCourse.execute({courseInput: target});
         break;
       }
       case 'sync-path': {

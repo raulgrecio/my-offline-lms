@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadGuides } from '@application/use-cases/DownloadGuides';
+
 import { AssetNamingService } from '@domain/services/AssetNamingService';
-
-
+import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
+import { ILogger } from '@domain/services/ILogger';
+import { DownloadGuides } from '@application/use-cases/DownloadGuides';
 
 describe('DownloadGuides Use Case', () => {
     let mockBrowserProvider: any;
     let mockCourseRepo: any;
     let mockAssetRepo: any;
     let mockAssetStorage: any;
-    let mockLogger: any;
+    let mockLogger: ILogger;
     let useCase: DownloadGuides;
 
     beforeEach(() => {
@@ -50,11 +51,14 @@ describe('DownloadGuides Use Case', () => {
             withContext: vi.fn().mockReturnThis(),
         };
 
-        const mockUrlProvider = {
+        const mockUrlProvider: IPlatformUrlProvider = {
+            resolveCourseUrl: vi.fn(target => ({ url: target, courseId: '123' })),
+            resolveLearningPathUrl: vi.fn(url => url),
+            getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`),
             getGuideViewerUrl: vi.fn().mockReturnValue('http://mock-viewer'),
             getVideoAssetUrl: vi.fn().mockReturnValue('http://mock-video'),
             getGuideImageBaseUrl: vi.fn(src => src.replace('/mobile/index.html', '/files/mobile/')),
-        } as any;
+        };
 
         // Mock global setTimeout to avoid delays in tests
         vi.spyOn(global, 'setTimeout').mockImplementation((fn: any) => {

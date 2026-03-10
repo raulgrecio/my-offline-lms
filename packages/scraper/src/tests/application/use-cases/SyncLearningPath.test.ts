@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
+
 import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
+import { ILogger } from '@domain/services/ILogger';
+import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
@@ -30,18 +33,22 @@ describe('SyncLearningPath Use Case', () => {
         deletePayload: vi.fn()
     } as any;
 
-    const mockUrlProvider = {
+    const mockUrlProvider: IPlatformUrlProvider = {
+        resolveCourseUrl: vi.fn(target => ({ url: target, courseId: '123' })),
         resolveLearningPathUrl: vi.fn(url => url),
-        getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`)
-    } as any;
+        getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`),
+        getVideoAssetUrl: vi.fn().mockReturnValue(''),
+        getGuideViewerUrl: vi.fn().mockReturnValue(''),
+        getGuideImageBaseUrl: vi.fn(src => src),
+    };
 
-    const mockLogger = {
+    const mockLogger: ILogger = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         withContext: vi.fn().mockReturnThis()
-    } as any;
+    };
 
     let useCase: SyncLearningPath;
 

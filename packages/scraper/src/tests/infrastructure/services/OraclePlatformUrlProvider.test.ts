@@ -6,21 +6,39 @@ describe('OraclePlatformUrlProvider', () => {
     const provider = new OraclePlatformUrlProvider();
 
     describe('resolveCourseUrl', () => {
-        it('should resolve a slug to a full URL with trailing slash', () => {
-            const result = provider.resolveCourseUrl('my-course-slug');
-            expect(result).toBe(new URL('ou/course/path/my-course-slug/', env.PLATFORM_BASE_URL).href);
+        it('should resolve a numeric ID to a full URL and extract courseId', () => {
+            const result = provider.resolveCourseUrl('150265');
+            expect(result).toEqual({
+                url: new URL('ou/course/path/150265/', env.PLATFORM_BASE_URL).href,
+                courseId: '150265'
+            });
         });
 
-        it('should return a full URL as is, but ensuring trailing slash', () => {
-            const url = new URL('ou/course/slug/another-slug', env.PLATFORM_BASE_URL).href;
+        it('should resolve a relative path and extract courseId', () => {
+            const result = provider.resolveCourseUrl('ou/course/oracle-data-platform/150265');
+            expect(result).toEqual({
+                url: new URL('ou/course/oracle-data-platform/150265/', env.PLATFORM_BASE_URL).href,
+                courseId: '150265'
+            });
+        });
+
+        it('should return a full URL and extract courseId', () => {
+            const url = new URL('ou/course/slug/123456', env.PLATFORM_BASE_URL).href;
             const result = provider.resolveCourseUrl(url);
-            expect(result).toBe(url + '/');
+            expect(result).toEqual({
+                url: url + '/',
+                courseId: '123456'
+            });
+        });
+
+        it('should throw an error if courseId cannot be extracted', () => {
+            expect(() => provider.resolveCourseUrl('malformed-url-without-id')).toThrow('No se pudo extraer el ID del curso');
         });
 
         it('should not add a second trailing slash if one already exists', () => {
-             const url = new URL('ou/course/slug/fixed-slug/', env.PLATFORM_BASE_URL).href;
+             const url = new URL('ou/course/slug/123/', env.PLATFORM_BASE_URL).href;
              const result = provider.resolveCourseUrl(url);
-             expect(result).toBe(url);
+             expect(result.url).toBe(url);
         });
     });
 
