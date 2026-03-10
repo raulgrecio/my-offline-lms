@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthSession } from '@application/use-cases/AuthSession';
+import { ILogger } from '@domain/services/ILogger';
 
 vi.mock('readline', () => ({
     default: {
@@ -20,13 +21,13 @@ describe('AuthSession Use Case', () => {
         ensureAuthDir: vi.fn(),
     } as any;
 
-    const mockLogger = {
+    const mockLogger: ILogger = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         withContext: vi.fn().mockReturnThis(),
-    } as any;
+    };
 
     let useCase: AuthSession;
 

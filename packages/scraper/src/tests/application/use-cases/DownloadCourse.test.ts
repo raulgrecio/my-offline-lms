@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadCourse } from '@application/use-cases/DownloadCourse';
 import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { ILogger } from '@domain/services/ILogger';
 
 describe('DownloadCourse Use Case', () => {
     const mockCourseRepo = {
@@ -15,13 +16,13 @@ describe('DownloadCourse Use Case', () => {
         executeForCourse: vi.fn()
     } as any;
 
-    const mockLogger = {
+    const mockLogger: ILogger = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         withContext: vi.fn().mockReturnThis()
-    } as any;
+    };
 
     let useCase: DownloadCourse;
 

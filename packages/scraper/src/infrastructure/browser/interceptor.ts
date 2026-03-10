@@ -2,14 +2,13 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
-import { DEBUG_DIR } from "@config/paths";
-import { PLATFORM } from "@config/platform";
+import { INTERCEPTED_DIR } from "@config/paths";
 
-const debugDir = DEBUG_DIR;
+const interceptedDir = INTERCEPTED_DIR;
 
 export function setupInterceptor(page: Page) {
-  if (!fs.existsSync(debugDir)) {
-    fs.mkdirSync(debugDir, { recursive: true });
+  if (!fs.existsSync(interceptedDir)) {
+    fs.mkdirSync(interceptedDir, { recursive: true });
   }
 
   page.on("response", async (response) => {
@@ -38,7 +37,7 @@ export function setupInterceptor(page: Page) {
         const filename = `${Date.now()}_${safeName}.json`;
         
         fs.writeFileSync(
-          path.join(debugDir, filename),
+          path.join(interceptedDir, filename),
           JSON.stringify({ url, method: response.request().method(), status: response.status(), data: json }, null, 2)
         );
         
@@ -49,5 +48,5 @@ export function setupInterceptor(page: Page) {
     }
   });
   
-  console.log(`[Interceptor] Activado. Guardando respuestas JSON en data/debug/`);
+  console.log(`[Interceptor] Activado. Guardando respuestas JSON en data/intercepted/`);
 }

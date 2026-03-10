@@ -2,19 +2,19 @@ import fs from "fs";
 import path from "path";
 
 import { IInterceptedDataRepository, InterceptedPayload } from "@domain/repositories/IInterceptedDataRepository";
-import { DEBUG_DIR } from "@config/paths";
+import { INTERCEPTED_DIR } from "@config/paths";
 import { PLATFORM } from "@config/platform";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
-  private debugDir: string;
+  private interceptedDir: string;
 
   constructor(baseDir?: string) {
-    this.debugDir = baseDir || DEBUG_DIR;
+    this.interceptedDir = baseDir || INTERCEPTED_DIR;
   }
   
   private initDir(): void {
-    if (!fs.existsSync(this.debugDir)) {
-      fs.mkdirSync(this.debugDir, { recursive: true });
+    if (!fs.existsSync(this.interceptedDir)) {
+      fs.mkdirSync(this.interceptedDir, { recursive: true });
     }
   }
  
@@ -28,13 +28,13 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
 
   private getPayloads(pattern: RegExp, id?: string): InterceptedPayload[] {
     this.initDir();
-    let files = fs.readdirSync(this.debugDir)
+    let files = fs.readdirSync(this.interceptedDir)
       .filter(
         file => pattern.test(file) && (!id || file.includes(id))
       );
 
     return files.map(file => {
-      const filePath = path.join(this.debugDir, file);
+      const filePath = path.join(this.interceptedDir, file);
       const content = fs.readFileSync(filePath, "utf-8");
       return { filePath, content };
     });

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadVideos } from '@application/use-cases/DownloadVideos';
 import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { ILogger } from '@domain/services/ILogger';
 
 
 
@@ -11,7 +12,7 @@ describe('DownloadVideos Use Case', () => {
     let mockAssetRepo: any;
     let mockAssetStorage: any;
     let mockVideoDownloader: any;
-    let mockContextLogger: any;
+    let mockContextLogger: ILogger;
     let mockRootLogger: any;
     let mockPage: any;
     let mockContext: any;
@@ -55,6 +56,7 @@ describe('DownloadVideos Use Case', () => {
             warn: vi.fn(),
             error: vi.fn(),
             debug: vi.fn(),
+            withContext: vi.fn().mockReturnThis()
         };
 
         mockRootLogger = {

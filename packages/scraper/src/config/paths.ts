@@ -5,11 +5,11 @@ import path from "path";
 /** Root del package scraper — para sus propios directorios de datos */
 const SCRAPER_ROOT = path.resolve(__dirname, "../../");
 
-// Dirs privados del scraper (auth, debug)
+// Dirs privados del scraper (auth, intercepted)
 export const DATA_DIR = path.join(SCRAPER_ROOT, "data");
 export const AUTH_DIR = path.join(DATA_DIR, ".auth");
 export const AUTH_STATE = path.join(AUTH_DIR, "state.json");
-export const DEBUG_DIR = path.join(DATA_DIR, "debug");
+export const INTERCEPTED_DIR = path.join(DATA_DIR, "intercepted");
 
 /** Root del monorepo — solo para recursos compartidos con otros packages (ej: la DB) */
 export const MONOREPO_ROOT = path.resolve(__dirname, "../../../../");

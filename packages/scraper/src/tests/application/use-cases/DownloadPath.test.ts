@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadPath } from '@application/use-cases/DownloadPath';
 import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { ILogger } from '@domain/services/ILogger';
 
 describe('DownloadPath Use Case', () => {
     const mockLearningPathRepo = {
@@ -19,13 +20,13 @@ describe('DownloadPath Use Case', () => {
         executeForCourse: vi.fn()
     } as any;
 
-    const mockLogger = {
+    const mockLogger: ILogger = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
         withContext: vi.fn().mockReturnThis()
-    } as any;
+    };
 
     let useCase: DownloadPath;
 

@@ -13,7 +13,7 @@ vi.mock('path', async () => {
 });
 
 describe('DiskInterceptedDataRepository', () => {
-    const mockBaseDir = '/mock/debug';
+    const mockBaseDir = '/mock/intercepted';
     let repo: DiskInterceptedDataRepository;
 
     beforeEach(() => {
@@ -43,7 +43,7 @@ describe('DiskInterceptedDataRepository', () => {
         const result = repo.getPendingLearningPaths();
 
         expect(result).toHaveLength(1);
-        expect(result[0].filePath).toBe('/mock/debug/content_learning_path_123_pagedata.json');
+        expect(result[0].filePath).toBe('/mock/intercepted/content_learning_path_123_pagedata.json');
         expect(result[0].content).toBe('{"id": "123"}');
     });
 
@@ -63,8 +63,8 @@ describe('DiskInterceptedDataRepository', () => {
         const result = repo.getPendingCourses();
 
         expect(result).toHaveLength(2);
-        expect(result[0].filePath).toBe('/mock/debug/content_courses_789_metadata.json');
-        expect(result[1].filePath).toBe('/mock/debug/content_courses_999_metadata.json');
+        expect(result[0].filePath).toBe('/mock/intercepted/content_courses_789_metadata.json');
+        expect(result[1].filePath).toBe('/mock/intercepted/content_courses_999_metadata.json');
     });
 
     it('should return pending courses filtered by identifier', () => {
@@ -83,18 +83,18 @@ describe('DiskInterceptedDataRepository', () => {
         const result = repo.getPendingForCourse('789');
 
         expect(result).toHaveLength(1);
-        expect(result[0].filePath).toBe('/mock/debug/content_courses_789_metadata.json');
+        expect(result[0].filePath).toBe('/mock/intercepted/content_courses_789_metadata.json');
     });
 
     it('should delete payload if it exists', () => {
         vi.mocked(fs.existsSync).mockReturnValue(true);
-        repo.deletePayload('/mock/debug/file.json');
-        expect(fs.unlinkSync).toHaveBeenCalledWith('/mock/debug/file.json');
+        repo.deletePayload('/mock/intercepted/file.json');
+        expect(fs.unlinkSync).toHaveBeenCalledWith('/mock/intercepted/file.json');
     });
 
     it('should not throw error when deleting non-existent payload', () => {
         vi.mocked(fs.existsSync).mockReturnValue(false);
-        expect(() => repo.deletePayload('/mock/debug/non_existent.json')).not.toThrow();
+        expect(() => repo.deletePayload('/mock/intercepted/non_existent.json')).not.toThrow();
         expect(fs.unlinkSync).not.toHaveBeenCalled();
     });
 
@@ -106,7 +106,7 @@ describe('DiskInterceptedDataRepository', () => {
         
         const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         
-        expect(() => repo.deletePayload('/mock/debug/locked.json')).not.toThrow();
+        expect(() => repo.deletePayload('/mock/intercepted/locked.json')).not.toThrow();
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not delete'));
         
         consoleSpy.mockRestore();
@@ -115,14 +115,14 @@ describe('DiskInterceptedDataRepository', () => {
     describe('markAsProcessed', () => {
         it('should rename payload when marking as processed', () => {
             vi.mocked(fs.existsSync).mockReturnValue(true);
-            const filePath = '/mock/debug/file.json';
+            const filePath = '/mock/intercepted/file.json';
             repo.markAsProcessed(filePath);
             expect(fs.renameSync).toHaveBeenCalledWith(filePath, `${filePath}.processed`);
         });
 
         it('should not rename if payload does not exist', () => {
             vi.mocked(fs.existsSync).mockReturnValue(false);
-            repo.markAsProcessed('/mock/debug/non_existent.json');
+            repo.markAsProcessed('/mock/intercepted/non_existent.json');
             expect(fs.renameSync).not.toHaveBeenCalled();
         });
 
@@ -133,7 +133,7 @@ describe('DiskInterceptedDataRepository', () => {
             });
             const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             
-            repo.markAsProcessed('/mock/debug/locked.json');
+            repo.markAsProcessed('/mock/intercepted/locked.json');
             
             expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not mark as processed'));
             consoleSpy.mockRestore();
