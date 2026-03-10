@@ -13,9 +13,9 @@ import { DiskAuthSessionStorage } from '@infrastructure/repositories/DiskAuthSes
 import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage';
 import { YtDlpVideoDownloader } from '@infrastructure/services/YtDlpVideoDownloader';
 import { ConsoleLogger } from '@infrastructure/services/ConsoleLogger';
-import { DownloadCourse } from '@application/use-cases/DownloadCourse';
 import { OraclePlatformUrlProvider } from '@infrastructure/services/OraclePlatformUrlProvider';
 
+import { DownloadCourse } from '@application/use-cases/DownloadCourse';
 import { AuthSession } from '@application/use-cases/AuthSession';
 import { SyncCourse } from '@application/use-cases/SyncCourse';
 import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
