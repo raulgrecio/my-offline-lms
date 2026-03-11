@@ -51,7 +51,7 @@ Comandos disponibles:
   const assetRepo = new SQLiteAssetRepository();
   const pathRepo = new SQLiteLearningPathRepository();
 
-  const interceptedDataRepo = new DiskInterceptedDataRepository();
+  const interceptedDataRepo = new DiskInterceptedDataRepository({ logger });
   const authSessionStorage = new DiskAuthSessionStorage();
   const assetStorage = new DiskAssetStorage();
   const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);

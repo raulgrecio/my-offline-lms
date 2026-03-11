@@ -1,16 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
 import { AssetNamingService } from '@domain/services/AssetNamingService';
 import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
 import { ILogger } from '@domain/services/ILogger';
 import { DownloadGuides } from '@application/use-cases/DownloadGuides';
+import { IAssetStorage } from '@domain/repositories/IAssetStorage';
 
 describe('DownloadGuides Use Case', () => {
     let mockBrowserProvider: any;
     let mockCourseRepo: any;
     let mockAssetRepo: any;
-    let mockAssetStorage: any;
-    let mockLogger: ILogger;
+    let mockAssetStorage: Mocked<IAssetStorage>;
+    let mockLogger: Mocked<ILogger>;
     let useCase: DownloadGuides;
 
     beforeEach(() => {
@@ -33,6 +34,7 @@ describe('DownloadGuides Use Case', () => {
         };
 
         mockAssetStorage = {
+            verifyVideoIntegrity: vi.fn(),
             ensureAssetDir: vi.fn(),
             ensureTempDir: vi.fn().mockReturnValue('/mock/temp'),
             assetExists: vi.fn(),
@@ -51,9 +53,9 @@ describe('DownloadGuides Use Case', () => {
             withContext: vi.fn().mockReturnThis(),
         };
 
-        const mockUrlProvider: IPlatformUrlProvider = {
-            resolveCourseUrl: vi.fn(target => ({ url: target, courseId: '123' })),
-            resolveLearningPathUrl: vi.fn(url => url),
+        const mockUrlProvider: Mocked<IPlatformUrlProvider> = {
+            resolveCourseUrl: vi.fn(url => ({ url, courseId: '123' })),
+            resolveLearningPathUrl: vi.fn(url => ({ url, pathId: '123' })),
             getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`),
             getGuideViewerUrl: vi.fn().mockReturnValue('http://mock-viewer'),
             getVideoAssetUrl: vi.fn().mockReturnValue('http://mock-video'),

@@ -45,13 +45,19 @@ describe('OraclePlatformUrlProvider', () => {
     describe('resolveLearningPathUrl', () => {
         it('should resolve a numeric ID to a full path URL and extract pathId', () => {
             const result = provider.resolveLearningPathUrl('12345');
-            expect(result).toBe(new URL('ou/learning-path/path/12345/', env.PLATFORM_BASE_URL).href);
+            expect(result).toEqual({
+                url: new URL('ou/learning-path/path/12345/', env.PLATFORM_BASE_URL).href,
+                pathId: '12345'
+            });
         });
 
         it('should extract pathId from a full learning path URL', () => {
             const url = new URL('ou/learning-path/some-slug/148510', env.PLATFORM_BASE_URL).href;
             const result = provider.resolveLearningPathUrl(url);
-            expect(result).toBe(url + '/');
+            expect(result).toEqual({
+                url: url + '/',
+                pathId: '148510'
+            });
         });
 
         it('should throw an error if pathId cannot be extracted', () => {

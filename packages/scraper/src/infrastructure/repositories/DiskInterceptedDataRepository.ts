@@ -4,12 +4,18 @@ import path from "path";
 import { IInterceptedDataRepository, InterceptedPayload } from "@domain/repositories/IInterceptedDataRepository";
 import { INTERCEPTED_DIR } from "@config/paths";
 import { PLATFORM } from "@config/platform";
+import { ILogger } from "@domain/services/ILogger";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private interceptedDir: string;
+  private logger: ILogger;
 
-  constructor(baseDir?: string) {
-    this.interceptedDir = baseDir || INTERCEPTED_DIR;
+  constructor(deps: {
+    baseDir?: string, 
+    logger: ILogger
+  }) {
+    this.interceptedDir = deps.baseDir || INTERCEPTED_DIR;
+    this.logger = deps.logger.withContext("DiskInterceptedDataRepository");
   }
   
   private initDir(): void {
@@ -20,6 +26,10 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
  
   getPendingLearningPaths(): InterceptedPayload[] {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH);
+  }
+
+  getPendingForLearningPath(pathId: string): InterceptedPayload[] {
+    return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH, pathId);
   }
 
   getPendingCourses(): InterceptedPayload[] {
@@ -50,7 +60,7 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
         fs.unlinkSync(filePath);
       }
     } catch (e) {
-      console.warn(`[DiskInterceptedDataRepository] Could not delete ${filePath}`);
+      this.logger.warn(`Could not delete ${filePath}`);
     }
   }
   
@@ -61,7 +71,17 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
         fs.renameSync(filePath, newPath);
       }
     } catch (e) {
-      console.warn(`[DiskInterceptedDataRepository] Could not mark as processed ${filePath}`);
+      this.logger.warn(`Could not mark as processed ${filePath}`);
+    }
+  }
+
+  deleteWorkspace(): void {
+    try {
+      if (fs.existsSync(this.interceptedDir)) {
+        fs.rmSync(this.interceptedDir, { recursive: true, force: true });
+      }
+    } catch (e) {
+      this.logger.error(`Failed to delete workspace directory ${this.interceptedDir}:`, e);
     }
   }
 }

@@ -43,7 +43,7 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
     return { url: finalUrl, courseId };
   }
 
-  resolveLearningPathUrl(target: string): string {
+  resolveLearningPathUrl(target: string): { url: string, pathId: string } {
     let url = target;
     let pathId: string | undefined;
 
@@ -73,7 +73,8 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
       throw new Error(`No se pudo extraer el ID del learning path de: "${target}"`);
     }
 
-    return url.endsWith('/') ? url : `${url}/`;
+    const finalUrl = url.endsWith('/') ? url : `${url}/`;
+    return { url: finalUrl, pathId };
   }
 
   getCourseUrl({ slug, id }: { slug: string, id: string}): string {

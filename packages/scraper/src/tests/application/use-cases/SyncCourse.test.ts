@@ -1,14 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
 import { AssetNamingService } from '@domain/services/AssetNamingService';
 import { PLATFORM } from '@config/platform';
 import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
 import { ILogger } from '@domain/services/ILogger';
 import { SyncCourse } from '@application/use-cases/SyncCourse';
+import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
+import { IInterceptedDataRepository } from '@domain/repositories/IInterceptedDataRepository';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn(),
 }));
+
+vi.mock('@infrastructure/repositories/DiskInterceptedDataRepository');
 
 describe('SyncCourse Use Case', () => {
     const mockBrowserProvider = {
@@ -25,13 +29,17 @@ describe('SyncCourse Use Case', () => {
         getCourseAssets: vi.fn().mockReturnValue([]),
     } as any;
     
-    const mockInterceptedDataRepo = {
+    const mockInterceptedDataRepo: Mocked<IInterceptedDataRepository> = {
         getPendingForCourse: vi.fn().mockReturnValue([]),
+        getPendingLearningPaths: vi.fn(),
+        getPendingForLearningPath: vi.fn(),
         deletePayload: vi.fn(),
+        getPendingCourses: vi.fn(),
         markAsProcessed: vi.fn(),
-    } as any;
+        deleteWorkspace: vi.fn(),
+    };
 
-    const mockLogger: ILogger = {
+    const mockLogger: Mocked<ILogger> = {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
@@ -39,9 +47,9 @@ describe('SyncCourse Use Case', () => {
         withContext: vi.fn().mockReturnThis(),
     };
 
-    const mockUrlProvider: IPlatformUrlProvider = {
-        resolveCourseUrl: vi.fn(target => ({ url: target, courseId: '123' })),
-        resolveLearningPathUrl: vi.fn(url => url),
+    const mockUrlProvider: Mocked<IPlatformUrlProvider> = {
+        resolveCourseUrl: vi.fn(url => ({ url, courseId: '123' })),
+        resolveLearningPathUrl: vi.fn(url => ({ url, pathId: '123' })),
         getCourseUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/course/${slug}/${id}`),
         getVideoAssetUrl: vi.fn(({courseUrl, assetId}) => {
             const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
@@ -56,6 +64,8 @@ describe('SyncCourse Use Case', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([]);
+        (DiskInterceptedDataRepository as any).mockImplementation(function() { return mockInterceptedDataRepo; });
+
         useCase = new SyncCourse({
             browserProvider: mockBrowserProvider,
             courseRepository: mockCourseRepo,

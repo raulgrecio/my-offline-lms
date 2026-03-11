@@ -1,3 +1,4 @@
+import { env } from "@config/env";
 import { IInterceptedDataRepository } from "@domain/repositories/IInterceptedDataRepository";
 import { ILearningPathRepository } from "@domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "@domain/repositories/ICourseRepository";
@@ -6,6 +7,7 @@ import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
 import { INamingService } from "@domain/services/INamingService";
 import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "@infrastructure/browser/interceptor";
+import { DiskInterceptedDataRepository } from "@infrastructure/repositories/DiskInterceptedDataRepository";
 
 import { SyncCourse } from "./SyncCourse";
 
@@ -39,35 +41,62 @@ export class SyncLearningPath {
     this.logger = deps.logger.withContext("SyncLearningPath");
   }
 
-  async execute(target: string): Promise<void> {
-    const targetUrl = this.urlProvider.resolveLearningPathUrl(target);
-    this.logger.info(`Iniciando mapeo y sincronización de ruta: ${targetUrl}`);
+  async execute(pathInput: string): Promise<void> {
+    if (!pathInput) {
+      this.logger.error("No se proporcionó pathInput");
+      return;
+    }
+    const { url, pathId } = this.urlProvider.resolveLearningPathUrl(pathInput);
+
+    if (!url || !pathId) {
+      this.logger.error(`No se pudo resolver la URL o el ID del path: ${pathInput}`);
+      return;
+    }
+ 
+    this.logger.info(`Iniciando mapeo y sincronización de ruta: ${url} (ID: ${pathId})`);
 
     // 1. Extraer datos (Navegador)
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
-    setupInterceptor(page);
     
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    // Create an isolated repository for this specific execution
+    // (We will initialize the actual path when setupInterceptor returns it)
+    const isolatedDirPath = setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
+    const isolatedInterceptedDataRepo = new DiskInterceptedDataRepository({ baseDir: isolatedDirPath, logger: this.logger });
+    
+    this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
+    
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
     
     this.logger.info("Esperando a que el proveedor envíe el listado de courses...");
     await page.waitForTimeout(10000); 
     await page.close();
 
     // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
-    await this.processInterceptedData();
+    await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
+
+    // --- Isolated Execution Environment Cleanup ---
+    if (!env.KEEP_TEMP_WORKSPACES) {
+      if (isolatedDirPath) {
+        this.logger.info(`🧹 Limpiando espacio de trabajo temporal del path: ${isolatedDirPath}`);
+        isolatedInterceptedDataRepo.deleteWorkspace();
+      }
+    } else {
+      if (isolatedDirPath) {
+        this.logger.info(`💾 Manteniendo espacio de trabajo temporal por configuración: ${isolatedDirPath}`);
+      }
+    }
   }
 
-  private async processInterceptedData(): Promise<void> {
-    const payloads = this.interceptedDataRepo.getPendingLearningPaths();
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: IInterceptedDataRepository }): Promise<void> {
+    const intercepted = isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
     
-    for (const payload of payloads) {
+    for (const payload of intercepted) {
       const json = JSON.parse(payload.content);
 
       const lpData = json.data?.lpPageData;
       if (!lpData || !lpData.id || !lpData.containerChildren) continue;
 
-      const pathId = lpData.id;
       const pathTitle = lpData.name;
       const pathSlug = this.namingService.slugify(pathTitle);
       const pathDesc = lpData.description || "";
@@ -88,6 +117,7 @@ export class SyncLearningPath {
 
         const courseSlug = this.namingService.slugify(child.name);
         
+        // Pre-guardamos el curso primero, para asegurarnos que en cualquier caso quede asociado al learning path
         this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
         this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });
 
@@ -104,7 +134,7 @@ export class SyncLearningPath {
 
       this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
       
-      this.interceptedDataRepo.deletePayload(payload.filePath);
+      this.interceptedDataRepo.markAsProcessed(payload.filePath);
     }
   }
 }

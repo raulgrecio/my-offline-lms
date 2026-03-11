@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
 import fs from 'fs';
+import { ILogger } from '@domain/services/ILogger';
 
 vi.mock('fs');
 vi.mock('path', async () => {
@@ -16,9 +17,17 @@ describe('DiskInterceptedDataRepository', () => {
     const mockBaseDir = '/mock/intercepted';
     let repo: DiskInterceptedDataRepository;
 
+    const mockLogger: Mocked<ILogger> = {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        withContext: vi.fn().mockReturnThis()
+    };
+
     beforeEach(() => {
         vi.clearAllMocks();
-        repo = new DiskInterceptedDataRepository(mockBaseDir);
+        repo = new DiskInterceptedDataRepository({baseDir: mockBaseDir, logger: mockLogger});
     });
 
     it('should ensure directory exists before reading payloads', () => {
@@ -104,12 +113,8 @@ describe('DiskInterceptedDataRepository', () => {
             throw new Error('Permission denied');
         });
         
-        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        
         expect(() => repo.deletePayload('/mock/intercepted/locked.json')).not.toThrow();
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not delete'));
-        
-        consoleSpy.mockRestore();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not delete'));
     });
 
     describe('markAsProcessed', () => {
@@ -131,12 +136,9 @@ describe('DiskInterceptedDataRepository', () => {
             vi.mocked(fs.renameSync).mockImplementation(() => {
                 throw new Error('Lock error');
             });
-            const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-            
             repo.markAsProcessed('/mock/intercepted/locked.json');
             
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Could not mark as processed'));
-            consoleSpy.mockRestore();
+            expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not mark as processed'));
         });
     });
 });

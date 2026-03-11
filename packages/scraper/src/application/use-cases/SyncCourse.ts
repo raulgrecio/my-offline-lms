@@ -1,3 +1,4 @@
+import { env } from "@config/env";
 import { PLATFORM } from "@config/platform";
 import { ICourseRepository } from "@domain/repositories/ICourseRepository";
 import { IAssetRepository } from "@domain/repositories/IAssetRepository";
@@ -7,6 +8,7 @@ import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
 import { INamingService } from "@domain/services/INamingService";
 import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "@infrastructure/browser/interceptor";
+import { DiskInterceptedDataRepository } from "@infrastructure/repositories/DiskInterceptedDataRepository";
 
 export class SyncCourse {
   private browserProvider: BrowserProvider;
@@ -49,12 +51,18 @@ export class SyncCourse {
       this.logger.error(`No se pudo resolver la URL o el ID del curso: ${courseInput}`);
       return;
     }
-
+   
     this.logger.info(`Iniciando mapeo y sincronización del curso: ${url} (ID: ${courseId})`);
-
+    
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
-    setupInterceptor(page);
+    
+    // Create an isolated repository for this specific execution
+    // (We will initialize the actual path when setupInterceptor returns it)
+    const isolatedDirPath = setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
+    this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
+
+    const isolatedInterceptedDataRepo = new DiskInterceptedDataRepository({ baseDir: isolatedDirPath, logger: this.logger });
 
     this.logger.info(`Navegando a: ${url}`);
     await page.goto(url, { waitUntil: "load", timeout: 60000 });
@@ -69,7 +77,7 @@ export class SyncCourse {
       this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
     }
 
-    const intercepted = this.interceptedDataRepo.getPendingForCourse(courseId);
+    const intercepted = isolatedInterceptedDataRepo.getPendingForCourse(courseId);
     const matchingPayloads: any[] = [];
     const processedPayloadPaths: string[] = [];
     
@@ -251,12 +259,24 @@ export class SyncCourse {
       });
 
       this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
-      
-      // 5. Marcar como procesados (renombrar en lugar de borrar)
+
+      // 5. Marcar todos los archivos interceptados del curso como procesados
       processedPayloadPaths.forEach(p => this.interceptedDataRepo.markAsProcessed(p));
 
     } else {
       this.logger.warn("No se encontraron datos interceptados válidos para este curso.");
+    }
+
+    // --- Isolated Execution Environment Cleanup ---
+    if (!env.KEEP_TEMP_WORKSPACES) {
+      if (isolatedDirPath) {
+        this.logger.info(`🧹 Limpiando espacio de trabajo temporal del curso: ${isolatedDirPath}`);
+        isolatedInterceptedDataRepo.deleteWorkspace();
+      }
+    } else {
+      if (isolatedDirPath) {
+        this.logger.info(`💾 Manteniendo espacio de trabajo temporal por configuración: ${isolatedDirPath}`);
+      }
     }
   }
 }

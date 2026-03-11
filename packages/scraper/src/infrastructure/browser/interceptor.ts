@@ -2,14 +2,19 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
+import { ConsoleLogger } from "@infrastructure/services/ConsoleLogger";
 import { INTERCEPTED_DIR } from "@config/paths";
 
-const interceptedDir = INTERCEPTED_DIR;
+export function setupInterceptor(page: Page, options?: { execTimestamp: number, prefix: string }): string {
+  const targetDir = options 
+    ? path.join(INTERCEPTED_DIR, `${options.prefix}_${options.execTimestamp}`) 
+    : INTERCEPTED_DIR;
 
-export function setupInterceptor(page: Page) {
-  if (!fs.existsSync(interceptedDir)) {
-    fs.mkdirSync(interceptedDir, { recursive: true });
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
   }
+
+  const logger = new ConsoleLogger().withContext('SetupInterceptor');
 
   page.on("response", async (response) => {
     const url = response.url();
@@ -21,6 +26,8 @@ export function setupInterceptor(page: Page) {
         const json = await response.json();
         
         /*
+        // TODO: REVISAR SI ES NECESARIO ESTE FILTRADO AGRESIVO O SE PUEDE QUITAR DEFINITIVAMENTE
+
         // Removed aggressive filtering to capture all JSONs and find where the original guide filename is
         const isCorePayload = (PLATFORM.INTERCEPTOR.FILTER_API as readonly (string | RegExp)[]).some(pattern => 
           typeof pattern === "string" ? url.includes(pattern) : pattern.test(url)
@@ -37,16 +44,17 @@ export function setupInterceptor(page: Page) {
         const filename = `${Date.now()}_${safeName}.json`;
         
         fs.writeFileSync(
-          path.join(interceptedDir, filename),
+          path.join(targetDir, filename),
           JSON.stringify({ url, method: response.request().method(), status: response.status(), data: json }, null, 2)
         );
         
-        console.log(`[Interceptor] JSON interceptado y guardado: ${filename}`);
+        logger.info(`JSON interceptado y guardado: ${filename}`);
       } catch (e) {
         // Ignorar si el body no se puede parsear
       }
     }
   });
   
-  console.log(`[Interceptor] Activado. Guardando respuestas JSON en data/intercepted/`);
+  logger.info(`Activado. Guardando respuestas JSON en ${targetDir}`);
+  return targetDir;
 }
