@@ -4,14 +4,12 @@ import { AssetNamingService } from '@domain/services/AssetNamingService';
 import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
 import { ILogger } from '@domain/services/ILogger';
 import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
-import { IInterceptedDataRepository, InterceptedPayload } from '@domain/repositories/IInterceptedDataRepository';
-import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
+import { IInterceptedDataRepository } from '@domain/repositories/IInterceptedDataRepository';
+import { IInterceptedDataRepositoryFactory } from '@domain/repositories/IInterceptedDataRepositoryFactory';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
 }));
-
-vi.mock('@infrastructure/repositories/DiskInterceptedDataRepository');
 
 describe('SyncLearningPath Use Case', () => {
     const mockBrowserProvider = {
@@ -42,6 +40,10 @@ describe('SyncLearningPath Use Case', () => {
         deleteWorkspace: vi.fn(),
     };
 
+    const mockInterceptedDataRepoFactory: Mocked<IInterceptedDataRepositoryFactory> = {
+        create: vi.fn().mockReturnValue(mockInterceptedDataRepo)
+    };
+
     const mockUrlProvider: Mocked<IPlatformUrlProvider> = {
         resolveCourseUrl: vi.fn(url => ({ url, courseId: '123' })),
         resolveLearningPathUrl: vi.fn(url => ({ url, pathId: 'lp123' })),
@@ -63,14 +65,13 @@ describe('SyncLearningPath Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (DiskInterceptedDataRepository as any).mockImplementation(function() { return mockInterceptedDataRepo; });
         
         useCase = new SyncLearningPath({
             browserProvider: mockBrowserProvider,
             learningPathRepo: mockLearningPathRepo,
             courseRepo: mockCourseRepo,
             syncCourse: mockSyncCourseUseCase,
-            interceptedDataRepo: mockInterceptedDataRepo,
+            interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
             urlProvider: mockUrlProvider,
             namingService: new AssetNamingService(),
             logger: mockLogger

@@ -5,14 +5,12 @@ import { PLATFORM } from '@config/platform';
 import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
 import { ILogger } from '@domain/services/ILogger';
 import { SyncCourse } from '@application/use-cases/SyncCourse';
-import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
 import { IInterceptedDataRepository } from '@domain/repositories/IInterceptedDataRepository';
+import { IInterceptedDataRepositoryFactory } from '@domain/repositories/IInterceptedDataRepositoryFactory';
 
 vi.mock('@infrastructure/browser/interceptor', () => ({
     setupInterceptor: vi.fn(),
 }));
-
-vi.mock('@infrastructure/repositories/DiskInterceptedDataRepository');
 
 describe('SyncCourse Use Case', () => {
     const mockBrowserProvider = {
@@ -37,6 +35,10 @@ describe('SyncCourse Use Case', () => {
         getPendingCourses: vi.fn(),
         markAsProcessed: vi.fn(),
         deleteWorkspace: vi.fn(),
+    };
+
+    const mockInterceptedDataRepoFactory: Mocked<IInterceptedDataRepositoryFactory> = {
+        create: vi.fn().mockReturnValue(mockInterceptedDataRepo)
     };
 
     const mockLogger: Mocked<ILogger> = {
@@ -64,13 +66,12 @@ describe('SyncCourse Use Case', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([]);
-        (DiskInterceptedDataRepository as any).mockImplementation(function() { return mockInterceptedDataRepo; });
 
         useCase = new SyncCourse({
             browserProvider: mockBrowserProvider,
             courseRepository: mockCourseRepo,
             assetRepository: mockAssetRepo,
-            interceptedDataRepo: mockInterceptedDataRepo,
+            interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
             urlProvider: mockUrlProvider,
             namingService: new AssetNamingService(),
             logger: mockLogger,

@@ -2,19 +2,18 @@ import { env } from "@config/env";
 import { PLATFORM } from "@config/platform";
 import { ICourseRepository } from "@domain/repositories/ICourseRepository";
 import { IAssetRepository } from "@domain/repositories/IAssetRepository";
-import { IInterceptedDataRepository } from "@domain/repositories/IInterceptedDataRepository";
+import { IInterceptedDataRepositoryFactory } from "@domain/repositories/IInterceptedDataRepositoryFactory";
 import { ILogger } from "@domain/services/ILogger";
 import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
 import { INamingService } from "@domain/services/INamingService";
 import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "@infrastructure/browser/interceptor";
-import { DiskInterceptedDataRepository } from "@infrastructure/repositories/DiskInterceptedDataRepository";
 
 export class SyncCourse {
   private browserProvider: BrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
-  private interceptedDataRepo: IInterceptedDataRepository;
+  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
@@ -23,7 +22,7 @@ export class SyncCourse {
     browserProvider: BrowserProvider,
     courseRepository: ICourseRepository,
     assetRepository: IAssetRepository,
-    interceptedDataRepo: IInterceptedDataRepository,
+    interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
     urlProvider: IPlatformUrlProvider,
     namingService: INamingService,
     logger: ILogger,
@@ -31,7 +30,7 @@ export class SyncCourse {
     this.browserProvider = deps.browserProvider;
     this.courseRepository = deps.courseRepository;
     this.assetRepository = deps.assetRepository;
-    this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncCourse");
@@ -62,7 +61,7 @@ export class SyncCourse {
     const isolatedDirPath = setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
 
-    const isolatedInterceptedDataRepo = new DiskInterceptedDataRepository({ baseDir: isolatedDirPath, logger: this.logger });
+    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
 
     this.logger.info(`Navegando a: ${url}`);
     await page.goto(url, { waitUntil: "load", timeout: 60000 });
@@ -261,7 +260,7 @@ export class SyncCourse {
       this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
 
       // 5. Marcar todos los archivos interceptados del curso como procesados
-      processedPayloadPaths.forEach(p => this.interceptedDataRepo.markAsProcessed(p));
+      processedPayloadPaths.forEach(p => isolatedInterceptedDataRepo.markAsProcessed(p));
 
     } else {
       this.logger.warn("No se encontraron datos interceptados válidos para este curso.");

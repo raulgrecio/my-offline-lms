@@ -1,5 +1,5 @@
 import { env } from "@config/env";
-import { IInterceptedDataRepository } from "@domain/repositories/IInterceptedDataRepository";
+import { IInterceptedDataRepositoryFactory } from "@domain/repositories/IInterceptedDataRepositoryFactory";
 import { ILearningPathRepository } from "@domain/repositories/ILearningPathRepository";
 import { ICourseRepository } from "@domain/repositories/ICourseRepository";
 import { ILogger } from "@domain/services/ILogger";
@@ -7,7 +7,6 @@ import { IPlatformUrlProvider } from "@domain/services/IPlatformUrlProvider";
 import { INamingService } from "@domain/services/INamingService";
 import { BrowserProvider } from "@infrastructure/browser/BrowserProvider";
 import { setupInterceptor } from "@infrastructure/browser/interceptor";
-import { DiskInterceptedDataRepository } from "@infrastructure/repositories/DiskInterceptedDataRepository";
 
 import { SyncCourse } from "./SyncCourse";
 
@@ -16,7 +15,7 @@ export class SyncLearningPath {
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
   private syncCourse: SyncCourse;
-  private interceptedDataRepo: IInterceptedDataRepository;
+  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
@@ -26,7 +25,7 @@ export class SyncLearningPath {
     learningPathRepo: ILearningPathRepository,
     courseRepo: ICourseRepository,
     syncCourse: SyncCourse,
-    interceptedDataRepo: IInterceptedDataRepository,
+    interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
     urlProvider: IPlatformUrlProvider,
     namingService: INamingService,
     logger: ILogger
@@ -35,7 +34,7 @@ export class SyncLearningPath {
     this.learningPathRepo = deps.learningPathRepo;
     this.courseRepo = deps.courseRepo;
     this.syncCourse = deps.syncCourse;
-    this.interceptedDataRepo = deps.interceptedDataRepo;
+    this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncLearningPath");
@@ -62,7 +61,7 @@ export class SyncLearningPath {
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setupInterceptor returns it)
     const isolatedDirPath = setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
-    const isolatedInterceptedDataRepo = new DiskInterceptedDataRepository({ baseDir: isolatedDirPath, logger: this.logger });
+    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
     
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
     
@@ -88,7 +87,7 @@ export class SyncLearningPath {
     }
   }
 
-  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: IInterceptedDataRepository }): Promise<void> {
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<IInterceptedDataRepositoryFactory['create']> }): Promise<void> {
     const intercepted = isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
     
     for (const payload of intercepted) {
@@ -134,7 +133,7 @@ export class SyncLearningPath {
 
       this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
       
-      this.interceptedDataRepo.markAsProcessed(payload.filePath);
+      isolatedInterceptedDataRepo.markAsProcessed(payload.filePath);
     }
   }
 }

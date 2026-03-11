@@ -8,7 +8,7 @@ import { browserProvider } from '@infrastructure/browser/BrowserProvider';
 import { SQLiteCourseRepository } from '@infrastructure/database/CourseRepository';
 import { SQLiteAssetRepository } from '@infrastructure/database/AssetRepository';
 import { SQLiteLearningPathRepository } from '@infrastructure/database/LearningPathRepository';
-import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
+import { DiskInterceptedDataRepositoryFactory } from '@infrastructure/repositories/DiskInterceptedDataRepositoryFactory';
 import { DiskAuthSessionStorage } from '@infrastructure/repositories/DiskAuthSessionStorage';
 import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage';
 import { YtDlpVideoDownloader } from '@infrastructure/services/YtDlpVideoDownloader';
@@ -51,7 +51,7 @@ Comandos disponibles:
   const assetRepo = new SQLiteAssetRepository();
   const pathRepo = new SQLiteLearningPathRepository();
 
-  const interceptedDataRepo = new DiskInterceptedDataRepository({ logger });
+  const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(logger);
   const authSessionStorage = new DiskAuthSessionStorage();
   const assetStorage = new DiskAssetStorage();
   const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);
@@ -78,7 +78,7 @@ Comandos disponibles:
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
-          interceptedDataRepo,
+          interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
@@ -94,7 +94,7 @@ Comandos disponibles:
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
-          interceptedDataRepo,
+          interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
@@ -104,7 +104,7 @@ Comandos disponibles:
           learningPathRepo: pathRepo, 
           courseRepo, 
           syncCourse, 
-          interceptedDataRepo,
+          interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
@@ -151,7 +151,7 @@ Comandos disponibles:
           browserProvider, 
           courseRepository: courseRepo, 
           assetRepository: assetRepo, 
-          interceptedDataRepo,
+          interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
@@ -161,7 +161,7 @@ Comandos disponibles:
           learningPathRepo: pathRepo, 
           courseRepo, 
           syncCourse, 
-          interceptedDataRepo,
+          interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
