@@ -1,8 +1,8 @@
 import { SQLiteAssetRepository } from "@infrastructure/database/AssetRepository";
-import path from "path";
+import { db } from "@db/schema";
 
 async function fix79688Guide() {
-    const assetRepository = new SQLiteAssetRepository();
+    const assetRepository = new SQLiteAssetRepository(db);
     const assetId = "pdf_110015";
     const filename = "S106689GC10_sg.pdf";
     const actualPath = "/mnt/e/oracle-pdfs-videos/assets-082-083/79688/guides/S106689GC10_sg.pdf";

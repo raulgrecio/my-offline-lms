@@ -19,8 +19,7 @@ function resetCourse(courseId: string) {
         const { videoExists, vttExists, guideExists, safeName } = verifyAssetFiles({
             type: asset.type,
             courseId,
-            metadataStr: asset.metadata,
-            assetsBaseDir: ASSETS_DIR
+            metadataStr: asset.metadata
         });
         
         let needsReset = false;

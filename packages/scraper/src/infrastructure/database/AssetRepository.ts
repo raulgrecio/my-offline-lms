@@ -1,10 +1,12 @@
-import { db } from '@db/schema';
 import { Asset, AssetStatus, AssetType } from '@domain/models/Asset';
 import { IAssetRepository } from '@domain/repositories/IAssetRepository';
+import { IDatabase } from './IDatabase';
 
 export class SQLiteAssetRepository implements IAssetRepository {
+  constructor(private db: IDatabase) {}
+
   saveAsset(asset: Asset): void {
-    db.prepare(`
+    this.db.prepare(`
         INSERT INTO Course_Assets (id, course_id, type, url, metadata, status, local_path)
         VALUES (@id, @course_id, @type, @url, @metadata, @status, @local_path)
         ON CONFLICT(id) DO UPDATE SET 
@@ -23,16 +25,16 @@ export class SQLiteAssetRepository implements IAssetRepository {
   }
 
   updateAssetStatus(id: string, status: AssetStatus): void {
-    db.prepare("UPDATE Course_Assets SET status = ? WHERE id = ?").run(status, id);
+    this.db.prepare("UPDATE Course_Assets SET status = ? WHERE id = ?").run(status, id);
   }
 
   updateAssetCompletion(id: string, metadata: any, localPath?: string): void {
-    db.prepare("UPDATE Course_Assets SET status = 'COMPLETED', metadata = ?, local_path = COALESCE(?, local_path) WHERE id = ?")
+    this.db.prepare("UPDATE Course_Assets SET status = 'COMPLETED', metadata = ?, local_path = COALESCE(?, local_path) WHERE id = ?")
       .run(JSON.stringify(metadata), localPath || null, id);
   }
 
   getAssetById(id: string): Asset | null {
-    const row = db.prepare('SELECT * FROM Course_Assets WHERE id = ?').get(id) as any;
+    const row = this.db.prepare('SELECT * FROM Course_Assets WHERE id = ?').get(id) as any;
     if (!row) return null;
     
     // map DB to Domain
@@ -48,12 +50,12 @@ export class SQLiteAssetRepository implements IAssetRepository {
   }
 
   countAssetsByCourseId(courseId: string): number {
-    const res = db.prepare("SELECT COUNT(*) as count FROM Course_Assets WHERE course_id = ?").get(courseId) as { count: number };
+    const res = this.db.prepare("SELECT COUNT(*) as count FROM Course_Assets WHERE course_id = ?").get(courseId) as { count: number };
     return res.count;
   }
 
   getPendingAssets(courseId: string, type: AssetType): Asset[] {
-     const rows = db.prepare(`
+     const rows = this.db.prepare(`
         SELECT * FROM Course_Assets 
         WHERE course_id = ? AND type = ? AND status != 'COMPLETED'
      `).all(courseId, type) as any[];

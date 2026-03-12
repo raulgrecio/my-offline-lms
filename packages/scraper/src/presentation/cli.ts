@@ -14,6 +14,7 @@ import { DiskAssetStorage } from '@infrastructure/repositories/DiskAssetStorage'
 import { YtDlpVideoDownloader } from '@infrastructure/services/YtDlpVideoDownloader';
 import { ConsoleLogger } from '@infrastructure/services/ConsoleLogger';
 import { OraclePlatformUrlProvider } from '@infrastructure/services/OraclePlatformUrlProvider';
+import { IDatabase } from '@infrastructure/database/IDatabase';
 
 import { DownloadCourse } from '@application/use-cases/DownloadCourse';
 import { AuthSession } from '@application/use-cases/AuthSession';
@@ -25,7 +26,7 @@ import { DownloadPath } from '@application/use-cases/DownloadPath';
 
 dotenv.config();
 
-async function main() {
+export async function runCLI(db: IDatabase) {
   const args = process.argv.slice(2);
   const command = args[0];
 
@@ -47,9 +48,9 @@ Comandos disponibles:
 
   // DI Setup (Manual Instantiation)
   const logger = new ConsoleLogger();
-  const courseRepo = new SQLiteCourseRepository();
-  const assetRepo = new SQLiteAssetRepository();
-  const pathRepo = new SQLiteLearningPathRepository();
+  const courseRepo = new SQLiteCourseRepository(db);
+  const assetRepo = new SQLiteAssetRepository(db);
+  const pathRepo = new SQLiteLearningPathRepository(db);
 
   const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(logger);
   const authSessionStorage = new DiskAuthSessionStorage();
@@ -62,8 +63,8 @@ Comandos disponibles:
     switch (command) {
       case 'login': {
         const baseUrl = env.PLATFORM_BASE_URL;
-        const auth = new AuthSession({ 
-          browserProvider, 
+        const auth = new AuthSession({
+          browserProvider,
           authStorage: authSessionStorage,
           logger,
         });
@@ -73,37 +74,37 @@ Comandos disponibles:
       case 'sync-course': {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
-        
-        const syncCourse = new SyncCourse({ 
-          browserProvider, 
-          courseRepository: courseRepo, 
-          assetRepository: assetRepo, 
+
+        const syncCourse = new SyncCourse({
+          browserProvider,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
           interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
         });
-        await syncCourse.execute({courseInput: target});
+        await syncCourse.execute({ courseInput: target });
         break;
       }
       case 'sync-path': {
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
-        
-        const syncCourse = new SyncCourse({ 
-          browserProvider, 
-          courseRepository: courseRepo, 
-          assetRepository: assetRepo, 
+
+        const syncCourse = new SyncCourse({
+          browserProvider,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
           interceptedDataRepoFactory,
           urlProvider,
           namingService,
           logger,
         });
-        const syncPath = new SyncLearningPath({ 
-          browserProvider, 
-          learningPathRepo: pathRepo, 
-          courseRepo, 
-          syncCourse, 
+        const syncPath = new SyncLearningPath({
+          browserProvider,
+          learningPathRepo: pathRepo,
+          courseRepo,
+          syncCourse,
           interceptedDataRepoFactory,
           urlProvider,
           namingService,
@@ -115,10 +116,10 @@ Comandos disponibles:
       case 'download-guides': {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        const guides = new DownloadGuides({ 
-          browserProvider, 
-          courseRepo, 
-          assetRepo, 
+        const guides = new DownloadGuides({
+          browserProvider,
+          courseRepo,
+          assetRepo,
           assetStorage,
           namingService,
           urlProvider,
@@ -130,11 +131,11 @@ Comandos disponibles:
       case 'download-videos': {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        const videos = new DownloadVideos({ 
-          browserProvider, 
-          courseRepository: courseRepo, 
-          assetRepository: assetRepo, 
-          assetStorage, 
+        const videos = new DownloadVideos({
+          browserProvider,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
+          assetStorage,
           videoDownloader,
           namingService,
           logger,
@@ -147,61 +148,26 @@ Comandos disponibles:
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
 
-        const syncCourse = new SyncCourse({ 
-          browserProvider, 
-          courseRepository: courseRepo, 
-          assetRepository: assetRepo, 
-          interceptedDataRepoFactory,
-          urlProvider,
-          namingService,
-          logger,
-        });
-        const syncPath = new SyncLearningPath({ 
-          browserProvider, 
-          learningPathRepo: pathRepo, 
-          courseRepo, 
-          syncCourse, 
-          interceptedDataRepoFactory,
-          urlProvider,
-          namingService,
-          logger,
-        });
-        const guides = new DownloadGuides({ 
-          browserProvider,
-          courseRepo,
-          assetRepo,
-          assetStorage,
-          namingService,
-          urlProvider,
-          logger,
-        });
-        const videos = new DownloadVideos({ 
+        const syncCourse = new SyncCourse({
           browserProvider,
           courseRepository: courseRepo,
           assetRepository: assetRepo,
-          assetStorage,
-          videoDownloader,
+          interceptedDataRepoFactory,
+          urlProvider,
           namingService,
           logger,
         });
-        const downloadPath = new DownloadPath({ 
-          learningPathRepo: pathRepo, 
-          syncLearningPath: syncPath,
-          downloadGuides: guides, 
-          downloadVideos: videos,
+        const syncPath = new SyncLearningPath({
+          browserProvider,
+          learningPathRepo: pathRepo,
+          courseRepo,
+          syncCourse,
+          interceptedDataRepoFactory,
+          urlProvider,
           namingService,
           logger,
         });
-
-        await downloadPath.execute({pathInput: id, type: type || 'all'});
-        break;
-      }
-      case 'download-course': {
-        const id = args[1];
-        const type = args[2] as DownloadType | undefined;
-        if (!id) throw new Error("Falta el ID del curso.");
-
-        const guides = new DownloadGuides({ 
+        const guides = new DownloadGuides({
           browserProvider,
           courseRepo,
           assetRepo,
@@ -219,16 +185,51 @@ Comandos disponibles:
           namingService,
           logger,
         });
-        
-        const downloadCourse = new DownloadCourse({ 
-          courseRepo,
-          downloadGuides: guides, 
+        const downloadPath = new DownloadPath({
+          learningPathRepo: pathRepo,
+          syncLearningPath: syncPath,
+          downloadGuides: guides,
           downloadVideos: videos,
           namingService,
           logger,
         });
 
-        await downloadCourse.execute({courseInput: id, type: type || 'all'});
+        await downloadPath.execute({ pathInput: id, type: type || 'all' });
+        break;
+      }
+      case 'download-course': {
+        const id = args[1];
+        const type = args[2] as DownloadType | undefined;
+        if (!id) throw new Error("Falta el ID del curso.");
+
+        const guides = new DownloadGuides({
+          browserProvider,
+          courseRepo,
+          assetRepo,
+          assetStorage,
+          namingService,
+          urlProvider,
+          logger,
+        });
+        const videos = new DownloadVideos({
+          browserProvider,
+          courseRepository: courseRepo,
+          assetRepository: assetRepo,
+          assetStorage,
+          videoDownloader,
+          namingService,
+          logger,
+        });
+
+        const downloadCourse = new DownloadCourse({
+          courseRepo,
+          downloadGuides: guides,
+          downloadVideos: videos,
+          namingService,
+          logger,
+        });
+
+        await downloadCourse.execute({ courseInput: id, type: type || 'all' });
         break;
       }
       default:
@@ -240,5 +241,3 @@ Comandos disponibles:
     await browserProvider.close();
   }
 }
-
-main().catch(console.error);

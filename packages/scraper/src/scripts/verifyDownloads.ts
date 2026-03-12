@@ -4,7 +4,7 @@ import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { ASSETS_DIR } from "@config/paths";
 import { SQLiteAssetRepository } from "@infrastructure/database/AssetRepository";
 
-const assetRepository = new SQLiteAssetRepository();
+const assetRepository = new SQLiteAssetRepository(db);
 
 /**
  * Verifies all downloaded videos for a specific course.

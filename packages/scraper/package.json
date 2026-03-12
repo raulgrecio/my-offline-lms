@@ -4,9 +4,9 @@
   "description": "Offline LMS Scraper CLI",
   "main": "src/index.js",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
-    "cli": "ts-node -r tsconfig-paths/register src/presentation/cli.ts",
-    "dev": "nodemon -x ts-node -r tsconfig-paths/register src/presentation/cli.ts",
+    "start": "ts-node -r tsconfig-paths/register src/index.ts",
+    "cli": "ts-node -r tsconfig-paths/register src/index.ts",
+    "dev": "nodemon -x ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
     "test": "vitest ./src",
     "test:run": "vitest run ./src",

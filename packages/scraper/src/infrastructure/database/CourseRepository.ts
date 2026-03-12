@@ -1,11 +1,13 @@
-import { db } from '@db/schema';
 import { Course } from '@domain/models/Course';
 import { Asset } from '@domain/models/Asset';
 import { ICourseRepository } from '@domain/repositories/ICourseRepository';
+import { IDatabase } from './IDatabase';
 
 export class SQLiteCourseRepository implements ICourseRepository {
+  constructor(private db: IDatabase) {}
+
   saveCourse(course: Course): void {
-    db.prepare(`
+    this.db.prepare(`
         INSERT INTO Courses (id, slug, title)
         VALUES (@id, @slug, @title)
         ON CONFLICT(id) DO UPDATE SET title=excluded.title, slug=excluded.slug
@@ -17,12 +19,12 @@ export class SQLiteCourseRepository implements ICourseRepository {
   }
 
   getCourseById(id: string): Course | null {
-    const row = db.prepare('SELECT id, slug, title FROM Courses WHERE id = ?').get(id) as Course | undefined;
+    const row = this.db.prepare('SELECT id, slug, title FROM Courses WHERE id = ?').get(id) as Course | undefined;
     return row || null;
   }
 
   getCourseAssets(courseId: string): Asset[] {
-    const rows = db.prepare('SELECT * FROM Course_Assets WHERE course_id = ?').all(courseId) as any[];
+    const rows = this.db.prepare('SELECT * FROM Course_Assets WHERE course_id = ?').all(courseId) as any[];
     return rows.map(row => ({
       id: row.id,
       courseId: row.course_id,
