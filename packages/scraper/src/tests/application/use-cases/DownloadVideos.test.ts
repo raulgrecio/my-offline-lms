@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadVideos } from '@application/use-cases/DownloadVideos';
-import { AssetNamingService } from '@domain/services/AssetNamingService';
-import { ILogger } from '@domain/services/ILogger';
+import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
+import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
+import { ILogger } from '@platform/logging/ILogger';
 
 
 

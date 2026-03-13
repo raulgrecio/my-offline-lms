@@ -1,4 +1,4 @@
-import { SQLiteAssetRepository } from "@infrastructure/database/AssetRepository";
+import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
 import { db } from "@db/schema";
 
 async function fix79688Guide() {

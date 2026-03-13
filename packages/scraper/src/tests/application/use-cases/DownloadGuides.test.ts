@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
-import { AssetNamingService } from '@domain/services/AssetNamingService';
-import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
-import { ILogger } from '@domain/services/ILogger';
-import { DownloadGuides } from '@application/use-cases/DownloadGuides';
-import { IAssetStorage } from '@domain/repositories/IAssetStorage';
+import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
+import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
+import { ILogger } from '@platform/logging/ILogger';
+import { DownloadGuides } from '@features/asset-download/application/DownloadGuides';
+import { IAssetStorage } from '@features/asset-download/domain/ports/IAssetStorage';
 
 describe('DownloadGuides Use Case', () => {
     let mockBrowserProvider: any;

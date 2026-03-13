@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { setupInterceptor } from '@infrastructure/browser/interceptor';
+import { setupInterceptor } from '@platform/browser/interceptor';
 import { Page, Request, Response } from 'playwright';
 import fs from 'fs';
 import path from 'path';
@@ -14,7 +14,7 @@ vi.mock('path', async () => {
     };
 });
 
-vi.mock('@infrastructure/services/ConsoleLogger', () => {
+vi.mock('@platform/logging/ConsoleLogger', () => {
     return {
         ConsoleLogger: class {
             withContext() { return this; }

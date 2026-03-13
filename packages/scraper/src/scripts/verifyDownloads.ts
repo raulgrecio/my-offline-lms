@@ -2,7 +2,7 @@ import path from "path";
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { ASSETS_DIR } from "@config/paths";
-import { SQLiteAssetRepository } from "@infrastructure/database/AssetRepository";
+import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
 
 const assetRepository = new SQLiteAssetRepository(db);
 

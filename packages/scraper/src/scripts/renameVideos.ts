@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { db } from "@db/schema";
-import { AssetNamingService } from "@domain/services/AssetNamingService";
+import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
 import { ASSETS_DIR } from "@config/paths";
 
 function renameVideosForCourse(courseId: string) {

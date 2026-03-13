@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OraclePlatformUrlProvider } from '@infrastructure/services/OraclePlatformUrlProvider';
+import { OraclePlatformUrlProvider } from '@features/platform-sync/infrastructure/OraclePlatformUrlProvider';
 import { env } from '@config/env';
 
 describe('OraclePlatformUrlProvider', () => {

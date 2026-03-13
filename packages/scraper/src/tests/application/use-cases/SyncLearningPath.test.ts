@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
-import { AssetNamingService } from '@domain/services/AssetNamingService';
-import { IPlatformUrlProvider } from '@domain/services/IPlatformUrlProvider';
-import { ILogger } from '@domain/services/ILogger';
-import { SyncLearningPath } from '@application/use-cases/SyncLearningPath';
-import { IInterceptedDataRepository } from '@domain/repositories/IInterceptedDataRepository';
-import { IInterceptedDataRepositoryFactory } from '@domain/repositories/IInterceptedDataRepositoryFactory';
+import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
+import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
+import { ILogger } from '@platform/logging/ILogger';
+import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
+import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
+import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
 
-vi.mock('@infrastructure/browser/interceptor', () => ({
+vi.mock('@platform/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
 }));
 

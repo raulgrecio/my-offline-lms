@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AssetNamingService } from "@domain/services/AssetNamingService";
+import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
 import { AssetPathResolver } from "@core/assets/domain/services/AssetPathResolver";
 import { NodeFileSystem } from "@core/assets/infrastructure/adapters/NodeFileSystem";
 import { MONOREPO_ROOT, ASSET_PATHS_CONFIG } from "@config/paths";

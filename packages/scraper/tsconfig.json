@@ -8,11 +8,11 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@application/*": ["src/application/*"],
-      "@domain/*": ["src/domain/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
+      "@cli/*": ["src/cli/*"],
+      "@platform/*": ["src/platform/*"],
+      "@features/*": ["src/features/*"],
       "@config/*": ["src/config/*"],
-      "@db/*": ["src/db/*"],
+      "@db/*": ["src/platform/database/*"],
       "@core/*": ["../core/src/*"]
     },
     "esModuleInterop": true,

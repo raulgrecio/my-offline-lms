@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { YtDlpVideoDownloader } from '@infrastructure/services/YtDlpVideoDownloader';
-import { IAuthSessionStorage } from '@domain/repositories/IAuthSessionStorage';
+import { YtDlpVideoDownloader } from '@features/asset-download/infrastructure/YtDlpVideoDownloader';
+import { IAuthSessionStorage } from '@features/auth-session/domain/ports/IAuthSessionStorage';
 import { spawn } from 'child_process';
 import EventEmitter from 'events';
 

@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 
 import { env } from "@config/env";
-import { AssetNamingService } from "@domain/services/AssetNamingService";
+import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
 
 chromium.use(stealth());
 

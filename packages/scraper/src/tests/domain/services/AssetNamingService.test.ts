@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AssetNamingService } from '@domain/services/AssetNamingService';
+import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
 import { env } from '@config/env';
 
 describe('AssetNamingService', () => {

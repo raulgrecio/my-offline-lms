@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { DiskInterceptedDataRepository } from '@infrastructure/repositories/DiskInterceptedDataRepository';
+import { DiskInterceptedDataRepository } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepository';
 import fs from 'fs';
-import { ILogger } from '@domain/services/ILogger';
+import { ILogger } from '@platform/logging/ILogger';
 
 vi.mock('fs');
 vi.mock('path', async () => {

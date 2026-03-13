@@ -1,5 +1,5 @@
-import { db, initDb } from "./db/schema";
-import { runCLI } from "./presentation/cli";
+import { db, initDb } from "./platform/database/schema";
+import { runCLI } from "./cli";
 
 console.log("Inicializando servidor local...");
 initDb(db);

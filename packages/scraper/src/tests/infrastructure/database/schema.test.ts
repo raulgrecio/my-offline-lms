@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { initDb } from '@db/schema';
-import { SQLiteDatabase } from '@infrastructure/database/SQLiteDatabase';
+import { SQLiteDatabase } from '@platform/database/SQLiteDatabase';
 
 describe('Database Schema', () => {
     it('should initialize database and tables', () => {

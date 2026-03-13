@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthSession } from '@application/use-cases/AuthSession';
-import { ILogger } from '@domain/services/ILogger';
+import { AuthSession } from '@features/auth-session/application/AuthSession';
+import { ILogger } from '@platform/logging/ILogger';
 
 vi.mock('readline', () => ({
     default: {
