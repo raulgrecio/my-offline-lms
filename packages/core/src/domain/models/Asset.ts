@@ -1,4 +1,9 @@
 export type AssetType = 'guide' | 'video';
+
+export const ASSET_FOLDERS: Record<AssetType, string> = {
+  guide: 'guides',
+  video: 'videos',
+};
 export type AssetStatus = 'PENDING' | 'DOWNLOADING' | 'COMPLETED' | 'FAILED';
 
 export interface AssetMetadata {
@@ -29,14 +34,12 @@ interface BaseAsset {
   localPath?: string;
 }
 
-export interface GuideAsset extends BaseAsset {
-  type: 'guide';
-  metadata: GuideMetadata;
+interface AssetBase<T extends AssetType, M> extends BaseAsset {
+  type: T;
+  metadata: M;
 }
 
-export interface VideoAsset extends BaseAsset {
-  type: 'video';
-  metadata: VideoMetadata;
-}
+export type GuideAsset = AssetBase<'guide', GuideMetadata>;
+export type VideoAsset = AssetBase<'video', VideoMetadata>;
 
 export type Asset = GuideAsset | VideoAsset;

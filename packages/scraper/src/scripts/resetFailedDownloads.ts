@@ -2,7 +2,6 @@ import path from "path";
 
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-import { ASSETS_DIR } from "@config/paths";
 
 function resetCourse(courseId: string) {
     console.log(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
@@ -21,7 +20,7 @@ function resetCourse(courseId: string) {
             courseId,
             metadataStr: asset.metadata
         });
-        
+
         let needsReset = false;
         let reason = "";
 
@@ -36,16 +35,16 @@ function resetCourse(courseId: string) {
                 reason = "Missing .pdf";
             }
         }
-        
+
         // We want to reset it if it needs resetting AND is not already PENDING
         if (needsReset && asset.status !== 'PENDING') {
-             db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
-             
-             console.log(`   🔄 Resetting [${asset.type.toUpperCase()}] ${safeName} to PENDING (${reason})`);
-             resetCount++;
+            db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
+
+            console.log(`   🔄 Resetting [${asset.type.toUpperCase()}] ${safeName} to PENDING (${reason})`);
+            resetCount++;
         }
     }
-    
+
     if (resetCount > 0) {
         console.log(`   ✅ Reset ${resetCount} assets to PENDING status for Course ${courseId}.`);
     } else {

@@ -68,10 +68,9 @@ export class DownloadVideos {
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'video') return;
 
-    const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'videos');
-
     const safeName = this.namingService.generateSafeFilename(asset.metadata.name, asset.metadata.order_index);
     const filename = `${safeName}.mp4`;
+    const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'video');
     const outputPath = `${courseVideosDir}/${filename}`;
 
     // [INTEGRITY CHECK] Verificamos si existe el .mp4 y el .vtt si se esperaba

@@ -90,7 +90,7 @@ export class DownloadGuides {
     }
 
     const filename = `${baseName}.pdf`;
-    const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guides');
+    const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guide');
     const outputPath = `${courseGuidesDir}/${filename}`;
 
     if (this.assetStorage.assetExists(outputPath)) {
@@ -101,7 +101,7 @@ export class DownloadGuides {
 
     // RESERVA: Si el metadata ya tiene un filename (ej: de una sync previa u otro scraper), buscarlo en todas las rutas
     if (meta.filename) {
-      const existingPath = this.assetStorage.findExistingAsset(courseId, 'guides', meta.filename);
+      const existingPath = this.assetStorage.findExistingAsset(courseId, 'guide', meta.filename);
       if (existingPath) {
         this.logger.info(`La guía ya existe (nombre en meta): ${existingPath}`);
         this.assetRepo.updateAssetCompletion(assetId, meta, existingPath);

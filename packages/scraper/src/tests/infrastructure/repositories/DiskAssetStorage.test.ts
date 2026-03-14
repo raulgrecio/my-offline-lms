@@ -66,7 +66,7 @@ describe('DiskAssetStorage', () => {
 
     it('should ensure asset directory exists', () => {
         vi.mocked(fs.existsSync).mockReturnValue(false);
-        const dir = storage.ensureAssetDir('123', 'videos');
+        const dir = storage.ensureAssetDir('123', 'video');
         expect(fs.mkdirSync).toHaveBeenCalledWith('/mock/assets/123/videos', { recursive: true });
         expect(dir).toBe('/mock/assets/123/videos');
     });

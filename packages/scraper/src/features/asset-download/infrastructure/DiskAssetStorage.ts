@@ -3,7 +3,7 @@ import path from "path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 
-import { AssetPathResolver, NodeFileSystem } from "@my-offline-lms/core";
+import { AssetPathResolver, NodeFileSystem, AssetType, ASSET_FOLDERS } from "@my-offline-lms/core";
 
 import { ASSET_PATHS_CONFIG, ASSETS_DIR, MONOREPO_ROOT } from "@config/paths";
 
@@ -23,8 +23,9 @@ export class DiskAssetStorage implements IAssetStorage {
     });
   }
 
-  ensureAssetDir(courseId: string, assetType: 'guides' | 'videos'): string {
-    const dir = path.join(this.assetsBaseDir, String(courseId), assetType);
+  ensureAssetDir(courseId: string, assetType: AssetType): string {
+    const folderName = ASSET_FOLDERS[assetType];
+    const dir = path.join(this.assetsBaseDir, String(courseId), folderName);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -32,7 +33,7 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   ensureTempDir(courseId: string, assetId: string): string {
-    const guidesDir = this.ensureAssetDir(courseId, 'guides');
+    const guidesDir = this.ensureAssetDir(courseId, 'guide');
     const tempDir = path.join(guidesDir, `temp_${assetId}`);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
@@ -48,14 +49,11 @@ export class DiskAssetStorage implements IAssetStorage {
 
   assetExists(filePath: string): boolean {
     if (fs.existsSync(filePath)) return true;
-    // Tenta encontrar em outras localizações se a original falhar
+    // Intenta encontrar en otras ubicaciones si la original falla
     return this.resolver.resolveExistingPath(filePath) !== null;
   }
 
-  /**
-   * Encuentra el path real de un asset buscando en todas las ubicaciones configuradas.
-   */
-  findExistingAsset(courseId: string, assetType: 'guides' | 'videos', filename: string): string | null {
+  findExistingAsset(courseId: string, assetType: AssetType, filename: string): string | null {
     return this.resolver.findAsset(courseId, assetType, filename);
   }
 

@@ -1,1 +1,2 @@
-export type DownloadType = 'video' | 'guide' | 'all';
+import type { AssetType } from "../models/Asset";
+export type DownloadType = AssetType | 'all';

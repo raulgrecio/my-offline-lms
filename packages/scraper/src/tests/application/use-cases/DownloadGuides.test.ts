@@ -477,7 +477,7 @@ describe('DownloadGuides Use Case', () => {
             await useCase.downloadSingleGuide({ assetId, courseId });
 
             // Assert
-            expect(mockAssetStorage.findExistingAsset).toHaveBeenCalledWith(courseId, 'guides', originalFilename);
+            expect(mockAssetStorage.findExistingAsset).toHaveBeenCalledWith(courseId, 'guide', originalFilename);
             expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
                 assetId,
                 asset.metadata,

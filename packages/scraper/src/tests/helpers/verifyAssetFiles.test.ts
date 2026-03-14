@@ -14,6 +14,17 @@ vi.mock('@my-offline-lms/core', () => ({
         });
         getDefaultWritePath = vi.fn(() => '/default/path');
         listAssets = vi.fn(() => []);
+    },
+    NodeFileSystem: class {
+        existsSync = vi.fn(() => true);
+        readFileSync = vi.fn(() => '{}');
+        resolve = vi.fn((...args) => args.join('/'));
+        join = vi.fn((...args) => args.join('/'));
+        sep = '/';
+    },
+    ASSET_FOLDERS: {
+        guide: 'guides',
+        video: 'videos',
     }
 }));
 

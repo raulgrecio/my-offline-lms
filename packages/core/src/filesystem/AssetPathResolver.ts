@@ -1,3 +1,5 @@
+import type { AssetType } from "../domain/models/Asset";
+import { ASSET_FOLDERS } from "../domain/models/Asset";
 import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
 import type { IFileSystem } from "./IFileSystem";
 
@@ -22,13 +24,16 @@ export class AssetPathResolver {
     this.loadConfig();
   }
 
+  /**
+   * Carga la configuración de rutas de assets desde el archivo JSON o aplica valores por defecto.
+   */
   private loadConfig() {
     try {
       if (this.fs.existsSync(this.configPath)) {
         const content = this.fs.readFileSync(this.configPath, "utf-8");
         this.config = JSON.parse(content);
       } else {
-        // Default fallback if config doesn't exist
+        // Valores por defecto si la configuración no existe
         this.config = {
           defaultWritePath: "data/assets",
           searchPaths: [{ path: "data/assets", label: "Default" }],
@@ -52,7 +57,7 @@ export class AssetPathResolver {
   }
 
   /**
-   * Returns all available search paths, flagging if they are mounted/exist.
+   * Devuelve todas las rutas de búsqueda disponibles, indicando si existen en el sistema.
    */
   getAvailablePaths() {
     if (!this.config) return [];
@@ -67,21 +72,25 @@ export class AssetPathResolver {
   }
 
   /**
-   * Returns the default path for new downloads.
+   * Devuelve la ruta por defecto para nuevas descargas.
    */
   getDefaultWritePath(): string {
     return this.getAbsolutePath(this.config?.defaultWritePath || "data/assets");
   }
 
   /**
-   * Tries to find an asset (courseId/type/filename) in all search paths.
+   * Intenta encontrar un asset (courseId/type/filename) en todas las rutas de búsqueda.
+   * @param courseId ID del curso.
+   * @param type Tipo de asset (lógico). Se mapeará automáticamente al nombre de la carpeta física.
+   * @param filename Nombre del archivo.
    */
   findAsset(
     courseId: string,
-    type: "videos" | "guides",
+    type: AssetType,
     filename: string
   ): string | null {
-    const relativePath = this.fs.join(String(courseId), type, filename);
+    const folderName = ASSET_FOLDERS[type];
+    const relativePath = this.fs.join(String(courseId), folderName, filename);
     const availablePaths = this.getAvailablePaths().filter((p) => p.available);
 
     for (const sp of availablePaths) {
@@ -95,25 +104,29 @@ export class AssetPathResolver {
   }
 
   /**
-   * Checks if an asset exists anywhere in the search paths.
+   * Verifica si un asset existe en alguna de las rutas de búsqueda.
+   * @param courseId ID del curso.
+   * @param type Tipo de asset (lógico).
+   * @param filename Nombre del archivo.
    */
   assetExistsAnywhere(
     courseId: string,
-    type: "videos" | "guides",
+    type: AssetType,
     filename: string
   ): boolean {
     return this.findAsset(courseId, type, filename) !== null;
   }
 
   /**
-   * Receives an absolute path (possibly old/broken) and tries to find the file
-   * by extracting the courseId/type/filename pattern and searching other locations.
+   * Recibe una ruta absoluta (posiblemente antigua o rota) e intenta encontrar el archivo
+   * extrayendo el patrón courseId/folder/filename y buscando en otras ubicaciones.
+   * Mapea automáticamente los nombres de carpeta ("videos", "guides") de vuelta a AssetType.
    */
   resolveExistingPath(absolutePath: string): string | null {
     if (this.fs.existsSync(absolutePath)) return absolutePath;
 
-    // Pattern: .../{courseId}/{videos|guides}/{filename}
-    // We match from the end
+    // Patrón: .../{courseId}/{videos|guides}/{filename}
+    // Buscamos desde el final
     const parts = absolutePath.split(this.fs.sep);
     if (parts.length < 3) return null;
 
@@ -121,18 +134,24 @@ export class AssetPathResolver {
     const typeStr = parts[parts.length - 2]; // "videos" or "guides"
     const courseId = parts[parts.length - 3];
 
-    if (typeStr !== "videos" && typeStr !== "guides") return null;
+    const folderToType: Record<string, AssetType> = Object.entries(ASSET_FOLDERS).reduce(
+      (acc, [type, folder]) => ({ ...acc, [folder]: type as AssetType }),
+      {}
+    );
 
-    return this.findAsset(courseId, typeStr, filename);
+    const assetType = folderToType[typeStr];
+    if (!assetType) return null;
+
+    return this.findAsset(courseId, assetType, filename);
   }
 
   /**
-   * Saves a new search path to the config file.
+   * Guarda una nueva ruta de búsqueda en el archivo de configuración.
    */
   saveNewPath(p: string, label: string): void {
     if (!this.config) return;
 
-    // Avoid duplicates
+    // Evitar duplicados
     if (this.config.searchPaths.some((sp) => sp.path === p)) return;
 
     this.config.searchPaths.push({ path: p, label });
@@ -140,7 +159,7 @@ export class AssetPathResolver {
   }
 
   /**
-   * Removes a search path from the config file.
+   * Elimina una ruta de búsqueda del archivo de configuración.
    */
   removePath(p: string): void {
     if (!this.config) return;
@@ -151,11 +170,15 @@ export class AssetPathResolver {
   }
 
   /**
-   * Lists all existing files in a specific course asset directory across all search paths.
+   * Lista todos los archivos existentes en un directorio específico de assets de un curso
+   * a través de todas las rutas de búsqueda.
+   * @param courseId ID del curso.
+   * @param type Tipo de asset (lógico).
    */
-  listAssets(courseId: string, type: "videos" | "guides"): string[] {
+  listAssets(courseId: string, type: AssetType): string[] {
     const results: string[] = [];
-    const relativePath = this.fs.join(String(courseId), type);
+    const folderName = ASSET_FOLDERS[type];
+    const relativePath = this.fs.join(String(courseId), folderName);
     const availablePaths = this.getAvailablePaths().filter((p) => p.available);
 
     for (const sp of availablePaths) {
