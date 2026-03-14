@@ -1,7 +1,4 @@
-import Database from "better-sqlite3";
-
-import { DB_PATH } from "@config/paths";
-const db = new Database(DB_PATH, { verbose: console.log });
+import { db } from "@db/schema";
 
 console.log("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");
 
@@ -25,7 +22,7 @@ try {
         // 4. Eliminar tabla vieja y renombrar
         db.prepare(`DROP TABLE Courses;`).run();
         db.prepare(`ALTER TABLE Courses_new RENAME TO Courses;`).run();
-        
+
         console.log("✅ Migración completada con éxito.");
     })();
 

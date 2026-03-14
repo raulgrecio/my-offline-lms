@@ -1,4 +1,4 @@
-import { AssetPathConfig } from "./AssetPathConfig";
+import type { AssetPathConfig } from "./AssetPathConfig";
 
 export interface AssetPathsJson {
   defaultWritePath: string;

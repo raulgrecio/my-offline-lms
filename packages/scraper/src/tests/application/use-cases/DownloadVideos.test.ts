@@ -1,7 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ILogger } from '@my-offline-lms/core';
+
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { ILogger } from '@platform/logging/ILogger';
+
+import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
 
 
 
@@ -30,7 +33,7 @@ describe('DownloadVideos Use Case', () => {
         mockCourseRepo = {
             getCourseById: vi.fn().mockReturnValue({ title: 'Test Course' })
         };
-        
+
         mockAssetRepo = {
             getPendingAssets: vi.fn(),
             getAssetById: vi.fn(),
@@ -70,7 +73,7 @@ describe('DownloadVideos Use Case', () => {
             url: vi.fn().mockReturnValue('http://mock-url'),
             on: vi.fn(),
             $: vi.fn().mockResolvedValue({ click: vi.fn() }),
-            locator: vi.fn().mockReturnValue({ 
+            locator: vi.fn().mockReturnValue({
                 first: vi.fn().mockReturnThis(),
                 getAttribute: vi.fn().mockResolvedValue('mock-attr'),
                 isVisible: vi.fn().mockResolvedValue(true),
@@ -86,14 +89,14 @@ describe('DownloadVideos Use Case', () => {
         // Mock global setTimeout to avoid delays in tests
         vi.spyOn(global, 'setTimeout').mockImplementation((fn: any) => {
             if (typeof fn === 'function') fn();
-            return { unref: () => {} } as any;
+            return { unref: () => { } } as any;
         });
 
         useCase = new DownloadVideos({
-            browserProvider: mockBrowserProvider, 
+            browserProvider: mockBrowserProvider,
             courseRepository: mockCourseRepo,
-            assetRepository: mockAssetRepo, 
-            assetStorage: mockAssetStorage, 
+            assetRepository: mockAssetRepo,
+            assetStorage: mockAssetStorage,
             videoDownloader: mockVideoDownloader,
             namingService: new AssetNamingService(),
             logger: mockRootLogger,
@@ -124,7 +127,7 @@ describe('DownloadVideos Use Case', () => {
         mockAssetRepo.getPendingAssets.mockReturnValue([mockAsset]);
         mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
-        
+
         mockAssetStorage.verifyVideoIntegrity.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
         await useCase.executeForCourse('123');
@@ -154,7 +157,7 @@ describe('DownloadVideos Use Case', () => {
         });
 
         await useCase.executeForCourse('123');
-        
+
         expect(mockVideoDownloader.download).toHaveBeenCalledWith('http://stream.m3u8', expect.anything(), 'http://v1');
     });
 
@@ -164,7 +167,7 @@ describe('DownloadVideos Use Case', () => {
         mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
         mockAssetStorage.verifyVideoIntegrity.mockReturnValue(false);
-        
+
         mockVideoDownloader.download.mockRejectedValue(new Error('Downloader failed'));
 
         await useCase.executeForCourse('123');
@@ -178,7 +181,7 @@ describe('DownloadVideos Use Case', () => {
         mockAssetRepo.getPendingAssets.mockReturnValue([mockAsset]);
         mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
-        
+
         mockAssetStorage.verifyVideoIntegrity.mockImplementation(() => false);
 
         await useCase.executeForCourse('123');
@@ -202,7 +205,7 @@ describe('DownloadVideos Use Case', () => {
         // but here we are doing it manually to be safe.
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
         mockAssetStorage.verifyVideoIntegrity.mockReturnValue(false);
-        
+
         await useCase.downloadSingleVideo('v1', '123');
         expect(mockBrowserProvider.close).toHaveBeenCalled();
     });

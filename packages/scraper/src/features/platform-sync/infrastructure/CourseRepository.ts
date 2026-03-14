@@ -1,10 +1,9 @@
-import { Course } from '@features/platform-sync/domain/models/Course';
-import { Asset } from '@features/asset-download/domain/models/Asset';
+import { Asset, Course, IDatabase } from '@my-offline-lms/core';
+
 import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
-import { IDatabase } from '@platform/database/IDatabase';
 
 export class SQLiteCourseRepository implements ICourseRepository {
-  constructor(private db: IDatabase) {}
+  constructor(private db: IDatabase) { }
 
   saveCourse(course: Course): void {
     this.db.prepare(`

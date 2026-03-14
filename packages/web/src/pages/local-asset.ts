@@ -3,22 +3,22 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import fs from 'fs';
 import path from 'path';
-import { AssetPathResolver } from '@core/assets/domain/services/AssetPathResolver';
-import { NodeFileSystem } from '@core/assets/infrastructure/adapters/NodeFileSystem';
+
+import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core';
 
 const MONOREPO_ROOT = path.resolve(process.cwd(), "..", "..");
 const CONFIG_PATH = path.join(MONOREPO_ROOT, "data", "asset-paths.json");
 
 const MIME_MAP: Record<string, string> = {
-  '.mp4':  'video/mp4',
+  '.mp4': 'video/mp4',
   '.webm': 'video/webm',
-  '.mkv':  'video/x-matroska',
-  '.pdf':  'application/pdf',
-  '.vtt':  'text/vtt',
-  '.srt':  'text/plain',
-  '.jpg':  'image/jpeg',
+  '.mkv': 'video/x-matroska',
+  '.pdf': 'application/pdf',
+  '.vtt': 'text/vtt',
+  '.srt': 'text/plain',
+  '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.png':  'image/png',
+  '.png': 'image/png',
 };
 
 const fsAdapter = new NodeFileSystem();

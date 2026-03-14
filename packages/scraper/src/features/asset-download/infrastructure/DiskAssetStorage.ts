@@ -3,10 +3,11 @@ import path from "path";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 
+import { AssetPathResolver, NodeFileSystem } from "@my-offline-lms/core";
+
+import { ASSET_PATHS_CONFIG, ASSETS_DIR, MONOREPO_ROOT } from "@config/paths";
+
 import { IAssetStorage, PDFOptions } from "@features/asset-download/domain/ports/IAssetStorage";
-import { ASSETS_DIR, MONOREPO_ROOT, ASSET_PATHS_CONFIG } from "@config/paths";
-import { AssetPathResolver } from "@core/assets/domain/services/AssetPathResolver";
-import { NodeFileSystem } from "@core/assets/infrastructure/adapters/NodeFileSystem";
 
 export class DiskAssetStorage implements IAssetStorage {
   private assetsBaseDir: string;
@@ -102,7 +103,7 @@ export class DiskAssetStorage implements IAssetStorage {
             }
           }
           doc.end();
-        } catch(e) { reject(e); }
+        } catch (e) { reject(e); }
       })();
 
       stream.on("finish", () => resolve());

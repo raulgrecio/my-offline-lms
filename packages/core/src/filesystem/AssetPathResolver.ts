@@ -1,5 +1,5 @@
-import { AssetPathsJson } from "../models/AssetPathsJson";
-import { IFileSystem } from "../ports/IFileSystem";
+import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
+import type { IFileSystem } from "./IFileSystem";
 
 export class AssetPathResolver {
   private configPath: string;

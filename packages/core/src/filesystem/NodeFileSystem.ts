@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { IFileSystem } from "../../domain/ports/IFileSystem";
+
+import type { IFileSystem } from "./IFileSystem";
 
 export class NodeFileSystem implements IFileSystem {
   existsSync(p: string): boolean {

@@ -1,5 +1,7 @@
-import Database from "better-sqlite3";
 import path from "path";
+
+import { type Course, type LearningPath, type Asset } from "@my-offline-lms/core";
+import { SQLiteDatabase } from "@my-offline-lms/core";
 
 // In Astro SSR, process.cwd() = packages/web directory
 // Go up 2 levels to reach monorepo root where data/db.sqlite lives
@@ -9,12 +11,12 @@ const DB_PATH = process.env.DATABASE_PATH
   : path.resolve(MONOREPO_ROOT, "data", "db.sqlite");
 
 // Singleton connection
-let _db: Database.Database | null = null;
+let _db: SQLiteDatabase | null = null;
 
-function getDb(): Database.Database {
+function getDb(): SQLiteDatabase {
   if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
+    _db = new SQLiteDatabase(DB_PATH, { verbose: console.log });
+    _db.exec("PRAGMA journal_mode=WAL;");
     runMigrations(_db);
   }
   return _db;
@@ -22,7 +24,7 @@ function getDb(): Database.Database {
 
 // ─── Migrations ──────────────────────────────────────────────────────────────
 
-function runMigrations(db: Database.Database) {
+function runMigrations(db: SQLiteDatabase) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS UserProgress (
       asset_id     TEXT PRIMARY KEY,
@@ -44,35 +46,6 @@ function runMigrations(db: Database.Database) {
   `);
 }
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-export interface Course {
-  id: string;
-  slug: string;
-  title: string;
-}
-
-export interface LearningPath {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-}
-
-export interface Asset {
-  id: string;
-  courseId: string;
-  type: "video" | "guide";
-  url: string;
-  metadata: {
-    name: string;
-    order_index?: number | string;
-    filename?: string;
-    [key: string]: unknown;
-  };
-  status: "PENDING" | "DOWNLOADING" | "COMPLETED" | "FAILED";
-  localPath?: string;
-}
 
 export interface VideoProgress {
   assetId: string;

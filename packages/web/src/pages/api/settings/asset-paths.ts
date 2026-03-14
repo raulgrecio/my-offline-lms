@@ -2,8 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import path from 'path';
-import { AssetPathResolver } from '@core/assets/domain/services/AssetPathResolver';
-import { NodeFileSystem } from '@core/assets/infrastructure/adapters/NodeFileSystem';
+
+import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core';
 
 const MONOREPO_ROOT = path.resolve(process.cwd(), "..", "..");
 const CONFIG_PATH = path.join(MONOREPO_ROOT, "data", "asset-paths.json");

@@ -1,11 +1,13 @@
-import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
+import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
-import { ILogger } from '@platform/logging/ILogger';
-import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
+import { ILogger } from '@my-offline-lms/core';
+
 import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
 import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
+import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
+
+import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
+import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
 
 vi.mock('@platform/browser/interceptor', () => ({
     setupInterceptor: vi.fn()
@@ -17,7 +19,7 @@ describe('SyncLearningPath Use Case', () => {
     } as any;
 
     const mockLearningPathRepo = {
-        saveLearningPath: vi.fn(), 
+        saveLearningPath: vi.fn(),
         addCourseToPath: vi.fn(),
         clearPathCourses: vi.fn()
     } as any;
@@ -65,7 +67,7 @@ describe('SyncLearningPath Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        
+
         useCase = new SyncLearningPath({
             browserProvider: mockBrowserProvider,
             learningPathRepo: mockLearningPathRepo,
@@ -107,9 +109,9 @@ describe('SyncLearningPath Use Case', () => {
 
         await useCase.execute('http://lp-url');
 
-        expect(mockLearningPathRepo.saveLearningPath).toHaveBeenCalledWith(expect.objectContaining({ 
-            id: 'lp123', 
-            title: 'My Path' 
+        expect(mockLearningPathRepo.saveLearningPath).toHaveBeenCalledWith(expect.objectContaining({
+            id: 'lp123',
+            title: 'My Path'
         }));
         expect(mockCourseRepo.saveCourse).toHaveBeenCalledTimes(2);
         expect(mockSyncCourseUseCase.execute).toHaveBeenCalledTimes(2);
@@ -168,9 +170,9 @@ describe('SyncLearningPath Use Case', () => {
 
         await (useCase as any).processInterceptedData({ pathId: 'lp2', isolatedInterceptedDataRepo: mockInterceptedDataRepo });
 
-        expect(mockLearningPathRepo.saveLearningPath).toHaveBeenCalledWith(expect.objectContaining({ 
-            id: 'lp2', 
-            description: '' 
+        expect(mockLearningPathRepo.saveLearningPath).toHaveBeenCalledWith(expect.objectContaining({
+            id: 'lp2',
+            description: ''
         }));
     });
 

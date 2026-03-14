@@ -1,4 +1,4 @@
-import { ILogger } from "@platform/logging/ILogger";
+import type { ILogger } from "./ILogger";
 
 export class ConsoleLogger implements ILogger {
   constructor(private readonly defaultContext?: string) {}

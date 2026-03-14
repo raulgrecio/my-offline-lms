@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { DiskInterceptedDataRepository } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepository';
 import fs from 'fs';
-import { ILogger } from '@platform/logging/ILogger';
+
+import { ILogger } from '@my-offline-lms/core';
+import { DiskInterceptedDataRepository } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepository';
 
 vi.mock('fs');
 vi.mock('path', async () => {
@@ -27,15 +28,15 @@ describe('DiskInterceptedDataRepository', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        repo = new DiskInterceptedDataRepository({baseDir: mockBaseDir, logger: mockLogger});
+        repo = new DiskInterceptedDataRepository({ baseDir: mockBaseDir, logger: mockLogger });
     });
 
     it('should ensure directory exists before reading payloads', () => {
         vi.mocked(fs.existsSync).mockReturnValue(false);
         vi.mocked(fs.readdirSync).mockReturnValue([]);
-        
+
         repo.getPendingLearningPaths();
-        
+
         expect(fs.mkdirSync).toHaveBeenCalledWith(mockBaseDir, { recursive: true });
     });
 
@@ -46,7 +47,7 @@ describe('DiskInterceptedDataRepository', () => {
             'ignore_this_file.txt',
             'content_courses_456_metadata.json'
         ] as any);
-        
+
         vi.mocked(fs.readFileSync).mockReturnValue('{"id": "123"}');
 
         const result = repo.getPendingLearningPaths();
@@ -63,7 +64,7 @@ describe('DiskInterceptedDataRepository', () => {
             'content_courses_789_metadata.json',
             'content_courses_999_metadata.json'
         ] as any);
-        
+
         vi.mocked(fs.readFileSync).mockImplementation((path) => {
             if (path.toString().includes('789')) return '{"id": "789"}';
             return '{"id": "999"}';
@@ -83,7 +84,7 @@ describe('DiskInterceptedDataRepository', () => {
             'content_courses_789_metadata.json',
             'content_courses_999_metadata.json'
         ] as any);
-        
+
         vi.mocked(fs.readFileSync).mockImplementation((path) => {
             if (path.toString().includes('789')) return '{"id": "789"}';
             return '{"id": "999"}';
@@ -112,7 +113,7 @@ describe('DiskInterceptedDataRepository', () => {
         vi.mocked(fs.unlinkSync).mockImplementation(() => {
             throw new Error('Permission denied');
         });
-        
+
         expect(() => repo.deletePayload('/mock/intercepted/locked.json')).not.toThrow();
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not delete'));
     });
@@ -137,7 +138,7 @@ describe('DiskInterceptedDataRepository', () => {
                 throw new Error('Lock error');
             });
             repo.markAsProcessed('/mock/intercepted/locked.json');
-            
+
             expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not mark as processed'));
         });
     });

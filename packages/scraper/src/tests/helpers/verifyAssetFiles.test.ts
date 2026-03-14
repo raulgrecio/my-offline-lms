@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+
+import { AssetPathResolver } from '@my-offline-lms/core';
+
 import { verifyAssetFiles } from '../../scripts/helpers/verifyAssetFiles';
-import { AssetPathResolver } from '@core/assets/domain/services/AssetPathResolver';
 
 // Mock dependencies
-vi.mock('@core/assets/domain/services/AssetPathResolver', () => ({
+vi.mock('@my-offline-lms/core', () => ({
     AssetPathResolver: class {
         findAsset = vi.fn((courseId: string, type: string, filename: string) => {
             if (filename === 'custom-name.pdf') return '/path/to/custom-name.pdf';

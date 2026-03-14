@@ -1,11 +1,12 @@
-import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
-import { ILogger } from "@platform/logging/ILogger";
-import { DownloadType } from "@features/asset-download/domain/models/DownloadType";
+import { DownloadType, ILogger } from "@my-offline-lms/core";
+
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
+import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
+
+import { SyncLearningPath } from "@features/platform-sync/application/SyncLearningPath";
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
-import { SyncLearningPath } from "@features/platform-sync/application/SyncLearningPath";
 
 export class DownloadPath {
   private learningPathRepo: ILearningPathRepository;
@@ -31,13 +32,13 @@ export class DownloadPath {
     this.logger = deps.logger.withContext("DownloadPath");
   }
 
-  async execute({pathInput, type = 'all'}: {pathInput: string, type: DownloadType}): Promise<void> {
+  async execute({ pathInput, type = 'all' }: { pathInput: string, type: DownloadType }): Promise<void> {
     const pathId = this.namingService.extractIdFromInput(pathInput);
-    
+
     this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);
-    
+
     const courses = this.learningPathRepo.getCoursesForPath(pathId);
-    
+
     if (courses.length === 0) {
       this.logger.info(`⚠️ No se encontraron cursos asociados al path ${pathId}.`);
       return;
@@ -53,7 +54,7 @@ export class DownloadPath {
       if (type === 'guide' || type === 'all') {
         await this.downloadGuides.executeForCourse(course.id);
       }
-      
+
       if (type === 'video' || type === 'all') {
         await this.downloadVideos.executeForCourse(course.id);
       }

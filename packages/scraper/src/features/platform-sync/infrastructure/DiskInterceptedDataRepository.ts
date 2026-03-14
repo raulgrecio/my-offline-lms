@@ -1,29 +1,31 @@
 import fs from "fs";
 import path from "path";
 
-import { IInterceptedDataRepository, InterceptedPayload } from "@features/platform-sync/domain/ports/IInterceptedDataRepository";
+import { ILogger } from "@my-offline-lms/core";
+
 import { INTERCEPTED_DIR } from "@config/paths";
 import { PLATFORM } from "@config/platform";
-import { ILogger } from "@platform/logging/ILogger";
+
+import { IInterceptedDataRepository, InterceptedPayload } from "@features/platform-sync/domain/ports/IInterceptedDataRepository";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private interceptedDir: string;
   private logger: ILogger;
 
   constructor(deps: {
-    baseDir?: string, 
+    baseDir?: string,
     logger: ILogger
   }) {
     this.interceptedDir = deps.baseDir || INTERCEPTED_DIR;
     this.logger = deps.logger.withContext("DiskInterceptedDataRepository");
   }
-  
+
   private initDir(): void {
     if (!fs.existsSync(this.interceptedDir)) {
       fs.mkdirSync(this.interceptedDir, { recursive: true });
     }
   }
- 
+
   getPendingLearningPaths(): InterceptedPayload[] {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH);
   }
@@ -63,7 +65,7 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
       this.logger.warn(`Could not delete ${filePath}`);
     }
   }
-  
+
   markAsProcessed(filePath: string): void {
     try {
       if (fs.existsSync(filePath)) {

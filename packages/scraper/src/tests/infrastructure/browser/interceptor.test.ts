@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { setupInterceptor } from '@platform/browser/interceptor';
-import { Page, Request, Response } from 'playwright';
 import fs from 'fs';
 import path from 'path';
+import { Page, Request, Response } from 'playwright';
+import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
+
+import { setupInterceptor } from '@platform/browser/interceptor';
 
 vi.mock('fs');
 vi.mock('path', async () => {
@@ -14,14 +15,14 @@ vi.mock('path', async () => {
     };
 });
 
-vi.mock('@platform/logging/ConsoleLogger', () => {
+vi.mock('@my-offline-lms/core', () => {
     return {
         ConsoleLogger: class {
             withContext() { return this; }
-            info() {}
-            warn() {}
-            error() {}
-            debug() {}
+            info() { }
+            warn() { }
+            error() { }
+            debug() { }
         }
     };
 });
@@ -95,10 +96,10 @@ describe('setupInterceptor', () => {
         // Verify that the file was written
         expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
         const writeCallArgs = vi.mocked(fs.writeFileSync).mock.calls[0];
-        
+
         expect(writeCallArgs[0]).toContain(targetDir);
         expect(writeCallArgs[0]).toContain('api_learning_paths_123');
-        
+
         const writtenData = JSON.parse(writeCallArgs[1] as string);
         expect(writtenData.url).toBe('https://example.com/api/learning-paths/123');
         expect(writtenData.method).toBe('GET');

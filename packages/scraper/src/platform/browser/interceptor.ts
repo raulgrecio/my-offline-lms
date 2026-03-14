@@ -2,12 +2,13 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
-import { ConsoleLogger } from "@platform/logging/ConsoleLogger";
+import { ConsoleLogger } from "@my-offline-lms/core";
+
 import { INTERCEPTED_DIR } from "@config/paths";
 
 export function setupInterceptor(page: Page, options?: { execTimestamp: number, prefix: string }): string {
-  const targetDir = options 
-    ? path.join(INTERCEPTED_DIR, `${options.prefix}_${options.execTimestamp}`) 
+  const targetDir = options
+    ? path.join(INTERCEPTED_DIR, `${options.prefix}_${options.execTimestamp}`)
     : INTERCEPTED_DIR;
 
   if (!fs.existsSync(targetDir)) {
@@ -19,12 +20,12 @@ export function setupInterceptor(page: Page, options?: { execTimestamp: number, 
   page.on("response", async (response) => {
     const url = response.url();
     const headers = response.headers();
-    
+
     // Filtramos solo respuestas JSON (API calls)
     if (headers["content-type"]?.includes("application/json")) {
       try {
         const json = await response.json();
-        
+
         /*
         // TODO: REVISAR SI ES NECESARIO ESTE FILTRADO AGRESIVO O SE PUEDE QUITAR DEFINITIVAMENTE
 
@@ -42,19 +43,19 @@ export function setupInterceptor(page: Page, options?: { execTimestamp: number, 
         const urlObj = new URL(url);
         const safeName = urlObj.pathname.replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '');
         const filename = `${Date.now()}_${safeName}.json`;
-        
+
         fs.writeFileSync(
           path.join(targetDir, filename),
           JSON.stringify({ url, method: response.request().method(), status: response.status(), data: json }, null, 2)
         );
-        
+
         logger.info(`JSON interceptado y guardado: ${filename}`);
       } catch (e) {
         // Ignorar si el body no se puede parsear
       }
     }
   });
-  
+
   logger.info(`Activado. Guardando respuestas JSON en ${targetDir}`);
   return targetDir;
 }

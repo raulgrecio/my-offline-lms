@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@my-offline-lms/core": "workspace:*",
-    "better-sqlite3": "^11.1.2",
     "dotenv": "^17.3.1",
     "p-queue": "^8.0.1",
     "pdfkit": "^0.15.0",
@@ -26,7 +25,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.14.9",
     "@types/pdfkit": "^0.13.4",
     "@vitest/coverage-v8": "^4.0.18",

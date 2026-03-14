@@ -1,13 +1,10 @@
-import Database from "better-sqlite3";
-import { DB_PATH } from "@config/paths";
-
-const db = new Database(DB_PATH, { verbose: console.log });
+import { db } from "@db/schema";
 
 console.log("Iniciando migración de metadatos: title -> name en Course_Assets...");
 
 try {
     const assets = db.prepare("SELECT id, metadata FROM Course_Assets").all() as { id: string, metadata: string }[];
-    
+
     let updatedCount = 0;
 
     db.transaction(() => {
@@ -27,7 +24,7 @@ try {
 
                 if (changed) {
                     db.prepare("UPDATE Course_Assets SET metadata = ? WHERE id = ?")
-                      .run(JSON.stringify(metadata), asset.id);
+                        .run(JSON.stringify(metadata), asset.id);
                     updatedCount++;
                 }
             } catch (e) {

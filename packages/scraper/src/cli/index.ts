@@ -1,28 +1,27 @@
-import dotenv from 'dotenv';
 import { env } from '@config/env';
+import dotenv from 'dotenv';
+
+import { ConsoleLogger, DownloadType, IDatabase } from '@my-offline-lms/core';
 
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { DownloadType } from '@features/asset-download/domain/models/DownloadType';
-
-import { browserProvider } from '@platform/browser/BrowserProvider';
-import { SQLiteCourseRepository } from '@features/platform-sync/infrastructure/CourseRepository';
 import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';
-import { SQLiteLearningPathRepository } from '@features/platform-sync/infrastructure/LearningPathRepository';
-import { DiskInterceptedDataRepositoryFactory } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepositoryFactory';
-import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
 import { DiskAssetStorage } from '@features/asset-download/infrastructure/DiskAssetStorage';
 import { YtDlpVideoDownloader } from '@features/asset-download/infrastructure/YtDlpVideoDownloader';
-import { ConsoleLogger } from '@platform/logging/ConsoleLogger';
+import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
+import { SQLiteCourseRepository } from '@features/platform-sync/infrastructure/CourseRepository';
+import { DiskInterceptedDataRepositoryFactory } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepositoryFactory';
+import { SQLiteLearningPathRepository } from '@features/platform-sync/infrastructure/LearningPathRepository';
 import { OraclePlatformUrlProvider } from '@features/platform-sync/infrastructure/OraclePlatformUrlProvider';
-import { IDatabase } from '@platform/database/IDatabase';
 
 import { DownloadCourse } from '@features/asset-download/application/DownloadCourse';
+import { DownloadGuides } from '@features/asset-download/application/DownloadGuides';
+import { DownloadPath } from '@features/asset-download/application/DownloadPath';
+import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
 import { AuthSession } from '@features/auth-session/application/AuthSession';
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
-import { DownloadGuides } from '@features/asset-download/application/DownloadGuides';
-import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
-import { DownloadPath } from '@features/asset-download/application/DownloadPath';
+
+import { browserProvider } from '@platform/browser/BrowserProvider';
 
 dotenv.config();
 

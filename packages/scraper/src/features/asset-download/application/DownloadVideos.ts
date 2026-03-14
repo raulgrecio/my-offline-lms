@@ -1,13 +1,15 @@
 import { BrowserContext } from "playwright";
 
+import { ILogger } from "@my-offline-lms/core";
+
 import { PLATFORM } from "@config/platform";
+
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
-import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ILogger } from "@platform/logging/ILogger";
+import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
+import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
+import { BrowserProvider } from "@platform/browser/BrowserProvider";
 
 export class DownloadVideos {
   private browserProvider: BrowserProvider;
@@ -38,7 +40,7 @@ export class DownloadVideos {
 
   async executeForCourse(courseId: string): Promise<void> {
     this.logger.info(`Iniciando procesamiento de vídeos para el curso: ${courseId}`);
-    
+
     const pendingVideos = this.assetRepo.getPendingAssets(courseId, 'video');
     if (pendingVideos.length === 0) {
       this.logger.info(`No hay vídeos pendientes para el curso ${courseId}.`);
@@ -46,15 +48,15 @@ export class DownloadVideos {
     }
 
     this.logger.info(`⏳ Encontrados ${pendingVideos.length} vídeos pendientes. Comenzando...`);
-    
+
     // Unico navegador para todo el batch
     const context = await this.browserProvider.getAuthenticatedContext();
 
     for (let i = 0; i < pendingVideos.length; i++) {
-        this.logger.info(`======================================================`, "");
-        this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
-        await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
-        await new Promise(r => setTimeout(r, 5000));
+      this.logger.info(`======================================================`, "");
+      this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
+      await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
+      await new Promise(r => setTimeout(r, 5000));
     }
 
     await this.browserProvider.close();
@@ -76,9 +78,9 @@ export class DownloadVideos {
     // yt-dlp guarda los subs incrustados y puede dejarlos sueltos. 
     // Por Clean Architecture, validaremos que al menos el mp4 tiene un tamaño aceptable (>1MB por ejemplo, o simplemente que existe si no fuimos estrictos).
     if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
-        this.logger.info(`[Integridad] El vídeo y sus componentes ya parecen existir correctamente: ${outputPath}`);
-        this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename });
-        return;
+      this.logger.info(`[Integridad] El vídeo y sus componentes ya parecen existir correctamente: ${outputPath}`);
+      this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename });
+      return;
     }
 
     let context = sharedContext;
@@ -88,38 +90,38 @@ export class DownloadVideos {
       if (!context) {
         context = await this.browserProvider.getAuthenticatedContext();
       }
-      
+
       page = await context.newPage();
       let m3u8Url = "";
 
       page.on("request", (req: any) => {
         const url = req.url();
         if ((url.includes(".m3u8") || url.includes(".mpd")) && !m3u8Url) {
-            m3u8Url = url;
+          m3u8Url = url;
         }
       });
 
       const cleanUrl = this.namingService.cleanUrl(asset.url);
-      
+
       await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-      await page.waitForTimeout(18000); 
+      await page.waitForTimeout(18000);
 
       const videoId = asset.url.split('/').pop();
       if (videoId) {
-          const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
-          if (await startLearningBtn.isVisible({ timeout: 5000 })) {
-              await startLearningBtn.click({ force: true });
-              await page.waitForTimeout(5000);
-          }
-          // Trigger routing/player
-          const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
-          if (await playButton.isVisible({ timeout: 4000 })) await playButton.click({ force: true });
+        const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
+        if (await startLearningBtn.isVisible({ timeout: 5000 })) {
+          await startLearningBtn.click({ force: true });
+          await page.waitForTimeout(5000);
+        }
+        // Trigger routing/player
+        const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
+        if (await playButton.isVisible({ timeout: 4000 })) await playButton.click({ force: true });
       }
 
       await page.waitForTimeout(15000); // Dar a la API tiempo de negociar m3u8
 
       let targetDownloadUrl = m3u8Url || cleanUrl;
-      
+
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       await page.close(); // Liberar memoria de playwright antes de yt-dlp
       page = null; // Mark as closed
@@ -128,23 +130,23 @@ export class DownloadVideos {
 
       // Verificamos tras la descarga!
       if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
-          this.logger.info(`✅ Vídeo completado y verificado: ${outputPath}`);
-          this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
+        this.logger.info(`✅ Vídeo completado y verificado: ${outputPath}`);
+        this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
       } else {
-          this.logger.warn(`⚠️ Vídeo descargado pero falló el check de integridad (ej. faltan subtitulos o archivo vacio)`);
-          this.assetRepo.updateAssetStatus(assetId, 'FAILED');
+        this.logger.warn(`⚠️ Vídeo descargado pero falló el check de integridad (ej. faltan subtitulos o archivo vacio)`);
+        this.assetRepo.updateAssetStatus(assetId, 'FAILED');
       }
 
     } catch (err) {
-        this.logger.error(`❌ Error extrayendo vídeo ${assetId}:`, err);
-        this.assetRepo.updateAssetStatus(assetId, 'FAILED');
+      this.logger.error(`❌ Error extrayendo vídeo ${assetId}:`, err);
+      this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {
-        if (page) {
-            await page.close().catch(() => {});
-        }
-        if (!sharedContext && context) {
-            await this.browserProvider.close();
-        }
+      if (page) {
+        await page.close().catch(() => { });
+      }
+      if (!sharedContext && context) {
+        await this.browserProvider.close();
+      }
     }
   }
 }

@@ -1,9 +1,9 @@
-import { Asset, AssetStatus, AssetType } from '@features/asset-download/domain/models/Asset';
+import { Asset, AssetStatus, AssetType, IDatabase } from '@my-offline-lms/core';
+
 import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
-import { IDatabase } from '@platform/database/IDatabase';
 
 export class SQLiteAssetRepository implements IAssetRepository {
-  constructor(private db: IDatabase) {}
+  constructor(private db: IDatabase) { }
 
   saveAsset(asset: Asset): void {
     this.db.prepare(`
@@ -36,7 +36,7 @@ export class SQLiteAssetRepository implements IAssetRepository {
   getAssetById(id: string): Asset | null {
     const row = this.db.prepare('SELECT * FROM Course_Assets WHERE id = ?').get(id) as any;
     if (!row) return null;
-    
+
     // map DB to Domain
     return {
       id: row.id,
@@ -55,12 +55,12 @@ export class SQLiteAssetRepository implements IAssetRepository {
   }
 
   getPendingAssets(courseId: string, type: AssetType): Asset[] {
-     const rows = this.db.prepare(`
+    const rows = this.db.prepare(`
         SELECT * FROM Course_Assets 
         WHERE course_id = ? AND type = ? AND status != 'COMPLETED'
      `).all(courseId, type) as any[];
 
-     return rows.map(row => ({
+    return rows.map(row => ({
       id: row.id,
       courseId: row.course_id,
       type: row.type,

@@ -1,11 +1,13 @@
+import { ILogger } from "@my-offline-lms/core";
+
 import { env } from "@config/env";
 import { PLATFORM } from "@config/platform";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
+
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
-import { ILogger } from "@platform/logging/ILogger";
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
+import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
+import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
+import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
 import { BrowserProvider } from "@platform/browser/BrowserProvider";
 import { setupInterceptor } from "@platform/browser/interceptor";
 
@@ -36,7 +38,7 @@ export class SyncCourse {
     this.logger = deps.logger.withContext("SyncCourse");
   }
 
-  async execute({courseInput, offeringId}: {courseInput: string, offeringId?: string}): Promise<void> {
+  async execute({ courseInput, offeringId }: { courseInput: string, offeringId?: string }): Promise<void> {
     if (!courseInput) {
       this.logger.error("No se proporcionó courseUrl");
       return;
@@ -50,12 +52,12 @@ export class SyncCourse {
       this.logger.error(`No se pudo resolver la URL o el ID del curso: ${courseInput}`);
       return;
     }
-   
+
     this.logger.info(`Iniciando mapeo y sincronización del curso: ${url} (ID: ${courseId})`);
-    
+
     const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
-    
+
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setupInterceptor returns it)
     const isolatedDirPath = setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
@@ -79,24 +81,24 @@ export class SyncCourse {
     const intercepted = isolatedInterceptedDataRepo.getPendingForCourse(courseId);
     const matchingPayloads: any[] = [];
     const processedPayloadPaths: string[] = [];
-    
+
     // 1. Identificar todos los payloads que corresponden a este curso
     for (const payload of intercepted) {
-        try {
-            const wrapper = JSON.parse(payload.content);
-            const data = wrapper.data;
-            if (!data) continue;
+      try {
+        const wrapper = JSON.parse(payload.content);
+        const data = wrapper.data;
+        if (!data) continue;
 
-            const matchesSlug = data.slug && url.includes(data.slug);
-            const matchesId = data.id && url.includes(data.id.toString());
+        const matchesSlug = data.slug && url.includes(data.slug);
+        const matchesId = data.id && url.includes(data.id.toString());
 
-            if (matchesSlug || matchesId) {
-                matchingPayloads.push(wrapper);
-                processedPayloadPaths.push(payload.filePath);
-            }
-        } catch (e) {
-            this.logger.warn(`Error parseando payload: ${payload.filePath}`);
+        if (matchesSlug || matchesId) {
+          matchingPayloads.push(wrapper);
+          processedPayloadPaths.push(payload.filePath);
         }
+      } catch (e) {
+        this.logger.warn(`Error parseando payload: ${payload.filePath}`);
+      }
     }
 
     if (matchingPayloads.length > 0) {
@@ -104,17 +106,17 @@ export class SyncCourse {
       const firstData = matchingPayloads[0].data;
       const courseId = firstData.id.toString();
       let courseTitle = firstData.name || firstData.title;
-      
+
       // Buscar el mejor título disponible en todos los payloads
       for (const p of matchingPayloads) {
-          const t = p.data.name || p.data.title;
-          if (t && t.length > (courseTitle?.length || 0)) {
-              courseTitle = t;
-          }
+        const t = p.data.name || p.data.title;
+        if (t && t.length > (courseTitle?.length || 0)) {
+          courseTitle = t;
+        }
       }
 
       this.logger.info(`💾 Fusionando metadatos para Curso: ${courseTitle} (${courseId})`);
-      
+
       const courseSlug = firstData.slug || this.namingService.slugify(courseTitle);
       this.courseRepository.saveCourse({
         id: courseId,
@@ -129,82 +131,82 @@ export class SyncCourse {
 
       // 3. Iterar por todos los payloads para fusionar assets
       for (const wrapper of matchingPayloads) {
-          const data = wrapper.data;
-          
-          // Extraer offeringId de la URL del payload si no lo tenemos
-          if (!finalOfferingId) {
-              const extractedId = this.namingService.extractOfferingId(wrapper.url);
-              if (extractedId) {
-                  finalOfferingId = extractedId;
-                  this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
-              }
+        const data = wrapper.data;
+
+        // Extraer offeringId de la URL del payload si no lo tenemos
+        if (!finalOfferingId) {
+          const extractedId = this.namingService.extractOfferingId(wrapper.url);
+          if (extractedId) {
+            finalOfferingId = extractedId;
+            this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
           }
+        }
 
-          // A. Fusionar eKits (Guías)
-          if (data.eKits && Array.isArray(data.eKits)) {
-              data.eKits.forEach((ekit: any) => {
-                  const numericId = ekit.id?.toString();
-                  const uuid = ekit.ekitId;
-                  
-                  if (!numericId && !uuid) return;
+        // A. Fusionar eKits (Guías)
+        if (data.eKits && Array.isArray(data.eKits)) {
+          data.eKits.forEach((ekit: any) => {
+            const numericId = ekit.id?.toString();
+            const uuid = ekit.ekitId;
 
-                  // Buscar si ya existe por cualquiera de los dos IDs
-                  let existing = null;
-                  if (numericId && ekitsMap.has(`num_${numericId}`)) {
-                      existing = ekitsMap.get(`num_${numericId}`);
-                  } else if (uuid && ekitsMap.has(`uuid_${uuid}`)) {
-                      existing = ekitsMap.get(`uuid_${uuid}`);
-                  }
+            if (!numericId && !uuid) return;
 
-                  if (!existing) {
-                      existing = { id: numericId, ekitId: uuid };
-                      // Registrar en ambos mapas si están presentes
-                      if (numericId) ekitsMap.set(`num_${numericId}`, existing);
-                      if (uuid) ekitsMap.set(`uuid_${uuid}`, existing);
+            // Buscar si ya existe por cualquiera de los dos IDs
+            let existing = null;
+            if (numericId && ekitsMap.has(`num_${numericId}`)) {
+              existing = ekitsMap.get(`num_${numericId}`);
+            } else if (uuid && ekitsMap.has(`uuid_${uuid}`)) {
+              existing = ekitsMap.get(`uuid_${uuid}`);
+            }
+
+            if (!existing) {
+              existing = { id: numericId, ekitId: uuid };
+              // Registrar en ambos mapas si están presentes
+              if (numericId) ekitsMap.set(`num_${numericId}`, existing);
+              if (uuid) ekitsMap.set(`uuid_${uuid}`, existing);
+            } else {
+              // Si ya existía, pero ahora tenemos el otro ID, actualizar mapas
+              if (numericId && !existing.id) {
+                existing.id = numericId;
+                ekitsMap.set(`num_${numericId}`, existing);
+              }
+              if (uuid && !existing.ekitId) {
+                existing.ekitId = uuid;
+                ekitsMap.set(`uuid_${uuid}`, existing);
+              }
+            }
+
+            // Fusionar campos (solo si el nuevo tiene valor valioso)
+            if (ekit.name) existing.name = ekit.name;
+            if (ekit.gcc) existing.gcc = ekit.gcc;
+            if (ekit.ekitType) existing.ekitType = ekit.ekitType;
+            if (ekit.typeId) existing.typeId = ekit.typeId;
+            if (ekit.offeringId) existing.offeringId = ekit.offeringId;
+          });
+        }
+
+        // B. Fusionar Vídeos (Modules -> Components)
+        if (data.modules && Array.isArray(data.modules)) {
+          data.modules.forEach((mod: any) => {
+            if (mod.components && Array.isArray(mod.components)) {
+              mod.components.forEach((comp: any) => {
+                if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
+                  const vidId = comp.id.toString();
+                  if (!videosMap.has(vidId)) {
+                    videosMap.set(vidId, {
+                      id: vidId,
+                      name: comp.name || comp.title,
+                      duration: comp.duration
+                    });
                   } else {
-                      // Si ya existía, pero ahora tenemos el otro ID, actualizar mapas
-                      if (numericId && !existing.id) {
-                          existing.id = numericId;
-                          ekitsMap.set(`num_${numericId}`, existing);
-                      }
-                      if (uuid && !existing.ekitId) {
-                          existing.ekitId = uuid;
-                          ekitsMap.set(`uuid_${uuid}`, existing);
-                      }
+                    const existing = videosMap.get(vidId);
+                    if (!existing.name && (comp.name || comp.title)) existing.name = comp.name || comp.title;
+                    if (!existing.duration && comp.duration) existing.duration = comp.duration;
                   }
-                  
-                  // Fusionar campos (solo si el nuevo tiene valor valioso)
-                  if (ekit.name) existing.name = ekit.name;
-                  if (ekit.gcc) existing.gcc = ekit.gcc;
-                  if (ekit.ekitType) existing.ekitType = ekit.ekitType;
-                  if (ekit.typeId) existing.typeId = ekit.typeId;
-                  if (ekit.offeringId) existing.offeringId = ekit.offeringId;
+                }
               });
-          }
-
-          // B. Fusionar Vídeos (Modules -> Components)
-          if (data.modules && Array.isArray(data.modules)) {
-            data.modules.forEach((mod: any) => {
-              if (mod.components && Array.isArray(mod.components)) {
-                mod.components.forEach((comp: any) => {
-                  if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
-                    const vidId = comp.id.toString();
-                    if (!videosMap.has(vidId)) {
-                        videosMap.set(vidId, {
-                            id: vidId,
-                            name: comp.name || comp.title,
-                            duration: comp.duration
-                        });
-                    } else {
-                        const existing = videosMap.get(vidId);
-                        if (!existing.name && (comp.name || comp.title)) existing.name = comp.name || comp.title;
-                        if (!existing.duration && comp.duration) existing.duration = comp.duration;
-                    }
-                  }
-                });
-              }
-            });
-          }
+            }
+          });
+        }
       }
 
       // 4. Guardar assets fusionados en la DB
@@ -216,28 +218,28 @@ export class SyncCourse {
 
       // Guardar Guías
       uniqueEkits.forEach((ekit, index) => {
-          // El usuario prefiere el ID numérico como PK en Course_Assets.
-          // El UUID (ekitId) se guarda en metadatos para el visor.
-          const assetId = ekit.id; 
-          
-          this.assetRepository.saveAsset({
-            id: assetId,
-            courseId: courseId,
-            type: 'guide',
-            url: "",
-            metadata: {
-              name: ekit.name || `Guide ${index + 1}`,
-              id: ekit.id, // numeric id
-              ekitId: ekit.ekitId, // UUID (ahora explícitamente en meta)
-              typeId: ekit.typeId,
-              ekitType: ekit.ekitType,
-              gcc: ekit.gcc,
-              offeringId: ekit.offeringId || finalOfferingId,
-              order_index: index + 1,
-            },
-            status: 'PENDING'
-          });
-          guideCount++;
+        // El usuario prefiere el ID numérico como PK en Course_Assets.
+        // El UUID (ekitId) se guarda en metadatos para el visor.
+        const assetId = ekit.id;
+
+        this.assetRepository.saveAsset({
+          id: assetId,
+          courseId: courseId,
+          type: 'guide',
+          url: "",
+          metadata: {
+            name: ekit.name || `Guide ${index + 1}`,
+            id: ekit.id, // numeric id
+            ekitId: ekit.ekitId, // UUID (ahora explícitamente en meta)
+            typeId: ekit.typeId,
+            ekitType: ekit.ekitType,
+            gcc: ekit.gcc,
+            offeringId: ekit.offeringId || finalOfferingId,
+            order_index: index + 1,
+          },
+          status: 'PENDING'
+        });
+        guideCount++;
       });
 
       // Guardar Vídeos
@@ -246,7 +248,7 @@ export class SyncCourse {
           id: video.id,
           courseId: courseId,
           type: 'video',
-          url: this.urlProvider.getVideoAssetUrl({courseUrl: url, assetId: video.id}),
+          url: this.urlProvider.getVideoAssetUrl({ courseUrl: url, assetId: video.id }),
           metadata: {
             name: video.name || `Video ${index + 1}`,
             order_index: index + 1,

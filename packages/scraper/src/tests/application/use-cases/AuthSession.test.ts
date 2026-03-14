@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ILogger } from '@my-offline-lms/core';
+
 import { AuthSession } from '@features/auth-session/application/AuthSession';
-import { ILogger } from '@platform/logging/ILogger';
 
 vi.mock('readline', () => ({
     default: {
@@ -13,7 +15,7 @@ describe('AuthSession Use Case', () => {
         getHeadfulContext: vi.fn(),
         close: vi.fn(),
     } as any;
-    
+
     const mockAuthStorage = {
         getAuthFile: vi.fn().mockReturnValue('/mock/state.json'),
         getCookiesFile: vi.fn(),
@@ -33,12 +35,12 @@ describe('AuthSession Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        useCase = new AuthSession({ 
-            browserProvider: mockBrowserProvider, 
+        useCase = new AuthSession({
+            browserProvider: mockBrowserProvider,
             authStorage: mockAuthStorage,
             logger: mockLogger,
         });
-        
+
         // Mock stdin
         (process.stdin as any).isTTY = true;
         process.stdin.setRawMode = vi.fn().mockReturnThis();
@@ -56,8 +58,8 @@ describe('AuthSession Use Case', () => {
             goto: vi.fn().mockResolvedValue(undefined),
             close: vi.fn().mockResolvedValue(undefined),
         } as any;
-        const mockContext = { 
-            newPage: vi.fn().mockResolvedValue(mockPage), 
+        const mockContext = {
+            newPage: vi.fn().mockResolvedValue(mockPage),
             close: vi.fn().mockResolvedValue(undefined),
             storageState: vi.fn().mockResolvedValue({}),
             cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }])

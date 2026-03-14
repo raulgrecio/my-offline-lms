@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
+
+import { ASSET_PATHS_CONFIG, MONOREPO_ROOT } from "@config/paths";
+
+import { AssetPathResolver, NodeFileSystem } from "@my-offline-lms/core";
+
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
-import { AssetPathResolver } from "@core/assets/domain/services/AssetPathResolver";
-import { NodeFileSystem } from "@core/assets/infrastructure/adapters/NodeFileSystem";
-import { MONOREPO_ROOT, ASSET_PATHS_CONFIG } from "@config/paths";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.
@@ -12,7 +14,7 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: { t
     const meta = JSON.parse(metadataStr || "{}");
     const namingService = new AssetNamingService();
     const safeName = namingService.generateSafeFilename(meta.name, meta.order_index);
-    
+
     const fsAdapter = new NodeFileSystem();
     const resolver = new AssetPathResolver({
         configPath: ASSET_PATHS_CONFIG,
@@ -36,7 +38,7 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: { t
     if (type === 'guide') {
         const filename = meta.filename || `${safeName}.pdf`;
         const foundPath = resolver.findAsset(courseId, "guides", filename);
-        
+
         return {
             guideExists: !!foundPath,
             expectedPath: path.join(resolver.getDefaultWritePath(), courseId, "guides", filename),
@@ -48,7 +50,7 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: { t
     // Default to video
     const filename = meta.filename || `${safeName}.mp4`;
     const foundPath = resolver.findAsset(courseId, "videos", filename);
-    
+
     let vttExists = false;
     if (foundPath) {
         const courseVideosDir = path.dirname(foundPath);
