@@ -20,7 +20,7 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error("❌ Invalid web environment variables:");
-  console.error(parsed.error.format());
+  console.error(z.treeifyError(parsed.error));
 }
 
 export const env: Env = parsed.success ? parsed.data : envSchema.parse({});

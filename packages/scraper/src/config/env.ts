@@ -12,7 +12,7 @@ const envSchema = z.object({
   PLATFORM_BASE_URL: z.string().url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
   LOGIN_SUCCESS_SELECTOR: z.string().default("body"),
-  
+
   // PDF download configurations
   KEEP_TEMP_IMAGES: z.coerce.boolean().default(false),
   CREATE_PDF: z.coerce.boolean().default(true),
@@ -29,7 +29,7 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error("❌ Invalid environment variables. Verifique su archivo .env:");
-  console.error(parsed.error.format());
+  console.error(z.treeifyError(parsed.error));
   if (process.env.NODE_ENV !== 'test') {
     process.exit(1);
   }
