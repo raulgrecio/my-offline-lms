@@ -3,11 +3,11 @@ import type { ILearningPathRepository } from "../domain/ports/ILearningPathRepos
 
 export interface PathWithCourses {
   path: LearningPath;
-  courses: Course[];
+  courses: (Course & { orderIndex: number })[]; // TODO: TAL VEZ MERECE UN DTO APARTE
 }
 
 export class GetPathDetails {
-  constructor(private pathRepo: ILearningPathRepository) {}
+  constructor(private pathRepo: ILearningPathRepository) { }
 
   execute(pathId: string): PathWithCourses | null {
     const path = this.pathRepo.getLearningPathById(pathId);

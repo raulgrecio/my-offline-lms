@@ -2,7 +2,7 @@ import { type Course, type LearningPath, type IDatabase } from "@my-offline-lms/
 import type { ILearningPathRepository } from "../domain/ports/ILearningPathRepository";
 
 export class SQLiteLearningPathRepository implements ILearningPathRepository {
-  constructor(private db: IDatabase) {}
+  constructor(private db: IDatabase) { }
 
   getAllLearningPaths(): LearningPath[] {
     return this.db
