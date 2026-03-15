@@ -212,8 +212,11 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
     >
       <div
         onMouseDown={handleMouseDown}
-        className={`bg-black/75 backdrop-blur-md text-white px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg border border-white/10'}`}
+        className={`backdrop-blur-md px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
         style={{
+          backgroundColor: 'var(--glass-bg)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--glass-border)',
           pointerEvents: 'auto',
           wordWrap: 'break-word',
           width: 'max-content',

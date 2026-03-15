@@ -15,7 +15,7 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
       onChange={onSeek}
       className="w-full mb-2"
       style={{ 
-        accentColor: '#c74634', 
+        accentColor: 'var(--color-oracle-600)', 
         height: '3px', 
         cursor: 'pointer' 
       }}

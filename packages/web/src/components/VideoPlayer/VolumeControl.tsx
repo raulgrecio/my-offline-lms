@@ -14,7 +14,7 @@ export default function VolumeControl({ volume, onVolumeChange }: VolumeControlP
       onChange={onVolumeChange}
       className="w-16 sm:w-24"
       style={{ 
-        accentColor: '#c74634', 
+        accentColor: 'var(--color-oracle-600)', 
         height: '3px', 
         cursor: 'pointer' 
       }}

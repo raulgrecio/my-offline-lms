@@ -1,43 +1,89 @@
 @import "tailwindcss";
 
-/* ─── Oracle Design System Theme ────────────────────────────────────────── */
-@theme {
-  /* Brand colors — Oracle Red primary */
-  --color-oracle-50:  #fff1ef;
-  --color-oracle-100: #ffe0db;
-  --color-oracle-200: #ffc5bc;
-  --color-oracle-300: #ff9d8d;
-  --color-oracle-400: #ff6751;
-  --color-oracle-500: #f83b20;
-  --color-oracle-600: #c74634;  /* Oracle brand red */
-  --color-oracle-700: #a8311f;
-  --color-oracle-800: #8b2919;
-  --color-oracle-900: #73231a;
-  --color-oracle-950: #3f0e0a;
-
-  /* Surface / Dark backgrounds */
-  --color-surface-950: #0a0c11;
-  --color-surface-900: #0f1117;
-  --color-surface-800: #161b27;
-  --color-surface-700: #1e2535;
-  --color-surface-600: #28334a;
-  --color-surface-500: #3a4861;
-
-  /* Text */
-  --color-text-primary:   #f0f2f7;
-  --color-text-secondary: #a0aec0;
-  --color-text-muted:     #64748b;
-
-  /* Status */
-  --color-status-completed:   #22c55e;
-  --color-status-in-progress: #f59e0b;
-  --color-status-not-started: #64748b;
-  --color-status-failed:      #ef4444;
-
+/* ─── Variables System ───────────────────────────────────────────────────── */
+:root {
   /* Typography */
   --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
 
-  /* Radius */
+  /* Brand colors (Constant) */
+  --oracle-50: #fff1ef;
+  --oracle-100: #ffe0db;
+  --oracle-200: #ffc5bc;
+  --oracle-300: #ff9d8d;
+  --oracle-400: #ff6751;
+  --oracle-500: #f83b20;
+  --oracle-600: #c74634;
+  --oracle-700: #a8311f;
+  --oracle-800: #8b2919;
+  --oracle-900: #73231a;
+  --oracle-950: #3f0e0a;
+
+  /* Default (Dark) Theme */
+  --bg-primary: #0a0c11;
+  --bg-secondary: #0f1117;
+  --bg-surface: #161b27;
+  --bg-surface-elevated: #1e2535;
+  --bg-surface-active: #28334a;
+
+  --text-primary: #f0f2f7;
+  --text-secondary: #a0aec0;
+  --text-muted: #64748b;
+
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.2);
+
+  --shadow-elevation: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --glass-bg: rgba(0, 0, 0, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-surface-active: #e2e8f0;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.1);
+
+  --shadow-elevation: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.1);
+}
+
+@theme {
+  --color-oracle-50: var(--oracle-50);
+  --color-oracle-100: var(--oracle-100);
+  --color-oracle-200: var(--oracle-200);
+  --color-oracle-300: var(--oracle-300);
+  --color-oracle-400: var(--oracle-400);
+  --color-oracle-500: var(--oracle-500);
+  --color-oracle-600: var(--oracle-600);
+  --color-oracle-700: var(--oracle-700);
+  --color-oracle-800: var(--oracle-800);
+  --color-oracle-900: var(--oracle-900);
+  --color-oracle-950: var(--oracle-950);
+
+  /* Theme-aware utilities */
+  --color-surface-950: var(--bg-primary);
+  --color-surface-900: var(--bg-secondary);
+  --color-surface-800: var(--bg-surface);
+  --color-surface-700: var(--bg-surface-elevated);
+  --color-surface-600: var(--bg-surface-active);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  /* Elevation and overlays */
+  --shadow-custom: var(--shadow-elevation);
+
+  /* Radius (Constant) */
   --radius-card: 0.75rem;
   --radius-badge: 9999px;
 }
@@ -46,10 +92,11 @@
 @layer base {
   html {
     font-family: var(--font-sans);
-    background-color: var(--color-surface-950);
-    color: var(--color-text-primary);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   * {
@@ -60,13 +107,16 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
-    background: var(--color-surface-900);
+    background: var(--bg-secondary);
   }
+
   ::-webkit-scrollbar-thumb {
-    background: var(--color-surface-600);
+    background: var(--bg-surface-active);
     border-radius: 9999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-oracle-600);
   }
@@ -74,17 +124,20 @@
 
 /* ─── Components ─────────────────────────────────────────────────────────── */
 @layer components {
+
   /* Card */
   .card {
-    background-color: var(--color-surface-800);
-    border: 1px solid var(--color-surface-600);
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--radius-card);
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+    box-shadow: var(--shadow-elevation);
   }
+
   .card:hover {
     border-color: var(--color-oracle-600);
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(199, 70, 52, 0.12);
+    box-shadow: 0 12px 24px -10px rgba(199, 70, 52, 0.25);
   }
 
   /* Badge */
@@ -99,18 +152,22 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
+
   .badge-completed {
     background-color: color-mix(in srgb, var(--color-status-completed) 15%, transparent);
     color: var(--color-status-completed);
   }
+
   .badge-in-progress {
     background-color: color-mix(in srgb, var(--color-status-in-progress) 15%, transparent);
     color: var(--color-status-in-progress);
   }
+
   .badge-not-started {
     background-color: color-mix(in srgb, var(--color-status-not-started) 15%, transparent);
     color: var(--color-status-not-started);
   }
+
   .badge-failed {
     background-color: color-mix(in srgb, var(--color-status-failed) 15%, transparent);
     color: var(--color-status-failed);
@@ -123,6 +180,7 @@
     border-radius: 9999px;
     overflow: hidden;
   }
+
   .progress-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--color-oracle-600), var(--color-oracle-400));
@@ -146,10 +204,12 @@
     transition: background-color 0.15s ease, transform 0.1s ease;
     text-decoration: none;
   }
+
   .btn-primary:hover {
     background-color: var(--color-oracle-700);
     transform: translateY(-1px);
   }
+
   .btn-primary:active {
     transform: translateY(0);
   }
@@ -161,15 +221,16 @@
     gap: 0.5rem;
     padding: 0.55rem 1rem;
     background-color: transparent;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-weight: 500;
     font-size: 0.875rem;
     border-radius: 0.5rem;
-    border: 1px solid var(--color-surface-600);
+    border: 1px solid var(--border-subtle);
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s, background-color 0.15s;
     text-decoration: none;
   }
+
   .btn-ghost:hover {
     color: var(--color-text-primary);
     border-color: var(--color-oracle-600);
@@ -189,7 +250,7 @@
   /* Divider */
   .divider {
     border: none;
-    border-top: 1px solid var(--color-surface-700);
+    border-top: 1px solid var(--border-subtle);
   }
 
   /* Fullscreen Player Styles */

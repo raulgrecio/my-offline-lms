@@ -128,7 +128,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     <div
       ref={containerRef}
       className="relative rounded-xl overflow-hidden group w-full video-player-container"
-      style={{ background: '#000', aspectRatio: '16/9', maxHeight: '70vh' }}
+      style={{ background: 'var(--bg-primary)', aspectRatio: '16/9', maxHeight: '70vh' }}
       onMouseMove={showControlsTemp}
       onClick={() => {
         togglePlay();
