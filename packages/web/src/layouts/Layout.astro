@@ -1,24 +1,26 @@
 ---
-import '../styles/global.css';
-import ThemeToggle from '../components/ThemeToggle';
+import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle";
+import { Icon } from "../components/Icon";
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const { title, description = 'Tu plataforma de aprendizaje offline' } = Astro.props;
+const { title, description = "Tu plataforma de aprendizaje offline" } =
+  Astro.props;
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { href: '/', label: 'Inicio', icon: '🏠' },
-  { href: '/learning-paths', label: 'Learning Paths', icon: '🎓' },
-  { href: '/courses', label: 'Cursos', icon: '📚' },
-  { href: '/settings', label: 'Ajustes', icon: '⚙️' },
-];
+  { href: "/", label: "Inicio", icon: "home" },
+  { href: "/learning-paths", label: "Learning Paths", icon: "layers" },
+  { href: "/courses", label: "Cursos", icon: "book-open" },
+  { href: "/settings", label: "Ajustes", icon: "settings" },
+] as const;
 ---
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -33,12 +35,15 @@ const navLinks = [
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
-      const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.setAttribute('data-theme', theme);
+      const theme =
+        localStorage.getItem("theme") ||
+        (window.matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : "dark");
+      document.documentElement.setAttribute("data-theme", theme);
     </script>
   </head>
   <body class="min-h-screen flex flex-col">
-
     <!-- ─── Top Navigation ─────────────────────────────────────────── -->
     <header
       id="main-header"
@@ -47,36 +52,47 @@ const navLinks = [
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-
           <!-- Logo -->
-          <a href="/" class="flex items-center gap-2 shrink-0" style="text-decoration: none;">
+          <a
+            href="/"
+            class="flex items-center gap-2 shrink-0"
+            style="text-decoration: none;"
+          >
             <div
               class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-              style="background-color: var(--color-oracle-600);"
+              style="background-color: var(--color-brand-600);"
             >
-              LMS
+              <span style="transform: rotate(90deg); display:inline-block;"
+                >0</span
+              >
             </div>
-            <span class="font-semibold hidden sm:block" style="color: var(--color-text-primary);">
+            <span
+              class="font-semibold hidden sm:block"
+              style="color: var(--color-text-primary);"
+            >
               My Offline LMS
             </span>
           </a>
 
           <!-- Desktop Nav -->
           <nav class="hidden md:flex items-center gap-1">
-            {navLinks.map(link => (
-              <a
-                href={link.href}
-                class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150"
-                style={
-                  currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-                    ? 'color: var(--color-oracle-400); background-color: color-mix(in srgb, var(--color-oracle-600) 12%, transparent);'
-                    : 'color: var(--color-text-secondary);'
-                }
-              >
-                <span>{link.icon}</span>
-                {link.label}
-              </a>
-            ))}
+            {
+              navLinks.map((link) => (
+                <a
+                  href={link.href}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150"
+                  style={
+                    currentPath === link.href ||
+                    (link.href !== "/" && currentPath.startsWith(link.href))
+                      ? "color: var(--color-brand-400); background-color: color-mix(in srgb, var(--color-brand-600) 12%, transparent);"
+                      : "color: var(--color-text-secondary);"
+                  }
+                >
+                  <Icon name={link.icon} size="sm" />
+                  {link.label}
+                </a>
+              ))
+            }
           </nav>
 
           <!-- Mobile hamburger + Toggle -->
@@ -84,16 +100,16 @@ const navLinks = [
             <ThemeToggle client:load />
             <button
               id="menu-toggle"
-              class="p-2 rounded-lg"
+              class="p-2 rounded-lg transition-colors hover:bg-[var(--bg-secondary)]"
               style="color: var(--color-text-secondary);"
               aria-label="Abrir menú"
             >
-              <svg id="icon-menu" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-              </svg>
-              <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <div id="icon-menu">
+                <Icon name="menu" size="md" />
+              </div>
+              <div id="icon-close" class="hidden">
+                <Icon name="x" size="md" />
+              </div>
             </button>
           </div>
 
@@ -111,20 +127,23 @@ const navLinks = [
         style="background-color: var(--color-surface-800); border-color: var(--color-surface-700);"
       >
         <nav class="px-4 py-3 flex flex-col gap-1">
-          {navLinks.map(link => (
-            <a
-              href={link.href}
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
-              style={
-                currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-                  ? 'color: var(--color-oracle-400); background-color: color-mix(in srgb, var(--color-oracle-600) 12%, transparent);'
-                  : 'color: var(--color-text-secondary);'
-              }
-            >
-              <span class="text-lg">{link.icon}</span>
-              {link.label}
-            </a>
-          ))}
+          {
+            navLinks.map((link) => (
+              <a
+                href={link.href}
+                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                style={
+                  currentPath === link.href ||
+                  (link.href !== "/" && currentPath.startsWith(link.href))
+                    ? "color: var(--color-brand-400); background-color: color-mix(in srgb, var(--color-brand-600) 12%, transparent);"
+                    : "color: var(--color-text-secondary);"
+                }
+              >
+                <Icon name={link.icon} size="md" />
+                {link.label}
+              </a>
+            ))
+          }
         </nav>
       </div>
     </header>
@@ -139,21 +158,22 @@ const navLinks = [
       class="mt-auto py-6 text-center text-xs"
       style="color: var(--color-text-muted); border-top: 1px solid var(--color-surface-700);"
     >
-      My Offline LMS — contenido descargado y exclusivo para fines educativos y personales
+      My Offline LMS — contenido descargado y exclusivo para fines educativos y
+      personales
     </footer>
 
     <!-- ─── Mobile Menu Script ─────────────────────────────────────── -->
     <script>
-      const toggle = document.getElementById('menu-toggle');
-      const menu = document.getElementById('mobile-menu');
-      const iconMenu = document.getElementById('icon-menu');
-      const iconClose = document.getElementById('icon-close');
+      const toggle = document.getElementById("menu-toggle");
+      const menu = document.getElementById("mobile-menu");
+      const iconMenu = document.getElementById("icon-menu");
+      const iconClose = document.getElementById("icon-close");
 
-      toggle?.addEventListener('click', () => {
-        const isOpen = !menu?.classList.contains('hidden');
-        menu?.classList.toggle('hidden', isOpen);
-        iconMenu?.classList.toggle('hidden', !isOpen);
-        iconClose?.classList.toggle('hidden', isOpen);
+      toggle?.addEventListener("click", () => {
+        const isOpen = !menu?.classList.contains("hidden");
+        menu?.classList.toggle("hidden", isOpen);
+        iconMenu?.classList.toggle("hidden", !isOpen);
+        iconClose?.classList.toggle("hidden", isOpen);
       });
     </script>
   </body>

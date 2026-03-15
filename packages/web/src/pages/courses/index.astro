@@ -3,13 +3,9 @@ export const prerender = false;
 
 import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
-import {
-  getAllCourses,
-  getCourseAssets,
-} from "../../features/courses";
-import {
-  getAllCourseProgress,
-} from "../../features/progress";
+import { Icon } from "../../components/Icon";
+import { getAllCourses, getCourseAssets } from "../../features/courses";
+import { getAllCourseProgress } from "../../features/progress";
 
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();
@@ -26,16 +22,23 @@ const coursesWithStats = courses.map((c) => {
 ---
 
 <Layout title="Cursos">
-  <div class="mb-8">
-    <h1
-      class="text-2xl sm:text-3xl font-bold mb-1"
-      style="color: var(--color-text-primary);"
-    >
-      📚 Cursos
-    </h1>
-    <p class="text-sm" style="color: var(--color-text-secondary);">
-      {courses.length} cursos disponibles
-    </p>
+  <div class="mb-8 flex items-end justify-between">
+    <div>
+      <h1
+        class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2"
+        style="color: var(--text-primary);"
+      >
+        <Icon
+          name="book-open"
+          size="lg"
+          className="text-[var(--color-brand-600)]"
+        />
+        Cursos
+      </h1>
+      <p class="text-sm" style="color: var(--text-secondary);">
+        {courses.length} cursos disponibles
+      </p>
+    </div>
   </div>
 
   {
@@ -51,9 +54,16 @@ const coursesWithStats = courses.map((c) => {
         ))}
       </div>
     ) : (
-      <div class="text-center py-24">
-        <div class="text-5xl mb-4">📭</div>
-        <p style="color: var(--color-text-secondary);">
+      <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
+        <div class="flex justify-center mb-4">
+          <div
+            class="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center"
+            style="color: var(--text-muted);"
+          >
+            <Icon name="inbox" size="xl" />
+          </div>
+        </div>
+        <p style="color: var(--text-secondary);" class="font-medium">
           Sin cursos descargados.
         </p>
       </div>

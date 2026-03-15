@@ -29,7 +29,7 @@ export default function PlayerSettings({ subtitleMode, onChangeSubtitleMode }: P
         >
           Personalizados
           {subtitleMode === 'custom' && (
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-oracle-500)] shadow-[0_0_8px_var(--color-oracle-500)]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] shadow-[0_0_8px_var(--color-brand-500)]" />
           )}
         </button>
         <button
@@ -42,7 +42,7 @@ export default function PlayerSettings({ subtitleMode, onChangeSubtitleMode }: P
         >
           Nativos
           {subtitleMode === 'native' && (
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-oracle-500)] shadow-[0_0_8px_var(--color-oracle-500)]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand-500)] shadow-[0_0_8px_var(--color-brand-500)]" />
           )}
         </button>
       </div>

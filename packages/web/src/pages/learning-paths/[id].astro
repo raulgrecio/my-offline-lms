@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
 import ProgressBadge from "../../components/ProgressBadge.astro";
+import { Icon } from "../../components/Icon";
 import {
   getLearningPathById,
   getCoursesForPath,
@@ -42,13 +43,13 @@ const progress =
       style="color: var(--color-text-muted); text-decoration: none;"
       class="hover:underline">Inicio</a
     >
-    <span>›</span>
+    <Icon name="chevron-right" size="xs" />
     <a
       href="/learning-paths"
       style="color: var(--color-text-muted); text-decoration: none;"
       class="hover:underline">Learning Paths</a
     >
-    <span>›</span>
+    <Icon name="chevron-right" size="xs" />
     <span style="color: var(--color-text-secondary);">{path.title}</span>
   </nav>
 
@@ -56,10 +57,10 @@ const progress =
   <div class="mb-8">
     <div class="flex items-start gap-4 mb-4">
       <div
-        class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-        style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+        class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white"
+        style="background-color: var(--color-brand-600); box-shadow: 0 8px 16px -4px rgba(199, 70, 52, 0.4);"
       >
-        🎓
+        <Icon name="graduation-cap" size="lg" strokeWidth={2.5} />
       </div>
       <div class="flex-1 min-w-0">
         <h1
@@ -100,7 +101,7 @@ const progress =
         >
           Progreso del learning path
         </span>
-        <span class="text-sm font-bold" style="color: var(--color-oracle-400);">
+        <span class="text-sm font-bold" style="color: var(--color-brand-400);">
           {completedCount} / {courses.length} cursos
         </span>
       </div>
@@ -120,7 +121,14 @@ const progress =
 
   <!-- Course list -->
   <div>
-    <h2 class="section-title mb-5">📚 Cursos del path ({courses.length})</h2>
+    <h2 class="section-title mb-5">
+      <Icon
+        name="book-open"
+        size="md"
+        className="text-[var(--color-brand-600)]"
+      />
+      Cursos del path ({courses.length})
+    </h2>
     {
       courses.length > 0 ? (
         <div class="flex flex-col gap-3">

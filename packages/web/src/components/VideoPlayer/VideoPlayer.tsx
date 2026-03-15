@@ -32,6 +32,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [subtitleMode, setSubtitleMode] = useState<SubtitleMode>('custom');
   const [showSettings, setShowSettings] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -48,6 +49,15 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     setSubtitleMode(mode);
     localStorage.setItem('subtitle_mode', mode);
   };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Set initial position
   useEffect(() => {
@@ -224,6 +234,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
 
             {/* Fullscreen */}
             <FullscreenButton
+              isFullscreen={isFullscreen}
               onToggle={() => {
                 const c = containerRef.current;
                 if (!c) return;

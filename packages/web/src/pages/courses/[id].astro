@@ -5,6 +5,7 @@ import { env } from "../../config/env";
 import Layout from '../../layouts/Layout.astro';
 import ProgressBadge from '../../components/ProgressBadge.astro';
 import VideoPlayer from '../../components/VideoPlayer';
+import { Icon } from '../../components/Icon';
 import {
   getCourseById,
   getCourseAssets,
@@ -57,31 +58,30 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 ---
 
 <Layout title={course.title}>
-
   <!-- Breadcrumb -->
-  <nav class="flex items-center gap-2 text-xs mb-6" style="color: var(--color-text-muted);">
-    <a href="/" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Inicio</a>
-    <span>›</span>
-    <a href="/courses" style="color: var(--color-text-muted); text-decoration: none;" class="hover:underline">Cursos</a>
-    <span>›</span>
-    <span style="color: var(--color-text-secondary);">{course.title}</span>
+  <nav class="flex items-center gap-2 text-xs mb-6" style="color: var(--text-muted);">
+    <a href="/" style="color: var(--text-muted); text-decoration: none;" class="hover:underline">Inicio</a>
+    <Icon name="chevron-right" size="xs" />
+    <a href="/courses" style="color: var(--text-muted); text-decoration: none;" class="hover:underline">Cursos</a>
+    <Icon name="chevron-right" size="xs" />
+    <span style="color: var(--text-secondary);">{course.title}</span>
   </nav>
 
   <!-- Course header -->
   <div class="flex flex-col sm:flex-row items-start gap-4 mb-8">
     <div
-      class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-      style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+      class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-105"
+      style="background-color: var(--bg-secondary); color: var(--color-brand-600); border: 1px solid var(--border-subtle);"
     >
-      📚
+      <Icon name="book-open" size="xl" />
     </div>
     <div class="flex-1 min-w-0">
-      <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2" style="color: var(--color-text-primary);">
+      <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2" style="color: var(--text-primary);">
         {course.title}
       </h1>
       <div class="flex items-center gap-3 flex-wrap">
         <ProgressBadge status={courseProgress?.status ?? 'not_started'} />
-        <span class="text-xs" style="color: var(--color-text-muted);">
+        <span class="text-xs" style="color: var(--text-muted);">
           {videos.length} vídeos · {guides.length} guías
         </span>
       </div>
@@ -93,7 +93,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
       class="btn-primary shrink-0 sm:self-start"
       data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
     >
-      {courseProgress?.status === 'completed' ? '✓ Completado' : '✓ Marcar completado'}
+      <Icon name="check-circle" size="sm" />
+      {courseProgress?.status === 'completed' ? 'Completado' : 'Marcar completado'}
     </button>
   </div>
 
@@ -102,10 +103,12 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
   <!-- ─── Videos ──────────────────────────────────────────────────────── -->
   {videos.length > 0 && (
     <section class="mb-10">
-      <h2 class="section-title mb-5">🎬 Vídeos ({videos.length})</h2>
+      <h2 class="section-title mb-5">
+        <Icon name="play" size="md" className="text-[var(--color-brand-600)]" />
+        Vídeos ({videos.length})
+      </h2>
 
       <div class="flex flex-col lg:flex-row gap-6">
-
         <!-- Player panel -->
         <div class="flex-1 min-w-0">
           <div id="player-container">
@@ -120,7 +123,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
               />
             )}
           </div>
-          <p id="player-title" class="text-sm font-medium mt-3" style="color: var(--color-text-secondary);">
+          <p id="player-title" class="text-sm font-medium mt-3" style="color: var(--text-primary);">
             {activeVideo?.metadata?.name ?? ''}
           </p>
         </div>
@@ -128,10 +131,10 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
         <!-- Video list -->
         <div
           class="lg:w-80 xl:w-96 overflow-y-auto rounded-xl"
-          style="background-color: var(--color-surface-800); border: 1px solid var(--color-surface-600); max-height: 400px;"
+          style="background-color: var(--bg-surface); border: 1px solid var(--border-subtle); max-height: 400px; box-shadow: var(--shadow-elevation);"
         >
-          <div class="p-3 border-b text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted); border-color: var(--color-surface-700);">
-            Playlist
+          <div class="p-3 border-b text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-muted); border-color: var(--border-subtle);">
+            Contenido del curso
           </div>
             {videos.map((v, i) => {
               const vp = videoProgressMap.get(v.id);
@@ -139,9 +142,9 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
               const isActive = v.id === activeVideo?.id;
               return (
                 <button
-                  class="video-item w-full text-left flex items-start gap-3 p-3 transition-colors"
-                  style={`border-bottom: 1px solid var(--color-surface-700); cursor: pointer; ${
-                    isActive ? 'background-color: var(--color-surface-700);' : 'background: none;'
+                  class="video-item w-full text-left flex items-start gap-3 p-3 transition-all hover:bg-[var(--bg-secondary)]"
+                  style={`border-bottom: 1px solid var(--border-subtle); cursor: pointer; ${
+                    isActive ? 'background-color: var(--bg-surface-active);' : 'background: none;'
                   }`}
                   data-src={localUrl(v.localPath!)}
                   data-asset-id={v.id}
@@ -150,20 +153,21 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                   data-position={vp?.positionSec ?? 0}
                 >
                 <div
-                  class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5"
+                  class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
                   style={isDone
-                    ? 'background-color: color-mix(in srgb, var(--color-status-completed) 20%, transparent); color: var(--color-status-completed);'
-                    : 'background-color: var(--color-surface-700); color: var(--color-text-muted);'}
+                    ? 'background-color: var(--color-brand-600); color: white;'
+                    : 'background-color: var(--bg-surface-active); color: var(--text-muted);'}
                 >
-                  {isDone ? '✓' : i + 1}
+                  {isDone ? <Icon name="check-circle" size="xs" strokeWidth={3} /> : i + 1}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs leading-snug line-clamp-2" style="color: var(--color-text-secondary);">
+                  <p class="text-xs leading-snug line-clamp-2 transition-colors" style={isActive ? 'color: var(--text-primary); font-weight: 600;' : 'color: var(--text-secondary);'}>
                     {v.metadata?.name ?? `Vídeo ${i + 1}`}
                   </p>
                   {vp && !vp.completed && vp.positionSec > 0 && (
-                    <p class="text-xs mt-0.5" style="color: var(--color-oracle-400);">
-                      ⏸ {Math.floor(vp.positionSec / 60)}:{String(Math.floor(vp.positionSec % 60)).padStart(2,'0')}
+                    <p class="text-[10px] mt-1 flex items-center gap-1 font-semibold" style="color: var(--color-brand-600);">
+                      <Icon name="play" size="xs" />
+                      Continuar: {Math.floor(vp.positionSec / 60)}:{String(Math.floor(vp.positionSec % 60)).padStart(2,'0')}
                     </p>
                   )}
                 </div>
@@ -177,8 +181,11 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 
   <!-- ─── Guides ──────────────────────────────────────────────────────── -->
   {guides.length > 0 && (
-    <section>
-      <h2 class="section-title mb-5">📄 Guías ({guides.length})</h2>
+    <section class="mb-10">
+      <h2 class="section-title mb-5">
+        <Icon name="file-text" size="md" className="text-[var(--color-brand-600)]" />
+        Guías ({guides.length})
+      </h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {guides.map((g, i) => (
           <a
@@ -189,16 +196,19 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             style="text-decoration: none;"
           >
             <div
-              class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-              style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent);"
+              class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+              style="background-color: var(--bg-secondary); color: var(--color-brand-600); border: 1px solid var(--border-subtle);"
             >
-              📄
+              <Icon name="file-text" size="md" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium line-clamp-2" style="color: var(--color-text-primary);">
+              <p class="text-sm font-medium line-clamp-2" style="color: var(--text-primary);">
                 {g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
               </p>
-              <span class="text-xs" style="color: var(--color-text-muted);">PDF</span>
+              <div class="flex items-center gap-1.5 mt-1">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-secondary)]" style="color: var(--text-muted);">PDF</span>
+                <span class="text-[10px]" style="color: var(--text-muted);">Ver guía</span>
+              </div>
             </div>
           </a>
         ))}
@@ -207,17 +217,19 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
   )}
 
   {videos.length === 0 && guides.length === 0 && (
-    <div class="text-center py-16">
-      <div class="text-4xl mb-3">⏳</div>
-      <p style="color: var(--color-text-secondary);">Sin assets descargados para este curso.</p>
+    <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
+      <div class="flex justify-center mb-4">
+        <div class="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center" style="color: var(--text-muted);">
+          <Icon name="inbox" size="xl" />
+        </div>
+      </div>
+      <p style="color: var(--text-secondary);" class="font-medium text-sm">Sin assets descargados para este curso.</p>
     </div>
   )}
 </Layout>
 
 <script>
   // ─── Video playlist switching ────────────────────────────────────────────
-  // Since VideoPlayer is a React island, we reload Astro to switch videos
-  // (full page nav with query param is clean enough for local SSR)
   document.querySelectorAll<HTMLButtonElement>('.video-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const assetId = btn.dataset.assetId!;

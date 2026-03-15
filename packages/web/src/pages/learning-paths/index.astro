@@ -1,16 +1,13 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import LearningPathCard from "../../components/LearningPathCard.astro";
+import { Icon } from "../../components/Icon";
 import {
   getAllLearningPaths,
   getCoursesForPath,
 } from "../../features/learning-paths";
-import {
-  getAllCourseProgress,
-} from "../../features/progress";
-import {
-  getActiveLearningPath,
-} from "../../features/settings";
+import { getAllCourseProgress } from "../../features/progress";
+import { getActiveLearningPath } from "../../features/settings";
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();
@@ -27,16 +24,23 @@ const lpStats = learningPaths.map((lp) => {
 ---
 
 <Layout title="Learning Paths">
-  <div class="mb-8">
-    <h1
-      class="text-2xl sm:text-3xl font-bold mb-1"
-      style="color: var(--color-text-primary);"
-    >
-      🎓 Learning Paths
-    </h1>
-    <p class="text-sm" style="color: var(--color-text-secondary);">
-      {lpStats.length} paths disponibles
-    </p>
+  <div class="mb-8 flex items-end justify-between">
+    <div>
+      <h1
+        class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2"
+        style="color: var(--text-primary);"
+      >
+        <Icon
+          name="layers"
+          size="lg"
+          className="text-[var(--color-brand-600)]"
+        />
+        Learning Paths
+      </h1>
+      <p class="text-sm" style="color: var(--text-secondary);">
+        {lpStats.length} paths disponibles
+      </p>
+    </div>
   </div>
 
   {
@@ -54,9 +58,16 @@ const lpStats = learningPaths.map((lp) => {
         ))}
       </div>
     ) : (
-      <div class="text-center py-24">
-        <div class="text-5xl mb-4">📭</div>
-        <p style="color: var(--color-text-secondary);">
+      <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
+        <div class="flex justify-center mb-4">
+          <div
+            class="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center"
+            style="color: var(--text-muted);"
+          >
+            <Icon name="inbox" size="xl" />
+          </div>
+        </div>
+        <p style="color: var(--text-secondary);" class="font-medium">
           Sin learning paths descargados.
         </p>
       </div>

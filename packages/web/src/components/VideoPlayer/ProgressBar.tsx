@@ -14,10 +14,10 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
       value={currentTime}
       onChange={onSeek}
       className="w-full mb-2"
-      style={{ 
-        accentColor: 'var(--color-oracle-600)', 
-        height: '3px', 
-        cursor: 'pointer' 
+      style={{
+        accentColor: 'var(--color-brand-600)',
+        height: '3px',
+        cursor: 'pointer'
       }}
       aria-label="Barra de progreso"
     />

@@ -1,3 +1,5 @@
+import { Icon } from '../Icon';
+
 export interface PlayPauseButtonProps {
   isPlaying: boolean;
   onToggle: () => void;
@@ -11,13 +13,9 @@ export default function PlayPauseButton({ isPlaying, onToggle }: PlayPauseButton
       aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
     >
       {isPlaying ? (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-        </svg>
+        <Icon name="pause" size="sm" fill="currentColor" />
       ) : (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-          <path d="M8 5v14l11-7z" />
-        </svg>
+        <Icon name="play" size="sm" fill="currentColor" />
       )}
     </button>
   );

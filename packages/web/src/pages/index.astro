@@ -2,21 +2,17 @@
 import Layout from "../layouts/Layout.astro";
 import LearningPathCard from "../components/LearningPathCard.astro";
 import CourseCard from "../components/CourseCard.astro";
+import { Icon } from "../components/Icon";
 import {
   getAllLearningPaths,
   getCoursesForPath,
 } from "../features/learning-paths";
-import {
-  getAllCourses,
-  getCourseById,
-} from "../features/courses";
+import { getAllCourses, getCourseById } from "../features/courses";
 import {
   getAllCourseProgress,
   getLastWatchedAsset,
 } from "../features/progress";
-import {
-  getActiveLearningPath,
-} from "../features/settings";
+import { getActiveLearningPath } from "../features/settings";
 
 const learningPaths = getAllLearningPaths();
 const courses = getAllCourses();
@@ -51,19 +47,19 @@ let lastWatchedCourse = lastWatched
       <section class="mb-10">
         <div
           class="rounded-xl overflow-hidden"
-          style="background: linear-gradient(135deg, var(--color-surface-800) 0%, color-mix(in srgb, var(--color-oracle-600) 8%, var(--color-surface-800)) 100%); border: 1px solid color-mix(in srgb, var(--color-oracle-600) 25%, transparent);"
+          style="background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-elevation);"
         >
           <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div
-              class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-              style="background-color: color-mix(in srgb, var(--color-oracle-600) 20%, transparent);"
+              class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
+              style="background-color: var(--color-brand-600); color: white; box-shadow: 0 8px 16px -4px rgba(199, 70, 52, 0.4);"
             >
-              ▶
+              <Icon name="play" size="lg" strokeWidth={3} />
             </div>
             <div class="flex-1 min-w-0">
               <div
                 class="text-xs font-semibold uppercase tracking-widest mb-1"
-                style="color: var(--color-oracle-400);"
+                style="color: var(--color-brand-400);"
               >
                 Continuar viendo
               </div>
@@ -81,9 +77,14 @@ let lastWatchedCourse = lastWatched
             </div>
             <a
               href={`/courses/${lastWatched.courseId}`}
-              class="btn-primary shrink-0"
+              class="btn-primary shrink-0 group"
             >
-              Continuar →
+              Continuar
+              <Icon
+                name="chevron-right"
+                size="xs"
+                className="transition-transform group-hover:translate-x-1"
+              />
             </a>
           </div>
         </div>
@@ -96,9 +97,21 @@ let lastWatchedCourse = lastWatched
     lpStats.length > 0 && (
       <section class="mb-10">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="section-title">🎓 Learning Paths</h2>
-          <a href="/learning-paths" class="btn-ghost text-xs">
-            Ver todos →
+          <h2 class="section-title">
+            <Icon
+              name="layers"
+              size="md"
+              className="text-[var(--color-brand-600)]"
+            />
+            Learning Paths
+          </h2>
+          <a href="/learning-paths" class="btn-ghost text-xs group">
+            Ver todos
+            <Icon
+              name="chevron-right"
+              size="xs"
+              className="transition-transform group-hover:translate-x-1"
+            />
           </a>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -122,9 +135,21 @@ let lastWatchedCourse = lastWatched
     courses.length > 0 && (
       <section>
         <div class="flex items-center justify-between mb-5">
-          <h2 class="section-title">📚 Todos los cursos</h2>
-          <a href="/courses" class="btn-ghost text-xs">
-            Ver todos →
+          <h2 class="section-title">
+            <Icon
+              name="book-open"
+              size="md"
+              className="text-[var(--color-brand-600)]"
+            />
+            Todos los cursos
+          </h2>
+          <a href="/courses" class="btn-ghost text-xs group">
+            Ver todos
+            <Icon
+              name="chevron-right"
+              size="xs"
+              className="transition-transform group-hover:translate-x-1"
+            />
           </a>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -136,13 +161,16 @@ let lastWatchedCourse = lastWatched
             />
           ))}
         </div>
-        {courses.length > 8 && (
-          <div class="mt-4 text-center">
-            <a href="/courses" class="btn-ghost">
-              Ver los {courses.length} cursos →
-            </a>
-          </div>
-        )}
+        <div class="mt-4 text-center">
+          <a href="/courses" class="btn-ghost group">
+            Ver los {courses.length} cursos
+            <Icon
+              name="chevron-right"
+              size="sm"
+              className="transition-transform group-hover:translate-x-1"
+            />
+          </a>
+        </div>
       </section>
     )
   }
@@ -150,15 +178,19 @@ let lastWatchedCourse = lastWatched
   <!-- Empty state -->
   {
     courses.length === 0 && learningPaths.length === 0 && (
-      <div class="text-center py-24">
-        <div class="text-5xl mb-4">📭</div>
-        <h2
-          class="text-xl font-bold mb-2"
-          style="color: var(--color-text-primary);"
-        >
+      <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
+        <div class="flex justify-center mb-4">
+          <div
+            class="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center"
+            style="color: var(--text-muted);"
+          >
+            <Icon name="inbox" size="xl" />
+          </div>
+        </div>
+        <h2 class="text-xl font-bold mb-2" style="color: var(--text-primary);">
           Sin contenido descargado
         </h2>
-        <p class="text-sm" style="color: var(--color-text-secondary);">
+        <p class="text-sm" style="color: var(--text-secondary);">
           Ejecuta el scraper para descargar cursos y learning paths.
         </p>
       </div>
