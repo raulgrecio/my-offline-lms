@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import { env } from "../../config/env";
 import Layout from '../../layouts/Layout.astro';
 import ProgressBadge from '../../components/ProgressBadge.astro';
 import VideoPlayer from '../../components/VideoPlayer';
@@ -50,9 +51,9 @@ function localUrl(localPath: string): string {
 
 function subtitleUrl(videoLocalPath: string): string | undefined {
   const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
-  // Check if .vtt sibling exists — we just pass it; the player handles missing gracefully
-  return `/local-asset?path=${encodeURIComponent(base + '.vtt')}`;
-}
+  const subtitlePath = `${base}.${env.SUBTITLE_LANGUAGE}.vtt`;
+  return `/local-asset?path=${encodeURIComponent(subtitlePath)}`;
+} 
 ---
 
 <Layout title={course.title}>
