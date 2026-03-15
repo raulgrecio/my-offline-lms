@@ -21,12 +21,12 @@ if (!course) return Astro.redirect('/courses');
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
-  .filter(a => a.type === 'video' && a.status === 'COMPLETED' && a.localPath)
-  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+.filter(a => a.type === 'video' && a.status === 'COMPLETED' && a.localPath)
+.sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const guides = allAssets
-  .filter(a => a.type === 'guide' && a.status === 'COMPLETED' && a.localPath)
-  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+.filter(a => a.type === 'guide' && a.status === 'COMPLETED' && a.localPath)
+.sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const courseProgress = getCourseProgress(id);
 
@@ -35,8 +35,11 @@ const videoProgressMap = new Map(
   videos.map(v => [v.id, getVideoProgress(v.id)])
 );
 
-// Find the first video
-const _firstVideoId = videos[0]?.id ?? null;
+// Find the active video
+const videoId = Astro.url.searchParams.get('v');
+const activeVideo = videoId
+  ? (videos.find(v => v.id === videoId) || videos[0])
+  : videos[0];
 
 // Generate file:// URL for local assets
 function localUrl(localPath: string): string {
@@ -105,19 +108,19 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
         <!-- Player panel -->
         <div class="flex-1 min-w-0">
           <div id="player-container">
-            {videos[0] && (
+            {activeVideo && (
               <VideoPlayer
                 client:load
-                assetId={videos[0].id}
-                src={localUrl(videos[0].localPath!)}
-                title={videos[0].metadata?.name ?? videos[0].id}
-                subtitleSrc={subtitleUrl(videos[0].localPath!)}
-                initialPosition={videoProgressMap.get(videos[0].id)?.positionSec ?? 0}
+                assetId={activeVideo.id}
+                src={localUrl(activeVideo.localPath!)}
+                title={activeVideo.metadata?.name ?? activeVideo.id}
+                subtitleSrc={subtitleUrl(activeVideo.localPath!)}
+                initialPosition={videoProgressMap.get(activeVideo.id)?.positionSec ?? 0}
               />
             )}
           </div>
           <p id="player-title" class="text-sm font-medium mt-3" style="color: var(--color-text-secondary);">
-            {videos[0]?.metadata?.name ?? ''}
+            {activeVideo?.metadata?.name ?? ''}
           </p>
         </div>
 
@@ -129,19 +132,22 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
           <div class="p-3 border-b text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-muted); border-color: var(--color-surface-700);">
             Playlist
           </div>
-          {videos.map((v, i) => {
-            const vp = videoProgressMap.get(v.id);
-            const isDone = vp?.completed;
-            return (
-              <button
-                class="video-item w-full text-left flex items-start gap-3 p-3 transition-colors"
-                style={`border-bottom: 1px solid var(--color-surface-700); background: none; cursor: pointer;`}
-                data-src={localUrl(v.localPath!)}
-                data-asset-id={v.id}
-                data-title={v.metadata?.name ?? v.id}
-                data-subtitle={subtitleUrl(v.localPath!)}
-                data-position={vp?.positionSec ?? 0}
-              >
+            {videos.map((v, i) => {
+              const vp = videoProgressMap.get(v.id);
+              const isDone = vp?.completed;
+              const isActive = v.id === activeVideo?.id;
+              return (
+                <button
+                  class="video-item w-full text-left flex items-start gap-3 p-3 transition-colors"
+                  style={`border-bottom: 1px solid var(--color-surface-700); cursor: pointer; ${
+                    isActive ? 'background-color: var(--color-surface-700);' : 'background: none;'
+                  }`}
+                  data-src={localUrl(v.localPath!)}
+                  data-asset-id={v.id}
+                  data-title={v.metadata?.name ?? v.id}
+                  data-subtitle={subtitleUrl(v.localPath!)}
+                  data-position={vp?.positionSec ?? 0}
+                >
                 <div
                   class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5"
                   style={isDone
