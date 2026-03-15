@@ -1,6 +1,6 @@
 import { type Asset, type IDatabase } from "@my-offline-lms/core";
 
-import type { CourseProgress } from "../domain/model/CourseProgress";
+import type { CourseProgress, CourseStatusType } from "../domain/model/CourseProgress";
 import type { VideoProgress } from "../domain/model/VideoProgress";
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 
@@ -95,7 +95,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
 
   markCourseStatus(
     courseId: string,
-    status: CourseProgress["status"],
+    status: CourseStatusType,
   ): void {
     this.db
       .prepare(

@@ -1,15 +1,22 @@
 ---
-import ProgressBadge from './ProgressBadge.astro';
+import type { CourseStatusType } from "src/features/progress/domain/model/CourseProgress";
+import ProgressBadge from "./ProgressBadge.astro";
 
 interface Props {
   id: string;
   title: string;
-  status?: 'not_started' | 'in_progress' | 'completed';
+  status?: CourseStatusType;
   orderIndex?: number;
   assetCount?: number;
 }
 
-const { id, title, status = 'not_started', orderIndex, assetCount } = Astro.props;
+const {
+  id,
+  title,
+  status = "not_started",
+  orderIndex,
+  assetCount,
+} = Astro.props;
 ---
 
 <a
@@ -22,7 +29,7 @@ const { id, title, status = 'not_started', orderIndex, assetCount } = Astro.prop
     class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
     style="background-color: color-mix(in srgb, var(--color-oracle-600) 15%, transparent); color: var(--color-oracle-400);"
   >
-    {orderIndex !== undefined ? orderIndex : '📚'}
+    {orderIndex !== undefined ? orderIndex : "📚"}
   </div>
 
   <!-- Title + badge -->
@@ -35,11 +42,13 @@ const { id, title, status = 'not_started', orderIndex, assetCount } = Astro.prop
     </h4>
     <div class="flex items-center gap-2 flex-wrap">
       <ProgressBadge status={status} />
-      {assetCount !== undefined && (
-        <span class="text-xs" style="color: var(--color-text-muted);">
-          {assetCount} assets
-        </span>
-      )}
+      {
+        assetCount !== undefined && (
+          <span class="text-xs" style="color: var(--color-text-muted);">
+            {assetCount} assets
+          </span>
+        )
+      }
     </div>
   </div>
 

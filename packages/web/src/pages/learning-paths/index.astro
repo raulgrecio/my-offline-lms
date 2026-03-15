@@ -3,10 +3,14 @@ import Layout from "../../layouts/Layout.astro";
 import LearningPathCard from "../../components/LearningPathCard.astro";
 import {
   getAllLearningPaths,
-  getAllCourseProgress,
   getCoursesForPath,
+} from "../../features/learning-paths";
+import {
+  getAllCourseProgress,
+} from "../../features/progress";
+import {
   getActiveLearningPath,
-} from "../../lib";
+} from "../../features/settings";
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();

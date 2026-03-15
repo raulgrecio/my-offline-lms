@@ -4,13 +4,19 @@ import LearningPathCard from "../components/LearningPathCard.astro";
 import CourseCard from "../components/CourseCard.astro";
 import {
   getAllLearningPaths,
-  getAllCourses,
-  getAllCourseProgress,
   getCoursesForPath,
-  getLastWatchedAsset,
-  getActiveLearningPath,
+} from "../features/learning-paths";
+import {
+  getAllCourses,
   getCourseById,
-} from "../lib";
+} from "../features/courses";
+import {
+  getAllCourseProgress,
+  getLastWatchedAsset,
+} from "../features/progress";
+import {
+  getActiveLearningPath,
+} from "../features/settings";
 
 const learningPaths = getAllLearningPaths();
 const courses = getAllCourses();

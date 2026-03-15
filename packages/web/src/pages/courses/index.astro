@@ -5,9 +5,11 @@ import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
 import {
   getAllCourses,
-  getAllCourseProgress,
   getCourseAssets,
-} from "../../lib";
+} from "../../features/courses";
+import {
+  getAllCourseProgress,
+} from "../../features/progress";
 
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();

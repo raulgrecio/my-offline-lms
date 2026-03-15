@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { updateVideoProgress } from '../../../lib';
+import { updateVideoProgress } from '../../../features/progress';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

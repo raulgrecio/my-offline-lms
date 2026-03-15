@@ -7,9 +7,11 @@ import VideoPlayer from '../../components/VideoPlayer';
 import {
   getCourseById,
   getCourseAssets,
+} from "../../features/courses";
+import {
   getCourseProgress,
   getVideoProgress,
-} from '../../lib';
+} from "../../features/progress";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/courses');
