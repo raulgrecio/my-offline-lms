@@ -12,6 +12,7 @@ export * from './database/schema';
 export * from './filesystem/IFileSystem';
 export * from './filesystem/NodeFileSystem';
 export * from './filesystem/AssetPathResolver';
+export * from './filesystem/MimeTypes';
 
 export * from './logging/ILogger';
 export * from './logging/ConsoleLogger';

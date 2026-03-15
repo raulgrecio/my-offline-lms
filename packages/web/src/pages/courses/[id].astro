@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import Layout from '../../layouts/Layout.astro';
 import ProgressBadge from '../../components/ProgressBadge.astro';
 import VideoPlayer from '../../components/VideoPlayer';
@@ -7,9 +9,7 @@ import {
   getCourseAssets,
   getCourseProgress,
   getVideoProgress,
-} from '../../lib/db';
-
-export const prerender = false;
+} from '../../lib';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/courses');

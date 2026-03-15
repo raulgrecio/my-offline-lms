@@ -1,9 +1,8 @@
 import fs from 'fs';
 
-import { DATA_DIR, DB_PATH } from '@config/paths';
-
 import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core';
 
+import { DATA_DIR, DB_PATH } from '@config/paths';
 
 export const db = new SQLiteDatabase(DB_PATH, { verbose: console.log });
 

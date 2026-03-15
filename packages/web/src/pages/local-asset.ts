@@ -4,22 +4,8 @@ import type { APIRoute } from 'astro';
 import fs from 'fs';
 import path from 'path';
 
-import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core';
-
-const MONOREPO_ROOT = path.resolve(process.cwd(), "..", "..");
-const CONFIG_PATH = path.join(MONOREPO_ROOT, "data", "asset-paths.json");
-
-const MIME_MAP: Record<string, string> = {
-  '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
-  '.mkv': 'video/x-matroska',
-  '.pdf': 'application/pdf',
-  '.vtt': 'text/vtt',
-  '.srt': 'text/plain',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-};
+import { AssetPathResolver, NodeFileSystem, getMimeType } from '@my-offline-lms/core';
+import { CONFIG_PATH, MONOREPO_ROOT } from '../config/paths';
 
 const fsAdapter = new NodeFileSystem();
 const resolver = new AssetPathResolver({
@@ -43,7 +29,7 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   const ext = path.extname(resolved).toLowerCase();
-  const mimeType = MIME_MAP[ext] ?? 'application/octet-stream';
+  const mimeType = getMimeType(ext);
 
   try {
     const stat = fs.statSync(resolved);

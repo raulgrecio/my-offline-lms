@@ -1,7 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { setActiveLearningPath } from '../../../lib/db';
+
+import { setActiveLearningPath } from '../../../lib';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
