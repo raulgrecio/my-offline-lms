@@ -6,25 +6,42 @@ import {
   getAllLearningPaths,
   getCoursesForPath,
 } from "../../features/learning-paths";
+import { getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 import { getActiveLearningPath } from "../../features/settings";
+
+const showAll = Astro.url.searchParams.get("all") === "true";
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();
 const activePathId = getActiveLearningPath();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p.status]));
 
-const lpStats = learningPaths.map((lp) => {
-  const lpCourses = getCoursesForPath(lp.id);
-  const completed = lpCourses.filter(
-    (c) => progressMap.get(c.id) === "completed"
-  ).length;
-  return { ...lp, courseCount: lpCourses.length, completedCount: completed };
-});
+const lpStats = learningPaths
+  .map((lp) => {
+    const lpCourses = getCoursesForPath(lp.id);
+    const completed = lpCourses.filter(
+      (c) => progressMap.get(c.id) === "completed"
+    ).length;
+
+    // Calculate asset count for the path
+    const totalAssets = lpCourses.reduce((acc, course) => {
+      const assets = getCourseAssets(course.id);
+      return acc + assets.filter((a) => a.status === "COMPLETED").length;
+    }, 0);
+
+    return {
+      ...lp,
+      courseCount: lpCourses.length,
+      completedCount: completed,
+      assetCount: totalAssets,
+    };
+  })
+  .filter((lp) => showAll || lp.assetCount > 0);
 ---
 
 <Layout title="Learning Paths">
-  <div class="mb-8 flex items-end justify-between">
+  <div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
     <div>
       <h1
         class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2 text-text-primary"
@@ -37,9 +54,17 @@ const lpStats = learningPaths.map((lp) => {
         Learning Paths
       </h1>
       <p class="text-sm text-text-secondary">
-        {lpStats.length} paths disponibles
+        {lpStats.length} de {learningPaths.length} paths disponibles
       </p>
     </div>
+
+    <a
+      href={showAll ? "/learning-paths" : "/learning-paths?all=true"}
+      class="btn-ghost text-xs group flex items-center gap-2"
+    >
+      <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
+      {showAll ? "Ocultar vacíos" : "Ver todos"}
+    </a>
   </div>
 
   {

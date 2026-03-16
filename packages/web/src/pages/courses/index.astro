@@ -7,22 +7,26 @@ import { Icon } from "../../components/Icon";
 import { getAllCourses, getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 
+const showAll = Astro.url.searchParams.get("all") === "true";
+
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p.status]));
 
-const coursesWithStats = courses.map((c) => {
-  const assets = getCourseAssets(c.id);
-  return {
-    ...c,
-    status: progressMap.get(c.id) ?? "not_started",
-    assetCount: assets.filter((a) => a.status === "COMPLETED").length,
-  };
-});
+const coursesWithStats = courses
+  .map((c) => {
+    const assets = getCourseAssets(c.id);
+    return {
+      ...c,
+      status: progressMap.get(c.id) ?? "not_started",
+      assetCount: assets.filter((a) => a.status === "COMPLETED").length,
+    };
+  })
+  .filter((c) => showAll || c.assetCount > 0);
 ---
 
 <Layout title="Cursos">
-  <div class="mb-8 flex items-end justify-between">
+  <div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
     <div>
       <h1
         class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2 text-text-primary"
@@ -35,9 +39,17 @@ const coursesWithStats = courses.map((c) => {
         Cursos
       </h1>
       <p class="text-sm text-text-secondary">
-        {courses.length} cursos disponibles
+        {coursesWithStats.length} de {courses.length} cursos disponibles
       </p>
     </div>
+
+    <a
+      href={showAll ? "/courses" : "/courses?all=true"}
+      class="btn-ghost text-xs group flex items-center gap-2"
+    >
+      <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
+      {showAll ? "Ocultar vacíos" : "Ver todos"}
+    </a>
   </div>
 
   {
