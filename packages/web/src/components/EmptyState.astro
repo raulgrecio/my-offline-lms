@@ -3,11 +3,12 @@ import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
 
 interface Props {
+  title?: string;
   message: string;
   icon?: IconName;
 }
 
-const { message, icon = "inbox" } = Astro.props;
+const { title, message, icon = "inbox" } = Astro.props;
 ---
 
 <div
@@ -20,6 +21,13 @@ const { message, icon = "inbox" } = Astro.props;
       <Icon name={icon} size="xl" />
     </div>
   </div>
+  {
+    title && (
+      <h2 class="text-lg font-medium text-text-primary mb-2">
+        {title}
+      </h2>
+    )
+  }
   <p class="font-medium text-text-secondary">
     {message}
   </p>

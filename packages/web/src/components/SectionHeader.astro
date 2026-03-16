@@ -3,15 +3,16 @@ import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
 
 interface Props {
+  id?: string;
   title: string;
   icon: IconName;
-  href: string;
+  href?: string;
 }
 
-const { title, icon, href } = Astro.props;
+const { id, title, icon, href } = Astro.props;
 ---
 
-<div class="flex items-center justify-between mb-5">
+<div id={id} class="flex items-center justify-between mb-5">
   <h2 class="section-title">
     <Icon
       name={icon}
@@ -20,6 +21,7 @@ const { title, icon, href } = Astro.props;
     />
     {title}
   </h2>
+  { href && (
   <a href={href} class="btn-ghost text-xs group">
     Ver más
     <Icon
@@ -28,4 +30,5 @@ const { title, icon, href } = Astro.props;
       className="transition-transform group-hover:translate-x-1"
     />
   </a>
+  )}
 </div>
