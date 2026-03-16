@@ -4,7 +4,7 @@ import type { CourseStatusType } from "../domain/model/CourseProgress";
 export class MarkCourseStatus {
   constructor(private progressRepo: IProgressRepository) { }
 
-  execute(courseId: string, status: CourseStatusType): void {
-    this.progressRepo.markCourseStatus(courseId, status);
+  execute({ courseId, status }: { courseId: string, status: CourseStatusType }): void {
+    this.progressRepo.markCourseStatus({ courseId, status });
   }
 }

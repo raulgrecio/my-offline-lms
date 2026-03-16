@@ -26,13 +26,11 @@ if (!course) return Astro.redirect('/courses');
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
-  .filter((a): a is VideoAsset => a.type === 'video')
-  .filter(a => a.status === 'COMPLETED' && !!a.localPath)
+  .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const guides = allAssets
-  .filter((a): a is GuideAsset => a.type === 'guide')
-  .filter(a => a.status === 'COMPLETED' && !!a.localPath)
+  .filter((a): a is GuideAsset => a.type === 'guide' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const courseProgress = getCourseProgress(id);

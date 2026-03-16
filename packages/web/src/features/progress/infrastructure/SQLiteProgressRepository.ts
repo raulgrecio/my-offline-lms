@@ -74,11 +74,11 @@ export class SQLiteProgressRepository implements IProgressRepository {
     };
   }
 
-  updateVideoProgress(
-    assetId: string,
-    positionSec: number,
+  updateVideoProgress({
+    assetId,
+    positionSec,
     completed = false,
-  ): void {
+  }: { assetId: string; positionSec: number; completed?: boolean }): void {
     this.db
       .prepare(
         `
@@ -93,10 +93,10 @@ export class SQLiteProgressRepository implements IProgressRepository {
       .run(assetId, positionSec, completed ? 1 : 0);
   }
 
-  markCourseStatus(
-    courseId: string,
-    status: CourseStatusType,
-  ): void {
+  markCourseStatus({
+    courseId,
+    status,
+  }: { courseId: string, status: CourseStatusType }): void {
     this.db
       .prepare(
         `

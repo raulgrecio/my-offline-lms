@@ -8,6 +8,6 @@ export interface IProgressRepository {
   getCourseProgress(courseId: string): CourseProgress | null;
   getAllCourseProgress(): CourseProgress[];
   getLastWatchedAsset(): (Asset & { positionSec: number }) | null;
-  updateVideoProgress(assetId: string, positionSec: number, completed?: boolean): void;
-  markCourseStatus(courseId: string, status: CourseStatusType): void;
+  updateVideoProgress({ assetId, positionSec, completed }: { assetId: string; positionSec: number; completed?: boolean }): void;
+  markCourseStatus({ courseId, status }: { courseId: string, status: CourseStatusType }): void;
 }

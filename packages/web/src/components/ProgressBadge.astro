@@ -1,6 +1,11 @@
 ---
+import type { AssetStatus } from "@core/domain/models/Asset";
+import type { CourseStatusType } from "../features/progress/domain/model/CourseProgress";
+
+type StatusType = CourseStatusType | AssetStatus;
+
 interface Props {
-  status: 'not_started' | 'in_progress' | 'completed' | 'COMPLETED' | 'FAILED' | 'PENDING' | 'DOWNLOADING';
+  status: StatusType
 }
 
 const { status } = Astro.props;

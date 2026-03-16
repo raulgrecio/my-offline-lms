@@ -15,7 +15,11 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    updateVideoProgress(String(assetId), Number(positionSec), Boolean(completed));
+    updateVideoProgress({
+      assetId: String(assetId), 
+      positionSec: Number(positionSec), 
+      completed: Boolean(completed)
+    });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

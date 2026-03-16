@@ -4,7 +4,7 @@ import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 export class GetVideoProgress {
   constructor(private progressRepo: IProgressRepository) {}
 
-  execute(assetId: string): VideoProgress | null {
+  execute({assetId}: {assetId: string}): VideoProgress | null {
     return this.progressRepo.getVideoProgress(assetId);
   }
 }

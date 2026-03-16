@@ -10,5 +10,5 @@ const getCourseDetails = new GetCourseDetails(repo);
 
 // 2. Public API
 export const getAllCourses = () => getCourseListing.execute();
-export const getCourseById = (id: string) => getCourseDetails.execute(id)?.course ?? null;
-export const getCourseAssets = (courseId: string) => getCourseDetails.execute(courseId)?.assets ?? [];
+export const getCourseById = (courseId: string) => getCourseDetails.execute({ courseId })?.course ?? null;
+export const getCourseAssets = (courseId: string) => getCourseDetails.execute({ courseId })?.assets ?? [];

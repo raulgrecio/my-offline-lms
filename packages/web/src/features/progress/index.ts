@@ -16,12 +16,12 @@ const getDashboardStatus = new GetDashboardStatus(repo);
 const markCourseStatusUC = new MarkCourseStatus(repo);
 
 // 2. Public API
-export const updateVideoProgress = (assetId: string, pos: number, comp?: boolean) =>
-  updateVideoProgressUC.execute(assetId, pos, comp);
+export const updateVideoProgress = ({ assetId, positionSec, completed }: { assetId: string; positionSec: number; completed?: boolean }) =>
+  updateVideoProgressUC.execute({ assetId, positionSec, completed });
 
-export const getVideoProgress = (assetId: string) => getVideoProgressUC.execute(assetId);
-export const getCourseProgress = (courseId: string) => getCourseProgressUC.execute(courseId);
+export const getVideoProgress = (assetId: string) => getVideoProgressUC.execute({assetId});
+export const getCourseProgress = (courseId: string) => getCourseProgressUC.execute({courseId});
 export const getAllCourseProgress = () => getDashboardStatus.execute().allProgress;
 export const getLastWatchedAsset = () => getDashboardStatus.execute().lastWatched;
-export const markCourseStatus = (courseId: string, status: CourseStatusType) =>
-  markCourseStatusUC.execute(courseId, status);
+export const markCourseStatus = ({ courseId, status }: { courseId: string, status: CourseStatusType }) =>
+  markCourseStatusUC.execute({ courseId, status });

@@ -10,5 +10,5 @@ const getPathDetails = new GetPathDetails(repo);
 
 // 2. Public API
 export const getAllLearningPaths = () => getPathCatalog.execute();
-export const getLearningPathById = (id: string) => getPathDetails.execute(id)?.path ?? null;
-export const getCoursesForPath = (pathId: string) => getPathDetails.execute(pathId)?.courses ?? [];
+export const getLearningPathById = (pathId: string) => getPathDetails.execute({ pathId })?.path ?? null;
+export const getCoursesForPath = (pathId: string) => getPathDetails.execute({ pathId })?.courses ?? [];

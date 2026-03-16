@@ -9,7 +9,7 @@ export interface CourseWithAssets {
 export class GetCourseDetails {
   constructor(private courseRepo: ICourseRepository) {}
 
-  execute(courseId: string): CourseWithAssets | null {
+  execute({courseId}: {courseId: string}): CourseWithAssets | null {
     const course = this.courseRepo.getCourseById(courseId);
     if (!course) return null;
 

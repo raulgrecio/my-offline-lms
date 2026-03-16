@@ -9,7 +9,7 @@ export interface PathWithCourses {
 export class GetPathDetails {
   constructor(private pathRepo: ILearningPathRepository) { }
 
-  execute(pathId: string): PathWithCourses | null {
+  execute({pathId}: {pathId: string}): PathWithCourses | null {
     const path = this.pathRepo.getLearningPathById(pathId);
     if (!path) return null;
 
