@@ -8,8 +8,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "better-sqlite3": "^11.1.2",
-    "path-browserify": "^1.0.1"
+    "better-sqlite3": "^11.1.2"
   },
   "devDependencies": {
     "typescript": "^5.5.3",
