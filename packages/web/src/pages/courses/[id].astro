@@ -15,6 +15,7 @@ import {
   getVideoProgress,
 } from "../../features/progress";
 import GuideCard from "src/components/GuideCard.astro";
+import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/courses');
@@ -24,11 +25,13 @@ if (!course) return Astro.redirect('/courses');
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
-.filter(a => a.type === 'video' && a.status === 'COMPLETED' && a.localPath)
+.filter((a): a is VideoAsset => a.type === 'video')
+.filter(a => a.status === 'COMPLETED' && !!a.localPath)
 .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const guides = allAssets
-.filter(a => a.type === 'guide' && a.status === 'COMPLETED' && a.localPath)
+.filter((a): a is GuideAsset => a.type === 'guide')
+.filter(a => a.status === 'COMPLETED' && !!a.localPath)
 .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const courseProgress = getCourseProgress(id);
@@ -120,6 +123,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 title={activeVideo.metadata?.name ?? activeVideo.id}
                 subtitleSrc={subtitleUrl(activeVideo.localPath!)}
                 initialPosition={videoProgressMap.get(activeVideo.id)?.positionSec ?? 0}
+                initialDuration={activeVideo.metadata?.duration ?? 0}
               />
             )}
           </div>

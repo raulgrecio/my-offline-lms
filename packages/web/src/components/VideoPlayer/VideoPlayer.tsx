@@ -19,14 +19,15 @@ interface Props {
   title: string;
   subtitleSrc?: string;
   initialPosition?: number;
+  initialDuration?: number | string;
 }
 
-export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialPosition = 0 }: Props) {
+export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialPosition = 0, initialDuration = 0 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(initialPosition);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(Number(initialDuration) || 0);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
@@ -149,7 +150,6 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
         src={src}
         className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={(e) => setDuration((e.target as HTMLVideoElement).duration)}
         onEnded={handleEnded}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
