@@ -1,0 +1,31 @@
+---
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon/icons";
+
+interface Props {
+  title: string;
+  icon: IconName;
+  href: string;
+}
+
+const { title, icon, href } = Astro.props;
+---
+
+<div class="flex items-center justify-between mb-5">
+  <h2 class="section-title">
+    <Icon
+      name={icon}
+      size="md"
+      className="text-brand-600"
+    />
+    {title}
+  </h2>
+  <a href={href} class="btn-ghost text-xs group">
+    Ver más
+    <Icon
+      name="chevron-right"
+      size="xs"
+      className="transition-transform group-hover:translate-x-1"
+    />
+  </a>
+</div>

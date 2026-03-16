@@ -1,10 +1,10 @@
-export interface ProgressBarProps {
+export interface ProgressVideoBarProps {
   currentTime: number;
   duration: number;
   onSeek: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps) {
+export default function ProgressVideoBar({ currentTime, duration, onSeek }: ProgressVideoBarProps) {
   return (
     <input
       type="range"

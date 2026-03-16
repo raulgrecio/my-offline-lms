@@ -4,7 +4,7 @@ import SubtitleDisplay from './SubtitleDisplay';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';
 import PlayOverlay from './PlayOverlay';
 import VideoTitle from './VideoTitle';
-import ProgressBar from './ProgressBar';
+import ProgressVideoBar from './ProgressVideoBar';
 import PlayPauseButton from './PlayPauseButton';
 import VolumeControl from './VolumeControl';
 import TimeDisplay from './TimeDisplay';
@@ -186,7 +186,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
         )}
 
         {/* Seek bar */}
-        <ProgressBar
+        <ProgressVideoBar
           currentTime={currentTime}
           duration={duration}
           onSeek={handleSeek}

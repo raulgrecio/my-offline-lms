@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import LearningPathCard from "../../components/LearningPathCard.astro";
-import { Icon } from "../../components/Icon";
+import PageHeader from "../../components/PageHeader.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import {
   getAllLearningPaths,
   getCoursesForPath,
@@ -10,7 +11,7 @@ import { getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 import { getActiveLearningPath } from "../../features/settings";
 
-const showAll = Astro.url.searchParams.get("all") === "true";
+const showAll = Astro.url.searchParams.get("all") !== "false";
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();
@@ -41,31 +42,13 @@ const lpStats = learningPaths
 ---
 
 <Layout title="Learning Paths">
-  <div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
-    <div>
-      <h1
-        class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2 text-text-primary"
-      >
-        <Icon
-          name="layers"
-          size="lg"
-          className="text-brand-600"
-        />
-        Learning Paths
-      </h1>
-      <p class="text-sm text-text-secondary">
-        {lpStats.length} de {learningPaths.length} paths disponibles
-      </p>
-    </div>
-
-    <a
-      href={showAll ? "/learning-paths" : "/learning-paths?all=true"}
-      class="btn-ghost text-xs group flex items-center gap-2"
-    >
-      <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
-      {showAll ? "Ocultar vacíos" : "Ver todos"}
-    </a>
-  </div>
+  <PageHeader
+    title="Learning Paths"
+    icon="layers"
+    stats={`${lpStats.length} de ${learningPaths.length} paths disponibles`}
+    showAll={showAll}
+    baseUrl="/learning-paths"
+  />
 
   {
     lpStats.length > 0 ? (
@@ -82,18 +65,7 @@ const lpStats = learningPaths
         ))}
       </div>
     ) : (
-      <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
-        <div class="flex justify-center mb-4">
-          <div
-            class="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center text-text-muted"
-          >
-            <Icon name="inbox" size="xl" />
-          </div>
-        </div>
-        <p class="font-medium text-text-secondary">
-          Sin learning paths descargados.
-        </p>
-      </div>
+      <EmptyState message="Sin learning paths descargados." />
     )
   }
 </Layout>

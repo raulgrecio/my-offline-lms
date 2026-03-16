@@ -1,7 +1,10 @@
 ---
+export const prerender = false;
+
 import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
 import ProgressBadge from "../../components/ProgressBadge.astro";
+import ProgressBar from "../../components/ProgreesBar.astro";
 import { Icon } from "../../components/Icon";
 import {
   getLearningPathById,
@@ -10,7 +13,6 @@ import {
 import { getAllCourseProgress } from "../../features/progress";
 import { setActiveLearningPath } from "../../features/settings";
 
-export const prerender = false;
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/learning-paths");
@@ -89,9 +91,7 @@ const progress =
           {completedCount} / {courses.length} cursos
         </span>
       </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" style={`width: ${progress}%`}></div>
-      </div>
+      <ProgressBar progress={progress} />
       <div
         class="text-right text-xs mt-1 text-text-muted"
       >

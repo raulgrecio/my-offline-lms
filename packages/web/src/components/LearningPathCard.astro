@@ -1,6 +1,7 @@
 ---
 import ProgressBadge from "./ProgressBadge.astro";
 import { Icon } from "./Icon";
+import ProgressBar from "../components/ProgreesBar.astro";
 
 interface Props {
   id: string;
@@ -85,8 +86,6 @@ const status =
         {progress}%
       </span>
     </div>
-    <div class="progress-bar">
-      <div class="progress-bar-fill" style={`width: ${progress}%`}></div>
-    </div>
+    <ProgressBar progress={progress} />
   </div>
 </a>

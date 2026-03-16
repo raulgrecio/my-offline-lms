@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import LearningPathCard from "../components/LearningPathCard.astro";
 import CourseCard from "../components/CourseCard.astro";
+import SectionHeader from "../components/SectionHeader.astro";
 import { Icon } from "../components/Icon";
 import {
   getAllLearningPaths,
@@ -92,24 +93,11 @@ let lastWatchedCourse = lastWatched
   {
     lpStats.length > 0 && (
       <section class="mb-10">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="section-title">
-            <Icon
-              name="layers"
-              size="md"
-              className="text-brand-600"
-            />
-            Learning Paths
-          </h2>
-          <a href="/learning-paths" class="btn-ghost text-xs group">
-            Ver todos
-            <Icon
-              name="chevron-right"
-              size="xs"
-              className="transition-transform group-hover:translate-x-1"
-            />
-          </a>
-        </div>
+        <SectionHeader
+          title="Learning Paths"
+          icon="layers"
+          href="/learning-paths"
+        />
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {lpStats.map((lp) => (
             <LearningPathCard
@@ -130,24 +118,11 @@ let lastWatchedCourse = lastWatched
   {
     courses.length > 0 && (
       <section>
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="section-title">
-            <Icon
-              name="book-open"
-              size="md"
-              className="text-brand-600"
-            />
-            Todos los cursos
-          </h2>
-          <a href="/courses" class="btn-ghost text-xs group">
-            Ver todos
-            <Icon
-              name="chevron-right"
-              size="xs"
-              className="transition-transform group-hover:translate-x-1"
-            />
-          </a>
-        </div>
+        <SectionHeader
+          title="Todos los cursos"
+          icon="book-open"
+          href="/courses"
+        />
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {courses.slice(0, 8).map((course) => (
             <CourseCard
