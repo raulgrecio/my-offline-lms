@@ -32,12 +32,11 @@ const status =
 
 <a
   href={`/learning-paths/${id}`}
-  class="card block p-5 group"
-  style="text-decoration: none; position: relative;"
+  class="card block p-5 group no-underline relative"
 >
   {
     isActive && (
-      <div class="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--color-brand-600)] text-white text-[10px] font-bold uppercase tracking-wider shadow-lg">
+      <div class="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg">
         <Icon name="play" size="xs" strokeWidth={3} />
         Activo
       </div>
@@ -47,15 +46,13 @@ const status =
   <!-- Icon + Title -->
   <div class="flex items-start gap-3 mb-4">
     <div
-      class="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-      style="background-color: var(--bg-secondary); color: var(--color-brand-600); border: 1px solid var(--border-subtle);"
+      class="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-surface-900 text-brand-600 border border-border-subtle"
     >
       <Icon name="layers" size="lg" />
     </div>
     <div class="flex-1 min-w-0">
       <h3
-        class="font-bold text-sm leading-tight mb-1 line-clamp-2 transition-colors group-hover:color-[var(--color-brand-600)]"
-        style="color: var(--color-text-primary);"
+        class="font-bold text-sm leading-tight mb-1 line-clamp-2 transition-colors group-hover:text-brand-600 text-text-primary"
       >
         {title}
       </h3>
@@ -67,8 +64,7 @@ const status =
   {
     description && (
       <p
-        class="text-xs leading-relaxed line-clamp-3 mb-4"
-        style="color: var(--color-text-secondary);"
+        class="text-xs leading-relaxed line-clamp-3 mb-4 text-text-secondary"
         set:html={description
           .replace(/<[^>]*>/g, " ")
           .trim()
@@ -79,13 +75,12 @@ const status =
 
   <!-- Progress bar + count -->
   <div class="mt-auto">
-    <div class="flex items-center justify-between mb-1.5">
-      <span class="text-xs" style="color: var(--color-text-muted);">
+    <div class="flex items-center justify-between mb-1.5 border-none">
+      <span class="text-xs text-text-muted">
         {completedCount} / {courseCount} cursos
       </span>
       <span
-        class="text-xs font-semibold"
-        style="color: var(--color-brand-400);"
+        class="text-xs font-semibold text-brand-400"
       >
         {progress}%
       </span>

@@ -22,13 +22,11 @@ const {
 
 <a
   href={`/courses/${id}`}
-  class="card flex items-center gap-4 p-4 group"
-  style="text-decoration: none;"
+  class="card flex items-center gap-4 p-4 group no-underline"
 >
   <!-- Order number or icon -->
   <div
-    class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-transform group-hover:scale-110"
-    style="background-color: var(--bg-secondary); color: var(--color-brand-600); border: 1px solid var(--border-subtle);"
+    class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-transform group-hover:scale-110 bg-surface-900 text-brand-600 border border-border-subtle"
   >
     {
       orderIndex !== undefined ? (
@@ -41,17 +39,16 @@ const {
 
   <!-- Title + badge -->
   <div class="flex-1 min-w-0">
-    <h4
-      class="font-semibold text-sm leading-snug line-clamp-2 mb-1"
-      style="color: var(--text-primary);"
+    <h3
+      class="font-bold text-sm leading-tight mb-1 line-clamp-2 transition-colors group-hover:text-brand-600 text-text-primary"
     >
       {title}
-    </h4>
+    </h3>
     <div class="flex items-center gap-2 flex-wrap">
       <ProgressBadge status={status} />
       {
         assetCount !== undefined && (
-          <span class="text-xs" style="color: var(--text-muted);">
+          <span class="text-xs text-text-muted">
             {assetCount} assets
           </span>
         )
@@ -61,8 +58,7 @@ const {
 
   <!-- Arrow -->
   <div
-    class="shrink-0 transition-transform group-hover:translate-x-1"
-    style="color: var(--text-muted);"
+    class="shrink-0 transition-transform group-hover:translate-x-1 text-text-muted"
   >
     <Icon name="chevron-right" size="sm" />
   </div>

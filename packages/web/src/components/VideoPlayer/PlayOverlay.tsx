@@ -10,12 +10,7 @@ export default function PlayOverlay({ isVisible }: PlayOverlayProps) {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 transition-opacity duration-300">
       <div
-        className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl"
-        style={{
-          background: 'var(--color-brand-600)',
-          backdropFilter: 'blur(8px)',
-          color: 'white'
-        }}
+        className="w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-110 bg-glass-bg backdrop-blur-md border border-glass-border shadow-custom text-text-primary"
       >
         <Icon name="play" size="xl" strokeWidth={3} className="translate-x-0.5" fill="currentColor" />
       </div>

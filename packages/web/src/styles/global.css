@@ -80,8 +80,16 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
 
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+
+  /* Glass effects */
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+
   /* Elevation and overlays */
   --shadow-custom: var(--shadow-elevation);
+  --shadow-brand: 0 8px 16px -4px rgba(199, 70, 52, 0.4);
 
   /* Radius (Constant) */
   --radius-card: 0.75rem;
@@ -104,21 +112,24 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
     background: var(--bg-surface-active);
-    border-radius: 9999px;
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-brand-600);
+    background-clip: content-box;
   }
 }
 
@@ -137,7 +148,7 @@
   .card:hover {
     border-color: var(--color-brand-600);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px -10px rgba(199, 70, 52, 0.25);
+    box-shadow: var(--shadow-brand);
   }
 
   /* Badge */

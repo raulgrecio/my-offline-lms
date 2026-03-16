@@ -46,31 +46,27 @@ let lastWatchedCourse = lastWatched
     lastWatched && (
       <section class="mb-10">
         <div
-          class="rounded-xl overflow-hidden"
-          style="background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-secondary) 100%); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-elevation);"
+          class="rounded-xl overflow-hidden bg-surface border border-border-subtle shadow-custom"
         >
           <div class="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div
-              class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
-              style="background-color: var(--color-brand-600); color: white; box-shadow: 0 8px 16px -4px rgba(199, 70, 52, 0.4);"
+              class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 bg-brand-600 text-white shadow-brand"
             >
               <Icon name="play" size="lg" strokeWidth={3} />
             </div>
             <div class="flex-1 min-w-0">
               <div
-                class="text-xs font-semibold uppercase tracking-widest mb-1"
-                style="color: var(--color-brand-400);"
+                class="text-xs font-semibold uppercase tracking-widest mb-1 text-brand-400"
               >
                 Continuar viendo
               </div>
               <h2
-                class="font-bold text-lg leading-snug mb-1 truncate"
-                style="color: var(--color-text-primary);"
+                class="font-bold text-lg leading-snug mb-1 truncate text-text-primary"
               >
                 {lastWatched.metadata?.name ?? "Vídeo"}
               </h2>
               {lastWatchedCourse && (
-                <p class="text-sm" style="color: var(--color-text-secondary);">
+                <p class="text-sm text-text-secondary">
                   {lastWatchedCourse.title}
                 </p>
               )}
@@ -101,7 +97,7 @@ let lastWatchedCourse = lastWatched
             <Icon
               name="layers"
               size="md"
-              className="text-[var(--color-brand-600)]"
+              className="text-brand-600"
             />
             Learning Paths
           </h2>
@@ -139,7 +135,7 @@ let lastWatchedCourse = lastWatched
             <Icon
               name="book-open"
               size="md"
-              className="text-[var(--color-brand-600)]"
+              className="text-brand-600"
             />
             Todos los cursos
           </h2>
@@ -178,19 +174,18 @@ let lastWatchedCourse = lastWatched
   <!-- Empty state -->
   {
     courses.length === 0 && learningPaths.length === 0 && (
-      <div class="text-center py-24 rounded-2xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-subtle)]">
+      <div class="text-center py-24 rounded-2xl bg-surface border border-dashed border-border-subtle">
         <div class="flex justify-center mb-4">
           <div
-            class="w-16 h-16 rounded-full bg-[var(--bg-surface)] flex items-center justify-center"
-            style="color: var(--text-muted);"
+            class="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center text-text-muted"
           >
             <Icon name="inbox" size="xl" />
           </div>
         </div>
-        <h2 class="text-xl font-bold mb-2" style="color: var(--text-primary);">
+        <h2 class="text-xl font-bold mb-2 text-text-primary">
           Sin contenido descargado
         </h2>
-        <p class="text-sm" style="color: var(--text-secondary);">
+        <p class="text-sm text-text-secondary">
           Ejecuta el scraper para descargar cursos y learning paths.
         </p>
       </div>

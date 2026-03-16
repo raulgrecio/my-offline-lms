@@ -13,12 +13,7 @@ export default function ProgressBar({ currentTime, duration, onSeek }: ProgressB
       step={0.5}
       value={currentTime}
       onChange={onSeek}
-      className="w-full mb-2"
-      style={{
-        accentColor: 'var(--color-brand-600)',
-        height: '3px',
-        cursor: 'pointer'
-      }}
+      className="w-full accent-brand-600 h-1 cursor-pointer"
       aria-label="Barra de progreso"
     />
   );

@@ -212,16 +212,7 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
     >
       <div
         onMouseDown={handleMouseDown}
-        className={`backdrop-blur-md px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
-        style={{
-          backgroundColor: 'var(--glass-bg)',
-          color: 'var(--text-primary)',
-          border: '1px solid var(--glass-border)',
-          pointerEvents: 'auto',
-          wordWrap: 'break-word',
-          width: 'max-content',
-          maxWidth: '100%'
-        }}
+        className={`backdrop-blur-md px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow bg-glass-bg text-text-primary border border-glass-border pointer-events-auto break-words w-max max-w-full ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
         dangerouslySetInnerHTML={{ __html: activeCue.text.replace(/\n/g, '<br/>') }}
       />
     </div>

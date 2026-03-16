@@ -11,7 +11,7 @@ export default function TimeDisplay({ currentTime, duration }: TimeDisplayProps)
   };
 
   return (
-    <span className="text-xs tabular-nums" style={{ color: 'rgba(255,255,255,0.75)' }}>
+    <span className="text-xs tabular-nums text-text-secondary">
       {fmt(currentTime)} / {fmt(duration)}
     </span>
   );

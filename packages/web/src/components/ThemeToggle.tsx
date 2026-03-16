@@ -23,13 +23,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 border"
-      style={{
-        backgroundColor: 'var(--bg-surface-elevated)',
-        borderColor: 'var(--border-subtle)',
-        color: 'var(--text-primary)',
-        boxShadow: 'var(--shadow-elevation)'
-      }}
+      className="p-2 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 border bg-surface-700 border-border-subtle text-text-primary shadow-custom"
       title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}
     >
       <div className="w-5 h-5 flex items-center justify-center">

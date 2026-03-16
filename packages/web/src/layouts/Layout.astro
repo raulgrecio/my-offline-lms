@@ -47,28 +47,24 @@ const navLinks = [
     <!-- ─── Top Navigation ─────────────────────────────────────────── -->
     <header
       id="main-header"
-      style="background-color: var(--color-surface-900); border-bottom: 1px solid var(--color-surface-700);"
-      class="sticky top-0 z-50"
+      class="sticky top-0 z-50 bg-surface-900 border-b border-border-subtle"
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
           <a
             href="/"
-            class="flex items-center gap-2 shrink-0"
-            style="text-decoration: none;"
+            class="flex items-center gap-2 shrink-0 no-underline"
           >
             <div
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-              style="background-color: var(--color-brand-600);"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm bg-brand-600"
             >
-              <span style="transform: rotate(90deg); display:inline-block;"
+              <span class="rotate-90 inline-block"
                 >0</span
               >
             </div>
             <span
-              class="font-semibold hidden sm:block"
-              style="color: var(--color-text-primary);"
+              class="font-semibold hidden sm:block text-text-primary"
             >
               My Offline LMS
             </span>
@@ -77,21 +73,22 @@ const navLinks = [
           <!-- Desktop Nav -->
           <nav class="hidden md:flex items-center gap-1">
             {
-              navLinks.map((link) => (
-                <a
-                  href={link.href}
-                  class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150"
-                  style={
-                    currentPath === link.href ||
-                    (link.href !== "/" && currentPath.startsWith(link.href))
-                      ? "color: var(--color-brand-400); background-color: color-mix(in srgb, var(--color-brand-600) 12%, transparent);"
-                      : "color: var(--color-text-secondary);"
-                  }
-                >
-                  <Icon name={link.icon} size="sm" />
-                  {link.label}
-                </a>
-              ))
+              navLinks.map((link) => {
+                const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+                return (
+                  <a
+                    href={link.href}
+                    class={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      isActive 
+                        ? "text-brand-400 bg-brand-600/12" 
+                        : "text-text-secondary hover:text-text-primary hover:bg-surface-800"
+                    }`}
+                  >
+                    <Icon name={link.icon} size="sm" />
+                    {link.label}
+                  </a>
+                );
+              })
             }
           </nav>
 
@@ -100,8 +97,7 @@ const navLinks = [
             <ThemeToggle client:load />
             <button
               id="menu-toggle"
-              class="p-2 rounded-lg transition-colors hover:bg-[var(--bg-secondary)]"
-              style="color: var(--color-text-secondary);"
+              class="p-2 rounded-lg transition-colors hover:bg-surface-700 text-text-secondary"
               aria-label="Abrir menú"
             >
               <div id="icon-menu">
@@ -123,26 +119,26 @@ const navLinks = [
       <!-- Mobile Nav Drawer -->
       <div
         id="mobile-menu"
-        class="hidden md:hidden border-t"
-        style="background-color: var(--color-surface-800); border-color: var(--color-surface-700);"
+        class="hidden md:hidden border-t bg-surface-800 border-border-subtle"
       >
         <nav class="px-4 py-3 flex flex-col gap-1">
           {
-            navLinks.map((link) => (
-              <a
-                href={link.href}
-                class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                style={
-                  currentPath === link.href ||
-                  (link.href !== "/" && currentPath.startsWith(link.href))
-                    ? "color: var(--color-brand-400); background-color: color-mix(in srgb, var(--color-brand-600) 12%, transparent);"
-                    : "color: var(--color-text-secondary);"
-                }
-              >
-                <Icon name={link.icon} size="md" />
-                {link.label}
-              </a>
-            ))
+            navLinks.map((link) => {
+              const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+              return (
+                <a
+                  href={link.href}
+                  class={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    isActive 
+                      ? "text-brand-400 bg-brand-600/12" 
+                      : "text-text-secondary hover:bg-surface-700"
+                  }`}
+                >
+                  <Icon name={link.icon} size="md" />
+                  {link.label}
+                </a>
+              );
+            })
           }
         </nav>
       </div>
@@ -155,8 +151,7 @@ const navLinks = [
 
     <!-- ─── Footer ─────────────────────────────────────────────────── -->
     <footer
-      class="mt-auto py-6 text-center text-xs"
-      style="color: var(--color-text-muted); border-top: 1px solid var(--color-surface-700);"
+      class="mt-auto py-6 text-center text-xs text-text-muted border-t border-border-subtle"
     >
       My Offline LMS — contenido descargado y exclusivo para fines educativos y
       personales

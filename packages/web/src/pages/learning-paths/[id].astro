@@ -34,38 +34,25 @@ const progress =
 
 <Layout title={path.title} description={path.description}>
   <!-- Breadcrumb -->
-  <nav
-    class="flex items-center gap-2 text-xs mb-6"
-    style="color: var(--color-text-muted);"
-  >
-    <a
-      href="/"
-      style="color: var(--color-text-muted); text-decoration: none;"
-      class="hover:underline">Inicio</a
-    >
+  <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
+    <a href="/" class="text-text-muted no-underline hover:underline">Inicio</a>
     <Icon name="chevron-right" size="xs" />
-    <a
-      href="/learning-paths"
-      style="color: var(--color-text-muted); text-decoration: none;"
-      class="hover:underline">Learning Paths</a
-    >
+    <a href="/learning-paths" class="text-text-muted no-underline hover:underline">Learning Paths</a>
     <Icon name="chevron-right" size="xs" />
-    <span style="color: var(--color-text-secondary);">{path.title}</span>
+    <span class="text-text-secondary">{path.title}</span>
   </nav>
 
   <!-- Header -->
   <div class="mb-8">
     <div class="flex items-start gap-4 mb-4">
       <div
-        class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white"
-        style="background-color: var(--color-brand-600); box-shadow: 0 8px 16px -4px rgba(199, 70, 52, 0.4);"
+        class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white bg-brand-600 shadow-brand"
       >
         <Icon name="graduation-cap" size="lg" strokeWidth={2.5} />
       </div>
       <div class="flex-1 min-w-0">
         <h1
-          class="text-xl sm:text-2xl font-bold leading-snug mb-2"
-          style="color: var(--color-text-primary);"
+          class="text-xl sm:text-2xl font-bold leading-snug mb-2 text-text-primary"
         >
           {path.title}
         </h1>
@@ -82,8 +69,7 @@ const progress =
     {
       path.description && (
         <p
-          class="text-sm leading-relaxed mb-6"
-          style="color: var(--color-text-secondary);"
+          class="text-sm leading-relaxed mb-6 text-text-secondary"
           set:html={path.description}
         />
       )
@@ -91,17 +77,15 @@ const progress =
 
     <!-- Progress summary -->
     <div
-      class="rounded-lg p-4"
-      style="background-color: var(--color-surface-800); border: 1px solid var(--color-surface-600);"
+      class="rounded-lg p-4 bg-surface-800 border border-border-default"
     >
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center justify-between mb-2 border-none">
         <span
-          class="text-sm font-medium"
-          style="color: var(--color-text-secondary);"
+          class="text-sm font-medium text-text-secondary"
         >
           Progreso del learning path
         </span>
-        <span class="text-sm font-bold" style="color: var(--color-brand-400);">
+        <span class="text-sm font-bold text-brand-400">
           {completedCount} / {courses.length} cursos
         </span>
       </div>
@@ -109,8 +93,7 @@ const progress =
         <div class="progress-bar-fill" style={`width: ${progress}%`}></div>
       </div>
       <div
-        class="text-right text-xs mt-1"
-        style="color: var(--color-text-muted);"
+        class="text-right text-xs mt-1 text-text-muted"
       >
         {progress}% completado
       </div>
@@ -125,7 +108,7 @@ const progress =
       <Icon
         name="book-open"
         size="md"
-        className="text-[var(--color-brand-600)]"
+        className="text-brand-600"
       />
       Cursos del path ({courses.length})
     </h2>
@@ -142,7 +125,7 @@ const progress =
           ))}
         </div>
       ) : (
-        <p style="color: var(--color-text-muted);">
+        <p class="text-text-muted">
           Sin cursos asignados a este path.
         </p>
       )

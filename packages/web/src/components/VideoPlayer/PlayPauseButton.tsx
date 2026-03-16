@@ -9,7 +9,7 @@ export default function PlayPauseButton({ isPlaying, onToggle }: PlayPauseButton
   return (
     <button
       onClick={onToggle}
-      className="text-white p-1 rounded transition-transform hover:scale-110"
+      className="text-text-primary p-1 rounded transition-transform hover:scale-110"
       aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
     >
       {isPlaying ? (
