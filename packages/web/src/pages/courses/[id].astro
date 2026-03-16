@@ -1,11 +1,14 @@
 ---
 export const prerender = false;
 
+import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
+
 import { env } from "../../config/env";
 import Layout from '../../layouts/Layout.astro';
 import ProgressBadge from '../../components/ProgressBadge.astro';
 import VideoPlayer from '../../components/VideoPlayer';
 import { Icon } from '../../components/Icon';
+import GuideCard from "../../components/GuideCard.astro";
 import {
   getCourseById,
   getCourseAssets,
@@ -14,8 +17,6 @@ import {
   getCourseProgress,
   getVideoProgress,
 } from "../../features/progress";
-import GuideCard from "src/components/GuideCard.astro";
-import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/courses');
@@ -25,14 +26,14 @@ if (!course) return Astro.redirect('/courses');
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
-.filter((a): a is VideoAsset => a.type === 'video')
-.filter(a => a.status === 'COMPLETED' && !!a.localPath)
-.sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+  .filter((a): a is VideoAsset => a.type === 'video')
+  .filter(a => a.status === 'COMPLETED' && !!a.localPath)
+  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const guides = allAssets
-.filter((a): a is GuideAsset => a.type === 'guide')
-.filter(a => a.status === 'COMPLETED' && !!a.localPath)
-.sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+  .filter((a): a is GuideAsset => a.type === 'guide')
+  .filter(a => a.status === 'COMPLETED' && !!a.localPath)
+  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
 const courseProgress = getCourseProgress(id);
 
@@ -51,13 +52,13 @@ const activeVideo = videoId
 function localUrl(localPath: string): string {
   // Strip leading /home/... to a relative /assets/... if needed
   // We serve files from /data via a static route
-  return `/local-asset?path=${encodeURIComponent(localPath)}`;
+  return `/api/asset/local-asset?path=${encodeURIComponent(localPath)}`;
 }
 
 function subtitleUrl(videoLocalPath: string): string | undefined {
   const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
   const subtitlePath = `${base}.${env.SUBTITLE_LANGUAGE}.vtt`;
-  return `/local-asset?path=${encodeURIComponent(subtitlePath)}`;
+  return `/api/asset/local-asset?path=${encodeURIComponent(subtitlePath)}`;
 } 
 ---
 
