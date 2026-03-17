@@ -1,7 +1,9 @@
 import { getDb } from "../../platform/db/database";
 import { SQLiteProgressRepository } from "./infrastructure/SQLiteProgressRepository";
 import { UpdateVideoProgress } from "./application/UpdateVideoProgress";
+import { UpdatePdfProgress } from "./application/UpdatePdfProgress";
 import { GetVideoProgress } from "./application/GetVideoProgress";
+import { GetPdfProgress } from "./application/GetPdfProgress";
 import { GetCourseProgress } from "./application/GetCourseProgress";
 import { GetDashboardStatus } from "./application/GetDashboardStatus";
 import { MarkCourseStatus } from "./application/MarkCourseStatus";
@@ -10,7 +12,9 @@ import type { CourseStatusType } from "./domain/model/CourseProgress";
 // 1. Wiring
 const repo = new SQLiteProgressRepository(getDb());
 const updateVideoProgressUC = new UpdateVideoProgress(repo);
+const updatePdfProgressUC = new UpdatePdfProgress(repo);
 const getVideoProgressUC = new GetVideoProgress(repo);
+const getPdfProgressUC = new GetPdfProgress(repo);
 const getCourseProgressUC = new GetCourseProgress(repo);
 const getDashboardStatus = new GetDashboardStatus(repo);
 const markCourseStatusUC = new MarkCourseStatus(repo);
@@ -19,7 +23,11 @@ const markCourseStatusUC = new MarkCourseStatus(repo);
 export const updateVideoProgress = ({ assetId, positionSec, completed }: { assetId: string; positionSec: number; completed?: boolean }) =>
   updateVideoProgressUC.execute({ assetId, positionSec, completed });
 
+export const updatePdfProgress = ({ assetId, page, completed }: { assetId: string; page: number; completed?: boolean }) =>
+  updatePdfProgressUC.execute({ assetId, page, completed });
+
 export const getVideoProgress = (assetId: string) => getVideoProgressUC.execute({assetId});
+export const getPdfProgress = (assetId: string) => getPdfProgressUC.execute({assetId});
 export const getCourseProgress = (courseId: string) => getCourseProgressUC.execute({courseId});
 export const getAllCourseProgress = () => getDashboardStatus.execute().allProgress;
 export const getLastWatchedAsset = () => getDashboardStatus.execute().lastWatched;

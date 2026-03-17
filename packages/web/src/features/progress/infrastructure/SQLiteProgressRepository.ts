@@ -2,6 +2,7 @@ import { type Asset, type IDatabase } from "@my-offline-lms/core";
 
 import type { CourseProgress, CourseStatusType } from "../domain/model/CourseProgress";
 import type { VideoProgress } from "../domain/model/VideoProgress";
+import type { PdfProgress } from "../domain/model/PdfProgress";
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 
 export class SQLiteProgressRepository implements IProgressRepository {
@@ -17,6 +18,21 @@ export class SQLiteProgressRepository implements IProgressRepository {
     return {
       assetId: row.asset_id,
       positionSec: row.position_sec,
+      completed: row.completed === 1,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  getPdfProgress(assetId: string): PdfProgress | null {
+    const row = this.db
+      .prepare(
+        "SELECT asset_id, position_sec, completed, updated_at FROM UserProgress WHERE asset_id = ?",
+      )
+      .get(assetId) as any;
+    if (!row) return null;
+    return {
+      assetId: row.asset_id,
+      page: row.position_sec,
       completed: row.completed === 1,
       updatedAt: row.updated_at,
     };
@@ -91,6 +107,25 @@ export class SQLiteProgressRepository implements IProgressRepository {
     `,
       )
       .run(assetId, positionSec, completed ? 1 : 0);
+  }
+
+  updatePdfProgress({
+    assetId,
+    page,
+    completed = false,
+  }: { assetId: string, page: number, completed?: boolean }): void {
+    this.db
+      .prepare(
+        `
+      INSERT INTO UserProgress (asset_id, position_sec, completed, updated_at)
+      VALUES (?, ?, ?, datetime('now'))
+      ON CONFLICT(asset_id) DO UPDATE SET
+        position_sec = excluded.position_sec,
+        completed    = excluded.completed,
+        updated_at   = excluded.updated_at
+    `,
+      )
+      .run(assetId, page, completed ? 1 : 0);
   }
 
   markCourseStatus({

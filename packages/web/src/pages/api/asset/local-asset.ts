@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import fs from 'fs';
 import path from 'path';
+import { Readable } from 'stream';
 
 import { AssetPathResolver, NodeFileSystem, getMimeType } from '@my-offline-lms/core';
 
@@ -15,7 +16,7 @@ const resolver = new AssetPathResolver({
   fs: fsAdapter,
 });
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request, url }) => {
   const filePath = url.searchParams.get('path');
 
   if (!filePath) {
@@ -35,20 +36,49 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const stat = fs.statSync(resolved);
     const fileSize = stat.size;
+    const range = request.headers.get('range');
 
-    // Stream the file directly
-    const buffer = fs.readFileSync(resolved);
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-    return new Response(buffer, {
-      status: 200,
-      headers: {
-        'Content-Type': mimeType,
-        'Content-Length': String(fileSize),
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'no-cache',
-      },
-    });
-  } catch {
+      if (start >= fileSize) {
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${fileSize}` }
+        });
+      }
+
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(resolved, { start, end });
+      
+      // @ts-ignore
+      return new Response(file, {
+        status: 206,
+        headers: {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': String(chunksize),
+          'Content-Type': mimeType,
+          'Cache-Control': 'public, max-age=31536000',
+        }
+      });
+    } else {
+      const file = fs.createReadStream(resolved);
+      // @ts-ignore
+      return new Response(file, {
+        status: 200,
+        headers: {
+          'Content-Length': String(fileSize),
+          'Content-Type': mimeType,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=31536000',
+        },
+      });
+    }
+  } catch (err) {
+    console.error('[Local Asset Error]', err);
     return new Response('Error reading file', { status: 500 });
   }
 };

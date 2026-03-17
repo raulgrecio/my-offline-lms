@@ -11,7 +11,7 @@ export default function PlayerSettings({ subtitleMode, onChangeSubtitleMode }: P
       className="absolute bottom-full right-4 mb-4 p-3 rounded-xl shadow-2xl flex flex-col gap-3 min-w-[180px] z-50 bg-glass-bg backdrop-blur-xl border border-glass-border shadow-custom"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="text-[10px] font-bold opacity-40 uppercase tracking-widest px-1 text-text-primary">Subtítulos</div>
+      <div className="text-2xs font-bold opacity-40 uppercase tracking-widest px-1 text-text-primary">Subtítulos</div>
       <div className="flex flex-col gap-1">
         <button
           onClick={() => onChangeSubtitleMode('custom')}

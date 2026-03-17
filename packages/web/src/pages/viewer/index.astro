@@ -1,0 +1,23 @@
+---
+import ViewerLayout from "../../layouts/ViewerLayout.astro";
+import { getPdfProgress } from "../../features/progress";
+import PDFViewer from "../../components/PDFViewer/Viewer.astro";
+
+const assetId = Astro.url.searchParams.get('assetId');
+const path = Astro.url.searchParams.get('path');
+
+if (!assetId || !path) {
+  return Astro.redirect('/courses');
+}
+
+const initialProgress = getPdfProgress(assetId);
+const initialPage = initialProgress?.page || 1;
+---
+
+<ViewerLayout title="Visor de PDF">
+  <PDFViewer 
+    assetId={assetId} 
+    path={path} 
+    initialPage={initialPage} 
+  />
+</ViewerLayout>

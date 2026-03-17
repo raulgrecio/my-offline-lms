@@ -135,7 +135,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
         <div
           class="lg:w-80 xl:w-96 flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden"
         >
-          <div class="p-3 border-b text-[10px] font-bold uppercase tracking-widest text-text-muted border-border-subtle shrink-0 bg-surface-800/50 backdrop-blur-sm">
+          <div class="p-3 border-b text-2xs font-bold uppercase tracking-widest text-text-muted border-border-subtle shrink-0 bg-surface-800/50 backdrop-blur-sm">
             Contenido del curso
           </div>
           <div class="overflow-y-auto flex-1 custom-scrollbar">
@@ -155,7 +155,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                   data-position={vp?.positionSec ?? 0}
                 >
                 <div
-                  class={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 ${
+                  class={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-2xs font-bold mt-0.5 ${
                     isDone
                       ? 'bg-brand-600 text-white'
                       : 'bg-surface-600 text-text-muted'
@@ -168,7 +168,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                     {v.metadata?.name ?? `Vídeo ${i + 1}`}
                   </p>
                   {vp && !vp.completed && vp.positionSec > 0 && (
-                    <p class="text-[10px] mt-1 flex items-center gap-1 font-semibold text-brand-600">
+                    <p class="text-2xs mt-1 flex items-center gap-1 font-semibold text-brand-600">
                       <Icon name="play" size="xs" />
                       Continuar: {Math.floor(vp.positionSec / 60)}:{String(Math.floor(vp.positionSec % 60)).padStart(2,'0')}
                     </p>
@@ -193,6 +193,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {guides.map((g, i) => (
           <GuideCard
+            assetId={g.id}
             name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
             localUrl={localUrl(g.localPath!)}
           />
