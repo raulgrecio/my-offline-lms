@@ -34,7 +34,7 @@ import { Icon } from "../Icon";
 
 <template id="help-template">
   <div id="help-modal" class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-surface-950/80 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-none">
-    <div class="bg-surface-900 border border-border-subtle rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-95 opacity-0 duration-300 js-modal-content">
+    <div data-modal-content class="bg-surface-900 border border-border-subtle rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
       <div class="flex items-center justify-between p-4 border-b border-border-subtle bg-surface-950/50">
         <h3 class="font-bold flex items-center gap-2">
           <Icon name="help-box" size="sm" className="text-brand-400" />

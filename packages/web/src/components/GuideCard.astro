@@ -3,13 +3,14 @@ import { Icon } from "./Icon";
 import ProgressBar from "./ProgreesBar.astro";
 
 const { assetId, name, localUrl, progress, totalPages } = Astro.props;
-const isDone = progress?.completed;
-const currentPage = progress?.page;
+const maxPage = progress?.maxPage || 0;
+const currentPage = progress?.page || 0;
+const isDone = progress?.completed || (totalPages > 0 && maxPage >= totalPages);
 
 const statusText = isDone 
   ? "Completado" 
-  : (currentPage && currentPage > 1 
-      ? `Continuar en la página ${currentPage} de ${totalPages || 'Ver guía'}` 
+  : (currentPage > 1 
+      ? `Continuar en la pág. ${currentPage}${maxPage > currentPage ? ` (visto hasta la ${maxPage})` : ""}` 
       : (totalPages ? `Ver guía de ${totalPages} páginas` : "Ver guía"));
 ---
 <a

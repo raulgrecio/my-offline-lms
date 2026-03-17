@@ -510,7 +510,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       document.body.appendChild(clone);
       modal = document.getElementById('help-modal')!;
       
-      const content = modal.querySelector('.js-modal-content') as HTMLElement;
+      const content = modal.querySelector('[data-modal-content]') as HTMLElement;
       const closeBtn = modal.querySelector('[data-close-help]') as HTMLElement;
       
       const close = () => {
@@ -534,15 +534,15 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       const isVisible = !modal.classList.contains('opacity-0');
       if (isVisible) {
         modal.classList.add('opacity-0', 'pointer-events-none');
-        modal.querySelector('.js-modal-content')!.classList.add('scale-95', 'opacity-0');
+        modal.querySelector('[data-modal-content]')!.classList.add('scale-95', 'opacity-0');
       } else {
         modal.classList.remove('opacity-0', 'pointer-events-none');
-        modal.querySelector('.js-modal-content')!.classList.remove('scale-95', 'opacity-0');
+        modal.querySelector('[data-modal-content]')!.classList.remove('scale-95', 'opacity-0');
         // Close on next key
         const keyClose = (e: KeyboardEvent) => { 
           if (e.key !== '?' && e.key !== 'Enter') {
             modal!.classList.add('opacity-0', 'pointer-events-none');
-            modal!.querySelector('.js-modal-content')!.classList.add('scale-95', 'opacity-0');
+            modal!.querySelector('[data-modal-content]')!.classList.add('scale-95', 'opacity-0');
             window.removeEventListener('keydown', keyClose);
           }
         };
