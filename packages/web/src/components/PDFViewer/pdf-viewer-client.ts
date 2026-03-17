@@ -22,6 +22,11 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   const btnRotate = document.getElementById('btn-rotate') as HTMLButtonElement;
   const fitActiveBg = document.getElementById('fit-active-bg') as HTMLElement;
 
+  // Templates
+  const pageTemplate = document.getElementById('page-template') as HTMLTemplateElement;
+  const thumbTemplate = document.getElementById('thumb-template') as HTMLTemplateElement;
+  const errorTemplate = document.getElementById('error-template') as HTMLTemplateElement;
+
   let pdfDoc: any = null;
   let currentPage = initialPage;
   let currentZoom = 1.0;
@@ -80,8 +85,12 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
 
     } catch (error) {
       console.error('Error loading PDF:', error);
-      if (container) {
-        container.innerHTML = `<div class="p-10 text-center"><p class="text-red-500 font-medium">Error al cargar el documento</p><p class="text-xs opacity-50 mt-2">${error}</p></div>`;
+      if (container && errorTemplate) {
+        container.innerHTML = '';
+        const clone = errorTemplate.content.cloneNode(true) as DocumentFragment;
+        const msg = clone.querySelector('[data-error-message]') as HTMLElement;
+        if (msg) msg.textContent = error instanceof Error ? error.message : String(error);
+        container.appendChild(clone);
       }
     }
   }
@@ -92,19 +101,16 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     const pageHeight = (isRotated ? baseWidth : baseHeight) * currentZoom;
 
     for (let i = 1; i <= pdfDoc.numPages; i++) {
-       let wrapper = document.getElementById(`page-${i}`);
+       let wrapper = container.querySelector(`[data-page-number="${i}"]`) as HTMLElement;
        
-       if (!wrapper) {
-         wrapper = document.createElement('div');
-         wrapper.id = `page-${i}`;
+       if (!wrapper && pageTemplate) {
+         const clone = pageTemplate.content.cloneNode(true) as DocumentFragment;
+         wrapper = clone.querySelector('[data-page-row]') as HTMLElement;
          wrapper.dataset.pageNumber = i.toString();
-         wrapper.className = 'page-wrapper relative bg-surface-900 shadow-[0_10px_30px_rgba(0,0,0,0.5)] opacity-30';
-         
-         const loader = document.createElement('div');
-         loader.className = 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin';
-         wrapper.appendChild(loader);
-         container.appendChild(wrapper);
+         container.appendChild(clone);
        }
+
+       if (!wrapper) continue;
 
        wrapper.style.width = `${Math.floor(pageWidth)}px`;
        wrapper.style.height = `${Math.floor(pageHeight)}px`;
@@ -140,33 +146,32 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     const finalThumbHeight = Math.floor(thumbH);
 
     for (let i = 1; i <= pdfDoc.numPages; i++) {
-      let thumb = document.getElementById(`thumb-${i}`);
+      let thumb = thumbnailsContainer.querySelector(`[data-thumb-number="${i}"]`) as HTMLElement;
       
-      if (!thumb) {
-        thumb = document.createElement('div');
-        thumb.className = 'thumb-wrapper group relative cursor-pointer transition-all duration-200 p-1 rounded-lg bg-surface-600 hover:bg-surface-800 flex flex-col items-center';
+      if (!thumb && thumbTemplate) {
+        const clone = thumbTemplate.content.cloneNode(true) as DocumentFragment;
+        thumb = clone.querySelector('[data-thumb-row]') as HTMLElement;
+        thumb.dataset.thumbNumber = i.toString();
         thumb.dataset.pageNumber = i.toString();
-        thumb.id = `thumb-${i}`;
         
-        const canvasContainer = document.createElement('div');
-        canvasContainer.className = 'w-32 bg-surface-950 rounded border border-border-subtle overflow-hidden flex items-center justify-center';
-        thumb.appendChild(canvasContainer);
-        
-        const label = document.createElement('div');
-        label.className = 'text-center text-2xs mt-1 font-medium text-text-muted group-hover:text-text-primary transition-colors';
-        label.textContent = i.toString();
-        thumb.appendChild(label);
+        const label = clone.querySelector('[data-thumb-label]') as HTMLElement;
+        if (label) label.textContent = i.toString();
         
         thumb.onclick = () => goToPage(i);
-        thumbnailsContainer.appendChild(thumb);
+        thumbnailsContainer.appendChild(clone);
       }
 
-      const canvasContainer = thumb.querySelector('div') as HTMLElement;
-      canvasContainer.style.width = `${finalThumbWidth}px`;
-      canvasContainer.style.height = `${finalThumbHeight}px`;
+      if (!thumb) continue;
+
+      const canvasContainer = thumb.querySelector('[data-thumb-canvas]') as HTMLElement;
+      if (canvasContainer) {
+        canvasContainer.style.width = `${finalThumbWidth}px`;
+        canvasContainer.style.height = `${finalThumbHeight}px`;
+      }
       
       if (!renderedThumbs.has(i)) {
-        canvasContainer.innerHTML = `<span class="text-2xs text-text-muted opacity-30">${i}</span>`;
+        const placeholder = canvasContainer.querySelector('[data-thumb-placeholder]');
+        if (placeholder) placeholder.textContent = i.toString();
       }
     }
     updateActiveThumb(currentPage);
@@ -176,7 +181,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     if (renderedPages.has(num)) return;
     renderedPages.add(num);
 
-    const wrapper = document.getElementById(`page-${num}`);
+    const wrapper = container.querySelector(`[data-page-number="${num}"]`) as HTMLElement;
     if (!wrapper) return;
 
     try {
@@ -211,7 +216,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     if (renderedThumbs.has(num)) return;
     renderedThumbs.add(num);
 
-    const thumb = document.getElementById(`thumb-${num}`);
+    const thumb = thumbnailsContainer.querySelector(`[data-thumb-number="${num}"]`) as HTMLElement;
     if (!thumb) return;
 
     try {
@@ -224,7 +229,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       canvas.height = viewport.height;
       canvas.className = 'w-full h-full object-contain';
       
-      const canvasContainer = thumb.querySelector('div') as HTMLElement;
+      const canvasContainer = thumb.querySelector('[data-thumb-canvas]') as HTMLElement;
       if (canvasContainer) {
         // Precise fit for the current page
         const actualRatio = viewport.height / viewport.width;
@@ -307,7 +312,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       });
     }, { root: container, threshold: 0.1 });
 
-    document.querySelectorAll('.page-wrapper').forEach(el => observer.observe(el));
+    document.querySelectorAll('[data-page-row]').forEach(el => observer.observe(el));
     
     // Thumbnail observer
     const thumbObserver = new IntersectionObserver((entries) => {
@@ -323,11 +328,11 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       });
     }, { root: sidebar, threshold: 0.01 });
 
-    document.querySelectorAll('.thumb-wrapper').forEach(el => thumbObserver.observe(el));
+    document.querySelectorAll('[data-thumb-row]').forEach(el => thumbObserver.observe(el));
   }
 
   function updateActiveThumb(num: number) {
-    document.querySelectorAll('.thumb-wrapper').forEach(el => {
+    document.querySelectorAll('[data-thumb-row]').forEach(el => {
       const isActive = parseInt((el as HTMLElement).dataset.pageNumber!) === num;
       el.classList.toggle('ring-2', isActive);
       el.classList.toggle('ring-brand-500', isActive);
@@ -346,7 +351,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     pageInput.value = num.toString();
     updateActiveThumb(num);
 
-    const el = document.getElementById(`page-${num}`);
+    const el = container.querySelector(`[data-page-number="${num}"]`) as HTMLElement;
     if (el) {
       container.scrollTo({ top: el.offsetTop, behavior });
       renderPage(num);
@@ -428,7 +433,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     const anchorPage = currentPage;
     const viewportHeight = container.clientHeight;
     const currentTop = container.scrollTop;
-    const currentPageEl = document.getElementById(`page-${anchorPage}`);
+    const currentPageEl = container.querySelector(`[data-page-number="${anchorPage}"]`) as HTMLElement;
     
     // Relative position within the current page
     let relativeY = 0; 
@@ -452,7 +457,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     syncThumbnailPlaceholders();
     
     // Restore alignment
-    const newPageEl = document.getElementById(`page-${anchorPage}`);
+    const newPageEl = container.querySelector(`[data-page-number="${anchorPage}"]`) as HTMLElement;
     if (newPageEl) {
        if (mode === 'center') {
          const newPageTop = newPageEl.offsetTop;
@@ -468,7 +473,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
 
     // Render any page that is now visible in the viewport
     const containerRect = container.getBoundingClientRect();
-    const wrappers = document.querySelectorAll('.page-wrapper');
+    const wrappers = document.querySelectorAll('[data-page-row]');
     
     wrappers.forEach(el => {
       const rect = el.getBoundingClientRect();

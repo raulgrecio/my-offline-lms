@@ -6,3 +6,13 @@
      <!-- Thumbnails will be injected here -->
   </div>
 </aside>
+
+<!-- ─── Templates ────────────────────────────────────────────────────────── -->
+<template id="thumb-template">
+  <div data-thumb-row class="thumb-wrapper group relative cursor-pointer transition-all duration-200 p-1.5 rounded-xl bg-surface-800/50 hover:bg-surface-700/50 flex flex-col items-center border border-transparent hover:border-border-subtle">
+    <div data-thumb-canvas class="bg-surface-950 rounded-lg border border-border-subtle overflow-hidden flex items-center justify-center shadow-lg transition-transform group-hover:scale-[1.02]">
+      <span data-thumb-placeholder class="text-2xs text-text-muted opacity-30"></span>
+    </div>
+    <span data-thumb-label class="text-center text-[10px] mt-2 font-bold text-text-muted group-hover:text-brand-500 transition-colors tracking-tight"></span>
+  </div>
+</template>
