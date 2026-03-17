@@ -2,58 +2,89 @@
 export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
+import { Icon } from "../components/Icon";
+import PageHeader from "src/components/PageHeader.astro";
 ---
 
 <Layout title="Ajustes de Assets">
-  <div class="max-w-4xl mx-auto">
-    <header class="mb-8">
-      <h1
-        class="text-3xl font-bold mb-2 text-text-primary"
-      >
-        Configuración de Assets
-      </h1>
-      <p class="text-text-secondary">
-        Gestiona las ubicaciones donde el sistema buscará vídeos y guías (PDFs).
-      </p>
-    </header>
+  <PageHeader
+    title="Configuración de Assets"
+    icon="settings"
+    subtitle="Gestiona las ubicaciones donde el sistema buscará vídeos y guías (PDFs)."   
+  />
 
-    <!-- ─── Add New Path ─────────────────────────────────────────── -->
-    <section class="p-6 mb-8 border border-border-subtle bg-surface-800 rounded-2xl">
-      <h2
-        class="text-lg font-semibold mb-4 text-text-primary"
+  <div class="max-w-4xl mx-auto">
+    <!-- ─── Add New Path (Unified Collapsible Card) ─────────────────────────── -->
+    <section class="mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all">
+      <button 
+        id="toggle-add-form"
+        class="flex items-center justify-between w-full p-5 hover:bg-surface-700 transition-colors group"
       >
-        Añadir nueva ubicación
-      </h2>
-      <form id="add-path-form" class="flex flex-col sm:flex-row gap-3">
-        <div class="flex-1">
-          <input
-            type="text"
-            id="path-input"
-            placeholder="Ej: /mnt/e/oracle-pdfs-videos/assets-new"
-            class="w-full px-4 py-2 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-colors"
-            required
-          />
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-600/10 text-brand-600 group-hover:scale-110 transition-transform">
+            <Icon name="plus" size="md" />
+          </div>
+          <div class="text-left">
+            <span class="block font-bold text-text-primary">Añadir nueva ubicación</span>
+            <span class="block text-xs text-text-muted mt-0.5">Configura una nueva carpeta local para tu catálogo de contenidos</span>
+          </div>
         </div>
-        <div class="w-full sm:w-48">
-          <input
-            type="text"
-            id="label-input"
-            placeholder="Etiqueta (ej: Disco Externo)"
-            class="w-full px-4 py-2 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-colors"
-            required
-          />
+        <div id="toggle-icon" class="text-text-muted transition-transform duration-300">
+          <Icon name="chevron-down" size="sm" />
         </div>
-        <button type="submit" class="btn-primary">Añadir</button>
-      </form>
+      </button>
+
+      <div id="add-form-container" class="hidden border-t border-border-subtle p-6 bg-surface-800/50">
+        <p class="text-sm text-text-secondary mb-6 leading-relaxed">
+          El sistema escaneará estas carpetas para sincronizar la biblioteca de vídeos y guías locales. Use rutas absolutas y etiquetas descriptivas.
+        </p>
+
+        <form id="add-path-form" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label for="label-input" class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1">
+                Etiqueta identificativa
+              </label>
+              <input
+                type="text"
+                id="label-input"
+                placeholder="Ej: Disco Externo, NAS..."
+                class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
+                required
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label for="path-input" class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1">
+                Ruta absoluta del sistema
+              </label>
+              <input
+                type="text"
+                id="path-input"
+                placeholder="Ej: /home/usuario/assets"
+                class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
+                required
+              />
+            </div>
+          </div>
+          
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="btn-primary py-2 px-6">
+              <Icon name="plus" size="sm" />
+              Guardar ubicación
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
 
     <!-- ─── Path List ────────────────────────────────────────────── -->
     <section>
-      <h2
-        class="text-lg font-semibold mb-4 text-text-primary"
-      >
-        Ubicaciones actuales
-      </h2>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-text-primary">
+          Ubicaciones actuales
+        </h2>
+      </div>
+
       <div id="path-list" class="flex flex-col gap-3">
         <div class="animate-pulse flex flex-col gap-3">
           {[1, 2, 3].map(() => <div class="h-20 rounded-xl bg-surface-800" />)}
@@ -61,101 +92,138 @@ import Layout from "../layouts/Layout.astro";
       </div>
     </section>
   </div>
+
+  <!-- ─── Templates for Path List States ────────────────────────────── -->
+  <template id="path-card-template">
+    <div class="card p-4 flex items-center justify-between gap-4 border border-border-subtle bg-surface-800 rounded-2xl">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="font-bold text-sm text-text-primary js-label"></span>
+          <span class="js-badge px-2 py-0.5 rounded-full text-xs font-semibold uppercase flex items-center gap-1">
+            <div class="js-icon-connected hidden">
+              <Icon name="check-circle" size="xs" />
+            </div>
+            <div class="js-icon-disconnected hidden">
+              <Icon name="alert-circle" size="xs" />
+            </div>
+            <span class="js-badge-text"></span>
+          </span>
+        </div>
+        <code class="text-xs break-all text-text-muted js-path"></code>
+      </div>
+      <button 
+        class="btn-delete p-2 rounded-lg hover:bg-surface-600 transition-colors text-text-muted hover:text-red-400 js-delete"
+        aria-label="Eliminar"
+      >
+        <Icon name="trash" size="sm" />
+      </button>
+    </div>
+  </template>
+
+  <template id="path-empty-template">
+    <div class="py-12 text-center">
+      <div class="flex justify-center mb-3 text-text-muted opacity-20">
+        <Icon name="inbox" size="xl" />
+      </div>
+      <p class="text-sm text-text-muted">No hay rutas configuradas.</p>
+    </div>
+  </template>
+
+  <template id="path-error-template">
+    <div class="py-12 text-center text-red-500 bg-red-500/5 rounded-2xl border border-dashed border-red-500/20">
+      <div class="flex justify-center mb-2">
+        <Icon name="alert-circle" size="lg" />
+      </div>
+      <p class="text-sm font-medium">Error al cargar las rutas.</p>
+    </div>
+  </template>
 </Layout>
 
-
 <script>
-  import { icons } from "../components/Icon/icons";
-
-  function renderIcon(name: keyof typeof icons, size: "xs" | "sm" | "md" = "sm", className = "") {
-    const sizeClass = size === "xs" ? "w-3 h-3" : size === "sm" ? "w-4 h-4" : "w-5 h-5";
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${sizeClass} ${className}">
-        ${icons[name]}
-      </svg>
-    `;
-  }
-
   async function loadPaths() {
     const list = document.getElementById("path-list");
-    if (!list) return;
+    const cardTemplate = document.getElementById("path-card-template") as HTMLTemplateElement;
+    const emptyTemplate = document.getElementById("path-empty-template") as HTMLTemplateElement;
+    const errorTemplate = document.getElementById("path-error-template") as HTMLTemplateElement;
+
+    if (!list || !cardTemplate) return;
 
     try {
       const res = await fetch("/api/settings/asset-paths");
       const paths = await res.json();
 
       if (paths.length === 0) {
-        list.innerHTML = `<p class="py-12 text-center text-sm text-text-muted">No hay rutas configuradas.</p>`;
+        list.innerHTML = "";
+        list.appendChild(emptyTemplate.content.cloneNode(true));
         return;
       }
 
-      list.innerHTML = paths
-        .map(
-          (p: any) => `
-        <div class="card p-4 flex items-center justify-between gap-4 border border-border-subtle bg-surface-800 rounded-2xl">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="font-bold text-sm text-text-primary">${
-                p.label
-              }</span>
-              <span class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase flex items-center gap-1 ${
-                p.available 
-                  ? "bg-emerald-500/20 text-emerald-500" 
-                  : "bg-red-500/20 text-red-500"
-              }">
-                ${p.available 
-                  ? renderIcon("check-circle", "xs") + " Conectado" 
-                  : renderIcon("alert-circle", "xs") + " No disponible"}
-              </span>
-            </div>
-            <code class="text-xs break-all text-text-muted">${
-              p.path
-            }</code>
-          </div>
-          <button 
-            class="btn-delete p-2 rounded-lg hover:bg-surface-600 transition-colors text-text-muted hover:text-red-400"
-            data-path="${p.path}"
-            aria-label="Eliminar"
-          >
-            ${renderIcon("trash", "sm")}
-          </button>
-        </div>
-      `
-        )
-        .join("");
+      list.innerHTML = ""; // Clear loader
+      
+      paths.forEach((p: any) => {
+        const clone = cardTemplate.content.cloneNode(true) as DocumentFragment;
+        
+        // Populate data
+        clone.querySelector(".js-label")!.textContent = p.label;
+        clone.querySelector(".js-path")!.textContent = p.path;
+        
+        const badge = clone.querySelector(".js-badge")!;
+        const iconConnected = clone.querySelector(".js-icon-connected")!;
+        const iconDisconnected = clone.querySelector(".js-icon-disconnected")!;
+        const badgeText = clone.querySelector(".js-badge-text")!;
+        
+        if (p.available) {
+          badge.classList.add("bg-emerald-500/20", "text-emerald-500");
+          iconConnected.classList.remove("hidden");
+          badgeText.textContent = "Conectado";
+        } else {
+          badge.classList.add("bg-red-500/20", "text-red-500");
+          iconDisconnected.classList.remove("hidden");
+          badgeText.textContent = "No disponible";
+        }
 
-      // Add delete listeners
-      list.querySelectorAll(".btn-delete").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const pathToRemove = (btn as HTMLElement).dataset.path;
-          if (
-            confirm(`¿Seguro que quieres eliminar la ruta: ${pathToRemove}?`)
-          ) {
+        const deleteBtn = clone.querySelector(".js-delete") as HTMLElement;
+        deleteBtn.dataset.path = p.path;
+
+        deleteBtn.addEventListener("click", async () => {
+          if (confirm(`¿Seguro que quieres eliminar la ruta: ${p.path}?`)) {
             const res = await fetch("/api/settings/asset-paths", {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ path: pathToRemove }),
+              body: JSON.stringify({ path: p.path }),
             });
             if (res.ok) loadPaths();
           }
         });
+
+        list.appendChild(clone);
       });
     } catch (err) {
-      list.innerHTML = `<p class="py-12 text-center text-sm text-red-400">Error al cargar las rutas.</p>`;
+      list.innerHTML = "";
+      list.appendChild(errorTemplate.content.cloneNode(true));
     }
   }
 
   // Initial load
   loadPaths();
 
-  // Form handling
+  // ─── Add Path Toggle ──────────────────────────────────────────────────────
+  const toggleBtn = document.getElementById("toggle-add-form");
+  const formContainer = document.getElementById("add-form-container");
+  const toggleIcon = document.getElementById("toggle-icon");
+
+  toggleBtn?.addEventListener("click", () => {
+    const isHidden = formContainer?.classList.contains("hidden");
+    formContainer?.classList.toggle("hidden");
+    toggleIcon?.classList.toggle("rotate-180", isHidden);
+  });
+  
+  // Form handling (Keeping existing logic)
   const form = document.getElementById("add-path-form") as HTMLFormElement;
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const pathInput = document.getElementById("path-input") as HTMLInputElement;
-    const labelInput = document.getElementById(
-      "label-input"
-    ) as HTMLInputElement;
+    const labelInput = document.getElementById("label-input") as HTMLInputElement;
 
     const res = await fetch("/api/settings/asset-paths", {
       method: "POST",

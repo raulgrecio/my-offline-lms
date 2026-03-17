@@ -4,38 +4,32 @@ import { Icon } from "./Icon";
 interface Props {
   title: string;
   icon: string;
-  stats: string;
-  showAll: boolean;
-  baseUrl: string;
+  subtitle?: string;
 }
 
-const { title, icon, stats, showAll, baseUrl } = Astro.props;
-
-const toggleUrl = showAll ? `${baseUrl}?all=false` : baseUrl;
+const { title, icon, subtitle } = Astro.props;
 ---
 
-<div class="mb-8 flex items-end justify-between gap-4 flex-wrap">
-  <div>
-    <h1
-      class="text-2xl sm:text-3xl font-bold mb-1 flex items-center gap-2 text-text-primary"
-    >
+<div class="flex items-center justify-between mb-8">
+  <div class="space-y-1">
+    <h1 class="text-3xl font-bold text-text-primary flex items-center gap-3">
       <Icon
         name={icon as any}
-        size="lg"
-        className="text-brand-600"
+        size="md"
+        className="text-brand-500"
       />
       {title}
     </h1>
-    <p class="text-sm text-text-secondary">
-      {stats}
-    </p>
+    {
+      subtitle && (
+        <p class="text-sm text-text-secondary">
+          {subtitle}
+        </p>
+      )
+    }
   </div>
 
-  <a
-    href={toggleUrl}
-    class="btn-ghost text-xs group flex items-center gap-2"
-  >
-    <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
-    {showAll ? "Ocultar vacíos" : "Ver todos"}
-  </a>
+  <div class="flex items-center gap-3">
+    <slot name="actions" />
+  </div>
 </div>

@@ -1,0 +1,19 @@
+---
+import { Icon } from "./Icon";
+
+interface Props {
+  showAll: boolean;
+  baseUrl: string;
+}
+
+const { showAll, baseUrl } = Astro.props;
+const toggleUrl = showAll ? `${baseUrl}?all=false` : baseUrl;
+---
+
+<a
+  href={toggleUrl}
+  class="btn-ghost text-xs group flex items-center gap-2"
+>
+  <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
+  {showAll ? "Ocultar vacíos" : "Ver todos"}
+</a>

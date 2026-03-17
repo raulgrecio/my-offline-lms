@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import LearningPathCard from "../../components/LearningPathCard.astro";
 import PageHeader from "../../components/PageHeader.astro";
+import VisibilityToggle from "../../components/VisibilityToggle.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import {
   getAllLearningPaths,
@@ -12,6 +13,7 @@ import { getAllCourseProgress } from "../../features/progress";
 import { getActiveLearningPath } from "../../features/settings";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
+const baseUrl = "/learning-paths";
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();
@@ -45,10 +47,10 @@ const lpStats = learningPaths
   <PageHeader
     title="Learning Paths"
     icon="layers"
-    stats={`${lpStats.length} de ${learningPaths.length} paths disponibles`}
-    showAll={showAll}
-    baseUrl="/learning-paths"
-  />
+    subtitle={`${lpStats.length} de ${learningPaths.length} paths disponibles`}
+  >
+    <VisibilityToggle slot="actions" showAll={showAll} baseUrl={baseUrl} />
+  </PageHeader>
 
   {
     lpStats.length > 0 ? (

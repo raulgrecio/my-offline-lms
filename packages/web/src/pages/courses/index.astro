@@ -4,12 +4,13 @@ export const prerender = false;
 import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
 import PageHeader from "../../components/PageHeader.astro";
+import VisibilityToggle from "../../components/VisibilityToggle.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import { getAllCourses, getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
-
+const baseUrl = "/courses";
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p.status]));
@@ -30,10 +31,10 @@ const coursesWithStats = courses
   <PageHeader
     title="Cursos"
     icon="book-open"
-    stats={`${coursesWithStats.length} de ${courses.length} cursos disponibles`}
-    showAll={showAll}
-    baseUrl="/courses"
-  />
+    subtitle={`${coursesWithStats.length} de ${courses.length} cursos disponibles`}
+  >
+    <VisibilityToggle slot="actions" showAll={showAll} baseUrl={baseUrl} />
+  </PageHeader>
 
   {
     coursesWithStats.length > 0 ? (
