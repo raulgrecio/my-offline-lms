@@ -23,7 +23,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
     };
   }
 
-  getPdfProgress(assetId: string): PdfProgress | null {
+  getGuideProgress(assetId: string): PdfProgress | null {
     const row = this.db
       .prepare(
         "SELECT asset_id, position_sec, completed, updated_at FROM UserProgress WHERE asset_id = ?",

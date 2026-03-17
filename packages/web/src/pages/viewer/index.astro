@@ -1,6 +1,6 @@
 ---
 import ViewerLayout from "../../layouts/ViewerLayout.astro";
-import { getPdfProgress } from "../../features/progress";
+import { getGuideProgress } from "../../features/progress";
 import PDFViewer from "../../components/PDFViewer/Viewer.astro";
 
 const assetId = Astro.url.searchParams.get('assetId');
@@ -10,7 +10,7 @@ if (!assetId || !path) {
   return Astro.redirect('/courses');
 }
 
-const initialProgress = getPdfProgress(assetId);
+const initialProgress = getGuideProgress(assetId);
 const initialPage = initialProgress?.page || 1;
 ---
 

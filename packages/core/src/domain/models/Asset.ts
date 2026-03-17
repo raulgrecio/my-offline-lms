@@ -19,11 +19,14 @@ export interface GuideMetadata extends AssetMetadata {
   ekitType?: string;
   typeId?: string;
   offeringId?: string;
+  totalPages?: number;
 }
 
 export interface VideoMetadata extends AssetMetadata {
   duration?: number;
 }
+
+export type Metadata = GuideMetadata | VideoMetadata;
 
 interface BaseAsset {
   id: string;

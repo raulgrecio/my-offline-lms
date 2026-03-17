@@ -16,6 +16,7 @@ import {
 import {
   getCourseProgress,
   getVideoProgress,
+  getGuideProgress,
 } from "../../features/progress";
 
 const { id } = Astro.params;
@@ -38,6 +39,11 @@ const courseProgress = getCourseProgress(id);
 // Pre-fetch all video progress
 const videoProgressMap = new Map(
   videos.map(v => [v.id, getVideoProgress(v.id)])
+);
+
+// Pre-fetch all guide progress
+const guideProgressMap = new Map(
+  guides.map(g => [g.id, getGuideProgress(g.id)])
 );
 
 // Find the active video
@@ -196,6 +202,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             assetId={g.id}
             name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
             localUrl={localUrl(g.localPath!)}
+            progress={guideProgressMap.get(g.id)}
+            totalPages={g.metadata?.totalPages}
           />
         ))}
       </div>
@@ -242,4 +250,60 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
       window.location.reload();
     }
   });
+
+  // ─── Metadata Polling ─────────────────────────────────────────────────────
+  const missingMetadataCards = document.querySelectorAll<HTMLElement>('[data-missing-metadata="true"]');
+  
+  if (missingMetadataCards.length > 0) {
+    const refreshMetadata = async (card: HTMLElement) => {
+      const assetId = card.dataset.assetId;
+      try {
+        const res = await fetch(`/api/assets/metadata?assetId=${assetId}`);
+        if (res.ok) {
+          const metadata = await res.json();
+          if (metadata && metadata.totalPages) {
+            const statusLabel = card.querySelector('.status-label');
+            const isDone = card.dataset.isDone === 'true';
+            const currentPage = parseInt(card.dataset.currentPage || '0');
+            const totalPages = metadata.totalPages;
+
+            if (statusLabel) {
+              if (isDone) {
+                statusLabel.textContent = 'Completado';
+              } else if (currentPage > 1) {
+                statusLabel.textContent = `Página ${currentPage} de ${totalPages}`;
+              } else {
+                statusLabel.textContent = `Ver guía de ${totalPages} páginas`;
+              }
+            }
+            card.dataset.missingMetadata = 'false';
+            return true;
+          }
+        }
+      } catch (e) {
+        console.error('Error polling metadata:', e);
+      }
+      return false;
+    };
+
+    const pollAll = async () => {
+      const remaining = document.querySelectorAll<HTMLElement>('[data-missing-metadata="true"]');
+      if (remaining.length === 0) return;
+      
+      for (const card of remaining) {
+        await refreshMetadata(card);
+      }
+    };
+
+    // Poll on visibility change (re-focusing the course page after closing the PDF)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        pollAll();
+      }
+    });
+
+    // Initial soft polling after returning
+    setTimeout(pollAll, 1500);
+    setTimeout(pollAll, 4000);
+  }
 </script>

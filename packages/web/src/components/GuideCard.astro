@@ -1,13 +1,26 @@
 ---
 import { Icon } from "./Icon";
+import ProgressBar from "./ProgreesBar.astro";
 
-const { assetId, name, localUrl } = Astro.props;
+const { assetId, name, localUrl, progress, totalPages } = Astro.props;
+const isDone = progress?.completed;
+const currentPage = progress?.page;
+
+const statusText = isDone 
+  ? "Completado" 
+  : (currentPage && currentPage > 1 
+      ? `Continuar en la página ${currentPage} de ${totalPages || 'Ver guía'}` 
+      : (totalPages ? `Ver guía de ${totalPages} páginas` : "Ver guía"));
 ---
 <a
   href={`/viewer/?assetId=${assetId}&path=${encodeURIComponent(localUrl)}`}
   target="_blank"
   rel="noopener"
-  class="card flex items-center gap-3 p-4 no-underline"
+  class="card flex items-center gap-3 p-4 no-underline group"
+  data-asset-id={assetId}
+  data-missing-metadata={!totalPages ? "true" : "false"}
+  data-is-done={isDone ? "true" : "false"}
+  data-current-page={currentPage || 0}
 >
   <div
     class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-surface-900 text-brand-600 border border-border-subtle"
@@ -15,19 +28,21 @@ const { assetId, name, localUrl } = Astro.props;
     <Icon name="file-text" size="md" />
   </div>
   <div class="flex-1 min-w-0">
-    <p
-      class="text-sm font-medium line-clamp-2 text-text-primary"
-    >
+    <p class="text-sm font-medium line-clamp-2 text-text-primary">
       {name}
     </p>
-    <div class="flex items-center gap-1.5 mt-1">
+    <div class="flex items-center gap-2 mt-1">
       <span
         class="text-2xs font-bold px-1.5 py-0.5 rounded bg-surface-900 text-text-muted"
       >PDF</span
       >
-      <span class="text-2xs text-text-muted"
-        >Ver guía</span
-      >
+      <span class:list={[
+        "text-2xs text-text-muted flex items-center gap-1",
+        isDone ? "bg-brand-600/10 text-brand-600" : "text-text-muted"
+      ]}>
+        {isDone && <Icon name="check-circle" size="xs" />}
+        <span class="status-label">{statusText}</span>
+      </span>
     </div>
   </div>
 </a>

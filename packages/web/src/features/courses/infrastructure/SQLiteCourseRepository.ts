@@ -1,4 +1,4 @@
-import { type Course, type Asset, type IDatabase } from "@my-offline-lms/core";
+import { type Course, type Asset, type IDatabase, type Metadata } from "@my-offline-lms/core";
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 
 export class SQLiteCourseRepository implements ICourseRepository {
@@ -31,5 +31,31 @@ export class SQLiteCourseRepository implements ICourseRepository {
       status: row.status,
       localPath: row.local_path,
     }));
+  }
+
+  getAssetById(id: string): Asset | null {
+    const row = this.db
+      .prepare("SELECT * FROM Course_Assets WHERE id = ?")
+      .get(id) as any;
+    if (!row) return null;
+    return {
+      id: row.id,
+      courseId: row.course_id,
+      type: row.type,
+      url: row.url,
+      metadata: row.metadata ? JSON.parse(row.metadata) : {},
+      status: row.status,
+      localPath: row.local_path,
+    };
+  }
+
+  updateAssetMetadata({assetId, metadata}: {assetId: string, metadata: Metadata}): void {
+    const result = this.db
+      .prepare("UPDATE Course_Assets SET metadata = ? WHERE id = ?")
+      .run(JSON.stringify(metadata), assetId);
+
+    if (result && result.changes === 0) {
+      throw new Error(`Asset with id ${assetId} not found`);
+    }
   }
 }

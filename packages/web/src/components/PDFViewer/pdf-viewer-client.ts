@@ -44,6 +44,8 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       
       totalPagesEl.textContent = pdfDoc.numPages.toString();
       pageInput.max = pdfDoc.numPages.toString();
+      const totalPages = pdfDoc.numPages;
+      updateAssetTotalPages(totalPages);
       loading.remove();
 
       const filename = path.split('/').pop()?.replace('.pdf', '') || 'Documento';
@@ -354,6 +356,16 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
 
     // Shortest possible lock to allow state to settle
     setTimeout(() => { isUserNavigating = false; }, 50);
+  }
+
+  async function updateAssetTotalPages(totalPages: number) {
+    try {
+      await fetch('/api/assets/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assetId, totalPages })
+      });
+    } catch (e) {}
   }
 
   async function saveProgress(page: number) {

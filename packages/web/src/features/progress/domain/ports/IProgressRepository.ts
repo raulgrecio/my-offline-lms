@@ -6,7 +6,7 @@ import type { PdfProgress } from "../model/PdfProgress";
 
 export interface IProgressRepository {
   getVideoProgress(assetId: string): VideoProgress | null;
-  getPdfProgress(assetId: string): PdfProgress | null;
+  getGuideProgress(assetId: string): PdfProgress | null;
   getCourseProgress(courseId: string): CourseProgress | null;
   getAllCourseProgress(): CourseProgress[];
   getLastWatchedAsset(): (Asset & { positionSec: number }) | null;
