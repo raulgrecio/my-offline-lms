@@ -49,25 +49,32 @@ const lpStats = learningPaths
     icon="layers"
     subtitle={`${lpStats.length} de ${learningPaths.length} paths disponibles`}
   >
-    <VisibilityToggle slot="actions" showAll={showAll} baseUrl={baseUrl} />
+    <VisibilityToggle
+      slot="actions"
+      showAll={showAll}
+      baseUrl={baseUrl}
+      targetIds={["learning-paths-container", "page-header-subtitle"]}
+    />
   </PageHeader>
-
-  {
-    lpStats.length > 0 ? (
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {lpStats.map((lp) => (
-          <LearningPathCard
-            id={lp.id}
-            title={lp.title}
-            description={lp.description}
-            courseCount={lp.courseCount}
-            completedCount={lp.completedCount}
-            isActive={lp.id === activePathId}
-          />
-        ))}
-      </div>
-    ) : (
-      <EmptyState message="Sin learning paths descargados." />
-    )
-  }
+  
+  <div id="learning-paths-container">
+    {
+      lpStats.length > 0 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {lpStats.map((lp) => (
+            <LearningPathCard
+              id={lp.id}
+              title={lp.title}
+              description={lp.description}
+              courseCount={lp.courseCount}
+              completedCount={lp.completedCount}
+              isActive={lp.id === activePathId}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState message="Sin learning paths descargados." />
+      )
+    }
+  </div>
 </Layout>

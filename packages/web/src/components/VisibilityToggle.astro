@@ -4,16 +4,79 @@ import { Icon } from "./Icon";
 interface Props {
   showAll: boolean;
   baseUrl: string;
+  targetIds: string | string[];
 }
 
-const { showAll, baseUrl } = Astro.props;
+const { showAll, baseUrl, targetIds } = Astro.props;
 const toggleUrl = showAll ? `${baseUrl}?all=false` : baseUrl;
+const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(',') : targetIds;
 ---
 
 <a
   href={toggleUrl}
   class="btn-ghost text-xs group flex items-center gap-2"
+  data-visibility-toggle
+  data-target-ids={targetIdsStr}
 >
   <Icon name={showAll ? "eye-off" : "eye"} size="xs" />
   {showAll ? "Ocultar vacíos" : "Ver todos"}
 </a>
+
+<script>
+  function init() {
+    const toggleLinks = document.querySelectorAll('[data-visibility-toggle]');
+    
+    toggleLinks.forEach(link => {
+      const parent = link.parentNode;
+      if (!parent || !(link instanceof HTMLElement)) return;
+
+      const targetIds = link.getAttribute('data-target-ids')?.split(',') || [];
+      if (targetIds.length === 0) return;
+
+      // Remove existing listener to avoid duplicates during Astro transitions
+      const newLink = link.cloneNode(true) as HTMLElement;
+      parent.replaceChild(newLink, link);
+      
+      newLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url = newLink.getAttribute('href');
+        if (!url) return;
+
+        try {
+          newLink.classList.add('opacity-50', 'pointer-events-none');
+          
+          const response = await fetch(url);
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          // Update all targeted containers
+          targetIds.forEach(id => {
+            const newContainer = doc.getElementById(id);
+            const currentContainer = document.getElementById(id);
+            if (newContainer && currentContainer) {
+              currentContainer.innerHTML = newContainer.innerHTML;
+            }
+          });
+
+          // Update the toggle itself
+          const newToggle = doc.querySelector(`[data-visibility-toggle][data-target-ids="${targetIds.join(',')}"]`);
+          if (newToggle instanceof HTMLElement) {
+            newLink.setAttribute('href', newToggle.getAttribute('href') || '');
+            newLink.innerHTML = newToggle.innerHTML;
+          }
+
+          window.history.pushState({}, '', url);
+        } catch (error) {
+          console.error('Failed to fetch filtered list:', error);
+          window.location.href = url;
+        } finally {
+          newLink.classList.remove('opacity-50', 'pointer-events-none');
+        }
+      });
+    });
+  }
+
+  init();
+  document.addEventListener('astro:after-swap', init);
+</script>

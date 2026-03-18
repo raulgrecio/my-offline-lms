@@ -33,23 +33,30 @@ const coursesWithStats = courses
     icon="book-open"
     subtitle={`${coursesWithStats.length} de ${courses.length} cursos disponibles`}
   >
-    <VisibilityToggle slot="actions" showAll={showAll} baseUrl={baseUrl} />
+    <VisibilityToggle
+      slot="actions"
+      showAll={showAll}
+      baseUrl={baseUrl}
+      targetIds={["courses-container", "page-header-subtitle"]}
+    />
   </PageHeader>
 
-  {
-    coursesWithStats.length > 0 ? (
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {coursesWithStats.map((c) => (
-          <CourseCard
-            id={c.id}
-            title={c.title}
-            status={c.status}
-            assetCount={c.assetCount}
-          />
-        ))}
-      </div>
-    ) : (
-      <EmptyState message="Sin cursos descargados." />
-    )
-  }
+  <div id="courses-container">
+    {
+      coursesWithStats.length > 0 ? (
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {coursesWithStats.map((c) => (
+            <CourseCard
+              id={c.id}
+              title={c.title}
+              status={c.status}
+              assetCount={c.assetCount}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState message="Sin cursos descargados." />
+      )
+    }
+  </div>
 </Layout>
