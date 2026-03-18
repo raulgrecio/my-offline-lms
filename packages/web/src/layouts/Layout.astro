@@ -36,12 +36,13 @@ const navLinks = [
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
-      const theme =
-        localStorage.getItem("theme") ||
-        (window.matchMedia("(prefers-color-scheme: light)").matches
-          ? "light"
-          : "dark");
-      document.documentElement.setAttribute("data-theme", theme);
+      (function () {
+        const saved = localStorage.getItem('theme');
+        const system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        const theme = saved || system;
+
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
     </script>
   </head>
   <body class="min-h-screen flex flex-col">

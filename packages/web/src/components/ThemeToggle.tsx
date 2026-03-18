@@ -1,20 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Icon } from './Icon';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-
-  useEffect(() => {
-    // Initial load
-    const saved = localStorage.getItem('theme') as 'dark' | 'light' | null;
-    const initial = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-    setTheme(initial);
-    document.documentElement.setAttribute('data-theme', initial);
-  }, []);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+  });
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     const newTheme = theme === 'dark' ? 'light' : 'dark';
+
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
@@ -27,11 +23,7 @@ export default function ThemeToggle() {
       title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}
     >
       <div className="w-5 h-5 flex items-center justify-center">
-        {theme === 'dark' ? (
-          <Icon name="sun" size="md" />
-        ) : (
-          <Icon name="moon" size="md" />
-        )}
+        <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
       </div>
     </button>
   );
