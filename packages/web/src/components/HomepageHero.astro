@@ -1,5 +1,6 @@
 ---
 import { Icon } from "./Icon";
+import { APP_ROUTES } from "../platform/router/routes";
 
 interface Props {
   lastWatched?: any;
@@ -42,7 +43,7 @@ const { lastWatched, lastWatchedCourse } = Astro.props;
             </p>
           )}
           <a
-            href={`/courses/${lastWatched.courseId}`}
+            href={APP_ROUTES.COURSES.DETAIL(lastWatched.courseId)}
             class="btn-primary px-8 py-4 text-base shadow-brand/50 hover:shadow-brand transition-all flex items-center gap-3 w-full sm:w-auto justify-center"
           >
             <Icon name="play" size="sm" strokeWidth={3} />

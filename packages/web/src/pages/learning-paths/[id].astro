@@ -12,16 +12,17 @@ import {
 } from "../../features/learning-paths";
 import { getAllCourseProgress } from "../../features/progress";
 import { setActiveLearningPath } from "../../features/settings";
+import { APP_ROUTES } from "../../platform/router/routes";
 
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect("/learning-paths");
+if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 // Set this as the active LP when visiting
 setActiveLearningPath(id);
 
 const path = getLearningPathById(id);
-if (!path) return Astro.redirect("/learning-paths");
+if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const courses = getCoursesForPath(id);
 const allProgress = getAllCourseProgress();
@@ -37,9 +38,9 @@ const progress =
 <Layout title={path.title} description={path.description}>
   <!-- Breadcrumb -->
   <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a href="/" class="text-text-muted no-underline hover:underline">Inicio</a>
+    <a href={APP_ROUTES.HOME} class="text-text-muted no-underline hover:underline">Inicio</a>
     <Icon name="chevron-right" size="xs" />
-    <a href="/learning-paths" class="text-text-muted no-underline hover:underline">Learning Paths</a>
+    <a href={APP_ROUTES.LEARNING_PATHS.INDEX} class="text-text-muted no-underline hover:underline">Learning Paths</a>
     <Icon name="chevron-right" size="xs" />
     <span class="text-text-secondary">{path.title}</span>
   </nav>

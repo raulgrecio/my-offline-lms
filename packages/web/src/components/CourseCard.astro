@@ -2,6 +2,7 @@
 import type { CourseStatusType } from "../features/progress/domain/model/CourseProgress";
 import ProgressBadge from "./ProgressBadge.astro";
 import { Icon } from "./Icon";
+import { APP_ROUTES } from "../platform/router/routes";
 
 interface Props {
   id: string;
@@ -21,7 +22,7 @@ const {
 ---
 
 <a
-  href={`/courses/${id}`}
+  href={APP_ROUTES.COURSES.DETAIL(id)}
   class="card flex items-center gap-4 p-4 group no-underline"
 >
   <!-- Order number or icon -->

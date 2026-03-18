@@ -19,12 +19,13 @@ import {
   getGuideProgress,
 } from "../../features/progress";
 import { API_ROUTES } from "../../platform/api/routes";
+import { APP_ROUTES } from "../../platform/router/routes";
 
 const { id } = Astro.params;
-if (!id) return Astro.redirect('/courses');
+if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
 const course = getCourseById(id);
-if (!course) return Astro.redirect('/courses');
+if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
@@ -68,9 +69,9 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 <Layout title={course.title}>
   <!-- Breadcrumb -->
   <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a href="/" class="text-text-muted no-underline hover:underline">Inicio</a>
+    <a href={APP_ROUTES.HOME} class="text-text-muted no-underline hover:underline">Inicio</a>
     <Icon name="chevron-right" size="xs" />
-    <a href="/courses" class="text-text-muted no-underline hover:underline">Cursos</a>
+    <a href={APP_ROUTES.COURSES.INDEX} class="text-text-muted no-underline hover:underline">Cursos</a>
     <Icon name="chevron-right" size="xs" />
     <span class="text-text-secondary">{course.title}</span>
   </nav>

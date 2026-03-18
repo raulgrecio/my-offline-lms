@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle";
 import { Icon } from "../components/Icon";
+import { APP_ROUTES } from "../platform/router/routes";
 
 interface Props {
   title: string;
@@ -13,10 +14,10 @@ const { title, description = "Tu plataforma de aprendizaje offline" } =
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { href: "/", label: "Inicio", icon: "home" },
-  { href: "/learning-paths", label: "Learning Paths", icon: "layers" },
-  { href: "/courses", label: "Cursos", icon: "book-open" },
-  { href: "/settings", label: "Ajustes", icon: "settings" },
+  { href: APP_ROUTES.HOME, label: "Inicio", icon: "home" },
+  { href: APP_ROUTES.LEARNING_PATHS.INDEX, label: "Learning Paths", icon: "layers" },
+  { href: APP_ROUTES.COURSES.INDEX, label: "Cursos", icon: "book-open" },
+  { href: APP_ROUTES.SETTINGS, label: "Ajustes", icon: "settings" },
 ] as const;
 ---
 
@@ -53,7 +54,7 @@ const navLinks = [
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
           <a
-            href="/"
+            href={APP_ROUTES.HOME}
             class="flex items-center gap-2 shrink-0 no-underline"
           >
             <div

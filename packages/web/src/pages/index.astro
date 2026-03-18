@@ -16,6 +16,7 @@ import {
   getLastWatchedAsset,
 } from "../features/progress";
 import { getActiveLearningPath } from "../features/settings";
+import { APP_ROUTES } from "../platform/router/routes";
 
 const learningPaths = getAllLearningPaths();
 const courses = getAllCourses();
@@ -54,7 +55,7 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
         <!-- ─── Learning Paths ─────────────────────────────────────────── -->
         {lpStats.length > 0 && (
           <section class="mb-10">
-            <SectionHeader title="Learning Paths" icon="layers" href="/learning-paths" />
+            <SectionHeader title="Learning Paths" icon="layers" href={APP_ROUTES.LEARNING_PATHS.INDEX} />
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {lpStats.map((lp) => (
                 <LearningPathCard
@@ -84,7 +85,7 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
               ))}
             </div>
             <div class="mt-4 text-center">
-              <a href="/courses" class="btn-ghost group">
+              <a href={APP_ROUTES.COURSES.INDEX} class="btn-ghost group">
                 Ver todos los cursos
                 <Icon name="chevron-right" size="sm" className="transition-transform group-hover:translate-x-1" />
               </a>

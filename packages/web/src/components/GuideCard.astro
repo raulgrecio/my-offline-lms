@@ -1,5 +1,6 @@
 ---
 import { Icon } from "./Icon";
+import { APP_ROUTES } from "../platform/router/routes";
 
 const { assetId, name, localUrl, progress, totalPages } = Astro.props;
 const maxPage = progress?.maxPage || 0;
@@ -13,7 +14,7 @@ const statusText = isDone
       : (totalPages ? `Ver guía de ${totalPages} páginas` : "Ver guía"));
 ---
 <a
-  href={`/viewer/?assetId=${assetId}&path=${encodeURIComponent(localUrl)}`}
+  href={APP_ROUTES.VIEWER.PDF(assetId, localUrl)}
   target="_blank"
   rel="noopener"
   class="card flex items-center gap-3 p-4 no-underline group"

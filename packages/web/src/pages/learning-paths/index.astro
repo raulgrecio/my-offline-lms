@@ -11,9 +11,10 @@ import {
 import { getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 import { getActiveLearningPath } from "../../features/settings";
+import { APP_ROUTES } from "../../platform/router/routes";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
-const baseUrl = "/learning-paths";
+const baseUrl = APP_ROUTES.LEARNING_PATHS.INDEX;
 
 const learningPaths = getAllLearningPaths();
 const allProgress = getAllCourseProgress();

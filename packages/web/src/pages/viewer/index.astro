@@ -3,11 +3,13 @@ import ViewerLayout from "../../layouts/ViewerLayout.astro";
 import { getGuideProgress } from "../../features/progress";
 import PDFViewer from "../../components/PDFViewer/Viewer.astro";
 
+import { APP_ROUTES } from "../../platform/router/routes";
+
 const assetId = Astro.url.searchParams.get('assetId');
 const path = Astro.url.searchParams.get('path');
 
 if (!assetId || !path) {
-  return Astro.redirect('/courses');
+  return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 }
 
 const initialProgress = getGuideProgress(assetId);
