@@ -74,7 +74,7 @@ export default function SubtitleDisplay({ src, currentTime, isVisible, opacity =
 
     const fetchVTT = async () => {
       try {
-        const text = await apiClient.get<string>(src);
+        const text = await apiClient.getText(src);
         parseVTT(text);
       } catch (error) {
         console.error('Error fetching subtitles:', error);
