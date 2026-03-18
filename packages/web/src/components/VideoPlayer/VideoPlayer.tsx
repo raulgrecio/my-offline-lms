@@ -21,6 +21,7 @@ export interface VideoPlayerProps {
   initialTime?: number;
   initialDuration?: number;
   assetId: string;
+  courseId: string;
   progressUrl: string;
 }
 
@@ -31,6 +32,7 @@ export default function VideoPlayer({
   initialTime = 0,
   initialDuration = 0,
   assetId,
+  courseId,
   progressUrl
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,9 +121,9 @@ export default function VideoPlayer({
         detail: { assetId, position, completed }
       }));
 
-      await apiClient.post(progressUrl, { assetId, position, completed });
+      await apiClient.post(progressUrl, { assetId, courseId, position, duration });
     } catch { /* silent */ }
-  }, [assetId]);
+  }, [assetId, courseId, duration, progressUrl]);
 
   // Save progress every 5 seconds
   useEffect(() => {

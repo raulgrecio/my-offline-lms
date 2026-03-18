@@ -15,7 +15,25 @@ export function runMigrations(db: SQLiteDatabase) {
     console.log("[DB] Added UserProgress.max_position column");
   } catch (e) {}
 
-  // 3. Crear tablas base si no existen
+  // 3. Añadir columnas de agregación a UserCourseProgress
+  try {
+    db.exec("ALTER TABLE UserCourseProgress ADD COLUMN completed_assets INTEGER DEFAULT 0;");
+    db.exec("ALTER TABLE UserCourseProgress ADD COLUMN in_progress_assets INTEGER DEFAULT 0;");
+    db.exec("ALTER TABLE UserCourseProgress ADD COLUMN total_assets INTEGER DEFAULT 0;");
+    console.log("[DB] Added aggregation columns to UserCourseProgress");
+  } catch (e) {}
+
+  // 4. Añadir columnas de agregación a UserLearningPathProgress
+  try {
+    db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN completed_courses INTEGER DEFAULT 0;");
+    db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN in_progress_courses INTEGER DEFAULT 0;");
+    db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN total_courses INTEGER DEFAULT 0;");
+    console.log("[DB] Added aggregation columns to UserLearningPathProgress");
+  } catch (e) {}
+
+  // 5. [Eliminado] Refactorización de progreso global (course_id eliminado)
+
+  // 6. Crear tablas base si no existen
   db.exec(`
     CREATE TABLE IF NOT EXISTS UserProgress (
       asset_id     TEXT PRIMARY KEY,
@@ -26,9 +44,21 @@ export function runMigrations(db: SQLiteDatabase) {
     );
 
     CREATE TABLE IF NOT EXISTS UserCourseProgress (
-      course_id  TEXT PRIMARY KEY,
-      status     TEXT DEFAULT 'not_started',
-      updated_at TEXT DEFAULT (datetime('now'))
+      course_id          TEXT PRIMARY KEY,
+      status             TEXT DEFAULT 'not_started',
+      completed_assets   INTEGER DEFAULT 0,
+      in_progress_assets INTEGER DEFAULT 0,
+      total_assets       INTEGER DEFAULT 0,
+      updated_at         TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS UserLearningPathProgress (
+      path_id            TEXT PRIMARY KEY,
+      status             TEXT DEFAULT 'not_started',
+      completed_courses  INTEGER DEFAULT 0,
+      in_progress_courses INTEGER DEFAULT 0,
+      total_courses      INTEGER DEFAULT 0,
+      updated_at         TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS UserSettings (

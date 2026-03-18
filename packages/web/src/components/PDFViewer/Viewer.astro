@@ -5,22 +5,24 @@ import ViewerMain from "./ViewerMain.astro";
 import SaveIndicator from "./SaveIndicator.astro";
 import { API_ROUTES } from "../../platform/api/routes";
 
-interface Props {
+interface ViewerProps {
   assetId: string;
+  courseId: string;
   path: string;
   initialPage: number;
 }
 
-const { assetId, path, initialPage } = Astro.props;
+const { assetId, courseId, path, initialPage } = Astro.props as ViewerProps;
 ---
 
 <div 
   id="viewer-root"
   class="flex flex-col h-screen overflow-hidden bg-surface-950 text-text-primary"
   data-asset-id={assetId}
+  data-course-id={courseId}
   data-path={path}
   data-initial-page={initialPage}
-  data-progress-url={API_ROUTES.PROGRESS.PDF}
+  data-progress-url={API_ROUTES.PROGRESS.GUIDE}
   data-metadata-url={API_ROUTES.ASSETS.METADATA()}
 >
   <ViewerHeader path={path} />
@@ -38,12 +40,13 @@ const { assetId, path, initialPage } = Astro.props;
   const root = document.getElementById('viewer-root') as HTMLElement;
   if (root) {
     const assetId = root.dataset.assetId!;
+    const courseId = root.dataset.courseId!;
     const path = root.dataset.path!;
     const initialPage = parseInt(root.dataset.initialPage || '1');
     const progressUrl = root.dataset.progressUrl!;
     const metadataUrl = root.dataset.metadataUrl!;
     
-    initPdfViewer(assetId, path, initialPage, { progressUrl, metadataUrl });
+    initPdfViewer({assetId, courseId, path, initialPage, options: { progressUrl, metadataUrl }});
   }
 </script>
 

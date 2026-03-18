@@ -1,27 +1,37 @@
 ---
 import { Icon } from "./Icon";
 import { APP_ROUTES } from "../platform/router/routes";
+import type { AssetProgress } from "../features/progress/domain/model/AssetProgress";
 
-const { assetId, name, localUrl, progress, totalPages } = Astro.props;
-const maxPage = progress?.maxPage || 0;
-const currentPage = progress?.page || 0;
-const isDone = progress?.completed || (totalPages > 0 && maxPage >= totalPages);
+interface GuideCardProps {
+  assetId: string;
+  courseId: string;
+  name: string;
+  localUrl: string;
+  progress: AssetProgress | null;
+  totalPages: number;
+}
+
+const { assetId, courseId, name, localUrl, progress, totalPages } = Astro.props as GuideCardProps;
+const maxPosition = progress?.maxPosition || 0;
+const currentPosition = progress?.position || 0;
+const isDone = progress?.completed || (totalPages > 0 && maxPosition >= totalPages);
 
 const statusText = isDone 
   ? "Completado" 
-  : (currentPage > 1 
-      ? `Continuar en la pág. ${currentPage}${maxPage > currentPage ? ` (visto hasta la ${maxPage})` : ""}` 
+  : (currentPosition > 1 
+      ? `Continuar en la pág. ${currentPosition}${maxPosition > currentPosition ? ` (visto hasta la ${maxPosition})` : ""}` 
       : (totalPages ? `Ver guía de ${totalPages} páginas` : "Ver guía"));
 ---
 <a
-  href={APP_ROUTES.VIEWER.PDF(assetId, localUrl)}
+  href={APP_ROUTES.VIEWER.GUIDE({ assetId, courseId, path: localUrl })}
   target="_blank"
   rel="noopener"
   class="card flex items-center gap-3 p-4 no-underline group"
   data-asset-id={assetId}
   data-missing-metadata={!totalPages ? "true" : "false"}
   data-is-done={isDone ? "true" : "false"}
-  data-current-page={currentPage || 0}
+  data-current-page={currentPosition || 0}
 >
   <div
     class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-surface-900 text-brand-600 border border-border-subtle"

@@ -1,24 +1,25 @@
 ---
+import { APP_ROUTES } from "../../platform/router/routes";
 import ViewerLayout from "../../layouts/ViewerLayout.astro";
-import { getGuideProgress } from "../../features/progress";
+import { getAssetProgress } from "../../features/progress";
 import PDFViewer from "../../components/PDFViewer/Viewer.astro";
 
-import { APP_ROUTES } from "../../platform/router/routes";
-
 const assetId = Astro.url.searchParams.get('assetId');
+const courseId = Astro.url.searchParams.get('courseId');
 const path = Astro.url.searchParams.get('path');
 
-if (!assetId || !path) {
+if (!assetId || !courseId || !path) {
   return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 }
 
-const initialProgress = getGuideProgress(assetId);
-const initialPage = initialProgress?.page || 1;
+const initialProgress = getAssetProgress(assetId);
+const initialPage = initialProgress?.position || 1;
 ---
 
-<ViewerLayout title="Visor de PDF">
+<ViewerLayout title="Visor de Guía">
   <PDFViewer 
     assetId={assetId} 
+    courseId={courseId}
     path={path} 
     initialPage={initialPage} 
   />

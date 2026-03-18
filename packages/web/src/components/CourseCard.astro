@@ -1,15 +1,16 @@
 ---
-import type { CourseStatusType } from "../features/progress/domain/model/CourseProgress";
+import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
 import ProgressBadge from "./ProgressBadge.astro";
 import { Icon } from "./Icon";
 import { APP_ROUTES } from "../platform/router/routes";
 
-interface Props {
+interface CourseCardProps {
   id: string;
   title: string;
-  status?: CourseStatusType;
+  status?: ProgressStatus;
   orderIndex?: number;
-  assetCount?: number;
+  totalAssets?: number;
+  progress?: number;
 }
 
 const {
@@ -17,8 +18,9 @@ const {
   title,
   status = "not_started",
   orderIndex,
-  assetCount,
-} = Astro.props;
+  totalAssets = 0,
+  progress = 0,
+} = Astro.props as CourseCardProps;
 ---
 
 <a
@@ -48,9 +50,9 @@ const {
     <div class="flex items-center gap-2 flex-wrap">
       <ProgressBadge status={status} />
       {
-        assetCount !== undefined && (
+        totalAssets > 0 && (
           <span class="text-xs text-text-muted">
-            {assetCount} assets
+            {totalAssets} assets · {progress}%
           </span>
         )
       }

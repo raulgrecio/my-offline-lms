@@ -10,7 +10,7 @@ import {
   getLearningPathById,
   getCoursesForPath,
 } from "../../features/learning-paths";
-import { getAllCourseProgress } from "../../features/progress";
+import { getAllCourseProgress, getLearningPathProgress } from "../../features/progress";
 import { setActiveLearningPath } from "../../features/settings";
 import { APP_ROUTES } from "../../platform/router/routes";
 
@@ -25,14 +25,12 @@ const path = getLearningPathById(id);
 if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const courses = getCoursesForPath(id);
+const lpProgress = getLearningPathProgress(id);
 const allProgress = getAllCourseProgress();
-const progressMap = new Map(allProgress.map((p) => [p.courseId, p.status]));
+const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 
-const completedCount = courses.filter(
-  (c) => progressMap.get(c.id) === "completed"
-).length;
-const progress =
-  courses.length > 0 ? Math.round((completedCount / courses.length) * 100) : 0;
+const completedCount = lpProgress?.completedCourses || 0;
+const progress = lpProgress?.progress || 0;
 ---
 
 <Layout title={path.title} description={path.description}>
@@ -116,14 +114,22 @@ const progress =
     {
       courses.length > 0 ? (
         <div class="flex flex-col gap-3">
-          {courses.map((course) => (
-            <CourseCard
-              id={course.id}
-              title={course.title}
-              status={progressMap.get(course.id) ?? "not_started"}
-              orderIndex={course.orderIndex}
-            />
-          ))}
+          {courses.map((course) => {
+            const progressObj = progressMap.get(course.id);
+            const progressPercent = progressObj?.totalAssets && progressObj.totalAssets > 0
+              ? Math.round((progressObj.completedAssets / progressObj.totalAssets) * 100)
+              : 0;
+            return (
+              <CourseCard
+                id={course.id}
+                title={course.title}
+                status={progressObj?.status ?? "not_started"}
+                totalAssets={progressObj?.totalAssets}
+                progress={progressPercent}
+                orderIndex={course.orderIndex}
+              />
+            );
+          })}
         </div>
       ) : (
         <p class="text-text-muted">

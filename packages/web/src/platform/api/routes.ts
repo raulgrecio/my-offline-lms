@@ -11,7 +11,7 @@ export const API_ROUTES = {
   },
   PROGRESS: {
     COURSE: "/api/progress/course",
-    PDF: "/api/progress/pdf",
+    GUIDE: "/api/progress/guide",
     VIDEO: "/api/progress/video",
   },
 } as const;

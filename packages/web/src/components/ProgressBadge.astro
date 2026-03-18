@@ -1,8 +1,8 @@
 ---
 import type { AssetStatus } from "@core/domain/models/Asset";
-import type { CourseStatusType } from "../features/progress/domain/model/CourseProgress";
+import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
 
-type StatusType = CourseStatusType | AssetStatus;
+type StatusType = ProgressStatus | AssetStatus;
 
 interface Props {
   status: StatusType
@@ -12,19 +12,19 @@ const { status } = Astro.props;
 
 const normalized = status?.toUpperCase();
 
-const config: Record<string, { cls: string; label: string; dot: string }> = {
-  COMPLETED: { cls: 'badge badge-completed', label: 'Completado', dot: '●' },
-  IN_PROGRESS: { cls: 'badge badge-in-progress', label: 'En progreso', dot: '●' },
-  NOT_STARTED: { cls: 'badge badge-not-started', label: 'Sin iniciar', dot: '○' },
-  FAILED: { cls: 'badge badge-failed', label: 'Error', dot: '✕' },
-  PENDING: { cls: 'badge badge-not-started', label: 'Pendiente', dot: '○' },
-  DOWNLOADING: { cls: 'badge badge-in-progress', label: 'Descargando', dot: '⟳' },
+const config: Record<string, { cls: string; label: string }> = {
+  COMPLETED: { cls: 'badge badge-completed', label: 'Completado' },
+  IN_PROGRESS: { cls: 'badge badge-in-progress badge-pulse', label: 'En progreso' },
+  NOT_STARTED: { cls: 'badge badge-not-started', label: 'Sin iniciar' },
+  FAILED: { cls: 'badge badge-failed', label: 'Error' },
+  PENDING: { cls: 'badge badge-not-started', label: 'Pendiente' },
+  DOWNLOADING: { cls: 'badge badge-downloading badge-pulse', label: 'Descargando' },
 };
 
 const cfg = config[normalized] ?? config['NOT_STARTED'];
 ---
 
 <span class={cfg.cls}>
-  <span aria-hidden="true">{cfg.dot}</span>
+  <span class="status-dot" aria-hidden="true"></span>
   {cfg.label}
 </span>

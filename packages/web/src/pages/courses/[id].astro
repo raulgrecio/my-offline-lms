@@ -15,8 +15,7 @@ import {
 } from "../../features/courses";
 import {
   getCourseProgress,
-  getVideoProgress,
-  getGuideProgress,
+  getAssetProgress,
 } from "../../features/progress";
 import { API_ROUTES } from "../../platform/api/routes";
 import { APP_ROUTES } from "../../platform/router/routes";
@@ -40,12 +39,12 @@ const courseProgress = getCourseProgress(id);
 
 // Pre-fetch all video progress
 const videoProgressMap = new Map(
-  videos.map(v => [v.id, getVideoProgress(v.id)])
+  videos.map(video => [video.id, getAssetProgress(video.id)])
 );
 
 // Pre-fetch all guide progress
 const guideProgressMap = new Map(
-  guides.map(g => [g.id, getGuideProgress(g.id)])
+  guides.map(guide => [guide.id, getAssetProgress(guide.id)])
 );
 
 // Find the active video
@@ -130,6 +129,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
               <VideoPlayer
                 client:load
                 assetId={activeVideo.id}
+                courseId={id}
                 src={localUrl(activeVideo.localPath!)}
                 title={activeVideo.metadata?.name ?? activeVideo.id}
                 subtitleSrc={subtitleUrl(activeVideo.localPath!)}
@@ -269,6 +269,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
         {guides.map((g, i) => (
           <GuideCard
             assetId={g.id}
+            courseId={id}
             name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
             localUrl={localUrl(g.localPath!)}
             progress={guideProgressMap.get(g.id)}

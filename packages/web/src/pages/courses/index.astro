@@ -13,18 +13,27 @@ const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = "/courses";
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();
-const progressMap = new Map(allProgress.map((p) => [p.courseId, p.status]));
+const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 
 const coursesWithStats = courses
   .map((c) => {
+    const progress = progressMap.get(c.id);
     const assets = getCourseAssets(c.id);
+    const completedAssets = progress?.completedAssets || 0;
+    const totalAssets = assets.filter((a) => a.status === "COMPLETED").length;
+    const progressPercent = totalAssets > 0 
+      ? Math.round((completedAssets / totalAssets) * 100) 
+      : 0;
+
     return {
       ...c,
-      status: progressMap.get(c.id) ?? "not_started",
-      assetCount: assets.filter((a) => a.status === "COMPLETED").length,
+      status: progress?.status ?? "not_started",
+      completedAssets,
+      totalAssets,
+      progressPercent,
     };
   })
-  .filter((c) => showAll || c.assetCount > 0);
+  .filter((c) => showAll || c.totalAssets > 0);
 ---
 
 <Layout title="Cursos">
@@ -50,7 +59,8 @@ const coursesWithStats = courses
               id={c.id}
               title={c.title}
               status={c.status}
-              assetCount={c.assetCount}
+              totalAssets={c.totalAssets}
+              progress={c.progressPercent}
             />
           ))}
         </div>

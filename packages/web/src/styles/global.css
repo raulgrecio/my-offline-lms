@@ -35,6 +35,13 @@
   --shadow-elevation: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --glass-bg: rgba(0, 0, 0, 0.85);
   --glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Status Colors (New) */
+  --color-status-completed: #10b981; /* Emerald 500 */
+  --color-status-in-progress: var(--brand-400);
+  --color-status-not-started: #94a3b8; /* Slate 400 */
+  --color-status-failed: #ef4444; /* Red 500 */
+  --color-status-downloading: #f59e0b; /* Amber 500 */
 }
 
 [data-theme="light"] {
@@ -54,6 +61,12 @@
   --shadow-elevation: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(0, 0, 0, 0.1);
+
+  --color-status-completed: #059669; /* Emerald 600 */
+  --color-status-in-progress: var(--brand-600);
+  --color-status-not-started: #64748b; /* Slate 500 */
+  --color-status-failed: #dc2626; /* Red 600 */
+  --color-status-downloading: #d97706; /* Amber 600 */
 }
 
 @theme {
@@ -159,33 +172,109 @@
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.65rem;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
     border-radius: var(--radius-badge);
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
   }
 
   .badge-completed {
     background-color: color-mix(in srgb, var(--color-status-completed) 15%, transparent);
     color: var(--color-status-completed);
+    border-color: color-mix(in srgb, var(--color-status-completed) 30%, transparent);
   }
 
   .badge-in-progress {
     background-color: color-mix(in srgb, var(--color-status-in-progress) 15%, transparent);
     color: var(--color-status-in-progress);
+    border-color: color-mix(in srgb, var(--color-status-in-progress) 30%, transparent);
   }
 
   .badge-not-started {
     background-color: color-mix(in srgb, var(--color-status-not-started) 15%, transparent);
     color: var(--color-status-not-started);
+    border-color: color-mix(in srgb, var(--color-status-not-started) 30%, transparent);
   }
 
   .badge-failed {
     background-color: color-mix(in srgb, var(--color-status-failed) 15%, transparent);
     color: var(--color-status-failed);
+    border-color: color-mix(in srgb, var(--color-status-failed) 30%, transparent);
+  }
+
+  .badge-downloading {
+    background-color: color-mix(in srgb, var(--color-status-downloading) 15%, transparent);
+    color: var(--color-status-downloading);
+    border-color: color-mix(in srgb, var(--color-status-downloading) 30%, transparent);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    background-color: currentColor;
+    flex-shrink: 0;
+  }
+
+  .badge-not-started .status-dot {
+    background-color: transparent;
+    border: 1.5px solid currentColor;
+  }
+
+  .badge-failed .status-dot {
+    background-color: transparent;
+    border-radius: 0;
+    width: 8px;
+    height: 8px;
+    position: relative;
+  }
+
+  .badge-failed .status-dot::before,
+  .badge-failed .status-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1.5px;
+    background-color: currentColor;
+  }
+
+  .badge-failed .status-dot::before { transform: translateY(-50%) rotate(45deg); }
+  .badge-failed .status-dot::after { transform: translateY(-50%) rotate(-45deg); }
+
+  .badge-downloading .status-dot {
+    background-color: transparent;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    animation: badge-spin 1s linear infinite;
+  }
+
+  /* Micro-animations */
+  .badge-pulse {
+    animation: badge-pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes badge-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+  }
+
+  @keyframes badge-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   /* Progress bar */

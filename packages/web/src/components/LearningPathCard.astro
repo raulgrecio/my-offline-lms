@@ -3,14 +3,17 @@ import ProgressBadge from "./ProgressBadge.astro";
 import { Icon } from "./Icon";
 import { APP_ROUTES } from "../platform/router/routes";
 import ProgressBar from "../components/ProgreesBar.astro";
+import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
 
-interface Props {
+interface LearningPathCardProps {
   id: string;
   title: string;
   description: string;
   courseCount: number;
   completedCount?: number;
   isActive?: boolean;
+  progress?: number;
+  status?: ProgressStatus;
 }
 
 const {
@@ -20,16 +23,10 @@ const {
   courseCount,
   completedCount = 0,
   isActive = false,
-} = Astro.props;
+  progress = 0,
+  status = "not_started",
+} = Astro.props as LearningPathCardProps;
 
-const progress =
-  courseCount > 0 ? Math.round((completedCount / courseCount) * 100) : 0;
-const status =
-  completedCount === courseCount && courseCount > 0
-    ? "completed"
-    : completedCount > 0
-    ? "in_progress"
-    : "not_started";
 ---
 
 <a

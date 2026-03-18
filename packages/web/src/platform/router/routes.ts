@@ -13,7 +13,7 @@ export const APP_ROUTES = {
     DETAIL: (id: string) => `/learning-paths/${id}`,
   },
   VIEWER: {
-    PDF: (assetId: string, path: string) => `/viewer/?assetId=${assetId}&path=${encodeURIComponent(path)}`,
+    GUIDE: ({ assetId, courseId, path }: { assetId: string, courseId: string, path: string }) => `/viewer/?assetId=${assetId}&courseId=${courseId}&path=${encodeURIComponent(path)}`,
   },
   SETTINGS: "/settings",
 } as const;

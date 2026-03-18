@@ -1,7 +1,14 @@
-export type CourseStatusType = "not_started" | "in_progress" | "completed";
+import { type ProgressStatus } from "./ProgressStatus";
 
 export interface CourseProgress {
     courseId: string;
-    status: CourseStatusType;
+    status: ProgressStatus;
+    completedAssets: number;
+    inProgressAssets: number;
+    totalAssets: number;
     updatedAt: string;
+}
+
+export interface EnrichedCourseProgress extends CourseProgress {
+    progress: number;
 }
