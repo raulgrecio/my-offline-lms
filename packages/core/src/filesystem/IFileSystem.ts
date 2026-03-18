@@ -7,5 +7,6 @@ export interface IFileSystem {
   isAbsolute(p: string): boolean;
   dirname(p: string): string;
   readdirSync(p: string): string[];
+  mkdirSync(p: string, options?: { recursive?: boolean }): void;
   sep: string;
 }

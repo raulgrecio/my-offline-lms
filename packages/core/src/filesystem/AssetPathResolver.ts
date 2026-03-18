@@ -38,6 +38,7 @@ export class AssetPathResolver {
           defaultWritePath: "data/assets",
           searchPaths: [{ path: "data/assets", label: "Default" }],
         };
+        this.saveConfig();
       }
     } catch (error) {
       console.error("Error loading asset paths config:", error);
@@ -45,7 +46,17 @@ export class AssetPathResolver {
         defaultWritePath: "data/assets",
         searchPaths: [{ path: "data/assets", label: "Default" }],
       };
+      this.saveConfig();
     }
+  }
+
+  private saveConfig() {
+    if (!this.config) return;
+    const dir = this.fs.dirname(this.configPath);
+    if (!this.fs.existsSync(dir)) {
+      this.fs.mkdirSync(dir, { recursive: true });
+    }
+    this.fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
   }
 
   /**

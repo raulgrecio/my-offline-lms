@@ -36,6 +36,10 @@ export class NodeFileSystem implements IFileSystem {
     return fs.readdirSync(p);
   }
 
+  mkdirSync(p: string, options?: { recursive?: boolean }): void {
+    fs.mkdirSync(p, options);
+  }
+
   get sep(): string {
     return path.sep;
   }

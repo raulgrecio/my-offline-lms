@@ -41,71 +41,58 @@ const lpStats = await Promise.all(
 let lastWatchedCourse = lastWatched
   ? getCourseById(lastWatched.courseId)
   : null;
+
+const hasContent = courses.length > 0 || lpStats.length > 0;
 ---
 
 <Layout title="Inicio" description="Tu catálogo de aprendizaje offline">
-  <HomepageHero lastWatched={lastWatched} lastWatchedCourse={lastWatchedCourse} />
-
-  <!-- ─── Learning Paths ─────────────────────────────────────────── -->
   {
-    lpStats.length > 0 && (
-      <section class="mb-10">
-        <SectionHeader
-          title="Learning Paths"
-          icon="layers"
-          href="/learning-paths"
-        />
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {lpStats.map((lp) => (
-            <LearningPathCard
-              id={lp.id}
-              title={lp.title}
-              description={lp.description}
-              courseCount={lp.courseCount}
-              completedCount={lp.completedCount}
-              isActive={lp.id === activePathId}
-            />
-          ))}
-        </div>
-      </section>
-    )
-  }
+    hasContent ? (
+      <>
+        <HomepageHero lastWatched={lastWatched} lastWatchedCourse={lastWatchedCourse} />
+        
+        <!-- ─── Learning Paths ─────────────────────────────────────────── -->
+        {lpStats.length > 0 && (
+          <section class="mb-10">
+            <SectionHeader title="Learning Paths" icon="layers" href="/learning-paths" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lpStats.map((lp) => (
+                <LearningPathCard
+                  id={lp.id}
+                  title={lp.title}
+                  description={lp.description}
+                  courseCount={lp.courseCount}
+                  completedCount={lp.completedCount}
+                  isActive={lp.id === activePathId}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-  <!-- ─── All Courses ────────────────────────────────────────────── -->
-  {
-    courses.length > 0 && (
-      <section>
-        <SectionHeader
-          id="cursos-section"
-          title="Cursos"
-          icon="book-open"
-        />
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {courses.slice(0, 8).map((course) => (
-            <CourseCard
-              id={course.id}
-              title={course.title}
-              status={progressMap.get(course.id) ?? "not_started"}
-            />
-          ))}
-        </div>
-        <div class="mt-4 text-center">
-          <a href="/courses" class="btn-ghost group">
-            Ver todos los cursos
-            <Icon
-              name="chevron-right"
-              size="sm"
-              className="transition-transform group-hover:translate-x-1"
-            />
-          </a>
-        </div>
-      </section>
-    )
-  }
-
-  <!-- Empty state -->
-  {
-    courses.length === 0 && learningPaths.length === 0 && (
+        <!-- ─── All Courses ────────────────────────────────────────────── -->
+        {courses.length > 0 && (
+          <section>
+            <SectionHeader id="cursos-section" title="Cursos" icon="book-open" />
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {courses.slice(0, 8).map((course) => (
+                <CourseCard
+                  id={course.id}
+                  title={course.title}
+                  status={progressMap.get(course.id) ?? "not_started"}
+                />
+              ))}
+            </div>
+            <div class="mt-4 text-center">
+              <a href="/courses" class="btn-ghost group">
+                Ver todos los cursos
+                <Icon name="chevron-right" size="sm" className="transition-transform group-hover:translate-x-1" />
+              </a>
+            </div>
+          </section>
+        )}
+      </>
+    ) : (
       <EmptyState
         title="Sin contenido descargado"
         message="Ejecuta el scraper para descargar cursos y learning paths."
