@@ -1,5 +1,3 @@
-import { type Metadata } from "@my-offline-lms/core";
-
 import { getDb } from "../../platform/db/database";
 import { SQLiteCourseRepository } from "./infrastructure/SQLiteCourseRepository";
 import { GetCourseListing } from "./application/GetCourseListing";

@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "type-check": "astro check"
+    "type-check": "NODE_OPTIONS='--max-old-space-size=8192' astro check"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.4",

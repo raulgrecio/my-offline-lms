@@ -3,7 +3,6 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import fs from 'fs';
 import path from 'path';
-import { Readable } from 'stream';
 
 import { AssetPathResolver, NodeFileSystem, getMimeType } from '@my-offline-lms/core';
 

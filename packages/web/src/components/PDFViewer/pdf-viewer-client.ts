@@ -1,3 +1,4 @@
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import * as pdfjs from 'pdfjs-dist';
 
 export function initPdfViewer(assetId: string, path: string, initialPage: number) {
@@ -29,18 +30,18 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   const errorTemplate = document.getElementById('error-template') as HTMLTemplateElement;
   const helpTemplate = document.getElementById('help-template') as HTMLTemplateElement;
 
-  let pdfDoc: any = null;
+  const renderedPages = new Set<number>();
+  const renderedThumbs = new Set<number>();
+
+  let pdfDoc:  PDFDocumentProxy | null = null;
   let currentPage = initialPage;
   let currentZoom = 1.0;
   let currentRotation = 0;
   let isSaving = false;
   let isUserNavigating = false;
   let isSidebarOpen = window.innerWidth > 640;
-  const renderedPages = new Set<number>();
-  const renderedThumbs = new Set<number>();
   let thumbQueue: number[] = [];
   let isProcessingQueue = false;
-  let assumedAspectRatio = 1.41; // A4 default
   let baseWidth = 595; // A4 default
   let baseHeight = 842; // A4 default
 
@@ -65,7 +66,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       const viewport = firstPage.getViewport({ scale: 1, rotation: 0 });
       baseWidth = viewport.width;
       baseHeight = viewport.height;
-      assumedAspectRatio = baseHeight / baseWidth;
+
       const isLandscape = baseWidth > baseHeight;
       const fitMode = isLandscape ? 'height' : 'width';
       
@@ -100,6 +101,8 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   function syncPlaceholders() {
+    if (!pdfDoc) return;
+
     const isRotated = currentRotation === 90 || currentRotation === 270;
     const pageWidth = (isRotated ? baseHeight : baseWidth) * currentZoom;
     const pageHeight = (isRotated ? baseWidth : baseHeight) * currentZoom;
@@ -130,6 +133,8 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   function syncThumbnailPlaceholders() {
+    if (!pdfDoc) return;
+
     const isRotated = currentRotation === 90 || currentRotation === 270;
     const pageWidth = isRotated ? baseHeight : baseWidth;
     const pageHeight = isRotated ? baseWidth : baseHeight;
@@ -182,7 +187,9 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   async function renderPage(num: number) {
+    if (!pdfDoc) return;
     if (renderedPages.has(num)) return;
+
     renderedPages.add(num);
 
     const wrapper = container.querySelector(`[data-page-number="${num}"]`) as HTMLElement;
@@ -208,7 +215,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
       wrapper.classList.remove('opacity-30');
       wrapper.appendChild(canvas);
 
-      await page.render({ canvasContext: ctx, viewport, transform: [dpr, 0, 0, dpr, 0, 0] }).promise;
+      await page.render({ canvasContext: ctx, viewport, transform: [dpr, 0, 0, dpr, 0, 0], canvas }).promise;
       renderThumbnail(num); // Render thumb as well if needed
     } catch (e) {
       console.error(`Page ${num} render error:`, e);
@@ -217,7 +224,9 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   async function renderThumbnail(num: number) {
+    if (!pdfDoc) return;
     if (renderedThumbs.has(num)) return;
+
     renderedThumbs.add(num);
 
     const thumb = thumbnailsContainer.querySelector(`[data-thumb-number="${num}"]`) as HTMLElement;
@@ -254,13 +263,15 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
         canvasContainer.appendChild(canvas);
       }
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      await page.render({ canvasContext: ctx, viewport, canvas }).promise;
     } catch (e) {
       renderedThumbs.delete(num);
     }
   }
 
   function prioritizeThumbnailsAround(center: number) {
+    if (!pdfDoc) return;
+
     const range = 15;
     const start = Math.max(1, center - range);
     const end = Math.min(pdfDoc.numPages, center + range);
@@ -348,8 +359,9 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   function goToPage(num: number, behavior: ScrollBehavior = 'instant') {
+    if (!pdfDoc) return;
     if (num < 1 || num > pdfDoc.numPages) return;
-    
+
     isUserNavigating = true;
     currentPage = num;
     pageInput.value = num.toString();
@@ -378,9 +390,11 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
   }
 
   async function saveProgress(page: number) {
+    if (!pdfDoc) return;
     if (isSaving) return;
+
     isSaving = true;
-    
+
     try {
       await fetch('/api/progress/pdf', {
         method: 'POST',

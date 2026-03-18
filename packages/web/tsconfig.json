@@ -6,8 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@core/*": ["../core/src/*"]
-    }
+    },
+    "skipLibCheck": true
   },
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "include": [".astro/types.d.ts", "./src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

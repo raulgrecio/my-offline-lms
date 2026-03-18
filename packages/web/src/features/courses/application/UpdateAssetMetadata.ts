@@ -1,4 +1,4 @@
-import { type GuideMetadata, type Metadata } from "@my-offline-lms/core";
+import { type GuideMetadata } from "@my-offline-lms/core";
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 
 export class UpdateGuideTotalPages {

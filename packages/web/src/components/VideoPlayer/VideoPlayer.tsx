@@ -204,7 +204,7 @@ export default function VideoPlayer({
       ref={containerRef}
       className="relative rounded-xl overflow-hidden group w-full video-player-container bg-surface-950 aspect-video max-h-[70vh] cursor-pointer"
       onMouseMove={showControlsTemp}
-      onClick={(e) => {
+      onClick={() => {
         togglePlay();
         if (showSettings) setShowSettings(false);
       }}
