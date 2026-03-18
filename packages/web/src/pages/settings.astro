@@ -4,6 +4,9 @@ export const prerender = false;
 import Layout from "../layouts/Layout.astro";
 import { Icon } from "../components/Icon";
 import PageHeader from "../components/PageHeader.astro";
+import { API_ROUTES } from "../platform/api/routes";
+
+const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
 ---
 
 <Layout title="Ajustes de Assets">
@@ -13,7 +16,7 @@ import PageHeader from "../components/PageHeader.astro";
     subtitle="Gestiona las ubicaciones donde el sistema buscará vídeos y guías (PDFs)."   
   />
 
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-4xl mx-auto" id="settings-view" data-api-url={assetPathsUrl}>
     <!-- ─── Add New Path (Unified Collapsible Card) ─────────────────────────── -->
     <section class="mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all">
       <button 
@@ -140,8 +143,10 @@ import PageHeader from "../components/PageHeader.astro";
 </Layout>
 
 <script>
-  import { API_ROUTES } from "../platform/api/routes";
   import { apiClient } from "../platform/api/client";
+
+  const settingsView = document.getElementById("settings-view") as HTMLElement;
+  const apiUrl = settingsView.dataset.apiUrl!;
 
   async function loadPaths() {
     const list = document.getElementById("path-list");
@@ -152,7 +157,7 @@ import PageHeader from "../components/PageHeader.astro";
     if (!list || !cardTemplate) return;
 
     try {
-      const paths = await apiClient.get<any[]>(API_ROUTES.SETTINGS.ASSET_PATHS);
+      const paths = await apiClient.get<any[]>(apiUrl);
 
       if (paths.length === 0) {
         list.innerHTML = "";
@@ -190,7 +195,7 @@ import PageHeader from "../components/PageHeader.astro";
         deleteBtn.addEventListener("click", async () => {
           if (confirm(`¿Seguro que quieres eliminar la ruta: ${p.path}?`)) {
             try {
-              await apiClient.delete(API_ROUTES.SETTINGS.ASSET_PATHS, { path: p.path });
+              await apiClient.delete(apiUrl, { path: p.path });
               loadPaths();
             } catch (err) {
               alert(`Error al eliminar: ${err instanceof Error ? err.message : String(err)}`);
@@ -228,7 +233,7 @@ import PageHeader from "../components/PageHeader.astro";
     const labelInput = document.getElementById("label-input") as HTMLInputElement;
 
     try {
-      await apiClient.post(API_ROUTES.SETTINGS.ASSET_PATHS, {
+      await apiClient.post(apiUrl, {
         path: pathInput.value.trim(),
         label: labelInput.value.trim(),
       });

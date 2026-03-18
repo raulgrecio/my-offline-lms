@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-import { API_ROUTES } from '../../platform/api/routes';
 import { apiClient } from '../../platform/api/client';
 import SubtitleDisplay from './SubtitleDisplay';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';
@@ -22,6 +21,7 @@ export interface VideoPlayerProps {
   initialTime?: number;
   initialDuration?: number;
   assetId: string;
+  progressUrl: string;
 }
 
 export default function VideoPlayer({
@@ -30,7 +30,8 @@ export default function VideoPlayer({
   subtitleSrc,
   initialTime = 0,
   initialDuration = 0,
-  assetId
+  assetId,
+  progressUrl
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -118,7 +119,7 @@ export default function VideoPlayer({
         detail: { assetId, position, completed }
       }));
 
-      await apiClient.post(API_ROUTES.PROGRESS.VIDEO, { assetId, position, completed });
+      await apiClient.post(progressUrl, { assetId, position, completed });
     } catch { /* silent */ }
   }, [assetId]);
 

@@ -67,6 +67,12 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 ---
 
 <Layout title={course.title}>
+  <div 
+    id="course-page-context" 
+    data-course-id={id}
+    data-progress-url={API_ROUTES.PROGRESS.COURSE}
+    data-metadata-url={API_ROUTES.ASSETS.METADATA()}
+  >
   <!-- Breadcrumb -->
   <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
     <a href={APP_ROUTES.HOME} class="text-text-muted no-underline hover:underline">Inicio</a>
@@ -129,6 +135,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 subtitleSrc={subtitleUrl(activeVideo.localPath!)}
                 initialTime={videoProgressMap.get(activeVideo.id)?.position ?? 0}
                 initialDuration={activeVideo.metadata?.duration ?? 0}
+                progressUrl={API_ROUTES.PROGRESS.VIDEO}
               />
             )}
           </div>
@@ -282,11 +289,15 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
       <p class="font-medium text-sm text-text-secondary">Sin assets descargados para este curso.</p>
     </div>
   )}
+  </div>
 </Layout>
 
 <script>
   import { apiClient } from "../../platform/api/client";
-  import { API_ROUTES } from "../../platform/api/routes";
+
+  const context = document.getElementById('course-page-context') as HTMLElement;
+  const COURSE_PROGRESS_URL = context.dataset.progressUrl!;
+  const METADATA_URL = context.dataset.metadataUrl!;
 
   // ─── Video playlist switching ────────────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.video-item').forEach(btn => {
@@ -306,7 +317,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     const newStatus = isCompleted ? 'in_progress' : 'completed';
 
     try {
-      await apiClient.post(API_ROUTES.PROGRESS.COURSE, { courseId, status: newStatus });
+      await apiClient.post(COURSE_PROGRESS_URL, { courseId, status: newStatus });
       window.location.reload();
     } catch (err) {
       console.error('Failed to update course progress:', err);
@@ -386,7 +397,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     const refreshMetadata = async (card: HTMLElement) => {
       const assetId = card.dataset.assetId;
       try {
-        const metadata = await apiClient.get<any>(API_ROUTES.ASSETS.METADATA(assetId));
+        const metadata = await apiClient.get<any>(`${METADATA_URL}?assetId=${assetId}`);
         if (metadata && metadata.totalPages) {
             const statusLabel = card.querySelector('.status-label');
             const isDone = card.dataset.isDone === 'true';

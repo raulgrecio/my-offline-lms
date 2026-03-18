@@ -3,6 +3,7 @@ import ViewerHeader from "./ViewerHeader.astro";
 import ViewerSidebar from "./ViewerSidebar.astro";
 import ViewerMain from "./ViewerMain.astro";
 import SaveIndicator from "./SaveIndicator.astro";
+import { API_ROUTES } from "../../platform/api/routes";
 
 interface Props {
   assetId: string;
@@ -19,6 +20,8 @@ const { assetId, path, initialPage } = Astro.props;
   data-asset-id={assetId}
   data-path={path}
   data-initial-page={initialPage}
+  data-progress-url={API_ROUTES.PROGRESS.PDF}
+  data-metadata-url={API_ROUTES.ASSETS.METADATA()}
 >
   <ViewerHeader path={path} />
 
@@ -37,7 +40,10 @@ const { assetId, path, initialPage } = Astro.props;
     const assetId = root.dataset.assetId!;
     const path = root.dataset.path!;
     const initialPage = parseInt(root.dataset.initialPage || '1');
-    initPdfViewer(assetId, path, initialPage);
+    const progressUrl = root.dataset.progressUrl!;
+    const metadataUrl = root.dataset.metadataUrl!;
+    
+    initPdfViewer(assetId, path, initialPage, { progressUrl, metadataUrl });
   }
 </script>
 
