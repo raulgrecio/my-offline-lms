@@ -1,6 +1,9 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import * as pdfjs from 'pdfjs-dist';
 
+import { API_ROUTES } from '../../platform/api/routes';
+import { apiClient } from '../../platform/api/client';
+
 export function initPdfViewer(assetId: string, path: string, initialPage: number) {
   // Configure worker
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
@@ -381,11 +384,7 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
 
   async function updateAssetTotalPages(totalPages: number) {
     try {
-      await fetch('/api/assets/metadata', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId, totalPages })
-      });
+      await apiClient.post(API_ROUTES.ASSETS.METADATA(), { assetId, totalPages });
     } catch (e) {}
   }
 
@@ -396,13 +395,10 @@ export function initPdfViewer(assetId: string, path: string, initialPage: number
     isSaving = true;
 
     try {
-      await fetch('/api/progress/pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId, page, completed: page === pdfDoc.numPages })
-      });
+      await apiClient.post(API_ROUTES.PROGRESS.PDF, { assetId, page, completed: page === pdfDoc.numPages });
       showSaveConfirmation();
-    } catch (e) {} finally {
+    } catch (e) {
+    } finally {
       isSaving = false;
     }
   }

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
+import { API_ROUTES } from '../../platform/api/routes';
+import { apiClient } from '../../platform/api/client';
 import SubtitleDisplay from './SubtitleDisplay';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';
 import PlayOverlay from './PlayOverlay';
@@ -116,11 +118,7 @@ export default function VideoPlayer({
         detail: { assetId, position, completed }
       }));
 
-      await fetch('/api/progress/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId, position, completed }),
-      });
+      await apiClient.post(API_ROUTES.PROGRESS.VIDEO, { assetId, position, completed });
     } catch { /* silent */ }
   }, [assetId]);
 

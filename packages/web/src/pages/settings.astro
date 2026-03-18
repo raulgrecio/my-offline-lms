@@ -3,7 +3,7 @@ export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import { Icon } from "../components/Icon";
-import PageHeader from "src/components/PageHeader.astro";
+import PageHeader from "../components/PageHeader.astro";
 ---
 
 <Layout title="Ajustes de Assets">
@@ -140,6 +140,9 @@ import PageHeader from "src/components/PageHeader.astro";
 </Layout>
 
 <script>
+  import { API_ROUTES } from "../platform/api/routes";
+  import { apiClient } from "../platform/api/client";
+
   async function loadPaths() {
     const list = document.getElementById("path-list");
     const cardTemplate = document.getElementById("path-card-template") as HTMLTemplateElement;
@@ -149,8 +152,7 @@ import PageHeader from "src/components/PageHeader.astro";
     if (!list || !cardTemplate) return;
 
     try {
-      const res = await fetch("/api/settings/asset-paths");
-      const paths = await res.json();
+      const paths = await apiClient.get<any[]>(API_ROUTES.SETTINGS.ASSET_PATHS);
 
       if (paths.length === 0) {
         list.innerHTML = "";
@@ -187,12 +189,12 @@ import PageHeader from "src/components/PageHeader.astro";
 
         deleteBtn.addEventListener("click", async () => {
           if (confirm(`¿Seguro que quieres eliminar la ruta: ${p.path}?`)) {
-            const res = await fetch("/api/settings/asset-paths", {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ path: p.path }),
-            });
-            if (res.ok) loadPaths();
+            try {
+              await apiClient.delete(API_ROUTES.SETTINGS.ASSET_PATHS, { path: p.path });
+              loadPaths();
+            } catch (err) {
+              alert(`Error al eliminar: ${err instanceof Error ? err.message : String(err)}`);
+            }
           }
         });
 
@@ -225,22 +227,17 @@ import PageHeader from "src/components/PageHeader.astro";
     const pathInput = document.getElementById("path-input") as HTMLInputElement;
     const labelInput = document.getElementById("label-input") as HTMLInputElement;
 
-    const res = await fetch("/api/settings/asset-paths", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      await apiClient.post(API_ROUTES.SETTINGS.ASSET_PATHS, {
         path: pathInput.value.trim(),
         label: labelInput.value.trim(),
-      }),
-    });
+      });
 
-    if (res.ok) {
       pathInput.value = "";
       labelInput.value = "";
       loadPaths();
-    } else {
-      const data = await res.json();
-      alert(`Error: ${data.error}`);
+    } catch (err) {
+      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   });
 </script>

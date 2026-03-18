@@ -18,6 +18,7 @@ import {
   getVideoProgress,
   getGuideProgress,
 } from "../../features/progress";
+import { API_ROUTES } from "../../platform/api/routes";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/courses');
@@ -54,15 +55,13 @@ const activeVideo = videoId
 
 // Generate file:// URL for local assets
 function localUrl(localPath: string): string {
-  // Strip leading /home/... to a relative /assets/... if needed
-  // We serve files from /data via a static route
-  return `/api/asset/local-asset?path=${encodeURIComponent(localPath)}`;
+  return API_ROUTES.ASSETS.LOCAL_ASSET(localPath);
 }
 
 function subtitleUrl(videoLocalPath: string): string | undefined {
   const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
   const subtitlePath = `${base}.${env.SUBTITLE_LANGUAGE}.vtt`;
-  return `/api/asset/local-asset?path=${encodeURIComponent(subtitlePath)}`;
+  return API_ROUTES.ASSETS.LOCAL_ASSET(subtitlePath);
 } 
 ---
 
@@ -285,6 +284,9 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 </Layout>
 
 <script>
+  import { apiClient } from "../../platform/api/client";
+  import { API_ROUTES } from "../../platform/api/routes";
+
   // ─── Video playlist switching ────────────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.video-item').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -302,14 +304,11 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     const isCompleted = btnComplete.dataset.completed === 'true';
     const newStatus = isCompleted ? 'in_progress' : 'completed';
 
-    const res = await fetch('/api/progress/course', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId, status: newStatus }),
-    });
-
-    if (res.ok) {
+    try {
+      await apiClient.post(API_ROUTES.PROGRESS.COURSE, { courseId, status: newStatus });
       window.location.reload();
+    } catch (err) {
+      console.error('Failed to update course progress:', err);
     }
   });
 
@@ -386,10 +385,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     const refreshMetadata = async (card: HTMLElement) => {
       const assetId = card.dataset.assetId;
       try {
-        const res = await fetch(`/api/assets/metadata?assetId=${assetId}`);
-        if (res.ok) {
-          const metadata = await res.json();
-          if (metadata && metadata.totalPages) {
+        const metadata = await apiClient.get<any>(API_ROUTES.ASSETS.METADATA(assetId));
+        if (metadata && metadata.totalPages) {
             const statusLabel = card.querySelector('.status-label');
             const isDone = card.dataset.isDone === 'true';
             const currentPage = parseInt(card.dataset.currentPage || '0');
@@ -407,7 +404,6 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             card.dataset.missingMetadata = 'false';
             return true;
           }
-        }
       } catch (e) {
         console.error('Error polling metadata:', e);
       }
