@@ -1,18 +1,19 @@
-import { Icon } from '../Icon';
+import React from 'react';
+import PlayerButton from './PlayerButton';
 
 export interface FullscreenButtonProps {
   isFullscreen: boolean;
   onToggle: () => void;
 }
 
-export default function FullscreenButton({ isFullscreen, onToggle }: FullscreenButtonProps) {
+const FullscreenButton = React.memo(({ isFullscreen, onToggle }: FullscreenButtonProps) => {
   return (
-    <button
+    <PlayerButton
+      icon={isFullscreen ? "minimize" : "maximize"}
+      title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
       onClick={onToggle}
-      className="text-text-secondary p-1.5 rounded-lg transition-transform hover:scale-110 opacity-70 hover:opacity-100"
-      aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
-    >
-      <Icon name={isFullscreen ? "minimize" : "maximize"} size="sm" />
-    </button>
+    />
   );
-}
+});
+
+export default FullscreenButton;

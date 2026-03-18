@@ -4,7 +4,7 @@ export function runMigrations(db: SQLiteDatabase) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS UserProgress (
       asset_id     TEXT PRIMARY KEY,
-      position_sec REAL DEFAULT 0,
+      position     REAL DEFAULT 0,
       max_position REAL DEFAULT 0,
       completed    INTEGER DEFAULT 0,
       updated_at   TEXT DEFAULT (datetime('now'))

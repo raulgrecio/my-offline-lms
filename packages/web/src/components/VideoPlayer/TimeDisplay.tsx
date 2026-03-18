@@ -11,7 +11,7 @@ export default function TimeDisplay({ currentTime, duration }: TimeDisplayProps)
   };
 
   return (
-    <span className="text-xs tabular-nums text-text-secondary">
+    <span className="text-xs tabular-nums text-white">
       {fmt(currentTime)} / {fmt(duration)}
     </span>
   );

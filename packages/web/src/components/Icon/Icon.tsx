@@ -13,7 +13,7 @@ export interface IconProps extends React.SVGProps<SVGSVGElement> {
   strokeWidth?: number;
 }
 
-export const Icon: React.FC<IconProps> = ({
+export const Icon: React.FC<IconProps> = React.memo(({
   name,
   size = 'md',
   strokeWidth = 2,
@@ -39,6 +39,6 @@ export const Icon: React.FC<IconProps> = ({
       {...props}
     />
   );
-};
+});
 
 export default Icon;

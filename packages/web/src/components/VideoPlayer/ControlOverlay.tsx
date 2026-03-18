@@ -8,12 +8,16 @@ export interface ControlOverlayProps {
 export default function ControlOverlay({ isVisible, children }: ControlOverlayProps) {
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 p-4 transition-opacity duration-300 flex flex-col gap-3 bg-glass-bg backdrop-blur-md border-t border-glass-border ${
-        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      className={`absolute inset-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-end bg-linear-to-t from-black/40 via-transparent to-transparent ${
+        isVisible ? 'opacity-100' : 'opacity-0'
       }`}
-      onClick={(e) => e.stopPropagation()}
     >
-      {children}
+      <div 
+        className="p-4 sm:p-6 pt-8 sm:pt-12 flex flex-col gap-3 pointer-events-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
     </div>
   );
 }

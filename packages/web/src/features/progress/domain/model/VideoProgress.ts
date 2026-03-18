@@ -1,7 +1,7 @@
 export interface VideoProgress {
     assetId: string;
-    positionSec: number;
-    maxPositionSec: number;
+    position: number;
+    maxPosition: number;
     completed: boolean;
     updatedAt: string;
 }

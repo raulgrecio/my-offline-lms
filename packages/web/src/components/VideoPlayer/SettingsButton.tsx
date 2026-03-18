@@ -1,18 +1,21 @@
-import { Icon } from '../Icon';
+import React from 'react';
+import PlayerButton from './PlayerButton';
 
 export interface SettingsButtonProps {
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export default function SettingsButton({ isOpen, onToggle }: SettingsButtonProps) {
+const SettingsButton = React.memo(({ isOpen, onToggle }: SettingsButtonProps) => {
   return (
-    <button
-      onClick={onToggle}
-      className={`p-1.5 rounded-lg transition-colors bg-surface-600 ${isOpen ? 'text-brand-400' : 'text-text-secondary hover:text-text-primary'}`}
+    <PlayerButton
+      icon="settings"
       title="Configuración de subtítulos"
-    >
-      <Icon name="settings" size="sm" />
-    </button>
+      isActive={isOpen}
+      onClick={onToggle}
+      activeColor="text-brand-400 bg-white/5"
+    />
   );
-}
+});
+
+export default SettingsButton;

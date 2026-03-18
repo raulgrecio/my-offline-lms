@@ -1,22 +1,21 @@
-import { Icon } from '../Icon';
+import React from 'react';
+import PlayerButton from './PlayerButton';
 
 export interface PlayPauseButtonProps {
   isPlaying: boolean;
   onToggle: () => void;
 }
 
-export default function PlayPauseButton({ isPlaying, onToggle }: PlayPauseButtonProps) {
+const PlayPauseButton = React.memo(({ isPlaying, onToggle }: PlayPauseButtonProps) => {
   return (
-    <button
+    <PlayerButton
+      icon={isPlaying ? "pause" : "play"}
+      className={!isPlaying ? "translate-x-0.5" : ""}
+      title={isPlaying ? 'Pausar' : 'Reproducir'}
+      isActive={!isPlaying}
       onClick={onToggle}
-      className="text-text-primary p-1 rounded transition-transform hover:scale-110"
-      aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-    >
-      {isPlaying ? (
-        <Icon name="pause" size="sm" fill="currentColor" />
-      ) : (
-        <Icon name="play" size="sm" fill="currentColor" />
-      )}
-    </button>
+    />
   );
-}
+});
+
+export default PlayPauseButton;

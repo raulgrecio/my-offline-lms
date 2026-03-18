@@ -11,17 +11,17 @@ export class SQLiteProgressRepository implements IProgressRepository {
   getVideoProgress(assetId: string): VideoProgress | null {
     const row = this.db
       .prepare(
-        "SELECT asset_id, position_sec, max_position, completed, updated_at FROM UserProgress WHERE asset_id = ?",
+        "SELECT asset_id, position, max_position, completed, updated_at FROM UserProgress WHERE asset_id = ?",
       )
       .get(assetId) as any;
     if (!row) return null;
-    const currentPos = row.position_sec || 0;
+    const currentPos = row.position || 0;
     const maxPos = row.max_position || 0;
     
     return {
       assetId: row.asset_id,
-      positionSec: currentPos,
-      maxPositionSec: Math.max(currentPos, maxPos),
+      position: currentPos,
+      maxPosition: Math.max(currentPos, maxPos),
       completed: row.completed === 1,
       updatedAt: row.updated_at,
     };
@@ -30,11 +30,11 @@ export class SQLiteProgressRepository implements IProgressRepository {
   getGuideProgress(assetId: string): PdfProgress | null {
     const row = this.db
       .prepare(
-        "SELECT asset_id, position_sec, max_position, completed, updated_at FROM UserProgress WHERE asset_id = ?",
+        "SELECT asset_id, position, max_position, completed, updated_at FROM UserProgress WHERE asset_id = ?",
       )
       .get(assetId) as any;
     if (!row) return null;
-    const currentPg = row.position_sec || 0;
+    const currentPg = row.position || 0;
     const maxPg = row.max_position || 0;
 
     return {
@@ -72,11 +72,11 @@ export class SQLiteProgressRepository implements IProgressRepository {
     }));
   }
 
-  getLastWatchedAsset(): (Asset & { positionSec: number }) | null {
+  getLastWatchedAsset(): (Asset & { position: number }) | null {
     const row = this.db
       .prepare(
         `
-      SELECT ca.*, up.position_sec
+      SELECT ca.*, up.position
       FROM UserProgress up
       JOIN Course_Assets ca ON ca.id = up.asset_id
       WHERE up.completed = 0 AND ca.type = 'video' AND ca.status = 'COMPLETED'
@@ -94,28 +94,28 @@ export class SQLiteProgressRepository implements IProgressRepository {
       metadata: row.metadata ? JSON.parse(row.metadata) : {},
       status: row.status,
       localPath: row.local_path,
-      positionSec: row.position_sec,
+      position: row.position,
     };
   }
 
   updateVideoProgress({
     assetId,
-    positionSec,
+    position,
     completed = false,
-  }: { assetId: string; positionSec: number; completed?: boolean }): void {
+  }: { assetId: string; position: number; completed?: boolean }): void {
     this.db
       .prepare(
         `
-      INSERT INTO UserProgress (asset_id, position_sec, max_position, completed, updated_at)
+      INSERT INTO UserProgress (asset_id, position, max_position, completed, updated_at)
       VALUES (?, ?, ?, ?, datetime('now'))
       ON CONFLICT(asset_id) DO UPDATE SET
-        position_sec = excluded.position_sec,
+        position     = excluded.position,
         max_position = MAX(max_position, excluded.max_position),
         completed    = CASE WHEN excluded.completed = 1 THEN 1 ELSE completed END,
         updated_at   = excluded.updated_at
     `,
       )
-      .run(assetId, positionSec, positionSec, completed ? 1 : 0);
+      .run(assetId, position, position, completed ? 1 : 0);
   }
 
   updatePdfProgress({
@@ -126,10 +126,10 @@ export class SQLiteProgressRepository implements IProgressRepository {
     this.db
       .prepare(
         `
-      INSERT INTO UserProgress (asset_id, position_sec, max_position, completed, updated_at)
+      INSERT INTO UserProgress (asset_id, position, max_position, completed, updated_at)
       VALUES (?, ?, ?, ?, datetime('now'))
       ON CONFLICT(asset_id) DO UPDATE SET
-        position_sec = excluded.position_sec,
+        position     = excluded.position,
         max_position = MAX(max_position, excluded.max_position),
         completed    = CASE WHEN excluded.completed = 1 THEN 1 ELSE completed END,
         updated_at   = excluded.updated_at

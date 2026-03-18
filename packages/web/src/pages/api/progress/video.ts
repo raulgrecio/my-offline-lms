@@ -6,10 +6,10 @@ import { updateVideoProgress } from '../../../features/progress';
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { assetId, positionSec, completed = false } = body;
+    const { assetId, position, completed = false } = body;
 
-    if (!assetId || positionSec === undefined) {
-      return new Response(JSON.stringify({ error: 'assetId and positionSec are required' }), {
+    if (!assetId || position === undefined) {
+      return new Response(JSON.stringify({ error: 'assetId and position are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     updateVideoProgress({
       assetId: String(assetId), 
-      positionSec: Number(positionSec), 
+      position: Number(position), 
       completed: Boolean(completed)
     });
 

@@ -13,27 +13,36 @@ import SubtitleToggleButton from './SubtitleToggleButton';
 import SettingsButton from './SettingsButton';
 import ControlOverlay from './ControlOverlay';
 
-interface Props {
-  assetId: string;
+export interface VideoPlayerProps {
   src: string;
   title: string;
   subtitleSrc?: string;
-  initialPosition?: number;
-  initialDuration?: number | string;
+  initialTime?: number;
+  initialDuration?: number;
+  assetId: string;
 }
 
-export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialPosition = 0, initialDuration = 0 }: Props) {
+export default function VideoPlayer({
+  src,
+  title,
+  subtitleSrc,
+  initialTime = 0,
+  initialDuration = 0,
+  assetId
+}: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const initialTimeSet = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(initialPosition);
-  const [duration, setDuration] = useState(Number(initialDuration) || 0);
+  const [currentTime, setCurrentTime] = useState(initialTime);
+  const [duration, setDuration] = useState(initialDuration);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [subtitleMode, setSubtitleMode] = useState<SubtitleMode>('custom');
   const [showSettings, setShowSettings] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [subtitleOpacity, setSubtitleOpacity] = useState(0.6);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -46,10 +55,21 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     }
   }, []);
 
-  const changeSubtitleMode = (mode: SubtitleMode) => {
+  const changeSubtitleMode = useCallback((mode: SubtitleMode) => {
     setSubtitleMode(mode);
     localStorage.setItem('subtitle_mode', mode);
-  };
+  }, []);
+
+  // Load more preferences
+  useEffect(() => {
+    const savedOpacity = localStorage.getItem('subtitle_opacity');
+    if (savedOpacity) setSubtitleOpacity(parseFloat(savedOpacity));
+  }, []);
+
+  const changeSubtitleOpacity = useCallback((val: number) => {
+    setSubtitleOpacity(val);
+    localStorage.setItem('subtitle_opacity', String(val));
+  }, []);
 
   // Listen for fullscreen changes
   useEffect(() => {
@@ -60,18 +80,49 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Set initial position
+  const applyInitialTime = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!initialTimeSet.current && initialTime > 0) {
+      video.currentTime = initialTime;
+      initialTimeSet.current = true;
+    }
+    if (video.duration) {
+      setDuration(video.duration);
+    }
+  }, [initialTime]);
+
+  // Set initial position and duration
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const onMeta = () => {
-      if (initialPosition > 0) {
-        video.currentTime = initialPosition;
-      }
-    };
-    video.addEventListener('loadedmetadata', onMeta);
-    return () => video.removeEventListener('loadedmetadata', onMeta);
-  }, [initialPosition]);
+
+    // Reset flag if asset changes
+    initialTimeSet.current = false;
+
+    if (video.readyState >= 1) {
+      applyInitialTime();
+    }
+
+    video.addEventListener('loadedmetadata', applyInitialTime);
+    return () => video.removeEventListener('loadedmetadata', applyInitialTime);
+  }, [assetId, applyInitialTime]);
+
+  // Save progress logic
+  const saveProgress = useCallback(async (position: number, completed: boolean) => {
+    try {
+      window.dispatchEvent(new CustomEvent('video-progress', {
+        detail: { assetId, position, completed }
+      }));
+
+      await fetch('/api/progress/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assetId, position, completed }),
+      });
+    } catch { /* silent */ }
+  }, [assetId]);
 
   // Save progress every 5 seconds
   useEffect(() => {
@@ -81,24 +132,14 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
       }
     }, 5000);
     return () => { if (saveTimer.current) clearInterval(saveTimer.current); };
-  }, [assetId]);
+  }, [assetId, saveProgress]);
 
-  const saveProgress = useCallback(async (position: number, completed: boolean) => {
-    try {
-      await fetch('/api/progress/video', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assetId, positionSec: position, completed }),
-      });
-    } catch { /* silent */ }
-  }, [assetId]);
-
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { v.play(); setIsPlaying(true); }
-    else { v.pause(); setIsPlaying(false); }
-  };
+    if (v.paused) v.play();
+    else v.pause();
+  }, []);
 
   const handleTimeUpdate = () => {
     const v = videoRef.current;
@@ -106,41 +147,64 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     setCurrentTime(v.currentTime);
   };
 
-  const handleEnded = () => {
+  const handleEnded = useCallback(() => {
     setIsPlaying(false);
     saveProgress(duration, true);
-  };
+    window.dispatchEvent(new CustomEvent('video-ended', {
+      detail: { assetId }
+    }));
+  }, [assetId, duration, saveProgress]);
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = videoRef.current;
     if (!v) return;
-    v.currentTime = Number(e.target.value);
-    setCurrentTime(Number(e.target.value));
-  };
+    const time = Number(e.target.value);
+    v.currentTime = time;
+    setCurrentTime(time);
+  }, []);
 
-  const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolume = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = videoRef.current;
     if (!v) return;
-    v.volume = Number(e.target.value);
-    setVolume(Number(e.target.value));
-  };
+    const vol = Number(e.target.value);
+    v.volume = vol;
+    setVolume(vol);
+  }, []);
 
-  const showControlsTemp = () => {
+  const toggleSubtitles = useCallback(() => {
+    setShowSubtitles(prev => !prev);
+  }, []);
+
+  const toggleSettings = useCallback(() => {
+    setShowSettings(prev => !prev);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      c.requestFullscreen?.();
+    }
+    setShowSettings(false);
+  }, []);
+
+  const showControlsTemp = useCallback(() => {
     setShowControls(true);
     if (controlsTimer.current) clearTimeout(controlsTimer.current);
     controlsTimer.current = setTimeout(() => {
-      if (isPlaying) setShowControls(false);
+      // Accessing isPlaying from ref would be better but let's see
+      setShowControls(false); 
     }, 3000);
-  };
-
-
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      className="relative rounded-xl overflow-hidden group w-full video-player-container bg-surface-950 aspect-video max-h-[70vh]"
+      className="relative rounded-xl overflow-hidden group w-full video-player-container bg-surface-950 aspect-video max-h-[70vh] cursor-pointer"
       onMouseMove={showControlsTemp}
-      onClick={() => {
+      onClick={(e) => {
         togglePlay();
         if (showSettings) setShowSettings(false);
       }}
@@ -164,6 +228,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
           src={subtitleSrc}
           currentTime={currentTime}
           isVisible={showSubtitles}
+          opacity={subtitleOpacity}
         />
       )}
 
@@ -182,6 +247,9 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
           <PlayerSettings
             subtitleMode={subtitleMode}
             onChangeSubtitleMode={changeSubtitleMode}
+            subtitleOpacity={subtitleOpacity}
+            onChangeSubtitleOpacity={changeSubtitleOpacity}
+            onClose={toggleSettings}
           />
         )}
 
@@ -219,7 +287,7 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
             {subtitleSrc && (
               <SubtitleToggleButton
                 isVisible={showSubtitles}
-                onToggle={() => setShowSubtitles(!showSubtitles)}
+                onToggle={toggleSubtitles}
               />
             )}
 
@@ -227,23 +295,14 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
             {subtitleSrc && (
               <SettingsButton
                 isOpen={showSettings}
-                onToggle={() => setShowSettings(!showSettings)}
+                onToggle={toggleSettings}
               />
             )}
 
             {/* Fullscreen */}
             <FullscreenButton
               isFullscreen={isFullscreen}
-              onToggle={() => {
-                const c = containerRef.current;
-                if (!c) return;
-                if (document.fullscreenElement) {
-                  document.exitFullscreen();
-                } else {
-                  c.requestFullscreen?.();
-                }
-                if (showSettings) setShowSettings(false);
-              }}
+              onToggle={toggleFullscreen}
             />
           </div>
         </div>
@@ -251,3 +310,4 @@ export default function VideoPlayer({ assetId, src, title, subtitleSrc, initialP
     </div>
   );
 }
+

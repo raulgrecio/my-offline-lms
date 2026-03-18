@@ -10,9 +10,10 @@ export interface SubtitleDisplayProps {
   src: string;
   currentTime: number;
   isVisible: boolean;
+  opacity?: number;
 }
 
-export default function SubtitleDisplay({ src, currentTime, isVisible }: SubtitleDisplayProps) {
+export default function SubtitleDisplay({ src, currentTime, isVisible, opacity = 0.85 }: SubtitleDisplayProps) {
   const [cues, setCues] = useState<Cue[]>([]);
   const [activeCue, setActiveCue] = useState<Cue | null>(null);
 
@@ -142,16 +143,26 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
     setActiveCue(cue || null);
   }, [currentTime, cues]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleStart = (clientX: number, clientY: number) => {
     setIsDragging(true);
-    dragStartMousePos.current = { x: e.clientX, y: e.clientY };
+    dragStartMousePos.current = { x: clientX, y: clientY };
     dragStartElementPos.current = { x: position.x, y: position.y };
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleStart(e.clientX, e.clientY);
     e.preventDefault();
     e.stopPropagation();
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleStart(touch.clientX, touch.clientY);
+    e.stopPropagation();
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!isDragging || !containerRef.current) return;
 
       const parent = containerRef.current.parentElement;
@@ -160,8 +171,8 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
       const parentRect = parent.getBoundingClientRect();
       const containerRect = containerRef.current.getBoundingClientRect();
 
-      const dx = e.clientX - dragStartMousePos.current.x;
-      const dy = e.clientY - dragStartMousePos.current.y;
+      const dx = clientX - dragStartMousePos.current.x;
+      const dy = clientY - dragStartMousePos.current.y;
 
       let newXPixels = (dragStartElementPos.current.x / 100) * parentRect.width + dx;
       let newYPixelsFromBottom = (dragStartElementPos.current.y / 100) * parentRect.height - dy;
@@ -181,18 +192,31 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
       localStorage.setItem('subtitle_position', JSON.stringify(newPos));
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        // Prevent scrolling while dragging subtitles
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    const handleUp = () => {
       setIsDragging(false);
     };
 
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', handleUp);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleUp);
     }
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleUp);
     };
   }, [isDragging]);
 
@@ -212,7 +236,9 @@ export default function SubtitleDisplay({ src, currentTime, isVisible }: Subtitl
     >
       <div
         onMouseDown={handleMouseDown}
-        className={`backdrop-blur-md px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow bg-glass-bg text-text-primary border border-glass-border pointer-events-auto break-words w-max max-w-full ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
+        onTouchStart={handleTouchStart}
+        className={`px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow text-text-primary border border-glass-border pointer-events-auto wrap-break-word w-max max-w-full ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
+        style={{ backgroundColor: `color-mix(in srgb, var(--bg-secondary) ${Math.round(opacity * 100)}%, transparent)` }}
         dangerouslySetInnerHTML={{ __html: activeCue.text.replace(/\n/g, '<br/>') }}
       />
     </div>

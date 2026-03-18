@@ -1,3 +1,4 @@
+import React from 'react';
 import { Icon } from '../Icon';
 
 export interface VolumeControlProps {
@@ -5,10 +6,10 @@ export interface VolumeControlProps {
   onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default function VolumeControl({ volume, onVolumeChange }: VolumeControlProps) {
+const VolumeControl = React.memo(({ volume, onVolumeChange }: VolumeControlProps) => {
   return (
     <div className="flex items-center gap-2 group">
-      <div className="text-text-secondary opacity-70 group-hover:opacity-100 transition-opacity">
+      <div className="text-white">
         <Icon name={volume === 0 ? "volume-x" : "volume-2"} size="sm" />
       </div>
       <input
@@ -18,9 +19,11 @@ export default function VolumeControl({ volume, onVolumeChange }: VolumeControlP
         step={0.05}
         value={volume}
         onChange={onVolumeChange}
-        className="w-16 sm:w-24 accent-brand-600 h-[3px] cursor-pointer"
+        className="w-16 sm:w-24 accent-white h-[3px] cursor-pointer rounded-full appearance-none bg-white/50"
         aria-label="Volumen"
       />
     </div>
   );
-}
+});
+
+export default VolumeControl;

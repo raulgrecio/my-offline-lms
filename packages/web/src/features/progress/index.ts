@@ -20,8 +20,8 @@ const getDashboardStatus = new GetDashboardStatus(repo);
 const markCourseStatusUC = new MarkCourseStatus(repo);
 
 // 2. Public API
-export const updateVideoProgress = ({ assetId, positionSec, completed }: { assetId: string; positionSec: number; completed?: boolean }) =>
-  updateVideoProgressUC.execute({ assetId, positionSec, completed });
+export const updateVideoProgress = ({ assetId, position, completed }: { assetId: string; position: number; completed?: boolean }) =>
+  updateVideoProgressUC.execute({ assetId, position, completed });
 
 export const updatePdfProgress = ({ assetId, page, completed }: { assetId: string; page: number; completed?: boolean }) =>
   updatePdfProgressUC.execute({ assetId, page, completed });
