@@ -1,7 +1,7 @@
 ---
 import type { AssetStatus } from "@core/domain/models/Asset";
 import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
-import Badge from "./Badge.astro";
+import Badge, { type BadgeVariant } from "./Badge.astro";
 
 type StatusType = ProgressStatus | AssetStatus;
 
@@ -13,7 +13,7 @@ const { status } = Astro.props;
 
 const normalized = status?.toUpperCase();
 
-const config: Record<string, { variant: any; label: string; pulse?: boolean }> = {
+const config: Record<string, { variant: Partial<BadgeVariant>; label: string; pulse?: boolean }> = {
   COMPLETED: { variant: 'completed', label: 'Completado' },
   IN_PROGRESS: { variant: 'in-progress', label: 'En progreso' },
   NOT_STARTED: { variant: 'not-started', label: 'Sin iniciar' },
