@@ -7,13 +7,13 @@ export function runMigrations(db: SQLiteDatabase) {
   try {
     db.exec("ALTER TABLE UserProgress RENAME COLUMN position_sec TO position;");
     console.log("[DB] Renamed UserProgress.position_sec to position");
-  } catch (e) {}
+  } catch (e) { }
 
   // 2. Asegurar que max_position existe
   try {
     db.exec("ALTER TABLE UserProgress ADD COLUMN max_position REAL DEFAULT 0;");
     console.log("[DB] Added UserProgress.max_position column");
-  } catch (e) {}
+  } catch (e) { }
 
   // 3. Añadir columnas de agregación a UserCourseProgress
   try {
@@ -21,7 +21,7 @@ export function runMigrations(db: SQLiteDatabase) {
     db.exec("ALTER TABLE UserCourseProgress ADD COLUMN in_progress_assets INTEGER DEFAULT 0;");
     db.exec("ALTER TABLE UserCourseProgress ADD COLUMN total_assets INTEGER DEFAULT 0;");
     console.log("[DB] Added aggregation columns to UserCourseProgress");
-  } catch (e) {}
+  } catch (e) { }
 
   // 4. Añadir columnas de agregación a UserLearningPathProgress
   try {
@@ -29,9 +29,36 @@ export function runMigrations(db: SQLiteDatabase) {
     db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN in_progress_courses INTEGER DEFAULT 0;");
     db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN total_courses INTEGER DEFAULT 0;");
     console.log("[DB] Added aggregation columns to UserLearningPathProgress");
-  } catch (e) {}
+  } catch (e) { }
 
   // 5. [Eliminado] Refactorización de progreso global (course_id eliminado)
+
+  // 7. Migración de favoritos: learning_path -> learning-path y actualización de CHECK constraint
+  try {
+    const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='UserFavorites'").get();
+    
+    if (tableExists) {
+      db.exec("PRAGMA foreign_keys=OFF;");
+      db.exec("DROP TABLE IF EXISTS UserFavorites_new;");
+      db.exec(`
+        CREATE TABLE UserFavorites_new (
+          id    TEXT,
+          type  TEXT CHECK(type IN ('course', 'learning-path')),
+          PRIMARY KEY (id, type)
+        );
+      `);
+      db.exec(`
+        INSERT OR IGNORE INTO UserFavorites_new (id, type) 
+        SELECT id, CASE WHEN type = 'learning_path' THEN 'learning-path' ELSE type END FROM UserFavorites;
+      `);
+      db.exec("DROP TABLE IF EXISTS UserFavorites;");
+      db.exec("ALTER TABLE UserFavorites_new RENAME TO UserFavorites;");
+      db.exec("PRAGMA foreign_keys=ON;");
+      console.log("[DB] Migrated UserFavorites constraint: learning_path -> learning-path");
+    }
+  } catch (e: any) {
+    console.error("[DB] Migration 7 failed:", e.message);
+  }
 
   // 6. Crear tablas base si no existen
   db.exec(`
@@ -64,6 +91,12 @@ export function runMigrations(db: SQLiteDatabase) {
     CREATE TABLE IF NOT EXISTS UserSettings (
       key   TEXT PRIMARY KEY,
       value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS UserFavorites (
+      id    TEXT,
+      type  TEXT CHECK(type IN ('course', 'learning-path')),
+      PRIMARY KEY (id, type)
     );
   `);
 }

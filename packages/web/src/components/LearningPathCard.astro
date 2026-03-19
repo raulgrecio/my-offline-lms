@@ -4,6 +4,7 @@ import { APP_ROUTES } from "../platform/router/routes";
 import ProgressBar from "../components/ProgreesBar.astro";
 import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
 import { Icon } from "./Icon";
+import FavoriteButton from "./FavoriteButton.astro";
 
 interface LearningPathCardProps {
   id: string;
@@ -11,7 +12,7 @@ interface LearningPathCardProps {
   description: string;
   courseCount: number;
   completedCount?: number;
-  isActive?: boolean;
+  isFavorite?: boolean;
   progress?: number;
   status?: ProgressStatus;
 }
@@ -22,7 +23,7 @@ const {
   description,
   courseCount,
   completedCount = 0,
-  isActive = false,
+  isFavorite = false,
   progress = 0,
   status = "not_started",
 } = Astro.props as LearningPathCardProps;
@@ -33,14 +34,6 @@ const {
   href={APP_ROUTES.LEARNING_PATHS.DETAIL(id)}
   class="card block p-5 group no-underline relative"
 >
-  {
-    isActive && (
-      <div class="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-600 text-white text-2xs font-bold uppercase tracking-wider shadow-lg">
-        <Icon name="play" size="xs" strokeWidth={3} />
-        Activo
-      </div>
-    )
-  }
 
   <!-- Icon + Title -->
   <div class="flex items-start gap-3 mb-4">
@@ -55,7 +48,10 @@ const {
       >
         {title}
       </h3>
-      <ProgressBadge status={status} />
+      <div class="flex items-center gap-2">
+        <ProgressBadge status={status} />
+        <FavoriteButton id={id} type="learning-path" isFavorite={isFavorite} />
+      </div>
     </div>
   </div>
 

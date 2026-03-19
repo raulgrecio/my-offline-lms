@@ -5,10 +5,11 @@ import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
 
 import { env } from "../../config/env";
 import Layout from '../../layouts/Layout.astro';
-import ProgressBadge from '../../components/ProgressBadge.astro';
 import VideoPlayer from '../../components/VideoPlayer';
 import { Icon } from '../../components/Icon';
+import FavoriteButton from "../../components/FavoriteButton.astro";
 import GuideCard from "../../components/GuideCard.astro";
+import PageHeader from "../../components/PageHeader.astro";
 import {
   getCourseById,
   getCourseAssets,
@@ -17,6 +18,7 @@ import {
   getCourseProgress,
   getAssetProgress,
 } from "../../features/progress";
+import { getIsFavorite } from "../../features/favorites";
 import { API_ROUTES } from "../../platform/api/routes";
 import { APP_ROUTES } from "../../platform/router/routes";
 
@@ -25,6 +27,8 @@ if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
 const course = getCourseById(id);
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
+
+const isFavorite = getIsFavorite(id, 'course');
 
 const allAssets = getCourseAssets(id);
 const videos = allAssets
@@ -81,35 +85,35 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     <span class="text-text-secondary">{course.title}</span>
   </nav>
 
-  <!-- Course header -->
-  <div class="flex flex-col sm:flex-row items-start gap-4 mb-8">
-    <div
-      class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-105 bg-surface-900 text-brand-600 border border-border-subtle"
-    >
-      <Icon name="book-open" size="xl" />
+  <!-- Header -->
+  <!-- Header -->
+  <PageHeader
+    title={course.title}
+    icon="book-open"
+    status={courseProgress?.status ?? 'not_started'}
+    subtext={`${videos.length} vídeos · ${guides.length} guías`}
+  >
+    <div slot="actions">
+      <FavoriteButton 
+        id={id} 
+        type="course" 
+        isFavorite={isFavorite} 
+        size="lg" 
+        hoverEffect="translate"
+        className="border border-border-subtle bg-surface-800"
+      />
+
+      <button
+        id="btn-complete"
+        data-course-id={id}
+        class="btn-primary"
+        data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
+      >
+        <Icon name="check-circle" size="sm" />
+        {courseProgress?.status === 'completed' ? 'Completado' : 'Marcar completado'}
+      </button>
     </div>
-    <div class="flex-1 min-w-0">
-      <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2 text-text-primary">
-        {course.title}
-      </h1>
-      <div class="flex items-center gap-3 flex-wrap">
-        <ProgressBadge status={courseProgress?.status ?? 'not_started'} />
-        <span class="text-xs text-text-muted">
-          {videos.length} vídeos · {guides.length} guías
-        </span>
-      </div>
-    </div>
-    <!-- Mark complete button -->
-    <button
-      id="btn-complete"
-      data-course-id={id}
-      class="btn-primary shrink-0 sm:self-start"
-      data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
-    >
-      <Icon name="check-circle" size="sm" />
-      {courseProgress?.status === 'completed' ? 'Completado' : 'Marcar completado'}
-    </button>
-  </div>
+  </PageHeader>
 
   <hr class="divider mb-8" />
 

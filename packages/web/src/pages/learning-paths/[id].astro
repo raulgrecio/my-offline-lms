@@ -3,26 +3,26 @@ export const prerender = false;
 
 import Layout from "../../layouts/Layout.astro";
 import CourseCard from "../../components/CourseCard.astro";
-import ProgressBadge from "../../components/ProgressBadge.astro";
 import ProgressBar from "../../components/ProgreesBar.astro";
 import { Icon } from "../../components/Icon";
+import FavoriteButton from "../../components/FavoriteButton.astro";
+import PageHeader from "../../components/PageHeader.astro";
 import {
   getLearningPathById,
   getCoursesForPath,
 } from "../../features/learning-paths";
 import { getAllCourseProgress, getLearningPathProgress } from "../../features/progress";
-import { setActiveLearningPath } from "../../features/settings";
+import { getIsFavorite } from "../../features/favorites";
 import { APP_ROUTES } from "../../platform/router/routes";
 
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
-// Set this as the active LP when visiting
-setActiveLearningPath(id);
-
 const path = getLearningPathById(id);
 if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
+
+const isFavorite = getIsFavorite(id, 'learning-path');
 
 const courses = getCoursesForPath(id);
 const lpProgress = getLearningPathProgress(id);
@@ -31,6 +31,11 @@ const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 
 const completedCount = lpProgress?.completedCourses || 0;
 const progress = lpProgress?.progress || 0;
+const status = completedCount === courses.length && courses.length > 0
+      ? "completed"
+      : completedCount > 0
+      ? "in_progress"
+      : "not_started"
 ---
 
 <Layout title={path.title} description={path.description}>
@@ -44,58 +49,51 @@ const progress = lpProgress?.progress || 0;
   </nav>
 
   <!-- Header -->
-  <div class="mb-8">
-    <div class="flex items-start gap-4 mb-4">
-      <div
-        class="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-white bg-brand-600 shadow-brand"
-      >
-        <Icon name="graduation-cap" size="lg" strokeWidth={2.5} />
-      </div>
-      <div class="flex-1 min-w-0">
-        <h1
-          class="text-xl sm:text-2xl font-bold leading-snug mb-2 text-text-primary"
-        >
-          {path.title}
-        </h1>
-        <ProgressBadge
-          status={completedCount === courses.length && courses.length > 0
-            ? "completed"
-            : completedCount > 0
-            ? "in_progress"
-            : "not_started"}
-        />
-      </div>
+  <PageHeader
+    title={path.title}
+    icon="graduation-cap"
+    status={status}
+    subtext={`${courses.length} cursos`}
+  >
+    <div slot="actions">
+      <FavoriteButton 
+        id={id} 
+        type="learning-path" 
+        isFavorite={isFavorite} 
+        size="lg" 
+        hoverEffect="translate" 
+      />
     </div>
+  </PageHeader>
 
-    {
-      path.description && (
-        <div
-          class="prose mb-6"
-          set:html={path.description}
-        />
-      )
-    }
-
-    <!-- Progress summary -->
-    <div
-      class="rounded-lg p-4 bg-surface-800 border border-border-default"
-    >
-      <div class="flex items-center justify-between mb-2 border-none">
-        <span
-          class="text-sm font-medium text-text-secondary"
-        >
-          Progreso del learning path
-        </span>
-        <span class="text-sm font-bold text-brand-400">
-          {completedCount} / {courses.length} cursos
-        </span>
-      </div>
-      <ProgressBar progress={progress} />
+  {
+    path.description && (
       <div
-        class="text-right text-xs mt-1 text-text-muted"
+        class="prose mb-6"
+        set:html={path.description}
+      />
+    )
+  }
+
+  <!-- Progress summary -->
+  <div
+    class="rounded-lg p-4 bg-surface-800 border border-border-default"
+  >
+    <div class="flex items-center justify-between mb-2 border-none">
+      <span
+        class="text-sm font-medium text-text-secondary"
       >
-        {progress}% completado
-      </div>
+        Progreso del learning path
+      </span>
+      <span class="text-sm font-bold text-brand-400">
+        {completedCount} / {courses.length} cursos
+      </span>
+    </div>
+    <ProgressBar progress={progress} />
+    <div
+      class="text-right text-xs mt-1 text-text-muted"
+    >
+      {progress}% completado
     </div>
   </div>
 
@@ -127,6 +125,7 @@ const progress = lpProgress?.progress || 0;
                 totalAssets={progressObj?.totalAssets}
                 progress={progressPercent}
                 orderIndex={course.orderIndex}
+                isFavorite={getIsFavorite(course.id, 'course')}
               />
             );
           })}

@@ -3,6 +3,7 @@ import type { ProgressStatus } from "../features/progress/domain/model/ProgressS
 import ProgressBadge from "./ProgressBadge.astro";
 import { APP_ROUTES } from "../platform/router/routes";
 import { Icon } from "./Icon";
+import FavoriteButton from "./FavoriteButton.astro";
 
 interface CourseCardProps {
   id: string;
@@ -11,6 +12,7 @@ interface CourseCardProps {
   orderIndex?: number;
   totalAssets?: number;
   progress?: number;
+  isFavorite?: boolean;
 }
 
 const {
@@ -20,6 +22,7 @@ const {
   orderIndex,
   totalAssets = 0,
   progress = 0,
+  isFavorite = false,
 } = Astro.props as CourseCardProps;
 ---
 
@@ -49,6 +52,9 @@ const {
     </h3>
     <div class="flex items-center gap-2 flex-wrap">
       <ProgressBadge status={status} />
+      
+      <FavoriteButton id={id} type="course" isFavorite={isFavorite} />
+
       {
         totalAssets > 0 && (
           <span class="text-xs text-text-muted">
@@ -58,6 +64,7 @@ const {
       }
     </div>
   </div>
+
 
   <!-- Arrow -->
   <div

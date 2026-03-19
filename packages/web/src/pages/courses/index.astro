@@ -8,6 +8,7 @@ import VisibilityToggle from "../../components/VisibilityToggle.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import { getAllCourses, getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
+import { getIsFavorite } from "../../features/favorites";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = "/courses";
@@ -61,6 +62,7 @@ const coursesWithStats = courses
               status={c.status}
               totalAssets={c.totalAssets}
               progress={c.progressPercent}
+              isFavorite={getIsFavorite(c.id, 'course')}
             />
           ))}
         </div>

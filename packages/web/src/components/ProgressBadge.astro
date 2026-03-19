@@ -3,7 +3,7 @@ import type { AssetStatus } from "@core/domain/models/Asset";
 import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
 import Badge, { type BadgeVariant } from "./Badge.astro";
 
-type StatusType = ProgressStatus | AssetStatus;
+export type StatusType = ProgressStatus | AssetStatus;
 
 interface ProgressBadgeProps {
   status: StatusType

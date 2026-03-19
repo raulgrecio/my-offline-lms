@@ -1,35 +1,35 @@
 ---
-import { Icon, type IconName } from "./Icon";
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon/icons";
+import ProgressBadge from "./ProgressBadge.astro";
+import type { StatusType } from "./ProgressBadge.astro";
 
 interface PageHeaderProps {
   title: string;
   icon: IconName;
-  subtitle?: string;
+  status?: StatusType;
+  subtext?: string;
 }
 
-const { title, icon, subtitle } = Astro.props as PageHeaderProps;
+const { title, icon, status, subtext } = Astro.props as PageHeaderProps;
 ---
 
-<div class="flex items-center justify-between mb-8">
-  <div class="space-y-1">
-    <h1 class="text-3xl font-bold text-text-primary flex items-center gap-3">
-      <Icon
-        name={icon}
-        size="md"
-        className="text-brand-500"
-      />
-      <span id="page-header-title">{title}</span>
-    </h1>
-    {
-      subtitle && (
-        <p id="page-header-subtitle" class="text-sm text-text-secondary">
-          {subtitle}
-        </p>
-      )
-    }
+<div class="flex flex-col sm:flex-row items-start gap-4 mb-8">
+  <div
+    class="shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-transform hover:scale-105 bg-surface-900 text-brand-600 border border-border-subtle shadow-sm"
+  >
+    <Icon name={icon} size="xl" />
   </div>
-
-  <div class="flex items-center gap-3">
+  <div class="flex-1 min-w-0">
+    <h1 class="text-xl sm:text-2xl font-bold leading-snug mb-2 text-text-primary">
+      {title}
+    </h1>
+    <div class="flex items-center gap-3 flex-wrap">
+      {status && <ProgressBadge status={status} />}
+      {subtext && <span class="text-xs text-text-muted">{subtext}</span>}
+    </div>
+  </div>
+  <div class="flex items-center gap-3 shrink-0 sm:self-start">
     <slot name="actions" />
   </div>
 </div>

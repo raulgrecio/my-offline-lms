@@ -14,4 +14,7 @@ export const API_ROUTES = {
     GUIDE: "/api/progress/guide",
     VIDEO: "/api/progress/video",
   },
+  FAVORITES: {
+    TOGGLE: "/api/favorites/toggle",
+  },
 } as const;

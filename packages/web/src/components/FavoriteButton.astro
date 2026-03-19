@@ -1,0 +1,143 @@
+---
+import { API_ROUTES } from "../platform/api/routes";
+import { Icon } from "./Icon";
+import type { FavoriteType } from "../features/favorites/domain/ports/IFavoritesRepository";
+
+interface FavoriteButtonProps {
+  id: string;
+  type: FavoriteType;
+  isFavorite?: boolean;
+  size?: "xs" | "sm" | "md" | "lg";
+  hoverEffect?: "scale" | "translate";
+  className?: string;
+}
+
+const { 
+  id, 
+  type, 
+  isFavorite = false, 
+  size = "sm",
+  hoverEffect = "scale",
+  className = "" 
+} = Astro.props as FavoriteButtonProps;
+
+// Map sizes to padding and icon sizes
+const sizeConfig = {
+  xs: { padding: "p-1", iconSize: "xs" },
+  sm: { padding: "p-1.5", iconSize: "sm" },
+  md: { padding: "p-2", iconSize: "sm" },
+  lg: { padding: "p-2.5", iconSize: "md" },
+} as const;
+
+const { padding, iconSize } = sizeConfig[size as keyof typeof sizeConfig] || sizeConfig.xs;
+const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
+
+const effects = {
+  scale: "hover:scale-110 active:scale-95",
+  translate: "hover:-translate-y-px active:translate-y-0"
+};
+const effectClass = effects[hoverEffect] || effects.scale;
+---
+
+<button
+  class:list={[
+    "inline-flex items-center justify-center rounded-xl transition-all duration-200 favorite-toggle group/fav cursor-pointer shadow-sm border",
+    effectClass,
+    padding,
+    className
+  ]}
+  data-id={id}
+  data-type={type}
+  data-url={favoritesUrl}
+  data-is-favorite={isFavorite.toString()}
+  type="button"
+  title={isFavorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+  aria-pressed={isFavorite ? "true" : "false"}
+>
+  <Icon
+    name="heart"
+    size={iconSize as any}
+    strokeWidth={2.5}
+  />
+</button>
+
+<style>
+  @reference "../styles/global.css";
+
+  /* Base styles for the button based on favorite state */
+  .favorite-toggle {
+    @apply bg-surface-800 border-border-subtle;
+  }
+
+  .favorite-toggle[data-is-favorite="true"] {
+    @apply text-brand-500 bg-brand-600/10 border-brand-500/20;
+  }
+  .favorite-toggle[data-is-favorite="false"] {
+    @apply text-text-muted hover:text-brand-400 hover:bg-surface-700;
+  }
+
+  /* Control del fill vía CSS (no JS) */
+  .favorite-toggle[data-is-favorite="true"] :global(svg) {
+    fill: currentColor;
+  }
+
+  .favorite-toggle[data-is-favorite="false"] :global(svg) {
+    fill: none;
+  }
+  
+  /* Loading state */
+  .favorite-toggle[data-loading="true"] {
+    @apply opacity-70 cursor-wait;
+  }
+
+</style>
+
+<script>
+  import { apiClient } from "../platform/api/client";
+
+  // Handle favorites toggle using event delegation. 
+  // Astro bundles this script once per page.
+  document.addEventListener("click", async (event) => {
+    const btn = (event.target as HTMLElement).closest(".favorite-toggle") as HTMLButtonElement;
+    if (!btn) return;
+
+    // Crucial: stop propagation to prevent parent link navigation
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Prevent concurrent requests
+    if (btn.dataset.loading === "true") return;
+
+    const { id, type, url: favoritesUrl, isFavorite } = btn.dataset;
+    if (!id || !type || !favoritesUrl) return;
+
+    const wasFavorite = isFavorite === "true";
+    const nextFavorite = !wasFavorite;
+
+    // --- OPTIMISTIC UI UPDATE ---
+    updateButtonState(btn, nextFavorite);
+    btn.dataset.loading = "true";
+
+    try {
+      const data = await apiClient.post<{ ok: boolean }>(favoritesUrl, { id, type });
+      
+      if (!data.ok) throw new Error("API reported failure");
+      
+      // Successfully toggled. No reload needed.
+      console.log(`Favorite toggled for ${type} ${id}: ${nextFavorite}`);
+
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      // REVERT on error
+      updateButtonState(btn, wasFavorite);
+    } finally {
+      delete btn.dataset.loading;
+    }
+  });
+
+  function updateButtonState(btn: HTMLButtonElement, isFav: boolean) {
+    btn.dataset.isFavorite = isFav.toString();
+    btn.setAttribute("aria-pressed", isFav.toString());
+    btn.title = isFav ? "Quitar de favoritos" : "Añadir a favoritos";
+  }
+</script>
