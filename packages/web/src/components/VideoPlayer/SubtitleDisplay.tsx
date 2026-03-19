@@ -237,8 +237,9 @@ export default function SubtitleDisplay({ src, currentTime, isVisible, opacity =
       <div
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
-        className={`px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow text-text-primary border border-glass-border pointer-events-auto wrap-break-word w-max max-w-full ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
-        style={{ backgroundColor: `color-mix(in srgb, var(--bg-secondary) ${Math.round(opacity * 100)}%, transparent)` }}
+        onClick={(e) => e.stopPropagation()}
+        className={`px-5 py-2.5 rounded-xl text-center text-sm sm:text-lg select-none cursor-move active:cursor-grabbing transition-shadow text-subtitle-text border border-white/10 pointer-events-auto wrap-break-word w-max max-w-full ${isDragging ? 'shadow-2xl ring-2 ring-white/20' : 'shadow-lg'}`}
+        style={{ backgroundColor: `color-mix(in srgb, var(--bg-subtitle-constant) ${Math.round(opacity * 100)}%, transparent)` }}
         dangerouslySetInnerHTML={{ __html: activeCue.text.replace(/\n/g, '<br/>') }}
       />
     </div>

@@ -42,6 +42,10 @@
   --color-status-not-started: #94a3b8; /* Slate 400 */
   --color-status-failed: #ef4444; /* Red 500 */
   --color-status-downloading: #f59e0b; /* Amber 500 */
+ 
+   /* Persistent Subtitle Colors (Always Dark) */
+   --bg-subtitle-constant: #0f1117;
+   --text-subtitle-constant: #f0f2f7;
 }
 
 [data-theme="light"] {
@@ -117,6 +121,10 @@
   --color-status-not-started: var(--color-status-not-started);
   --color-status-failed: var(--color-status-failed);
   --color-status-downloading: var(--color-status-downloading);
+ 
+   /* Subtitle colors */
+   --color-subtitle-bg: var(--bg-subtitle-constant);
+   --color-subtitle-text: var(--text-subtitle-constant);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
