@@ -43,6 +43,9 @@
   --color-status-failed: #ef4444; /* Red 500 */
   --color-status-downloading: #f59e0b; /* Amber 500 */
  
+   /* Shadow Presets */
+   --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.5);
+ 
    /* Persistent Subtitle Colors (Always Dark) */
    --bg-subtitle-constant: #0f1117;
    --text-subtitle-constant: #f0f2f7;
@@ -107,6 +110,7 @@
   /* Elevation and overlays */
   --shadow-custom: var(--shadow-elevation);
   --shadow-brand: 0 8px 16px -4px rgba(199, 70, 52, 0.4);
+  --shadow-deep: var(--shadow-deep); /* used en pdf page viewer*/
 
   /* Radius (Constant) */
   --radius-card: 0.75rem;
@@ -121,6 +125,7 @@
   --color-status-not-started: var(--color-status-not-started);
   --color-status-failed: var(--color-status-failed);
   --color-status-downloading: var(--color-status-downloading);
+ 
  
    /* Subtitle colors */
    --color-subtitle-bg: var(--bg-subtitle-constant);
