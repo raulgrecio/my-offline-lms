@@ -3,19 +3,21 @@ import * as pdfjs from 'pdfjs-dist';
 
 import { apiClient } from '../../platform/api/client';
 
+interface InitPdfViewerProps {
+  assetId: string,
+  courseId: string,
+  path: string,
+  initialPage: number,
+  options: { progressUrl: string, metadataUrl: string },
+}
+
 export function initPdfViewer({
   assetId,
   courseId,
   path,
   initialPage,
   options,
-}: {
-  assetId: string,
-  courseId: string,
-  path: string,
-  initialPage: number,
-  options: { progressUrl: string, metadataUrl: string },
-}) {
+}: InitPdfViewerProps) {
   // Configure worker
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
 

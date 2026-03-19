@@ -1,9 +1,9 @@
 ---
-interface Props {
+interface ProgressBarProps {
   progress: number;
 }
 
-const { progress } = Astro.props;
+const { progress } = Astro.props as ProgressBarProps;
 ---
 
 <div class="progress-bar">

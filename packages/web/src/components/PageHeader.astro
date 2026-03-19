@@ -1,13 +1,13 @@
 ---
 import { Icon, type IconName } from "./Icon";
 
-interface Props {
+interface PageHeaderProps {
   title: string;
   icon: IconName;
   subtitle?: string;
 }
 
-const { title, icon, subtitle } = Astro.props;
+const { title, icon, subtitle } = Astro.props as PageHeaderProps;
 ---
 
 <div class="flex items-center justify-between mb-8">

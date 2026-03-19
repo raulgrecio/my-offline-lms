@@ -1,11 +1,11 @@
 ---
 import { Icon } from "../Icon";
 
-interface Props {
+interface ViewerHeaderProps {
   path: string;
 }
 
-const { path } = Astro.props;
+const { path } = Astro.props as ViewerHeaderProps;
 ---
 
 <header class="flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle shrink-0 z-20 shadow-md">

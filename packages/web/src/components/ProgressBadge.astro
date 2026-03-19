@@ -5,11 +5,11 @@ import Badge, { type BadgeVariant } from "./Badge.astro";
 
 type StatusType = ProgressStatus | AssetStatus;
 
-interface Props {
+interface ProgressBadgeProps {
   status: StatusType
 }
 
-const { status } = Astro.props;
+const { status } = Astro.props as ProgressBadgeProps;
 
 const normalized = status?.toUpperCase();
 

@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Icon } from './Icon';
 
-export default function ThemeToggle() {
+interface ThemeToggleProps {
+}
+
+export default function ThemeToggle(_props: ThemeToggleProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window === 'undefined') return 'dark';
     return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';

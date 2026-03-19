@@ -1,13 +1,13 @@
 ---
 import { Icon } from "./Icon";
 
-interface Props {
+interface VisibilityToggleProps {
   showAll: boolean;
   baseUrl: string;
   targetIds: string | string[];
 }
 
-const { showAll, baseUrl, targetIds } = Astro.props;
+const { showAll, baseUrl, targetIds } = Astro.props as VisibilityToggleProps;
 const toggleUrl = showAll ? `${baseUrl}?all=false` : baseUrl;
 const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(',') : targetIds;
 ---

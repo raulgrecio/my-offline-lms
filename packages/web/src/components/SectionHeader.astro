@@ -2,14 +2,14 @@
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
 
-interface Props {
+interface SectionHeaderProps {
   id?: string;
   title: string;
   icon: IconName;
   href?: string;
 }
 
-const { id, title, icon, href } = Astro.props;
+const { id, title, icon, href } = Astro.props as SectionHeaderProps;
 ---
 
 <div id={id} class="flex items-center justify-between mb-5">

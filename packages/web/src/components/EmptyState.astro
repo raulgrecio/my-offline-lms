@@ -2,13 +2,13 @@
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
 
-interface Props {
+interface EmptyStateProps {
   title?: string;
   message: string;
   icon?: IconName;
 }
 
-const { title, message, icon = "inbox" } = Astro.props;
+const { title, message, icon = "inbox" } = Astro.props as EmptyStateProps;
 ---
 
 <div

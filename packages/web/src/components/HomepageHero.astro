@@ -1,14 +1,14 @@
 ---
-import { Icon } from "./Icon";
 import { APP_ROUTES } from "../platform/router/routes";
+import { Icon } from "./Icon";
 import Badge from "./Badge.astro";
 
-interface Props {
+interface HomepageHeroProps {
   lastWatched?: any;
   lastWatchedCourse?: any;
 }
 
-const { lastWatched, lastWatchedCourse } = Astro.props;
+const { lastWatched, lastWatchedCourse } = Astro.props as HomepageHeroProps;
 ---
 
 <section class="mb-12 relative overflow-hidden rounded-3xl group">
