@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 
-interface ThemeToggleProps {
-}
+export default function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
-export default function ThemeToggle(_props: ThemeToggleProps) {
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window === 'undefined') return 'dark';
-    return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
-  });
+  useEffect(() => {
+    // Only run on client
+    const currentTheme = (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+    setTheme(currentTheme);
+    setMounted(true);
+  }, []);
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -18,6 +20,13 @@ export default function ThemeToggle(_props: ThemeToggleProps) {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
   };
+
+  if (!mounted) {
+    // Return a placeholder structure with same dimensions to avoid flicker
+    return (
+      <div className="p-2 w-10 h-10 rounded-xl border bg-surface-700 border-border-subtle" />
+    );
+  }
 
   return (
     <button
