@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import { Icon } from "../components/Icon";
+import Badge from "../components/Badge.astro";
 import PageHeader from "../components/PageHeader.astro";
 import { API_ROUTES } from "../platform/api/routes";
 
@@ -102,15 +103,12 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
       <div class="min-w-0">
         <div class="flex items-center gap-2 mb-1">
           <span class="font-bold text-sm text-text-primary js-label"></span>
-          <span class="js-badge px-2 py-0.5 rounded-full text-xs font-semibold uppercase flex items-center gap-1">
-            <div class="js-icon-connected hidden">
-              <Icon name="check-circle" size="xs" />
-            </div>
-            <div class="js-icon-disconnected hidden">
-              <Icon name="alert-circle" size="xs" />
-            </div>
-            <span class="js-badge-text"></span>
-          </span>
+          <div class="js-badge-connected hidden">
+             <Badge variant="completed" dot="static">Conectado</Badge>
+          </div>
+          <div class="js-badge-disconnected hidden">
+             <Badge variant="failed" dot="static">No disponible</Badge>
+          </div>
         </div>
         <code class="text-xs break-all text-text-muted js-path"></code>
       </div>
@@ -174,19 +172,13 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
         clone.querySelector(".js-label")!.textContent = p.label;
         clone.querySelector(".js-path")!.textContent = p.path;
         
-        const badge = clone.querySelector(".js-badge")!;
-        const iconConnected = clone.querySelector(".js-icon-connected")!;
-        const iconDisconnected = clone.querySelector(".js-icon-disconnected")!;
-        const badgeText = clone.querySelector(".js-badge-text")!;
+        const badgeConnected = clone.querySelector(".js-badge-connected")!;
+        const badgeDisconnected = clone.querySelector(".js-badge-disconnected")!;
         
         if (p.available) {
-          badge.classList.add("bg-emerald-500/20", "text-emerald-500");
-          iconConnected.classList.remove("hidden");
-          badgeText.textContent = "Conectado";
+          badgeConnected.classList.remove("hidden");
         } else {
-          badge.classList.add("bg-red-500/20", "text-red-500");
-          iconDisconnected.classList.remove("hidden");
-          badgeText.textContent = "No disponible";
+          badgeDisconnected.classList.remove("hidden");
         }
 
         const deleteBtn = clone.querySelector(".js-delete") as HTMLElement;

@@ -110,6 +110,13 @@
 
   /* Font sizes */
   --text-2xs: 0.625rem;
+
+  /* Status Colors */
+  --color-status-completed: var(--color-status-completed);
+  --color-status-in-progress: var(--color-status-in-progress);
+  --color-status-not-started: var(--color-status-not-started);
+  --color-status-failed: var(--color-status-failed);
+  --color-status-downloading: var(--color-status-downloading);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -168,114 +175,6 @@
     box-shadow: var(--shadow-brand);
   }
 
-  /* Badge */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-badge);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-  }
-
-  .badge-completed {
-    background-color: color-mix(in srgb, var(--color-status-completed) 15%, transparent);
-    color: var(--color-status-completed);
-    border-color: color-mix(in srgb, var(--color-status-completed) 30%, transparent);
-  }
-
-  .badge-in-progress {
-    background-color: color-mix(in srgb, var(--color-status-in-progress) 15%, transparent);
-    color: var(--color-status-in-progress);
-    border-color: color-mix(in srgb, var(--color-status-in-progress) 30%, transparent);
-  }
-
-  .badge-not-started {
-    background-color: color-mix(in srgb, var(--color-status-not-started) 15%, transparent);
-    color: var(--color-status-not-started);
-    border-color: color-mix(in srgb, var(--color-status-not-started) 30%, transparent);
-  }
-
-  .badge-failed {
-    background-color: color-mix(in srgb, var(--color-status-failed) 15%, transparent);
-    color: var(--color-status-failed);
-    border-color: color-mix(in srgb, var(--color-status-failed) 30%, transparent);
-  }
-
-  .badge-downloading {
-    background-color: color-mix(in srgb, var(--color-status-downloading) 15%, transparent);
-    color: var(--color-status-downloading);
-    border-color: color-mix(in srgb, var(--color-status-downloading) 30%, transparent);
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-    background-color: currentColor;
-    flex-shrink: 0;
-  }
-
-  .badge-not-started .status-dot {
-    background-color: transparent;
-    border: 1.5px solid currentColor;
-  }
-
-  .badge-failed .status-dot {
-    background-color: transparent;
-    border-radius: 0;
-    width: 8px;
-    height: 8px;
-    position: relative;
-  }
-
-  .badge-failed .status-dot::before,
-  .badge-failed .status-dot::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1.5px;
-    background-color: currentColor;
-  }
-
-  .badge-failed .status-dot::before { transform: translateY(-50%) rotate(45deg); }
-  .badge-failed .status-dot::after { transform: translateY(-50%) rotate(-45deg); }
-
-  .badge-downloading .status-dot {
-    background-color: transparent;
-    border: 1.5px solid currentColor;
-    border-right-color: transparent;
-    animation: badge-spin 1s linear infinite;
-  }
-
-  /* Micro-animations */
-  .badge-pulse {
-    animation: badge-pulse 2s infinite ease-in-out;
-  }
-
-  @keyframes badge-pulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(0.98);
-    }
-  }
-
-  @keyframes badge-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
 
   /* Progress bar */
   .progress-bar {

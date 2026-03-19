@@ -1,6 +1,7 @@
 ---
 import type { AssetStatus } from "@core/domain/models/Asset";
 import type { ProgressStatus } from "../features/progress/domain/model/ProgressStatus";
+import Badge from "./Badge.astro";
 
 type StatusType = ProgressStatus | AssetStatus;
 
@@ -12,19 +13,18 @@ const { status } = Astro.props;
 
 const normalized = status?.toUpperCase();
 
-const config: Record<string, { cls: string; label: string }> = {
-  COMPLETED: { cls: 'badge badge-completed', label: 'Completado' },
-  IN_PROGRESS: { cls: 'badge badge-in-progress badge-pulse', label: 'En progreso' },
-  NOT_STARTED: { cls: 'badge badge-not-started', label: 'Sin iniciar' },
-  FAILED: { cls: 'badge badge-failed', label: 'Error' },
-  PENDING: { cls: 'badge badge-not-started', label: 'Pendiente' },
-  DOWNLOADING: { cls: 'badge badge-downloading badge-pulse', label: 'Descargando' },
+const config: Record<string, { variant: any; label: string; pulse?: boolean }> = {
+  COMPLETED: { variant: 'completed', label: 'Completado' },
+  IN_PROGRESS: { variant: 'in-progress', label: 'En progreso' },
+  NOT_STARTED: { variant: 'not-started', label: 'Sin iniciar' },
+  FAILED: { variant: 'failed', label: 'Error' },
+  PENDING: { variant: 'not-started', label: 'Pendiente' },
+  DOWNLOADING: { variant: 'downloading', label: 'Descargando', pulse: true },
 };
 
 const cfg = config[normalized] ?? config['NOT_STARTED'];
 ---
 
-<span class={cfg.cls}>
-  <span class="status-dot" aria-hidden="true"></span>
+<Badge variant={cfg.variant} pulse={cfg.pulse} dot="static">
   {cfg.label}
-</span>
+</Badge>

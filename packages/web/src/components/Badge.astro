@@ -1,0 +1,72 @@
+---
+type BadgeVariant = keyof typeof variantClasses;
+
+interface Props {
+  variant?: BadgeVariant;
+  pulse?: boolean;
+  dot?: 'none' | 'static' | 'pulse';
+  className?: string;
+}
+
+const { 
+  variant = 'brand', 
+  pulse = false, 
+  dot = 'none',
+  className = '' 
+} = Astro.props as Props;
+
+const variantClasses = {
+  'brand': 'bg-brand-600/10 text-brand-400 border-brand-600/20',
+  'completed': 'bg-status-completed/15 text-status-completed border-status-completed/30',
+  'in-progress': 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30',
+  'not-started': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
+  'failed': 'bg-status-failed/15 text-status-failed border-status-failed/30',
+  'downloading': 'bg-status-downloading/15 text-status-downloading border-status-downloading/30',
+  'neutral': 'bg-surface-800 text-text-secondary border-border-subtle',
+} as const;
+
+const dotColorClasses: Partial<Record<BadgeVariant, string>> = {
+  'brand': 'bg-brand-500',
+  'completed': 'bg-status-completed',
+  'in-progress': 'bg-status-in-progress',
+  'not-started': 'bg-transparent border-[1.5px] border-currentColor',
+  'neutral': 'bg-text-muted',
+} as const;
+
+const finalDotColor = dotColorClasses[variant] || 'bg-currentColor';
+
+const baseClasses = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-wider border transition-all duration-200";
+
+const classes = [
+  baseClasses,
+  variantClasses[variant as BadgeVariant] || variantClasses['neutral'],
+  pulse ? 'animate-pulse' : '',
+  className
+].filter(Boolean).join(' ');
+
+---
+
+<span class={classes}>
+  {dot !== 'none' && (
+    <>
+      {variant === 'failed' && (
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" aria-hidden="true">
+          <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      )}
+
+      {variant === 'downloading' && (
+        <span class="w-1.5 h-1.5 rounded-full border-[1.5px] border-currentColor border-r-transparent animate-spin shrink-0" aria-hidden="true"></span>
+      )}
+
+      {variant !== 'failed' && variant !== 'downloading' && (
+        <span class:list={[
+          "w-1.5 h-1.5 rounded-full shrink-0 relative",
+          finalDotColor,
+          dot === 'pulse' && "after:content-[''] after:absolute after:inset-0 after:rounded-full after:bg-currentColor after:animate-ping"
+        ]} aria-hidden="true"></span>
+      )}
+    </>
+  )}
+  <slot />
+</span>
