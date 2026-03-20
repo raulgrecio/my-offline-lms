@@ -21,7 +21,7 @@ const learningPaths = getAllLearningPaths();
 const lpStats = learningPaths
   .map((lp) => {
     const lpCourses = getCoursesForPath(lp.id);
-    const progress = getLearningPathProgress(lp.id);
+    const progress = getLearningPathProgress({ pathId: lp.id });
     
     // Calculate asset count for the path
     const totalAssets = lpCourses.reduce((acc, course) => {

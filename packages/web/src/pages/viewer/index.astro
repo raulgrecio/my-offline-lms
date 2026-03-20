@@ -12,7 +12,7 @@ if (!assetId || !courseId || !path) {
   return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 }
 
-const initialProgress = getAssetProgress(assetId);
+const initialProgress = getAssetProgress({ assetId });
 const initialPage = initialProgress?.position || 1;
 ---
 

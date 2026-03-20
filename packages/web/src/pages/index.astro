@@ -31,7 +31,7 @@ const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 const lpStats = await Promise.all(
   learningPaths.map(async (lp) => {
     const lpCourses = getCoursesForPath(lp.id);
-    const progress = getLearningPathProgress(lp.id);
+    const progress = getLearningPathProgress({ pathId: lp.id });
 
     return { 
       ...lp, 

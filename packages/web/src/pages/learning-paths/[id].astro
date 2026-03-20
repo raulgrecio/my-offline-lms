@@ -25,7 +25,7 @@ if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 const isFavorite = getIsFavorite(id, 'learning-path');
 
 const courses = getCoursesForPath(id);
-const lpProgress = getLearningPathProgress(id);
+const lpProgress = getLearningPathProgress({ pathId: id });
 const allProgress = getAllCourseProgress();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 
