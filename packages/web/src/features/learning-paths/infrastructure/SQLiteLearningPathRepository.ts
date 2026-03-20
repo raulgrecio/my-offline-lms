@@ -12,7 +12,7 @@ export class SQLiteLearningPathRepository implements ILearningPathRepository {
       .all() as LearningPath[];
   }
 
-  getLearningPathById(id: string): LearningPath | null {
+  getLearningPath(id: string): LearningPath | null {
     return (
       (this.db
         .prepare(

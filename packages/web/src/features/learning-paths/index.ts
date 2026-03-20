@@ -1,14 +1,20 @@
 import { getDb } from "../../platform/db/database";
+import { LearningPathManager } from "./application/LearningPathManager";
+import type { GetPathDetailsRequest, PathWithCourses } from "./application/use-cases/getPathDetails";
 import { SQLiteLearningPathRepository } from "./infrastructure/SQLiteLearningPathRepository";
-import { GetPathCatalog } from "./application/GetPathCatalog";
-import { GetPathDetails } from "./application/GetPathDetails";
 
-// 1. Wiring
+// 1. Types
+export type { GetPathDetailsRequest, PathWithCourses };
+
+// 2. Wiring
 const repo = new SQLiteLearningPathRepository(getDb());
-const getPathCatalog = new GetPathCatalog(repo);
-const getPathDetails = new GetPathDetails(repo);
+const manager = new LearningPathManager(repo);
 
-// 2. Public API
-export const getAllLearningPaths = () => getPathCatalog.execute();
-export const getLearningPathById = (pathId: string) => getPathDetails.execute({ pathId })?.path ?? null;
-export const getCoursesForPath = (pathId: string) => getPathDetails.execute({ pathId })?.courses ?? [];
+// 3. Public API
+export const getAllLearningPaths = () => manager.getAllLearningPaths();
+
+export const getLearningPathById = (request: GetPathDetailsRequest) =>
+  manager.getLearningPath(request);
+
+export const getCoursesForPath = (request: GetPathDetailsRequest) =>
+  manager.getCoursesForPath(request);

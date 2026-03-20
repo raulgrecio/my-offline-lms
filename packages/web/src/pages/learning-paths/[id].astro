@@ -16,15 +16,19 @@ import { getIsFavorite } from "../../features/favorites";
 import { APP_ROUTES } from "../../platform/router/routes";
 
 
-const { id } = Astro.params;
+interface PathPageProps {
+  id?: string;
+}
+
+const { id } = Astro.params as PathPageProps;
 if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
-const path = getLearningPathById(id);
+const path = getLearningPathById({ pathId: id });
 if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const isFavorite = getIsFavorite(id, 'learning-path');
 
-const courses = getCoursesForPath(id);
+const courses = getCoursesForPath({ pathId: id });
 const lpProgress = getLearningPathProgress({ pathId: id });
 const allProgress = getAllCourseProgress();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
