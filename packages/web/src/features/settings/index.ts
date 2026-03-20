@@ -1,11 +1,19 @@
 import { getDb } from "../../platform/db/database";
+import { SettingsManager } from "./application/SettingsManager";
+import { type SetActiveLearningPathRequest } from "./application/use-cases/setActiveLearningPath";
 import { SQLiteSettingsRepository } from "./infrastructure/SQLiteSettingsRepository";
-import { ManageActivePath } from "./application/ManageActivePath";
 
-// 1. Wiring
+// 1. Types
+export type { SetActiveLearningPathRequest };
+
+// 2. Wiring
 const repo = new SQLiteSettingsRepository(getDb());
-const manageActivePath = new ManageActivePath(repo);
+const manager = new SettingsManager(repo);
 
-// 2. Public API
-export const getActiveLearningPath = () => manageActivePath.getActive();
-export const setActiveLearningPath = (pathId: string) => manageActivePath.setActive(pathId);
+// 3. Public API
+/** @deprecated el sistema de path activo está en desuso */
+export const getActiveLearningPath = () => manager.getActiveLearningPath();
+
+/** @deprecated el sistema de path activo está en desuso */
+export const setActiveLearningPath = (request: SetActiveLearningPathRequest) =>
+  manager.setActiveLearningPath(request);
