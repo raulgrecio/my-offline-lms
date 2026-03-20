@@ -11,10 +11,10 @@
       "@layouts/*": ["src/layouts/*"],
       "@pages/*": ["src/pages/*"],
       "@platform/*": ["src/platform/*"],
-      "@/*": ["src/*"],
+      "@config/*": ["src/config/*"],
     },
     "skipLibCheck": true
   },
-  "include": [".astro/types.d.ts", "./src/**/*"],
+  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }

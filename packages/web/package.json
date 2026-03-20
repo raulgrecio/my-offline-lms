@@ -7,7 +7,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "type-check": "NODE_OPTIONS='--max-old-space-size=8192' astro check"
+    "type-check": "NODE_OPTIONS='--max-old-space-size=8192' astro check",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.4",
@@ -24,8 +32,17 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.1.0",
+    "jsdom": "^29.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
