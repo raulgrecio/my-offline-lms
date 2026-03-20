@@ -1,11 +1,22 @@
 import { getDb } from "../../platform/db/database";
-import { ManageFavorites } from "./application/ManageFavorites";
-import type { FavoriteType } from "./domain/ports/IFavoritesRepository";
+import { FavoriteManager } from "./application/FavoriteManager";
+import { type GetIsFavoriteRequest } from "./application/use-cases/getIsFavorite";
+import { type ToggleFavoriteRequest } from "./application/use-cases/toggleFavorite";
 import { SQLiteFavoritesRepository } from "./infrastructure/SQLiteFavoritesRepository";
 
-const favoritesRepository = new SQLiteFavoritesRepository(getDb());
-const manageFavorites = new ManageFavorites(favoritesRepository);
+// 1. Types
+export type { FavoriteType } from "./domain/ports/IFavoritesRepository";
+export type { GetIsFavoriteRequest, ToggleFavoriteRequest };
 
-export const toggleFavorite = (id: string, type: FavoriteType) => manageFavorites.toggleFavorite(id, type);
-export const getIsFavorite = (id: string, type: FavoriteType) => manageFavorites.getIsFavorite(id, type);
-export const getAllFavorites = () => manageFavorites.getAll();
+// 2. Wiring
+const repo = new SQLiteFavoritesRepository(getDb());
+const manager = new FavoriteManager(repo);
+
+// 3. Public API
+export const getAllFavorites = () => manager.getAll();
+
+export const getIsFavorite = ({ id, type }: GetIsFavoriteRequest) =>
+  manager.getIsFavorite({ id, type });
+
+export const toggleFavorite = ({ id, type }: ToggleFavoriteRequest) =>
+  manager.toggleFavorite({ id, type });

@@ -9,9 +9,10 @@ import EmptyState from "../../components/EmptyState.astro";
 import { getAllCourses, getCourseAssets } from "../../features/courses";
 import { getAllCourseProgress } from "../../features/progress";
 import { getIsFavorite } from "../../features/favorites";
+import { APP_ROUTES } from "../../platform/router/routes";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
-const baseUrl = "/courses";
+const baseUrl = APP_ROUTES.COURSES.INDEX;
 const courses = getAllCourses();
 const allProgress = getAllCourseProgress();
 const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
@@ -62,7 +63,7 @@ const coursesWithStats = courses
               status={c.status}
               totalAssets={c.totalAssets}
               progress={c.progressPercent}
-              isFavorite={getIsFavorite(c.id, 'course')}
+              isFavorite={getIsFavorite({ id: c.id, type: 'course' })}
             />
           ))}
         </div>

@@ -68,7 +68,7 @@ const lpStats = learningPaths
               completedCount={lp.completedCount}
               progress={lp.progress}
               status={lp.status}
-              isFavorite={getIsFavorite(lp.id, 'learning-path')}
+              isFavorite={getIsFavorite({ id: lp.id, type: 'learning-path' })}
             />
           ))}
         </div>

@@ -33,7 +33,7 @@ if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 const course = getCourseById({ courseId: id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const isFavorite = getIsFavorite(id, 'course');
+const isFavorite = getIsFavorite({ id, type: 'course' });
 
 const allAssets = getCourseAssets({ courseId: id });
 const videos = allAssets

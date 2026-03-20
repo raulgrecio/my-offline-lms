@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request }: APIContext): Promise<Response>
       });
     }
 
-    toggleFavorite(String(id), type);
+    toggleFavorite({ id: String(id), type });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

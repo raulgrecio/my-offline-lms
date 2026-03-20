@@ -40,7 +40,7 @@ const lpStats = await Promise.all(
       inProgressCount: progress?.inProgressCourses || 0,
       progress: progress?.progress || 0,
       status: progress?.status || "not_started",
-      isFavorite: getIsFavorite(lp.id, 'learning-path')
+      isFavorite: getIsFavorite({ id: lp.id, type: 'learning-path' })
     };
   })
 );
@@ -98,7 +98,7 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
                     status={progress?.status ?? "not_started"}
                     totalAssets={progress?.totalAssets}
                     progress={progressPercent}
-                    isFavorite={getIsFavorite(course.id, 'course')}
+                    isFavorite={getIsFavorite({ id: course.id, type: 'course' })}
                   />
                 );
               })}

@@ -10,15 +10,15 @@ export class SQLiteFavoritesRepository implements IFavoritesRepository {
       .all() as { id: string; type: FavoriteType }[];
   }
 
-  getIsFavorite(id: string, type: FavoriteType): boolean {
+  getIsFavorite({ id, type }: { id: string; type: FavoriteType }): boolean {
     const row = this.db
       .prepare("SELECT 1 FROM UserFavorites WHERE id = ? AND type = ?")
       .get(id, type);
     return !!row;
   }
 
-  toggleFavorite(id: string, type: FavoriteType): void {
-    const exists = this.getIsFavorite(id, type);
+  toggleFavorite({ id, type }: { id: string; type: FavoriteType }): void {
+    const exists = this.getIsFavorite({ id, type });
     if (exists) {
       this.db
         .prepare("DELETE FROM UserFavorites WHERE id = ? AND type = ?")

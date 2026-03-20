@@ -26,7 +26,7 @@ if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 const path = getLearningPathById({ pathId: id });
 if (!path) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
-const isFavorite = getIsFavorite(id, 'learning-path');
+const isFavorite = getIsFavorite({ id, type: 'learning-path' });
 
 const courses = getCoursesForPath({ pathId: id });
 const lpProgress = getLearningPathProgress({ pathId: id });
@@ -129,7 +129,7 @@ const status = completedCount === courses.length && courses.length > 0
                 totalAssets={progressObj?.totalAssets}
                 progress={progressPercent}
                 orderIndex={course.orderIndex}
-                isFavorite={getIsFavorite(course.id, 'course')}
+                isFavorite={getIsFavorite({ id: course.id, type: 'course' })}
               />
             );
           })}
