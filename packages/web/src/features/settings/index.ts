@@ -1,5 +1,5 @@
 import { getDb } from "../../platform/db/database";
-import { SettingsManager } from "./application/SettingsManager";
+import { SettingManager } from "./application/SettingManager";
 import { type SetActiveLearningPathRequest } from "./application/use-cases/setActiveLearningPath";
 import { SQLiteSettingsRepository } from "./infrastructure/SQLiteSettingsRepository";
 
@@ -8,7 +8,7 @@ export type { SetActiveLearningPathRequest };
 
 // 2. Wiring
 const repo = new SQLiteSettingsRepository(getDb());
-const manager = new SettingsManager(repo);
+const manager = new SettingManager(repo);
 
 // 3. Public API
 /** @deprecated el sistema de path activo está en desuso */
