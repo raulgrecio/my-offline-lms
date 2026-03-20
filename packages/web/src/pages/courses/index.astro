@@ -19,7 +19,7 @@ const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
 const coursesWithStats = courses
   .map((c) => {
     const progress = progressMap.get(c.id);
-    const assets = getCourseAssets(c.id);
+    const assets = getCourseAssets({ courseId: c.id });
     const completedAssets = progress?.completedAssets || 0;
     const totalAssets = assets.filter((a) => a.status === "COMPLETED").length;
     const progressPercent = totalAssets > 0 

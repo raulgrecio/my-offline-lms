@@ -47,7 +47,7 @@ const lpStats = await Promise.all(
 
 // Last watched course title
 let lastWatchedCourse = lastWatched
-  ? getCourseById(lastWatched.courseId)
+  ? getCourseById({ courseId: lastWatched.courseId })
   : null;
 
 const hasContent = courses.length > 0 || lpStats.length > 0;

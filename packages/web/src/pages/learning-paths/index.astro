@@ -25,7 +25,7 @@ const lpStats = learningPaths
     
     // Calculate asset count for the path
     const totalAssets = lpCourses.reduce((acc, course) => {
-      const assets = getCourseAssets(course.id);
+      const assets = getCourseAssets({ courseId: course.id });
       return acc + assets.filter((a) => a.status === "COMPLETED").length;
     }, 0);
 

@@ -22,15 +22,20 @@ import { getIsFavorite } from "../../features/favorites";
 import { API_ROUTES } from "../../platform/api/routes";
 import { APP_ROUTES } from "../../platform/router/routes";
 
-const { id } = Astro.params;
+
+interface CoursePageProps {
+  id?: string;
+}
+
+const { id } = Astro.params as CoursePageProps;
 if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const course = getCourseById(id);
+const course = getCourseById({ courseId: id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
 const isFavorite = getIsFavorite(id, 'course');
 
-const allAssets = getCourseAssets(id);
+const allAssets = getCourseAssets({ courseId: id });
 const videos = allAssets
   .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
