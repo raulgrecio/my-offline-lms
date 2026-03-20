@@ -33,9 +33,9 @@ if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 const course = getCourseById({ courseId: id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const isFavorite = getIsFavorite({ id, type: 'course' });
-
 const allAssets = getCourseAssets({ courseId: id });
+
+const isFavorite = getIsFavorite({ id, type: 'course' });
 const videos = allAssets
   .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));

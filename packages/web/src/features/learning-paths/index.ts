@@ -18,3 +18,6 @@ export const getLearningPathById = (request: GetPathDetailsRequest) =>
 
 export const getCoursesForPath = (request: GetPathDetailsRequest) =>
   manager.getCoursesForPath(request);
+
+export const getLearningPathDetails = (request: GetPathDetailsRequest) =>
+  manager.getLearningPathDetails(request);
