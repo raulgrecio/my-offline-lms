@@ -1,18 +1,18 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { apiClient } from '../../platform/api/client';
-import SubtitleDisplay from './SubtitleDisplay';
+import { apiClient } from '@platform/api/client';
+import ControlOverlay from './ControlOverlay';
+import FullscreenButton from './FullscreenButton';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';
 import PlayOverlay from './PlayOverlay';
-import VideoTitle from './VideoTitle';
-import ProgressVideoBar from './ProgressVideoBar';
 import PlayPauseButton from './PlayPauseButton';
-import VolumeControl from './VolumeControl';
-import TimeDisplay from './TimeDisplay';
-import FullscreenButton from './FullscreenButton';
-import SubtitleToggleButton from './SubtitleToggleButton';
+import ProgressVideoBar from './ProgressVideoBar';
 import SettingsButton from './SettingsButton';
-import ControlOverlay from './ControlOverlay';
+import SubtitleDisplay from './SubtitleDisplay';
+import SubtitleToggleButton from './SubtitleToggleButton';
+import TimeDisplay from './TimeDisplay';
+import VideoTitle from './VideoTitle';
+import VolumeControl from './VolumeControl';
 
 export interface VideoPlayerProps {
   src: string;

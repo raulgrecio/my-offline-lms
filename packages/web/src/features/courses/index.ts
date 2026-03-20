@@ -1,4 +1,4 @@
-import { getDb } from "../../platform/db/database";
+import { getDb } from "@platform/db/database";
 import { CourseManager } from "./application/CourseManager";
 import type { GetAssetByIdRequest } from "./application/use-cases/getAssetById";
 import type { GetCourseAssetsRequest } from "./application/use-cases/getCourseAssets";
@@ -14,7 +14,7 @@ export type {
   GetCourseAssetsRequest,
   GetCourseByIdRequest,
   GetCourseDetailsRequest,
-  UpdateAssetMetadataRequest,
+  UpdateAssetMetadataRequest
 };
 
 // 2. Wiring

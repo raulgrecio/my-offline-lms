@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 
-import { markCourseStatus } from '../../../features/progress';
+import { markCourseStatus } from '@features/progress';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    markCourseStatus({ courseId: String(courseId), status});
+    markCourseStatus({ courseId: String(courseId), status });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

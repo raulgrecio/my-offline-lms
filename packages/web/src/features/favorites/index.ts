@@ -1,4 +1,4 @@
-import { getDb } from "../../platform/db/database";
+import { getDb } from "@platform/db/database";
 import { FavoriteManager } from "./application/FavoriteManager";
 import { type GetIsFavoriteRequest } from "./application/use-cases/getIsFavorite";
 import { type ToggleFavoriteRequest } from "./application/use-cases/toggleFavorite";

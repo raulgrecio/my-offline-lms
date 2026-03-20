@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-import { apiClient } from '../../platform/api/client';
+import { apiClient } from '@platform/api/client';
 
 interface Cue {
   start: number;

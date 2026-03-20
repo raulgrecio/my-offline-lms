@@ -3,24 +3,24 @@ export const prerender = false;
 
 import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
 
-import { env } from "../../config/env";
-import Layout from '../../layouts/Layout.astro';
-import VideoPlayer from '../../components/VideoPlayer';
-import { Icon } from '../../components/Icon';
-import FavoriteButton from "../../components/FavoriteButton.astro";
-import GuideCard from "../../components/GuideCard.astro";
-import PageHeader from "../../components/PageHeader.astro";
+import { env } from "@config/env";
+import { API_ROUTES } from "@platform/api/routes";
+import { APP_ROUTES } from "@platform/router/routes";
 import {
   getCourseById,
   getCourseAssets,
-} from "../../features/courses";
+} from "@features/courses";
+import { getIsFavorite } from "@features/favorites";
 import {
   getCourseProgress,
   getAssetProgress,
-} from "../../features/progress";
-import { getIsFavorite } from "../../features/favorites";
-import { API_ROUTES } from "../../platform/api/routes";
-import { APP_ROUTES } from "../../platform/router/routes";
+} from "@features/progress";
+import Layout from '@layouts/Layout.astro';
+import FavoriteButton from "@components/FavoriteButton.astro";
+import { Icon } from '@components/Icon';
+import GuideCard from "@components/GuideCard.astro";
+import PageHeader from "@components/PageHeader.astro";
+import VideoPlayer from '@components/VideoPlayer';
 
 
 interface CoursePageProps {
@@ -303,6 +303,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 </Layout>
 
 <script>
+  // Route relative imports
   import { apiClient } from "../../platform/api/client";
 
   const context = document.getElementById('course-page-context') as HTMLElement;

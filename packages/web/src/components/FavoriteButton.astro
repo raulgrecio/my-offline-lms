@@ -1,7 +1,7 @@
 ---
-import { API_ROUTES } from "../platform/api/routes";
+import { API_ROUTES } from "@platform/api/routes";
+import type { FavoriteType } from "@features/favorites/domain/ports/IFavoritesRepository";
 import { Icon } from "./Icon";
-import type { FavoriteType } from "../features/favorites/domain/ports/IFavoritesRepository";
 
 interface FavoriteButtonProps {
   id: string;

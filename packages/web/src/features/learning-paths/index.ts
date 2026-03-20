@@ -1,4 +1,4 @@
-import { getDb } from "../../platform/db/database";
+import { getDb } from "@platform/db/database";
 import { LearningPathManager } from "./application/LearningPathManager";
 import type { GetPathDetailsRequest, PathWithCourses } from "./application/use-cases/getPathDetails";
 import { SQLiteLearningPathRepository } from "./infrastructure/SQLiteLearningPathRepository";

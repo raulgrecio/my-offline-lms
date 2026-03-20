@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { SQLiteDatabase } from "@my-offline-lms/core";
+import { DB_PATH } from "@config/paths";
 import { runMigrations } from "./schema";
-import { DB_PATH } from "../../config/paths";
 
 // Singleton connection
 let _db: SQLiteDatabase | null = null;

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { updateVideoProgress } from '../../../features/progress';
+import { updateVideoProgress } from '@features/progress';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     updateVideoProgress({
-      assetId: String(assetId), 
+      assetId: String(assetId),
       courseId: String(courseId),
       position: Number(position),
       duration: duration !== undefined ? Number(duration) : undefined

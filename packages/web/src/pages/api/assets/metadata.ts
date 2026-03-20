@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 
-import { updateAssetMetadata, getAssetById } from '../../../features/courses';
+import { updateAssetMetadata, getAssetById } from '@features/courses';
 
 export const GET: APIRoute = async ({ url }) => {
   const assetId = url.searchParams.get('assetId');

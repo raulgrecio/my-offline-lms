@@ -1,18 +1,18 @@
 ---
 export const prerender = false;
 
-import Layout from "../../layouts/Layout.astro";
-import CourseCard from "../../components/CourseCard.astro";
-import ProgressBar from "../../components/ProgreesBar.astro";
-import { Icon } from "../../components/Icon";
-import FavoriteButton from "../../components/FavoriteButton.astro";
-import PageHeader from "../../components/PageHeader.astro";
+import { APP_ROUTES } from "@platform/router/routes";
+import { getIsFavorite } from "@features/favorites";
 import {
   getLearningPathDetails,
-} from "../../features/learning-paths";
-import { getAllCourseProgress, getLearningPathProgress } from "../../features/progress";
-import { getIsFavorite } from "../../features/favorites";
-import { APP_ROUTES } from "../../platform/router/routes";
+} from "@features/learning-paths";
+import { getAllCourseProgress, getLearningPathProgress } from "@features/progress";
+import Layout from "@layouts/Layout.astro";
+import CourseCard from "@components/CourseCard.astro";
+import { Icon } from "@components/Icon";
+import FavoriteButton from "@components/FavoriteButton.astro";
+import PageHeader from "@components/PageHeader.astro";
+import ProgressBar from "@components/ProgreesBar.astro";
 
 
 interface PathPageProps {

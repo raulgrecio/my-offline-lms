@@ -1,7 +1,7 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import * as pdfjs from 'pdfjs-dist';
 
-import { apiClient } from '../../platform/api/client';
+import { apiClient } from '@platform/api/client';
 
 interface InitPdfViewerProps {
   assetId: string,

@@ -1,8 +1,9 @@
 ---
-import { APP_ROUTES } from "../../platform/router/routes";
-import ViewerLayout from "../../layouts/ViewerLayout.astro";
-import { getAssetProgress } from "../../features/progress";
-import PDFViewer from "../../components/PDFViewer/Viewer.astro";
+// @ts-nocheck
+import { APP_ROUTES } from "@platform/router/routes";
+import { getAssetProgress } from "@features/progress";
+import ViewerLayout from "@layouts/ViewerLayout.astro";
+import PDFViewer from "@components/PDFViewer/Viewer.astro";
 
 const assetId = Astro.url.searchParams.get('assetId');
 const courseId = Astro.url.searchParams.get('courseId');

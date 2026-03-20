@@ -3,8 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 
 import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core';
-
-import { CONFIG_PATH, MONOREPO_ROOT } from '../../../config/paths';
+import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
 
 const fsAdapter = new NodeFileSystem();
 const resolver = new AssetPathResolver({

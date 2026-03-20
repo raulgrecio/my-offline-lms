@@ -1,4 +1,4 @@
-import { getDb } from "../../platform/db/database";
+import { getDb } from "@platform/db/database";
 import { SettingManager } from "./application/SettingManager";
 import { type SetActiveLearningPathRequest } from "./application/use-cases/setActiveLearningPath";
 import { SQLiteSettingsRepository } from "./infrastructure/SQLiteSettingsRepository";

@@ -1,4 +1,4 @@
-import { getDb } from "../../platform/db/database";
+import { getDb } from "@platform/db/database";
 import { ProgressManager } from "./application/ProgressManager";
 import type { GetAssetProgressRequest } from "./application/use-cases/getAssetProgress";
 import type { GetCourseProgressRequest } from "./application/use-cases/getCourseProgress";
