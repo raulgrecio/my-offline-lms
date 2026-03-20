@@ -1,5 +1,7 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import * as pdfjs from 'pdfjs-dist';
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { GlobalWorkerOptions } from "pdfjs-dist";
 
 import { apiClient } from '@platform/api/client';
 
@@ -19,7 +21,7 @@ export function initPdfViewer({
   options,
 }: InitPdfViewerProps) {
   // Configure worker
-  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+  GlobalWorkerOptions.workerSrc = pdfWorker
 
   const container = document.getElementById('pdf-container') as HTMLElement;
   const thumbnailsContainer = document.getElementById('thumbnails-container') as HTMLElement;

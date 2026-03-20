@@ -17,6 +17,9 @@ export default defineConfig({
   vite: {
     // @ts-ignore
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      include: ['pdfjs-dist'],
+    },
   },
   server: {
     port: 4321,
