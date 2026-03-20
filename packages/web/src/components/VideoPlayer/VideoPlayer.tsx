@@ -48,6 +48,7 @@ export default function VideoPlayer({
   const [showSettings, setShowSettings] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subtitleOpacity, setSubtitleOpacity] = useState(0.6);
+  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -105,6 +106,7 @@ export default function VideoPlayer({
 
     // Reset flag if asset changes
     initialTimeSet.current = false;
+    setHasStartedPlaying(false);
 
     if (video.readyState >= 1) {
       applyInitialTime();
@@ -138,7 +140,10 @@ export default function VideoPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) v.play();
+    if (v.paused) {
+      v.play();
+      setHasStartedPlaying(true);
+    }
     else v.pause();
   }, []);
 
@@ -216,15 +221,18 @@ export default function VideoPlayer({
         className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          setHasStartedPlaying(true);
+        }}
         onPause={() => setIsPlaying(false)}
       >
-        {subtitleMode === 'native' && subtitleSrc && showSubtitles && (
+        {subtitleMode === 'native' && subtitleSrc && showSubtitles && hasStartedPlaying && (
           <track kind="subtitles" src={subtitleSrc} label="Subtítulos" default />
         )}
       </video>
 
-      {subtitleMode === 'custom' && subtitleSrc && (
+      {subtitleMode === 'custom' && subtitleSrc && hasStartedPlaying && (
         <SubtitleDisplay
           src={subtitleSrc}
           currentTime={currentTime}
