@@ -1,17 +1,15 @@
 import { getDb } from "@platform/db/database";
 import { LearningPathManager } from "./application/LearningPathManager";
-import type { GetLearningPathDetailsRequest, PathWithCourses } from "./application/use-cases/getLearningPathDetails";
+import { type GetLearningPathDetailsRequest, type PathWithCourses } from "./application/use-cases/getLearningPathDetails";
 import { SQLiteLearningPathRepository } from "./infrastructure/SQLiteLearningPathRepository";
 import type { GetCoursesForPathIdRequest } from "./application/use-cases/getCoursesForPathId";
 import type { GetLearningPathByIdRequest } from "./application/use-cases/getLearningPath";
-import type { GetLearningPathWithStatsRequest } from "./application/use-cases/getLearningPathWithStats";
 
 // 1. Types
 export type {
   GetCoursesForPathIdRequest,
   GetLearningPathByIdRequest,
   GetLearningPathDetailsRequest,
-  GetLearningPathWithStatsRequest,
   PathWithCourses,
 };
 
@@ -30,6 +28,3 @@ export const getLearningPathById = (request: GetLearningPathByIdRequest) =>
 
 export const getLearningPathDetails = (request: GetLearningPathDetailsRequest) =>
   manager.getLearningPathDetails(request);
-
-export const getLearningPathWithStats = (request: GetLearningPathWithStatsRequest) =>
-  manager.getLearningPathWithStats(request);

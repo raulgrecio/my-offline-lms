@@ -2,12 +2,11 @@
 export const prerender = false;
 
 import { APP_ROUTES } from "@platform/router/routes";
-import { getIsFavorite } from "@features/favorites";
 import {
   getLearningPathDetails,
-  getLearningPathWithStats,
 } from "@features/learning-paths";
-import { getDashboardStatus } from "@features/progress";
+import { getCourseProgress, getLearningPathProgress } from "@features/progress";
+import { getIsFavorite } from "@features/favorites";
 import Layout from "@layouts/Layout.astro";
 import CourseCard from "@components/CourseCard.astro";
 import { Icon } from "@components/Icon";
@@ -28,14 +27,11 @@ if (!pathDetails) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const { path, courses } = pathDetails;
 
-const lpStats = getLearningPathWithStats({ id: path.id });
-const isFavorite = lpStats.isFavorite;
-const progress = lpStats.progress;
-const completedCount = lpStats.completedCount;
-const status = lpStats.status;
-
-const { allProgress } = getDashboardStatus();
-const progressMap = new Map(allProgress.map((p) => [p.id, p]));
+const lpProgress = getLearningPathProgress({ id: path.id });
+const isFavorite = getIsFavorite({ id, type: "learning-path" });
+const progress = lpProgress.progress;
+const completedCount = lpProgress.completedItems;
+const status = lpProgress.status;
 ---
 
 <Layout title={path.title} description={path.description}>
@@ -113,17 +109,17 @@ const progressMap = new Map(allProgress.map((p) => [p.id, p]));
       courses.length > 0 ? (
         <div class="flex flex-col gap-3">
           {courses.map((course) => {
-            const progressObj = progressMap.get(course.id);
-            const progressPercent = progressObj?.progress || 0;
+            const courseProgress = getCourseProgress({ id: course.id });
+            const courseIsFavorite = getIsFavorite({ id: course.id, type: "course" });
             return (
               <CourseCard
                 id={course.id}
                 title={course.title}
-                status={progressObj?.status ?? "not_started"}
-                totalAssets={progressObj?.totalItems}
-                progress={progressPercent}
+                status={courseProgress.status}
+                totalAssets={courseProgress.totalItems}
+                progress={courseProgress.progress}
                 orderIndex={course.orderIndex}
-                isFavorite={getIsFavorite({ id: course.id, type: 'course' })}
+                isFavorite={courseIsFavorite}
               />
             );
           })}

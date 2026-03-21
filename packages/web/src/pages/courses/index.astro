@@ -2,9 +2,9 @@
 export const prerender = false;
 
 import { APP_ROUTES } from "@platform/router/routes";
-import { getAllCourses, getAssetsByCourseId } from "@features/courses";
+import { getAllCourses } from "@features/courses";
+import { getCourseProgress } from "@features/progress";
 import { getIsFavorite } from "@features/favorites";
-import { getDashboardStatus } from "@features/progress";
 import Layout from "@layouts/Layout.astro";
 import CourseCard from "@components/CourseCard.astro";
 import EmptyState from "@components/EmptyState.astro";
@@ -14,25 +14,17 @@ import VisibilityToggle from "@components/VisibilityToggle.astro";
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = APP_ROUTES.COURSES.INDEX;
 const courses = getAllCourses();
-const allProgress = getDashboardStatus().allProgress;
-const progressMap = new Map(allProgress.map((p) => [p.id, p]));
 
 const coursesWithStats = courses
   .map((c) => {
-    const progress = progressMap.get(c.id);
-    const assets = getAssetsByCourseId({ id: c.id });
-    const completedAssets = progress?.completedItems || 0;
-    const totalAssets = assets.filter((a) => a.status === "COMPLETED").length;
-    const progressPercent = totalAssets > 0 
-      ? Math.round((completedAssets / totalAssets) * 100) 
-      : 0;
-
+    const progress = getCourseProgress({ id: c.id });
+    const isFavorite = getIsFavorite({ id: c.id, type: "course" });
     return {
       ...c,
-      status: progress?.status ?? "not_started",
-      completedAssets,
-      totalAssets,
-      progressPercent,
+      status: progress.status,
+      totalAssets: progress.totalItems,
+      progress: progress.progress,
+      isFavorite,
     };
   })
   .filter((c) => showAll || c.totalAssets > 0);
@@ -62,8 +54,8 @@ const coursesWithStats = courses
               title={c.title}
               status={c.status}
               totalAssets={c.totalAssets}
-              progress={c.progressPercent}
-              isFavorite={getIsFavorite({ id: c.id, type: 'course' })}
+              progress={c.progress}
+              isFavorite={c.isFavorite}
             />
           ))}
         </div>

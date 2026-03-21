@@ -11,6 +11,6 @@ export interface CollectionProgress {
   updatedAt?: string;
 }
 
-export interface EnrichedCollectionProgress extends CollectionProgress {
+export interface CollectionStats extends CollectionProgress {
   progress: number;
 }

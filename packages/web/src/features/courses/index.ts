@@ -3,7 +3,7 @@ import { CourseManager } from "./application/CourseManager";
 import type { GetAssetByIdRequest } from "./application/use-cases/getAssetById";
 import type { GetAssetsByCourseIdRequest } from "./application/use-cases/getAssetsByCourseId";
 import type { GetCourseByIdRequest } from "./application/use-cases/getCourseById";
-import type { UpdateAssetTotalPagesRequest } from "./application/use-cases/updateAssetTotalPages";
+import { type UpdateAssetTotalPagesRequest } from "./application/use-cases/updateAssetTotalPages";
 import { SQLiteCourseRepository } from "./infrastructure/SQLiteCourseRepository";
 
 // 1. Types

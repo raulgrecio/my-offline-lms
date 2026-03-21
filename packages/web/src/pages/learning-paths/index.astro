@@ -2,8 +2,9 @@
 import { APP_ROUTES } from "@platform/router/routes";
 import {
   getAllLearningPaths,
-  getLearningPathWithStats,
 } from "@features/learning-paths";
+import { getLearningPathProgress } from "@features/progress";
+import { getIsFavorite } from "@features/favorites";
 import Layout from "@layouts/Layout.astro";
 import EmptyState from "@components/EmptyState.astro";
 import LearningPathCard from "@components/LearningPathCard.astro";
@@ -17,13 +18,19 @@ const learningPaths = getAllLearningPaths();
 
 const lpStats = learningPaths
   .map((lp) => {
-    const stats = getLearningPathWithStats({ id: lp.id });
+    const progress = getLearningPathProgress({ id: lp.id });
+    const isFavorite = getIsFavorite({ id: lp.id, type: "learning-path" });
     return {
       ...lp,
-      ...stats,
+      courseCount: progress.totalItems,
+      completedCount: progress.completedItems,
+      inProgressCount: progress.inProgressItems,
+      progress: progress.progress,
+      status: progress.status,
+      isFavorite,
     };
   })
-  .filter((lp) => showAll || lp.assetCount > 0);
+  .filter((stats) => showAll || stats.courseCount > 0);
 ---
 
 <Layout title="Learning Paths">

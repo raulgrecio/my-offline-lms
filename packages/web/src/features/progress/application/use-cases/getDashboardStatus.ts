@@ -1,10 +1,10 @@
 import type { Asset } from "@my-offline-lms/core";
 import type { IProgressRepository } from "../../domain/ports/IProgressRepository";
-import type { EnrichedCollectionProgress } from "../../domain/model/CollectionProgress";
+import type { CollectionProgress, CollectionStats } from "../../domain/model/CollectionProgress";
 import { calculateProgressPercentage } from "../calculateProgressPercentage";
 
 export interface DashboardStatus {
-  allProgress: EnrichedCollectionProgress[];
+  allProgress: CollectionStats[];
   lastWatched: Asset | null;
 }
 
@@ -12,7 +12,7 @@ export const getDashboardStatus = (progressRepo: IProgressRepository): Dashboard
   const rawProgress = progressRepo.getAllCollectionsProgress("course");
   const lastWatched = progressRepo.getLastWatchedAsset();
 
-  const allProgress: EnrichedCollectionProgress[] = rawProgress.map((p) => ({
+  const allProgress: CollectionStats[] = rawProgress.map((p: CollectionProgress) => ({
     ...p,
     progress: calculateProgressPercentage(
       p.completedItems,

@@ -1,7 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
 import LearningPathCard from "@components/LearningPathCard.astro";
-import type { LearningPathCardProps } from "@components/LearningPathCard.astro";
 import CourseCard from "@components/CourseCard.astro";
 import SectionHeader from "@components/SectionHeader.astro";
 import EmptyState from "@components/EmptyState.astro";
@@ -9,28 +8,32 @@ import HomepageHero from "@components/HomepageHero.astro";
 import { Icon } from "@components/Icon";
 import {
   getAllLearningPaths,
-  getLearningPathWithStats,
 } from "@features/learning-paths";
 import { getAllCourses, getCourseById } from "@features/courses";
 import {
   getDashboardStatus,
+  getCourseProgress,
+  getLearningPathProgress,
 } from "@features/progress";
 import { getIsFavorite } from "@features/favorites";
 import { APP_ROUTES } from "@platform/router/routes";
 
 const learningPaths = getAllLearningPaths();
 const courses = getAllCourses();
-const { allProgress, lastWatched } = getDashboardStatus();
-
-// Build progress map
-const progressMap = new Map(allProgress.map((p) => [p.id, p]));
+const { lastWatched } = getDashboardStatus();
 
 // LP progress and stats
-const lpStats: LearningPathCardProps[] = learningPaths.map((lp) => {
-  const stats = getLearningPathWithStats({ id: lp.id });
+const lpStats = learningPaths.map((lp) => {
+  const progress = getLearningPathProgress({ id: lp.id });
+  const isFavorite = getIsFavorite({ id: lp.id, type: "learning-path" });
   return {
     ...lp,
-    ...stats,
+    isFavorite,
+    courseCount: progress.totalItems,
+    completedCount: progress.completedItems,
+    inProgressCount: progress.inProgressItems,
+    progress: progress.progress,
+    status: progress.status,
   };
 });
 
@@ -76,16 +79,16 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
             <SectionHeader id="cursos-section" title="Cursos" icon="book-open" />
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {courses.slice(0, 8).map((course) => {
-                const progress = progressMap.get(course.id);
-                const progressPercent = progress?.progress || 0;
+                const progress = getCourseProgress({ id: course.id });
+                const isFavorite = getIsFavorite({ id: course.id, type: "course" });
                 return (
                   <CourseCard
                     id={course.id}
                     title={course.title}
-                    status={progress?.status ?? "not_started"}
-                    totalAssets={progress?.totalItems}
-                    progress={progressPercent}
-                    isFavorite={getIsFavorite({ id: course.id, type: 'course' })}
+                    status={progress.status}
+                    totalAssets={progress.totalItems}
+                    progress={progress.progress}
+                    isFavorite={isFavorite}
                   />
                 );
               })}
