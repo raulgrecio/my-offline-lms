@@ -99,9 +99,9 @@ export class SQLiteProgressRepository implements IProgressRepository {
     id,
     type,
     position,
-    duration,
+    maxPosition,
     completed,
-  }: { id: string; type: string; position: number; duration: number; completed: boolean }): void {
+  }: { id: string; type: string; position: number; maxPosition: number; completed: boolean }): void {
     this.db
       .prepare(
         `
@@ -114,7 +114,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
         updated_at   = excluded.updated_at
     `,
       )
-      .run(id, type, position, duration, completed ? 1 : 0);
+      .run(id, type, position, maxPosition, completed ? 1 : 0);
   }
 
   markCollectionStatus({

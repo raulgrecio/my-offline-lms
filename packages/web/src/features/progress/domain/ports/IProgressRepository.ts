@@ -10,7 +10,7 @@ export interface IProgressRepository {
   getCollectionProgress({ id, type }: { id: string, type: CollectionType }): CollectionProgress | null;
   getAllCollectionsProgress(type: CollectionType): CollectionProgress[];
   getLastWatchedAsset(): (Asset & { position: number }) | null;
-  saveAssetProgress({ id, type, position, duration, completed }: { id: string, type: AssetType, position: number, duration: number, completed: boolean }): void;
+  saveAssetProgress({ id, type, position, maxPosition, completed }: { id: string, type: AssetType, position: number, maxPosition: number, completed: boolean }): void;
   markCollectionStatus({ id, type, status }: { id: string, type: CollectionType, status: ProgressStatus }): void;
   recalculateCourseProgress(id: string): void;
   recalculateLearningPathProgress(id: string): void;

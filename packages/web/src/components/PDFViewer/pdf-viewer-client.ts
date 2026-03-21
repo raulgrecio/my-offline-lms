@@ -410,7 +410,7 @@ export function initPdfViewer({
     isSaving = true;
 
     try {
-      await apiClient.post(options.progressUrl, { assetId, courseId, page, completed: page === pdfDoc.numPages });
+      await apiClient.post(options.progressUrl, { assetId, courseId, page, totalPages: pdfDoc.numPages, completed: page === pdfDoc.numPages });
       showSaveConfirmation();
     } catch (e) {
     } finally {
