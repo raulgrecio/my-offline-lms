@@ -8,7 +8,7 @@ interface ViewerHeaderProps {
 const { path } = Astro.props as ViewerHeaderProps;
 ---
 
-<header class="flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle shrink-0 z-20 shadow-md">
+<header class="relative flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle shrink-0 z-20 shadow-md">
   <!-- Left: Sidebar Toggle & Title -->
   <div class="flex items-center gap-3 flex-1 min-w-0">
     <button 
@@ -120,4 +120,7 @@ const { path } = Astro.props as ViewerHeaderProps;
       <Icon name="external-link" size="sm" />
     </a>
   </div>
+
+  <!-- Visited Segments Layer -->
+  <div id="pdf-segments-container" class="absolute bottom-0 left-0 w-full h-0.5 flex bg-surface-800/30 overflow-hidden pointer-events-none"></div>
 </header>

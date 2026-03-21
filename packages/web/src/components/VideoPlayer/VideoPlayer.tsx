@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { apiClient } from '@platform/api/client';
+import { API_ROUTES } from '@platform/api/routes';
+import { VIDEO_SEGMENT_SIZE } from '@features/progress/application/constants';
 import ControlOverlay from './ControlOverlay';
 import FullscreenButton from './FullscreenButton';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';
@@ -49,9 +51,24 @@ export default function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subtitleOpacity, setSubtitleOpacity] = useState(0.6);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const [visitedSegments, setVisitedSegments] = useState<number[]>([]);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchSegments = useCallback(async () => {
+    try {
+      const response = await apiClient.get(API_ROUTES.PROGRESS.SEGMENTS(assetId, 'video')) as { segments?: number[] };
+      if (response.segments) {
+        setVisitedSegments(response.segments);
+      }
+    } catch { /* silent */ }
+  }, [assetId]);
+
+  // Fetch initial visited segments
+  useEffect(() => {
+    fetchSegments();
+  }, [fetchSegments]);
 
   // Load preferences
   useEffect(() => {
@@ -77,14 +94,15 @@ export default function VideoPlayer({
     localStorage.setItem('subtitle_opacity', String(val));
   }, []);
 
+  const handleFullscreenChange = useCallback(() => {
+    setIsFullscreen(!!document.fullscreenElement);
+  }, []);
+
   // Listen for fullscreen changes
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [handleFullscreenChange]);
 
   const applyInitialTime = useCallback(() => {
     const video = videoRef.current;
@@ -123,6 +141,10 @@ export default function VideoPlayer({
         detail: { assetId, position, completed }
       }));
 
+      // Update visited segments locally for immediate feedback
+      const segment = Math.floor(position / VIDEO_SEGMENT_SIZE);
+      setVisitedSegments(prev => prev.includes(segment) ? prev : [...prev, segment].sort((a, b) => a - b));
+
       await apiClient.post(progressUrl, { assetId, courseId, position, duration });
     } catch { /* silent */ }
   }, [assetId, courseId, duration, progressUrl]);
@@ -133,7 +155,7 @@ export default function VideoPlayer({
       if (videoRef.current && !videoRef.current.paused) {
         saveProgress(videoRef.current.currentTime, false);
       }
-    }, 5000);
+    }, VIDEO_SEGMENT_SIZE * 1000);
     return () => { if (saveTimer.current) clearInterval(saveTimer.current); };
   }, [assetId, saveProgress]);
 
@@ -147,11 +169,11 @@ export default function VideoPlayer({
     else v.pause();
   }, []);
 
-  const handleTimeUpdate = () => {
+  const handleTimeUpdate = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     setCurrentTime(v.currentTime);
-  };
+  }, []);
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
@@ -200,8 +222,10 @@ export default function VideoPlayer({
     setShowControls(true);
     if (controlsTimer.current) clearTimeout(controlsTimer.current);
     controlsTimer.current = setTimeout(() => {
-      // Accessing isPlaying from ref would be better but let's see
-      setShowControls(false); 
+      // Solo ocultamos si el video se está reproduciendo
+      if (videoRef.current && !videoRef.current.paused) {
+        setShowControls(false); 
+      }
     }, 3000);
   }, []);
 
@@ -267,24 +291,20 @@ export default function VideoPlayer({
           currentTime={currentTime}
           duration={duration}
           onSeek={handleSeek}
+          visitedSegments={visitedSegments}
         />
 
         {/* Bottom row */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {/* Play/pause */}
             <PlayPauseButton
               isPlaying={isPlaying}
               onToggle={togglePlay}
             />
-
-            {/* Volume */}
             <VolumeControl
               volume={volume}
               onVolumeChange={handleVolume}
             />
-
-            {/* Time */}
             <TimeDisplay
               currentTime={currentTime}
               duration={duration}

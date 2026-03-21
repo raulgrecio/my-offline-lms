@@ -1,3 +1,4 @@
+import type { AssetType } from "@my-offline-lms/core";
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 import { getAssetProgress, type GetAssetProgressRequest } from "./use-cases/getAssetProgress";
 import { getCollectionProgress, type GetCollectionProgressRequest } from "./use-cases/getCollectionProgress";
@@ -38,5 +39,9 @@ export class ProgressManager {
 
   getLastWatchedAsset() {
     return this.repo.getLastWatchedAsset();
+  }
+
+  getVisitedSegments({ id, type }: { id: string, type: AssetType }) {
+    return this.repo.getVisitedSegments({ id, type });
   }
 }

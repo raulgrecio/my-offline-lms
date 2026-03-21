@@ -13,6 +13,7 @@ export const API_ROUTES = {
     COURSE: "/api/progress/course",
     GUIDE: "/api/progress/guide",
     VIDEO: "/api/progress/video",
+    SEGMENTS: (assetId: string, type: string) => `/api/progress/segments?assetId=${assetId}&type=${type}`,
   },
   FAVORITES: {
     TOGGLE: "/api/favorites/toggle",

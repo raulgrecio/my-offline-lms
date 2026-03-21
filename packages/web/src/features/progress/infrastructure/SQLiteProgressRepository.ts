@@ -236,4 +236,13 @@ export class SQLiteProgressRepository implements IProgressRepository {
       .get(id, type) as any;
     return row?.count || 0;
   }
+
+  getVisitedSegments({ id, type }: { id: string; type: string }): number[] {
+    const rows = this.db
+      .prepare(
+        "SELECT segment FROM UserAssetSegments WHERE asset_id = ? AND asset_type = ? ORDER BY segment ASC",
+      )
+      .all(id, type) as any[];
+    return rows.map((r) => r.segment);
+  }
 }

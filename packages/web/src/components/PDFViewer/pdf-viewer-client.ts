@@ -4,6 +4,7 @@ import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { GlobalWorkerOptions } from "pdfjs-dist";
 
 import { apiClient } from '@platform/api/client';
+import { API_ROUTES } from '@platform/api/routes';
 
 interface InitPdfViewerProps {
   assetId: string,
@@ -41,6 +42,7 @@ export function initPdfViewer({
   const btnRotate = document.getElementById('btn-rotate') as HTMLButtonElement;
   const btnHelp = document.getElementById('btn-help') as HTMLButtonElement;
   const fitActiveBg = document.getElementById('fit-active-bg') as HTMLElement;
+  const segmentsContainer = document.getElementById('pdf-segments-container') as HTMLElement;
 
   // Templates
   const pageTemplate = document.getElementById('page-template') as HTMLTemplateElement;
@@ -62,6 +64,7 @@ export function initPdfViewer({
   let isProcessingQueue = false;
   let baseWidth = 595; // A4 default
   let baseHeight = 842; // A4 default
+  let visitedSegments = new Set<number>();
 
   async function init() {
     try {
@@ -105,6 +108,8 @@ export function initPdfViewer({
         renderPage(1);
         pageInput.value = '1';
       }
+
+      await fetchVisitedSegments();
 
     } catch (error) {
       console.error('Error loading PDF:', error);
@@ -405,6 +410,13 @@ export function initPdfViewer({
 
   async function saveProgress(page: number) {
     if (!pdfDoc) return;
+
+    // Update local segments for immediate feedback
+    if (!visitedSegments.has(page)) {
+      visitedSegments.add(page);
+      renderSegments();
+    }
+
     if (isSaving) return;
 
     isSaving = true;
@@ -415,6 +427,27 @@ export function initPdfViewer({
     } catch (e) {
     } finally {
       isSaving = false;
+    }
+  }
+
+  async function fetchVisitedSegments() {
+    try {
+      const response = await apiClient.get(API_ROUTES.PROGRESS.SEGMENTS(assetId, 'guide')) as { segments?: number[] };
+      if (response.segments) {
+        visitedSegments = new Set(response.segments);
+        renderSegments();
+      }
+    } catch (e) { }
+  }
+
+  function renderSegments() {
+    if (!pdfDoc || !segmentsContainer) return;
+    const total = pdfDoc.numPages;
+    segmentsContainer.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const seg = document.createElement('div');
+      seg.className = `flex-1 h-full ${visitedSegments.has(i) ? 'bg-brand-500/50 transition-colors duration-500' : ''}`;
+      segmentsContainer.appendChild(seg);
     }
   }
 

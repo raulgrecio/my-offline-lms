@@ -21,4 +21,5 @@ export interface IProgressRepository {
   incrementVisitedSegments({ id, type }: { id: string, type: AssetType }): void;
   setTotalSegments({ id, type, totalSegments }: { id: string, type: AssetType, totalSegments: number }): void;
   getVisitedSegmentsCount({ id, type }: { id: string, type: AssetType }): number;
+  getVisitedSegments({ id, type }: { id: string, type: AssetType }): number[];
 }
