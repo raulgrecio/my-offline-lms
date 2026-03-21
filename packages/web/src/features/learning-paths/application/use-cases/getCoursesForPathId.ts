@@ -7,7 +7,7 @@ export interface GetCoursesForPathIdRequest {
 
 export const getCoursesForPathId = (
   pathRepo: ILearningPathRepository,
-  { id }: GetCoursesForPathIdRequest
+  request: GetCoursesForPathIdRequest
 ): CourseWithOrderInPath[] => {
-  return pathRepo.getCoursesForPathId(id);
+  return pathRepo.getCoursesForPathId(request.id);
 };

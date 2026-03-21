@@ -9,12 +9,11 @@ import HomepageHero from "@components/HomepageHero.astro";
 import { Icon } from "@components/Icon";
 import {
   getAllLearningPaths,
-  getCoursesForPathId,
+  getLearningPathWithStats,
 } from "@features/learning-paths";
 import { getAllCourses, getCourseById } from "@features/courses";
 import {
   getDashboardStatus,
-  getLearningPathProgress,
 } from "@features/progress";
 import { getIsFavorite } from "@features/favorites";
 import { APP_ROUTES } from "@platform/router/routes";
@@ -27,22 +26,13 @@ const { allProgress, lastWatched } = getDashboardStatus();
 const progressMap = new Map(allProgress.map((p) => [p.id, p]));
 
 // LP progress and stats
-const lpStats = await Promise.all<LearningPathCardProps>(
-  learningPaths.map(async (lp) => {
-    const lpCourses = getCoursesForPathId({ id: lp.id });
-    const progress = getLearningPathProgress({ id: lp.id });
-
-    return { 
-      ...lp, 
-      courseCount: lpCourses.length,
-      completedCount: progress?.completedItems || 0,
-      inProgressCount: progress?.inProgressItems || 0,
-      progress: progress?.progress || 0,
-      status: progress?.status || "not_started",
-      isFavorite: getIsFavorite({ id: lp.id, type: 'learning-path' })
-    };
-  })
-);
+const lpStats: LearningPathCardProps[] = learningPaths.map((lp) => {
+  const stats = getLearningPathWithStats({ id: lp.id });
+  return {
+    ...lp,
+    ...stats,
+  };
+});
 
 // Last watched course title
 let lastWatchedCourse = lastWatched

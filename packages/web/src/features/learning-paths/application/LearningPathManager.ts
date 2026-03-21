@@ -1,8 +1,9 @@
 import type { ILearningPathRepository } from "../domain/ports/ILearningPathRepository";
 import { getCoursesForPathId, type GetCoursesForPathIdRequest } from "./use-cases/getCoursesForPathId";
-import { getLearningPath } from "./use-cases/getLearningPath";
+import { getLearningPathById, type GetLearningPathByIdRequest } from "./use-cases/getLearningPath";
 import { getAllLearningPaths } from "./use-cases/getAllLearningPaths";
-import { getPathDetails, type GetPathDetailsRequest } from "./use-cases/getPathDetails";
+import { getLearningPathDetails, type GetLearningPathDetailsRequest } from "./use-cases/getLearningPathDetails";
+import { getLearningPathWithStats, type GetLearningPathWithStatsRequest } from "./use-cases/getLearningPathWithStats";
 
 export class LearningPathManager {
   constructor(private repo: ILearningPathRepository) { }
@@ -11,15 +12,19 @@ export class LearningPathManager {
     return getAllLearningPaths(this.repo);
   }
 
-  getLearningPathDetails(request: GetPathDetailsRequest) {
-    return getPathDetails(this.repo, request);
+  getLearningPathDetails(request: GetLearningPathDetailsRequest) {
+    return getLearningPathDetails(this.repo, request);
   }
 
-  getLearningPath(request: GetPathDetailsRequest) {
-    return getLearningPath(this.repo, request);
+  getLearningPathById(request: GetLearningPathByIdRequest) {
+    return getLearningPathById(this.repo, request);
   }
 
   getCoursesForPathId(request: GetCoursesForPathIdRequest) {
     return getCoursesForPathId(this.repo, request);
+  }
+
+  getLearningPathWithStats(request: GetLearningPathWithStatsRequest) {
+    return getLearningPathWithStats(this.repo, request);
   }
 }

@@ -24,7 +24,7 @@ describe("LearningPathManager", () => {
     const path = { id: "lp1", title: "Path 1" } as any;
     vi.mocked(mockRepo.getLearningPath).mockReturnValue(path);
 
-    const result = manager.getLearningPath({ id: "lp1" });
+    const result = manager.getLearningPathById({ id: "lp1" });
     expect(result).toBe(path);
     expect(mockRepo.getLearningPath).toHaveBeenCalledWith("lp1");
   });

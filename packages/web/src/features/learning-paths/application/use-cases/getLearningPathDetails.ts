@@ -2,22 +2,22 @@ import type { LearningPath } from "@my-offline-lms/core";
 import type { ILearningPathRepository } from "../../domain/ports/ILearningPathRepository";
 import type { CourseWithOrderInPath } from "../../domain/model/CourseWithOrderInPath";
 import { getCoursesForPathId } from "./getCoursesForPathId";
-import { getLearningPath } from "./getLearningPath";
+import { getLearningPathById } from "./getLearningPath";
 
 export interface PathWithCourses {
   path: LearningPath;
   courses: CourseWithOrderInPath[];
 }
 
-export interface GetPathDetailsRequest {
+export interface GetLearningPathDetailsRequest {
   id: string;
 }
 
-export const getPathDetails = (
+export const getLearningPathDetails = (
   pathRepo: ILearningPathRepository,
-  { id }: GetPathDetailsRequest
+  { id }: GetLearningPathDetailsRequest
 ): PathWithCourses | null => {
-  const path = getLearningPath(pathRepo, { id });
+  const path = getLearningPathById(pathRepo, { id });
   if (!path) return null;
 
   const courses = getCoursesForPathId(pathRepo, { id });

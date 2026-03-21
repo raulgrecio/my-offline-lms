@@ -1,12 +1,9 @@
 ---
 import { APP_ROUTES } from "@platform/router/routes";
-import { getAssetsByCourseId } from "@features/courses";
-import { getIsFavorite } from "@features/favorites";
 import {
   getAllLearningPaths,
-  getCoursesForPathId,
+  getLearningPathWithStats,
 } from "@features/learning-paths";
-import { getLearningPathProgress } from "@features/progress";
 import Layout from "@layouts/Layout.astro";
 import EmptyState from "@components/EmptyState.astro";
 import LearningPathCard from "@components/LearningPathCard.astro";
@@ -20,22 +17,10 @@ const learningPaths = getAllLearningPaths();
 
 const lpStats = learningPaths
   .map((lp) => {
-    const lpCourses = getCoursesForPathId({ id: lp.id });
-    const progress = getLearningPathProgress({ id: lp.id });
-    
-    // Calculate asset count for the path
-    const totalAssets = lpCourses.reduce((acc, course) => {
-      const assets = getAssetsByCourseId({ id: course.id });
-      return acc + assets.filter((a) => a.status === "COMPLETED").length;
-    }, 0);
-
+    const stats = getLearningPathWithStats({ id: lp.id });
     return {
       ...lp,
-      courseCount: lpCourses.length,
-      completedCount: progress?.completedItems || 0,
-      assetCount: totalAssets,
-      progress: progress?.progress || 0,
-      status: progress?.status || "not_started"
+      ...stats,
     };
   })
   .filter((lp) => showAll || lp.assetCount > 0);
@@ -66,9 +51,10 @@ const lpStats = learningPaths
               description={lp.description}
               courseCount={lp.courseCount}
               completedCount={lp.completedCount}
+              inProgressCount={lp.inProgressCount}
               progress={lp.progress}
               status={lp.status}
-              isFavorite={getIsFavorite({ id: lp.id, type: 'learning-path' })}
+              isFavorite={lp.isFavorite}
             />
           ))}
         </div>

@@ -1,10 +1,13 @@
 import type { LearningPath } from "@my-offline-lms/core";
 import type { ILearningPathRepository } from "../../domain/ports/ILearningPathRepository";
-import type { GetPathDetailsRequest } from "./getPathDetails";
 
-export const getLearningPath = (
+export interface GetLearningPathByIdRequest {
+  id: string;
+}
+
+export const getLearningPathById = (
   pathRepo: ILearningPathRepository,
-  { id }: GetPathDetailsRequest
+  { id }: GetLearningPathByIdRequest
 ): LearningPath | null => {
   return pathRepo.getLearningPath(id);
 };
