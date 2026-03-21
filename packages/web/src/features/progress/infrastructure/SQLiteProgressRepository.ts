@@ -1,81 +1,71 @@
-import { type Asset, type IDatabase } from "@my-offline-lms/core";
+import { type Asset, type AssetType, type IDatabase } from "@my-offline-lms/core";
 
-import type { CourseProgress } from "../domain/model/CourseProgress";
 import type { AssetProgress } from "../domain/model/AssetProgress";
-import type { LearningPathProgress } from "../domain/model/LearningPathProgress";
+import type { CollectionProgress } from "../domain/model/CollectionProgress";
+import type { CollectionType } from "../domain/model/CollectionType";
 import type { ProgressStatus } from "../domain/model/ProgressStatus";
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 
 export class SQLiteProgressRepository implements IProgressRepository {
   constructor(private db: IDatabase) { }
 
-  getAssetProgress(assetId: string): AssetProgress | null {
+  getAssetProgress({ id, type }: { id: string, type: AssetType }): AssetProgress | null {
     const row = this.db
       .prepare(
-        "SELECT asset_id, position, max_position, completed, updated_at FROM UserProgress WHERE asset_id = ?",
+        "SELECT asset_id, asset_type, position, max_position, visited_segments, total_segments, completed, updated_at FROM UserProgress WHERE asset_id = ? AND asset_type = ?",
       )
-      .get(assetId) as any;
+      .get(id, type) as any;
 
     if (!row) return null;
     const currentPos = row.position || 0;
     const maxPos = row.max_position || 0;
 
     return {
-      assetId: row.asset_id,
+      id: row.asset_id,
+      type: (row.asset_type || type) as AssetType,
       position: currentPos,
       maxPosition: Math.max(currentPos, maxPos),
+      visitedSegments: row.visited_segments || 0,
+      totalSegments: row.total_segments || 0,
       completed: row.completed === 1,
       updatedAt: row.updated_at,
     };
   }
 
 
-  getCourseProgress(courseId: string): CourseProgress | null {
+  getCollectionProgress({ id, type }: { id: string; type: CollectionType }): CollectionProgress | null {
     const row = this.db
       .prepare(
-        "SELECT course_id, status, completed_assets, in_progress_assets, total_assets, updated_at FROM UserCourseProgress WHERE course_id = ?",
+        "SELECT id, type, status, completed_items, in_progress_items, total_items, updated_at FROM UserCollectionProgress WHERE id = ? AND type = ?",
       )
-      .get(courseId) as any;
+      .get(id, type) as any;
     if (!row) return null;
     return {
-      courseId: row.course_id,
+      id: row.id,
+      type: (row.type || type) as CollectionType,
       status: row.status as ProgressStatus,
-      completedAssets: row.completed_assets || 0,
-      inProgressAssets: row.in_progress_assets || 0,
-      totalAssets: row.total_assets || 0,
+      completedItems: row.completed_items || 0,
+      inProgressItems: row.in_progress_items || 0,
+      totalItems: row.total_items || 0,
       updatedAt: row.updated_at,
     };
   }
 
-  getLearningPathProgress(pathId: string): LearningPathProgress | null {
-    const row = this.db
-      .prepare(
-        "SELECT path_id, status, completed_courses, in_progress_courses, total_courses, updated_at FROM UserLearningPathProgress WHERE path_id = ?",
-      )
-      .get(pathId) as any;
-    if (!row) return null;
-    return {
-      pathId: row.path_id,
-      status: row.status as ProgressStatus,
-      completedCourses: row.completed_courses || 0,
-      inProgressCourses: row.in_progress_courses || 0,
-      totalCourses: row.total_courses || 0,
-      updatedAt: row.updated_at,
-    };
-  }
-
-  getAllCourseProgress(): CourseProgress[] {
+  getAllCollectionsProgress(type: CollectionType): CollectionProgress[] {
     return (
       this.db
-        .prepare("SELECT course_id, status, completed_assets, in_progress_assets, total_assets, updated_at FROM UserCourseProgress")
-        .all() as any[]
+        .prepare(
+          "SELECT id, type, status, completed_items, in_progress_items, total_items, updated_at FROM UserCollectionProgress WHERE type = ?",
+        )
+        .all(type) as any[]
     ).map((row) => ({
-      courseId: row.course_id,
+      id: row.id,
+      type: row.type as CollectionType,
       status: row.status as ProgressStatus,
-      completedAssets: row.completed_assets || 0,
-      inProgressAssets: row.in_progress_assets || 0,
-      totalAssets: row.total_assets || 0,
-      updatedAt: row.updated_at,
+      completedItems: row.completed_items || 0,
+      inProgressItems: row.in_progress_items || 0,
+      totalItems: row.total_items || 0,
+      updatedAt: row.updated_at || undefined,
     }));
   }
 
@@ -85,7 +75,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
         `
       SELECT ca.*, up.position
       FROM UserProgress up
-      JOIN Course_Assets ca ON ca.id = up.asset_id
+      JOIN Course_Assets ca ON ca.id = up.asset_id AND ca.type = up.asset_type
       WHERE (up.completed = 0 OR up.completed IS NULL) AND ca.type = 'video' AND ca.status = 'COMPLETED'
       ORDER BY up.updated_at DESC
       LIMIT 1
@@ -105,73 +95,55 @@ export class SQLiteProgressRepository implements IProgressRepository {
     };
   }
 
-  updateVideoProgress({
-    assetId,
+  saveAssetProgress({
+    id,
+    type,
     position,
     duration,
     completed,
-  }: { assetId: string; position: number; duration: number; completed: boolean }): void {
+  }: { id: string; type: string; position: number; duration: number; completed: boolean }): void {
     this.db
       .prepare(
         `
-      INSERT INTO UserProgress (asset_id, position, max_position, completed, updated_at)
-      VALUES (?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(asset_id) DO UPDATE SET
+      INSERT INTO UserProgress (asset_id, asset_type, position, max_position, completed, updated_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(asset_id, asset_type) DO UPDATE SET
         position     = excluded.position,
         max_position = MAX(max_position, excluded.max_position),
         completed    = MAX(completed, excluded.completed),
         updated_at   = excluded.updated_at
     `,
       )
-      .run(assetId, position, duration, completed ? 1 : 0);
+      .run(id, type, position, duration, completed ? 1 : 0);
   }
 
-  updateGuideProgress({
-    assetId,
-    position,
-    duration,
-    completed,
-  }: { assetId: string; position: number; duration: number; completed: boolean }): void {
-    this.db
-      .prepare(
-        `
-      INSERT INTO UserProgress (asset_id, position, max_position, completed, updated_at)
-      VALUES (?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(asset_id) DO UPDATE SET
-        position     = excluded.position,
-        max_position = MAX(max_position, excluded.max_position),
-        completed    = MAX(completed, excluded.completed),
-        updated_at   = excluded.updated_at
-    `,
-      )
-      .run(assetId, position, duration, completed ? 1 : 0);
-  }
-
-  markCourseStatus({
-    courseId,
+  markCollectionStatus({
+    id,
+    type,
     status,
-  }: { courseId: string, status: ProgressStatus }): void {
+  }: { id: string; type: CollectionType; status: ProgressStatus }): void {
     this.db
       .prepare(
         `
-      INSERT INTO UserCourseProgress (course_id, status, updated_at)
-      VALUES (?, ?, datetime('now'))
-      ON CONFLICT(course_id) DO UPDATE SET
+      INSERT INTO UserCollectionProgress (id, type, status, updated_at)
+      VALUES (?, ?, ?, datetime('now'))
+      ON CONFLICT(id, type) DO UPDATE SET
         status     = excluded.status,
         updated_at = excluded.updated_at
     `,
       )
-      .run(courseId, status);
+      .run(id, type, status);
   }
 
-  recalculateCourseProgress(courseId: string): void {
+  recalculateCourseProgress(id: string): void {
     this.db.prepare(`
-      INSERT INTO UserCourseProgress (course_id, completed_assets, in_progress_assets, total_assets, status, updated_at)
+      INSERT INTO UserCollectionProgress (id, type, completed_items, in_progress_items, total_items, status, updated_at)
       SELECT 
           ca.course_id,
-          COUNT(CASE WHEN up.completed = 1 THEN 1 END) as completed_assets,
-          COUNT(CASE WHEN (up.completed = 0 OR up.completed IS NULL) AND up.position > 0 THEN 1 END) as in_progress_assets,
-          COUNT(CASE WHEN ca.status = 'COMPLETED' THEN 1 END) as total_assets,
+          'course',
+          COUNT(CASE WHEN up.completed = 1 THEN 1 END) as completed_items,
+          COUNT(CASE WHEN (up.completed = 0 OR up.completed IS NULL) AND up.position > 0 THEN 1 END) as in_progress_items,
+          COUNT(CASE WHEN ca.status = 'COMPLETED' THEN 1 END) as total_items,
           CASE 
               WHEN COUNT(CASE WHEN up.completed = 1 THEN 1 END) = COUNT(CASE WHEN ca.status = 'COMPLETED' THEN 1 END) AND COUNT(CASE WHEN ca.status = 'COMPLETED' THEN 1 END) > 0 THEN 'completed'
               WHEN COUNT(CASE WHEN up.completed = 1 OR up.position > 0 THEN 1 END) > 0 THEN 'in_progress'
@@ -179,56 +151,89 @@ export class SQLiteProgressRepository implements IProgressRepository {
           END as status,
           datetime('now')
       FROM Course_Assets ca
-      LEFT JOIN UserProgress up ON ca.id = up.asset_id
+      LEFT JOIN UserProgress up ON ca.id = up.asset_id AND ca.type = up.asset_type
       WHERE ca.course_id = ?
       GROUP BY ca.course_id
-      ON CONFLICT(course_id) DO UPDATE SET
-          completed_assets = excluded.completed_assets,
-          in_progress_assets = excluded.in_progress_assets,
-          total_assets = excluded.total_assets,
+      ON CONFLICT(id, type) DO UPDATE SET
+          completed_items = excluded.completed_items,
+          in_progress_items = excluded.in_progress_items,
+          total_items = excluded.total_items,
           status = excluded.status,
           updated_at = excluded.updated_at
-    `).run(courseId);
+    `).run(id);
   }
 
-  recalculateLearningPathProgress(pathId: string): void {
+  recalculateLearningPathProgress(id: string): void {
     this.db.prepare(`
-      INSERT INTO UserLearningPathProgress (path_id, completed_courses, in_progress_courses, total_courses, status, updated_at)
+      INSERT INTO UserCollectionProgress (id, type, completed_items, in_progress_items, total_items, status, updated_at)
       SELECT 
           lpc.path_id,
-          COUNT(CASE WHEN ucp.status = 'completed' THEN 1 END) as completed_courses,
-          COUNT(CASE WHEN ucp.status = 'in_progress' THEN 1 END) as in_progress_courses,
-          COUNT(CASE WHEN ucp.total_assets > 0 THEN 1 END) as total_courses,
+          'learning-path',
+          COUNT(CASE WHEN ucp.status = 'completed' THEN 1 END) as completed_items,
+          COUNT(CASE WHEN ucp.status = 'in_progress' THEN 1 END) as in_progress_items,
+          COUNT(CASE WHEN ucp.total_items > 0 THEN 1 END) as total_items,
           CASE 
-              WHEN COUNT(CASE WHEN ucp.status = 'completed' THEN 1 END) = COUNT(CASE WHEN ucp.total_assets > 0 THEN 1 END) AND COUNT(CASE WHEN ucp.total_assets > 0 THEN 1 END) > 0 THEN 'completed'
+              WHEN COUNT(CASE WHEN ucp.status = 'completed' THEN 1 END) = COUNT(CASE WHEN ucp.total_items > 0 THEN 1 END) AND COUNT(CASE WHEN ucp.total_items > 0 THEN 1 END) > 0 THEN 'completed'
               WHEN COUNT(CASE WHEN ucp.status IN ('completed', 'in_progress') THEN 1 END) > 0 THEN 'in_progress'
               ELSE 'not_started'
           END as status,
           datetime('now')
       FROM LearningPath_Courses lpc
-      LEFT JOIN UserCourseProgress ucp ON ucp.course_id = lpc.course_id
+      LEFT JOIN UserCollectionProgress ucp ON ucp.id = lpc.course_id AND ucp.type = 'course'
       WHERE lpc.path_id = ?
       GROUP BY lpc.path_id
-      ON CONFLICT(path_id) DO UPDATE SET
-          completed_courses = excluded.completed_courses,
-          in_progress_courses = excluded.in_progress_courses,
-          total_courses = excluded.total_courses,
+      ON CONFLICT(id, type) DO UPDATE SET
+          completed_items = excluded.completed_items,
+          in_progress_items = excluded.in_progress_items,
+          total_items = excluded.total_items,
           status = excluded.status,
           updated_at = excluded.updated_at
-    `).run(pathId);
+    `).run(id);
   }
 
-  getLearningPathsForCourse(courseId: string): string[] {
+  getLearningPathsForCourse(id: string): string[] {
     const rows = this.db
       .prepare("SELECT path_id FROM LearningPath_Courses WHERE course_id = ?")
-      .all(courseId) as any[];
+      .all(id) as any[];
     return rows.map(r => r.path_id);
   }
 
-  getCourseIdsForAsset(assetId: string): string[] {
+  getCourseIdsForAsset(id: string): string[] {
     const rows = this.db
       .prepare("SELECT course_id FROM Course_Assets WHERE id = ?")
-      .all(assetId) as any[];
+      .all(id) as any[];
     return rows.map(r => r.course_id);
+  }
+
+  saveSegment({ id, type, segment }: { id: string; type: string; segment: number }): boolean {
+    const result = this.db
+      .prepare(
+        "INSERT OR IGNORE INTO UserAssetSegments (asset_id, asset_type, segment) VALUES (?, ?, ?)",
+      )
+      .run(id, type, segment);
+    return result.changes > 0;
+  }
+
+  incrementVisitedSegments({ id, type }: { id: string, type: string }): void {
+    this.db
+      .prepare(
+        "UPDATE UserProgress SET visited_segments = visited_segments + 1 WHERE asset_id = ? AND asset_type = ?",
+      )
+      .run(id, type);
+  }
+
+  setTotalSegments({ id, type, totalSegments }: { id: string, type: string, totalSegments: number }): void {
+    this.db
+      .prepare(
+        "UPDATE UserProgress SET total_segments = ? WHERE asset_id = ? AND asset_type = ?",
+      )
+      .run(totalSegments, id, type);
+  }
+
+  getVisitedSegmentsCount({ id, type }: { id: string, type: string }): number {
+    const row = this.db
+      .prepare("SELECT COUNT(*) as count FROM UserAssetSegments WHERE asset_id = ? AND asset_type = ?")
+      .get(id, type) as any;
+    return row?.count || 0;
   }
 }

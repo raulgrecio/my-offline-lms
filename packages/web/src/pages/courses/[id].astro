@@ -44,16 +44,16 @@ const guides = allAssets
   .filter((a): a is GuideAsset => a.type === 'guide' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
-const courseProgress = getCourseProgress({ courseId: id });
+const courseProgress = getCourseProgress({ id });
 
 // Pre-fetch all video progress
 const videoProgressMap = new Map(
-  videos.map(video => [video.id, getAssetProgress({ assetId: video.id })])
+  videos.map(video => [video.id, getAssetProgress({ assetId: video.id, type: 'video' })])
 );
 
 // Pre-fetch all guide progress
 const guideProgressMap = new Map(
-  guides.map(guide => [guide.id, getAssetProgress({ assetId: guide.id })])
+  guides.map(guide => [guide.id, getAssetProgress({ assetId: guide.id, type: 'guide' })])
 );
 
 // Find the active video

@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    markCourseStatus({ courseId: String(courseId), status });
+    markCourseStatus({ id: String(courseId), status });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

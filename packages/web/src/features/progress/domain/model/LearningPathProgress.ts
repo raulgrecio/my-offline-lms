@@ -1,12 +1,10 @@
-import { type ProgressStatus } from "./ProgressStatus";
+import type { CollectionProgress } from "./CollectionProgress";
 
-export interface LearningPathProgress {
-    pathId: string;
-    status: ProgressStatus;
-    completedCourses: number;
-    inProgressCourses: number;
-    totalCourses: number;
-    updatedAt: string;
+export interface LearningPathProgress extends CollectionProgress {
+    id: string; // Alias de id
+    completedCourses: number; // Alias de completedItems
+    inProgressCourses: number; // Alias de inProgressItems
+    totalCourses: number; // Alias de totalItems
 }
 
 export interface EnrichedLearningPathProgress extends LearningPathProgress {

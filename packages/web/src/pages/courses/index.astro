@@ -4,7 +4,7 @@ export const prerender = false;
 import { APP_ROUTES } from "@platform/router/routes";
 import { getAllCourses, getCourseAssets } from "@features/courses";
 import { getIsFavorite } from "@features/favorites";
-import { getAllCourseProgress } from "@features/progress";
+import { getDashboardStatus } from "@features/progress";
 import Layout from "@layouts/Layout.astro";
 import CourseCard from "@components/CourseCard.astro";
 import EmptyState from "@components/EmptyState.astro";
@@ -14,14 +14,14 @@ import VisibilityToggle from "@components/VisibilityToggle.astro";
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = APP_ROUTES.COURSES.INDEX;
 const courses = getAllCourses();
-const allProgress = getAllCourseProgress();
-const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
+const allProgress = getDashboardStatus().allProgress;
+const progressMap = new Map(allProgress.map((p) => [p.id, p]));
 
 const coursesWithStats = courses
   .map((c) => {
     const progress = progressMap.get(c.id);
     const assets = getCourseAssets({ courseId: c.id });
-    const completedAssets = progress?.completedAssets || 0;
+    const completedAssets = progress?.completedItems || 0;
     const totalAssets = assets.filter((a) => a.status === "COMPLETED").length;
     const progressPercent = totalAssets > 0 
       ? Math.round((completedAssets / totalAssets) * 100) 

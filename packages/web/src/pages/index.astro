@@ -1,43 +1,41 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import LearningPathCard from "../components/LearningPathCard.astro";
-import CourseCard from "../components/CourseCard.astro";
-import SectionHeader from "../components/SectionHeader.astro";
-import EmptyState from "../components/EmptyState.astro";
-import HomepageHero from "../components/HomepageHero.astro";
-import { Icon } from "../components/Icon";
+import Layout from "@layouts/Layout.astro";
+import LearningPathCard from "@components/LearningPathCard.astro";
+import CourseCard from "@components/CourseCard.astro";
+import SectionHeader from "@components/SectionHeader.astro";
+import EmptyState from "@components/EmptyState.astro";
+import HomepageHero from "@components/HomepageHero.astro";
+import { Icon } from "@components/Icon";
 import {
   getAllLearningPaths,
   getCoursesForPath,
-} from "../features/learning-paths";
-import { getAllCourses, getCourseById } from "../features/courses";
+} from "@features/learning-paths";
+import { getAllCourses, getCourseById } from "@features/courses";
 import {
-  getAllCourseProgress,
-  getLastWatchedAsset,
+  getDashboardStatus,
   getLearningPathProgress,
-} from "../features/progress";
-import { getIsFavorite } from "../features/favorites";
-import { APP_ROUTES } from "../platform/router/routes";
+} from "@features/progress";
+import { getIsFavorite } from "@features/favorites";
+import { APP_ROUTES } from "@platform/router/routes";
 
 const learningPaths = getAllLearningPaths();
 const courses = getAllCourses();
-const allProgress = getAllCourseProgress();
-const lastWatched = getLastWatchedAsset();
+const { allProgress, lastWatched } = getDashboardStatus();
 
 // Build progress map
-const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
+const progressMap = new Map(allProgress.map((p) => [p.id, p]));
 
 // LP progress and stats
 const lpStats = await Promise.all(
   learningPaths.map(async (lp) => {
     const lpCourses = getCoursesForPath({ pathId: lp.id });
-    const progress = getLearningPathProgress({ pathId: lp.id });
+    const progress = getLearningPathProgress({ id: lp.id });
 
     return { 
       ...lp, 
       courseCount: lpCourses.length,
-      completedCount: progress?.completedCourses || 0,
-      inProgressCount: progress?.inProgressCourses || 0,
+      completedCount: progress?.completedItems || 0,
+      inProgressCount: progress?.inProgressItems || 0,
       progress: progress?.progress || 0,
       status: progress?.status || "not_started",
       isFavorite: getIsFavorite({ id: lp.id, type: 'learning-path' })
@@ -88,34 +86,36 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {courses.slice(0, 8).map((course) => {
                 const progress = progressMap.get(course.id);
-                const progressPercent = progress?.totalAssets && progress.totalAssets > 0
-                  ? Math.round((progress.completedAssets / progress.totalAssets) * 100)
-                  : 0;
+                const progressPercent = progress?.progress || 0;
                 return (
                   <CourseCard
                     id={course.id}
                     title={course.title}
                     status={progress?.status ?? "not_started"}
-                    totalAssets={progress?.totalAssets}
+                    totalAssets={progress?.totalItems}
                     progress={progressPercent}
                     isFavorite={getIsFavorite({ id: course.id, type: 'course' })}
                   />
                 );
               })}
             </div>
-            <div class="mt-4 text-center">
-              <a href={APP_ROUTES.COURSES.INDEX} class="btn-ghost group">
-                Ver todos los cursos
-                <Icon name="chevron-right" size="sm" className="transition-transform group-hover:translate-x-1" />
-              </a>
-            </div>
+            
+            {courses.length > 8 && (
+              <div class="mt-6 text-center">
+                <a href={APP_ROUTES.COURSES.INDEX} class="btn btn-secondary btn-sm">
+                  Ver todos los cursos
+                  <Icon name="arrow-right" size="xs" className="ml-1" />
+                </a>
+              </div>
+            )}
           </section>
         )}
       </>
     ) : (
-      <EmptyState
-        title="Sin contenido descargado"
-        message="Ejecuta el scraper para descargar cursos y learning paths."
+      <EmptyState 
+        title="Tu biblioteca está vacía" 
+        message="Aún no tienes cursos ni rutas de aprendizaje disponibles. Sincroniza tu cuenta para empezar."
+        icon="library"
       />
     )
   }

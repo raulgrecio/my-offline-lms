@@ -17,7 +17,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     updateGuideProgress({
       assetId: String(assetId),
-      courseId: String(courseId),
+      id: String(courseId),
       position: Number(page),
       duration: totalPages !== undefined ? Number(totalPages) : undefined
     });

@@ -6,7 +6,7 @@ import { getIsFavorite } from "@features/favorites";
 import {
   getLearningPathDetails,
 } from "@features/learning-paths";
-import { getAllCourseProgress, getLearningPathProgress } from "@features/progress";
+import { getDashboardStatus, getLearningPathProgress } from "@features/progress";
 import Layout from "@layouts/Layout.astro";
 import CourseCard from "@components/CourseCard.astro";
 import { Icon } from "@components/Icon";
@@ -28,13 +28,13 @@ if (!pathDetails) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 const { path, courses } = pathDetails;
 
 const isFavorite = getIsFavorite({ id, type: 'learning-path' });
-const lpProgress = getLearningPathProgress({ pathId: id });
-const allProgress = getAllCourseProgress();
-const progressMap = new Map(allProgress.map((p) => [p.courseId, p]));
+const lpProgress = getLearningPathProgress({ id });
+const { allProgress } = getDashboardStatus();
+const progressMap = new Map(allProgress.map((p) => [p.id, p]));
 
-const completedCount = lpProgress?.completedCourses || 0;
+const completedCount = lpProgress?.completedItems || 0;
 const progress = lpProgress?.progress || 0;
-const status = completedCount === courses.length && courses.length > 0
+const status = (completedCount === courses.length && courses.length > 0)
       ? "completed"
       : completedCount > 0
       ? "in_progress"
@@ -117,15 +117,13 @@ const status = completedCount === courses.length && courses.length > 0
         <div class="flex flex-col gap-3">
           {courses.map((course) => {
             const progressObj = progressMap.get(course.id);
-            const progressPercent = progressObj?.totalAssets && progressObj.totalAssets > 0
-              ? Math.round((progressObj.completedAssets / progressObj.totalAssets) * 100)
-              : 0;
+            const progressPercent = progressObj?.progress || 0;
             return (
               <CourseCard
                 id={course.id}
                 title={course.title}
                 status={progressObj?.status ?? "not_started"}
-                totalAssets={progressObj?.totalAssets}
+                totalAssets={progressObj?.totalItems}
                 progress={progressPercent}
                 orderIndex={course.orderIndex}
                 isFavorite={getIsFavorite({ id: course.id, type: 'course' })}

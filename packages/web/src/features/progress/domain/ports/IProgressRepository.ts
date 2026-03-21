@@ -1,21 +1,24 @@
-import { type Asset } from "@my-offline-lms/core";
+import { type Asset, type AssetType } from "@my-offline-lms/core";
 
-import type { CourseProgress } from "../model/CourseProgress";
 import type { AssetProgress } from "../model/AssetProgress";
-import type { LearningPathProgress } from "../model/LearningPathProgress";
+import type { CollectionProgress } from "../model/CollectionProgress";
+import type { CollectionType } from "../model/CollectionType";
 import type { ProgressStatus } from "../model/ProgressStatus";
 
 export interface IProgressRepository {
-  getAssetProgress(assetId: string): AssetProgress | null;
-  getCourseProgress(courseId: string): CourseProgress | null;
-  getLearningPathProgress(pathId: string): LearningPathProgress | null;
-  getAllCourseProgress(): CourseProgress[];
+  getAssetProgress({ id, type }: { id: string, type: AssetType }): AssetProgress | null;
+  getCollectionProgress({ id, type }: { id: string, type: CollectionType }): CollectionProgress | null;
+  getAllCollectionsProgress(type: CollectionType): CollectionProgress[];
   getLastWatchedAsset(): (Asset & { position: number }) | null;
-  updateVideoProgress({ assetId, position, duration, completed }: { assetId: string, position: number, duration: number, completed: boolean }): void;
-  updateGuideProgress({ assetId, position, duration, completed }: { assetId: string, position: number, duration: number, completed: boolean }): void;
-  markCourseStatus({ courseId, status }: { courseId: string, status: ProgressStatus }): void;
-  recalculateCourseProgress(courseId: string): void;
-  recalculateLearningPathProgress(pathId: string): void;
-  getLearningPathsForCourse(courseId: string): string[];
-  getCourseIdsForAsset(assetId: string): string[];
+  saveAssetProgress({ id, type, position, duration, completed }: { id: string, type: AssetType, position: number, duration: number, completed: boolean }): void;
+  markCollectionStatus({ id, type, status }: { id: string, type: CollectionType, status: ProgressStatus }): void;
+  recalculateCourseProgress(id: string): void;
+  recalculateLearningPathProgress(id: string): void;
+  getLearningPathsForCourse(id: string): string[];
+  getCourseIdsForAsset(id: string): string[];
+
+  saveSegment({ id, type, segment }: { id: string, type: AssetType, segment: number }): boolean;
+  incrementVisitedSegments({ id, type }: { id: string, type: AssetType }): void;
+  setTotalSegments({ id, type, totalSegments }: { id: string, type: AssetType, totalSegments: number }): void;
+  getVisitedSegmentsCount({ id, type }: { id: string, type: AssetType }): number;
 }
