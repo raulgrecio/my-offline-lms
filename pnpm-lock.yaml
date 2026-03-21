@@ -20,6 +20,9 @@ importers:
       '@types/node':
         specifier: ^20.14.9
         version: 20.19.35
+      '@vitest/coverage-v8':
+        specifier: ^4.0.18
+        version: 4.0.18(vitest@4.0.18)
       typescript:
         specifier: ^5.5.3
         version: 5.9.3
@@ -65,7 +68,7 @@ importers:
         version: 0.13.9
       '@vitest/coverage-v8':
         specifier: ^4.0.18
-        version: 4.0.18(vitest@4.0.18(@types/node@20.19.35)(jiti@2.6.1)(jsdom@29.0.1)(lightningcss@1.31.1)(yaml@2.8.2))
+        version: 4.0.18(vitest@4.0.18)
       nodemon:
         specifier: ^3.1.4
         version: 3.1.14
@@ -147,7 +150,7 @@ importers:
         version: 4.3.4(vite@7.3.1(@types/node@20.19.35)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.8.2))
       '@vitest/coverage-v8':
         specifier: ^4.0.18
-        version: 4.0.18(vitest@4.0.18(@types/node@20.19.35)(jiti@2.6.1)(jsdom@29.0.1)(lightningcss@1.31.1)(yaml@2.8.2))
+        version: 4.0.18(vitest@4.0.18)
       '@vitest/ui':
         specifier: ^4.1.0
         version: 4.1.0(vitest@4.0.18)
@@ -5054,7 +5057,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@4.0.18(vitest@4.0.18(@types/node@20.19.35)(jiti@2.6.1)(jsdom@29.0.1)(lightningcss@1.31.1)(yaml@2.8.2))':
+  '@vitest/coverage-v8@4.0.18(vitest@4.0.18)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.18

@@ -11,6 +11,10 @@ export * from './database/schema';
 
 export * from './filesystem/IFileSystem';
 export * from './filesystem/NodeFileSystem';
+export * from './filesystem/UniversalFileSystem';
+export * from './filesystem/HttpFileSystem';
+export * from './filesystem/S3FileSystem';
+export * from './filesystem/BlobFileSystem';
 export * from './filesystem/AssetPathResolver';
 export * from './filesystem/MimeTypes';
 

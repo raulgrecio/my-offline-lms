@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getMimeType, MIME_MAP } from './MimeTypes';
+import { getMimeType, MIME_MAP } from '@filesystem/MimeTypes';
 
 describe('MimeTypes', () => {
   it('should return correct mime type for known extensions', () => {

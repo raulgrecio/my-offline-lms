@@ -77,14 +77,16 @@ The project follows **Clean Architecture** principles:
 - **Node.js**: v18+
 - **pnpm**: Recommended (`npm install -g pnpm`)
 - **yt-dlp**: Required for videos.
-  ```bash
-  sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-  sudo chmod a+rx /usr/local/bin/yt-dlp
-  ```
+  - **Linux**:
+    ```bash
+    sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+    sudo chmod a+rx /usr/local/bin/yt-dlp
+    ```
+  - **Windows**: Download `yt-dlp.exe` from [GitHub Releases](https://github.com/yt-dlp/yt-dlp/releases) and place it in your PATH, or use Chocolatey: `choco install yt-dlp`
+
 - **ffmpeg**: Required for video processing.
-  ```bash
-  sudo apt update && sudo apt install -y ffmpeg
-  ```
+  - **Linux**: `sudo apt update && sudo apt install -y ffmpeg`
+  - **Windows**: `choco install ffmpeg` or download from [ffmpeg.org](https://ffmpeg.org/download.html) and add `bin` to PATH.
 
 ---
 

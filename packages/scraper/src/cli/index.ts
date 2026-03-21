@@ -1,7 +1,7 @@
 import { env } from '@config/env';
 import dotenv from 'dotenv';
 
-import { ConsoleLogger, DownloadType, IDatabase } from '@my-offline-lms/core';
+import { ConsoleLogger, DownloadType, IDatabase, NodeFileSystem, UniversalFileSystem, HttpFileSystem } from '@my-offline-lms/core';
 
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
 import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';
@@ -47,13 +47,17 @@ Comandos disponibles:
 
   // DI Setup (Manual Instantiation)
   const logger = new ConsoleLogger();
+  const nodeFs = new NodeFileSystem();
+  const universalFs = new UniversalFileSystem(nodeFs);
+  universalFs.registerRemote('http', new HttpFileSystem());
+
   const courseRepo = new SQLiteCourseRepository(db);
   const assetRepo = new SQLiteAssetRepository(db);
   const pathRepo = new SQLiteLearningPathRepository(db);
 
   const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(logger);
   const authSessionStorage = new DiskAuthSessionStorage();
-  const assetStorage = new DiskAssetStorage();
+  const assetStorage = new DiskAssetStorage(undefined, universalFs);
   const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);
   const urlProvider = new OraclePlatformUrlProvider();
   const namingService = new AssetNamingService();

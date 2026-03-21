@@ -138,7 +138,8 @@ export class AssetPathResolver {
 
     // Patrón: .../{courseId}/{videos|guides}/{filename}
     // Buscamos desde el final
-    const parts = absolutePath.split(this.fs.sep);
+    // Usamos regex para split para soportar rutas windows y linux independientemente del SO
+    const parts = absolutePath.split(/[\\\/]/);
     if (parts.length < 3) return null;
 
     const filename = parts[parts.length - 1];

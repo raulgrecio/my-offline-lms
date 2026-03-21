@@ -11,9 +11,10 @@
     "better-sqlite3": "^11.1.2"
   },
   "devDependencies": {
-    "typescript": "^5.5.3",
-    "@types/node": "^20.14.9",
     "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.14.9",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.5.3",
     "vitest": "^4.0.18"
   }
 }

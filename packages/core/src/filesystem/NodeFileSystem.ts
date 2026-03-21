@@ -1,18 +1,23 @@
 import fs from "fs";
 import path from "path";
 
-import type { IFileSystem } from "./IFileSystem";
+import type { IFileSystem, FileStats } from "./IFileSystem";
 
 export class NodeFileSystem implements IFileSystem {
   existsSync(p: string): boolean {
     return fs.existsSync(p);
   }
 
-  readFileSync(p: string, encoding: "utf-8"): string {
-    return fs.readFileSync(p, encoding);
+  readFileSync(p: string): Buffer;
+  readFileSync(p: string, encoding: "utf-8"): string;
+  readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
+    if (encoding === "utf-8") {
+      return fs.readFileSync(p, encoding);
+    }
+    return fs.readFileSync(p);
   }
 
-  writeFileSync(p: string, content: string): void {
+  writeFileSync(p: string, content: string | Buffer): void {
     fs.writeFileSync(p, content);
   }
 
@@ -38,6 +43,27 @@ export class NodeFileSystem implements IFileSystem {
 
   mkdirSync(p: string, options?: { recursive?: boolean }): void {
     fs.mkdirSync(p, options);
+  }
+
+  rmSync(p: string, options?: { recursive?: boolean; force?: boolean }): void {
+    fs.rmSync(p, options);
+  }
+
+  statSync(p: string): FileStats {
+    const stats = fs.statSync(p);
+    return {
+      size: stats.size,
+      mtime: stats.mtime,
+      isDirectory: () => stats.isDirectory(),
+    };
+  }
+
+  createReadStream(p: string, options?: any): fs.ReadStream {
+    return fs.createReadStream(p, options);
+  }
+
+  createWriteStream(p: string): fs.WriteStream {
+    return fs.createWriteStream(p);
   }
 
   get sep(): string {

@@ -1,17 +1,19 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import fs from 'fs';
 import path from 'path';
 
-import { AssetPathResolver, NodeFileSystem, getMimeType } from '@my-offline-lms/core';
+import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType } from '@my-offline-lms/core';
 import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
 
-const fsAdapter = new NodeFileSystem();
+const nodeFs = new NodeFileSystem();
+const universalFs = new UniversalFileSystem(nodeFs);
+universalFs.registerRemote('http', new HttpFileSystem());
+
 const resolver = new AssetPathResolver({
   configPath: CONFIG_PATH,
   monorepoRoot: MONOREPO_ROOT,
-  fs: fsAdapter,
+  fs: universalFs,
 });
 
 export const GET: APIRoute = async ({ request, url }) => {
@@ -28,11 +30,16 @@ export const GET: APIRoute = async ({ request, url }) => {
     return new Response('File not found at any location', { status: 404 });
   }
 
+  // Si es una URL externa, redirigimos o manejamos de forma especial
+  if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
+    return Response.redirect(resolved, 302);
+  }
+
   const ext = path.extname(resolved).toLowerCase();
   const mimeType = getMimeType(ext);
 
   try {
-    const stat = fs.statSync(resolved);
+    const stat = universalFs.statSync(resolved);
     const fileSize = stat.size;
     const range = request.headers.get('range');
 
@@ -49,7 +56,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       }
 
       const chunksize = (end - start) + 1;
-      const file = fs.createReadStream(resolved, { start, end });
+      const file = universalFs.createReadStream!(resolved, { start, end });
 
       // @ts-ignore
       return new Response(file, {
@@ -63,7 +70,7 @@ export const GET: APIRoute = async ({ request, url }) => {
         }
       });
     } else {
-      const file = fs.createReadStream(resolved);
+      const file = universalFs.createReadStream!(resolved);
       // @ts-ignore
       return new Response(file, {
         status: 200,
