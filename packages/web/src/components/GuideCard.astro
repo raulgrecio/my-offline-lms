@@ -20,7 +20,7 @@ const isDone = progress?.completed || (totalPages > 0 && maxPosition >= totalPag
 const statusText = isDone 
   ? "Completado" 
   : (currentPosition > 1 
-      ? `Continuar en la pág. ${currentPosition}${maxPosition > currentPosition ? ` (visto hasta la ${maxPosition})` : ""}` 
+      ? `Continuar en la pág. ${currentPosition}${totalPages ? ` de ${totalPages}` : ""}${maxPosition > currentPosition ? ` (visto hasta la ${maxPosition})` : ""}` 
       : (totalPages ? `Ver guía de ${totalPages} páginas` : "Ver guía"));
 ---
 <a
