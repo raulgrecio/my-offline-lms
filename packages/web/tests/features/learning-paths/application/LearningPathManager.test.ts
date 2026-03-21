@@ -6,7 +6,7 @@ describe("LearningPathManager", () => {
   const mockRepo: ILearningPathRepository = {
     getAllLearningPaths: vi.fn(),
     getLearningPath: vi.fn(),
-    getCoursesForPath: vi.fn(),
+    getCoursesForPathId: vi.fn(),
   };
 
   const manager = new LearningPathManager(mockRepo);
@@ -24,17 +24,17 @@ describe("LearningPathManager", () => {
     const path = { id: "lp1", title: "Path 1" } as any;
     vi.mocked(mockRepo.getLearningPath).mockReturnValue(path);
 
-    const result = manager.getLearningPath({ pathId: "lp1" });
+    const result = manager.getLearningPath({ id: "lp1" });
     expect(result).toBe(path);
     expect(mockRepo.getLearningPath).toHaveBeenCalledWith("lp1");
   });
 
   it("should return courses for a path", () => {
     const courses = [{ id: "c1", title: "Course 1" } as any];
-    vi.mocked(mockRepo.getCoursesForPath).mockReturnValue(courses);
+    vi.mocked(mockRepo.getCoursesForPathId).mockReturnValue(courses);
 
-    const result = manager.getCoursesForPath({ pathId: "lp1" });
+    const result = manager.getCoursesForPathId({ id: "lp1" });
     expect(result).toBe(courses);
-    expect(mockRepo.getCoursesForPath).toHaveBeenCalledWith("lp1");
+    expect(mockRepo.getCoursesForPathId).toHaveBeenCalledWith("lp1");
   });
 });

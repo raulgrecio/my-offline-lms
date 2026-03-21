@@ -1,12 +1,12 @@
 import type { ISettingsRepository } from "../../domain/ports/ISettingsRepository";
 
 export interface SetActiveLearningPathRequest {
-  pathId: string;
+  id: string;
 }
 
 export const setActiveLearningPath = (
   settingsRepo: ISettingsRepository,
-  { pathId }: SetActiveLearningPathRequest
+  { id }: SetActiveLearningPathRequest
 ): void => {
-  settingsRepo.setActiveLearningPath(pathId);
+  settingsRepo.setActiveLearningPath(id);
 };

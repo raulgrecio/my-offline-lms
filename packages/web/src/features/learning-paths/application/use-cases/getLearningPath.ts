@@ -4,7 +4,7 @@ import type { GetPathDetailsRequest } from "./getPathDetails";
 
 export const getLearningPath = (
   pathRepo: ILearningPathRepository,
-  { pathId }: GetPathDetailsRequest
+  { id }: GetPathDetailsRequest
 ): LearningPath | null => {
-  return pathRepo.getLearningPath(pathId);
+  return pathRepo.getLearningPath(id);
 };

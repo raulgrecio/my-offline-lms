@@ -16,8 +16,8 @@ export const getAllLearningPaths = () => manager.getAllLearningPaths();
 export const getLearningPathById = (request: GetPathDetailsRequest) =>
   manager.getLearningPath(request);
 
-export const getCoursesForPath = (request: GetPathDetailsRequest) =>
-  manager.getCoursesForPath(request);
+export const getCoursesForPathId = (request: GetPathDetailsRequest) =>
+  manager.getCoursesForPathId(request);
 
 export const getLearningPathDetails = (request: GetPathDetailsRequest) =>
   manager.getLearningPathDetails(request);

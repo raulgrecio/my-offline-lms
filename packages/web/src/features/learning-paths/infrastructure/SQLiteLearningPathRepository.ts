@@ -1,5 +1,6 @@
-import { type Course, type LearningPath, type IDatabase } from "@my-offline-lms/core";
+import { type LearningPath, type IDatabase } from "@my-offline-lms/core";
 import type { ILearningPathRepository } from "../domain/ports/ILearningPathRepository";
+import type { CourseWithOrderInPath } from "../domain/model/CourseWithOrderInPath";
 
 export class SQLiteLearningPathRepository implements ILearningPathRepository {
   constructor(private db: IDatabase) { }
@@ -22,9 +23,9 @@ export class SQLiteLearningPathRepository implements ILearningPathRepository {
     );
   }
 
-  getCoursesForPath(
-    pathId: string,
-  ): (Course & { orderIndex: number })[] {
+  getCoursesForPathId(
+    id: string,
+  ): CourseWithOrderInPath[] {
     return this.db
       .prepare(
         `
@@ -35,6 +36,6 @@ export class SQLiteLearningPathRepository implements ILearningPathRepository {
         ORDER BY lc.order_index ASC
       `,
       )
-      .all(pathId) as any[];
+      .all(id) as CourseWithOrderInPath[];
   }
 }

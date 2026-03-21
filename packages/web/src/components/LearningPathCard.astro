@@ -6,12 +6,13 @@ import FavoriteButton from "./FavoriteButton.astro";
 import ProgressBadge from "./ProgressBadge.astro";
 import ProgressBar from "./ProgressBar.astro";
 
-interface LearningPathCardProps {
+export interface LearningPathCardProps {
   id: string;
   title: string;
   description: string;
   courseCount: number;
   completedCount?: number;
+  inProgressCount?: number;
   isFavorite?: boolean;
   progress?: number;
   status?: ProgressStatus;

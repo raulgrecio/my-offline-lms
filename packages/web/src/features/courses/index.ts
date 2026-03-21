@@ -1,17 +1,17 @@
 import { getDb } from "@platform/db/database";
 import { CourseManager } from "./application/CourseManager";
 import type { GetAssetByIdRequest } from "./application/use-cases/getAssetById";
-import type { GetCourseAssetsRequest } from "./application/use-cases/getCourseAssets";
+import type { GetAssetsByCourseIdRequest } from "./application/use-cases/getAssetsByCourseId";
 import type { GetCourseByIdRequest } from "./application/use-cases/getCourseById";
-import type { UpdateAssetMetadataRequest } from "./application/use-cases/updateAssetMetadata";
+import type { UpdateAssetTotalPagesRequest } from "./application/use-cases/updateAssetTotalPages";
 import { SQLiteCourseRepository } from "./infrastructure/SQLiteCourseRepository";
 
 // 1. Types
 export type {
   GetAssetByIdRequest,
-  GetCourseAssetsRequest,
+  GetAssetsByCourseIdRequest as GetCourseAssetsRequest,
   GetCourseByIdRequest,
-  UpdateAssetMetadataRequest,
+  UpdateAssetTotalPagesRequest as UpdateAssetMetadataRequest,
 };
 
 // 2. Wiring
@@ -21,14 +21,14 @@ const manager = new CourseManager(repo);
 // 3. Public API
 export const getAllCourses = () => manager.getAllCourses();
 
-export const getAssetById = ({ assetId }: GetAssetByIdRequest) =>
-  manager.getAssetById({ assetId });
+export const getAssetById = ({ id }: GetAssetByIdRequest) =>
+  manager.getAssetById({ id });
 
-export const getCourseAssets = ({ courseId }: GetCourseAssetsRequest) =>
-  manager.getCourseAssets({ courseId });
+export const getAssetsByCourseId = ({ id }: GetAssetsByCourseIdRequest) =>
+  manager.getAssetsByCourseId({ id });
 
-export const getCourseById = ({ courseId }: GetCourseByIdRequest) =>
-  manager.getCourseById({ courseId });
+export const getCourseById = ({ id }: GetCourseByIdRequest) =>
+  manager.getCourseById({ id });
 
-export const updateAssetMetadata = ({ assetId, totalPages }: UpdateAssetMetadataRequest) =>
-  manager.updateAssetMetadata({ assetId, totalPages });
+export const updateAssetTotalPages = ({ id, totalPages }: UpdateAssetTotalPagesRequest) =>
+  manager.updateAssetTotalPages({ id, totalPages });

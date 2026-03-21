@@ -1,7 +1,8 @@
-import { type Course, type LearningPath } from "@my-offline-lms/core";
+import { type LearningPath } from "@my-offline-lms/core";
+import type { CourseWithOrderInPath } from "../model/CourseWithOrderInPath";
 
 export interface ILearningPathRepository {
   getAllLearningPaths(): LearningPath[];
   getLearningPath(id: string): LearningPath | null;
-  getCoursesForPath(pathId: string): (Course & { orderIndex: number })[];
+  getCoursesForPathId(id: string): CourseWithOrderInPath[];
 }

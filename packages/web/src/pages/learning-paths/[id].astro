@@ -22,7 +22,7 @@ interface PathPageProps {
 const { id } = Astro.params as PathPageProps;
 if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
-const pathDetails = getLearningPathDetails({ pathId: id });
+const pathDetails = getLearningPathDetails({ id });
 if (!pathDetails) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const { path, courses } = pathDetails;

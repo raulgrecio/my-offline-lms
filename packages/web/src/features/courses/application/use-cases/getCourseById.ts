@@ -2,12 +2,12 @@ import type { Course } from "@my-offline-lms/core";
 import type { ICourseRepository } from "../../domain/ports/ICourseRepository";
 
 export interface GetCourseByIdRequest {
-  courseId: string;
+  id: string;
 }
 
 export const getCourseById = (
   courseRepo: ICourseRepository,
-  { courseId }: GetCourseByIdRequest
+  { id }: GetCourseByIdRequest
 ): Course | null => {
-  return courseRepo.getCourseById(courseId);
+  return courseRepo.getCourseById(id);
 };

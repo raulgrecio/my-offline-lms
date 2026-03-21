@@ -2,7 +2,7 @@ import { type Course, type Asset, type IDatabase, type Metadata } from "@my-offl
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 
 export class SQLiteCourseRepository implements ICourseRepository {
-  constructor(private db: IDatabase) {}
+  constructor(private db: IDatabase) { }
 
   getAllCourses(): Course[] {
     return this.db
@@ -18,10 +18,10 @@ export class SQLiteCourseRepository implements ICourseRepository {
     );
   }
 
-  getCourseAssets(courseId: string): Asset[] {
+  getAssetsByCourseId(id: string): Asset[] {
     const rows = this.db
       .prepare("SELECT * FROM Course_Assets WHERE course_id = ?")
-      .all(courseId) as any[];
+      .all(id) as any[];
     return rows.map((row) => ({
       id: row.id,
       courseId: row.course_id,
@@ -49,13 +49,13 @@ export class SQLiteCourseRepository implements ICourseRepository {
     };
   }
 
-  updateAssetMetadata({assetId, metadata}: {assetId: string, metadata: Metadata}): void {
+  updateAssetMetadata({ id, metadata }: { id: string, metadata: Metadata }): void {
     const result = this.db
       .prepare("UPDATE Course_Assets SET metadata = ? WHERE id = ?")
-      .run(JSON.stringify(metadata), assetId);
+      .run(JSON.stringify(metadata), id);
 
     if (result && result.changes === 0) {
-      throw new Error(`Asset with id ${assetId} not found`);
+      throw new Error(`Asset with id ${id} not found`);
     }
   }
 }

@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    setActiveLearningPath({ pathId: String(pathId) });
+    setActiveLearningPath({ id: String(pathId) });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 
-import { updateAssetMetadata, getAssetById } from '@features/courses';
+import { updateAssetTotalPages, getAssetById } from '@features/courses';
 
 export const GET: APIRoute = async ({ url }) => {
   const assetId = url.searchParams.get('assetId');
@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   }
 
-  const asset = getAssetById({ assetId });
+  const asset = getAssetById({ id: assetId });
   if (!asset) {
     return new Response(JSON.stringify({ error: 'Asset not found' }), {
       status: 404,
@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    updateAssetMetadata({ assetId, totalPages: Number(totalPages) });
+    updateAssetTotalPages({ id: assetId, totalPages: Number(totalPages) });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

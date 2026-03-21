@@ -1,13 +1,13 @@
 import type { Asset } from "@my-offline-lms/core";
 import type { ICourseRepository } from "../../domain/ports/ICourseRepository";
 
-export interface GetCourseAssetsRequest {
-  courseId: string;
+export interface GetAssetsByCourseIdRequest {
+  id: string;
 }
 
-export const getCourseAssets = (
+export const getAssetsByCourseId = (
   courseRepo: ICourseRepository,
-  { courseId }: GetCourseAssetsRequest
+  { id }: GetAssetsByCourseIdRequest
 ): Asset[] => {
-  return courseRepo.getCourseAssets(courseId);
+  return courseRepo.getAssetsByCourseId(id);
 };

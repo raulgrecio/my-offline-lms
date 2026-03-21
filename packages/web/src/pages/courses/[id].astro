@@ -8,7 +8,7 @@ import { API_ROUTES } from "@platform/api/routes";
 import { APP_ROUTES } from "@platform/router/routes";
 import {
   getCourseById,
-  getCourseAssets,
+  getAssetsByCourseId,
 } from "@features/courses";
 import { getIsFavorite } from "@features/favorites";
 import {
@@ -30,10 +30,10 @@ interface CoursePageProps {
 const { id } = Astro.params as CoursePageProps;
 if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const course = getCourseById({ courseId: id });
+const course = getCourseById({ id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const allAssets = getCourseAssets({ courseId: id });
+const allAssets = getAssetsByCourseId({ id });
 
 const isFavorite = getIsFavorite({ id, type: 'course' });
 const videos = allAssets
