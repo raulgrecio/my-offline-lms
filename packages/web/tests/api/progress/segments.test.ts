@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET } from "../../../src/pages/api/progress/segments";
-import * as ProgressFeature from "../../../src/features/progress/index";
+import { GET } from "@pages/api/progress/segments";
+import * as ProgressFeature from "@features/progress/index";
 
-vi.mock("../../../src/features/progress/index", () => ({
+vi.mock("@features/progress/index", () => ({
   getVisitedSegments: vi.fn(),
 }));
 
@@ -14,7 +14,7 @@ describe("Segments API Endpoint", () => {
   it("should return a 400 error if assetId or type is missing", async () => {
     const url = new URL("http://localhost/api/progress/segments");
     const response = await GET({ url } as any);
-    
+
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.error).toBe("assetId and type are required");

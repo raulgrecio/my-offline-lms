@@ -614,18 +614,27 @@ export function initPdfViewer({
   window.onkeydown = (e) => {
     // Only handle if not typing in inputs
     if (e.target instanceof HTMLInputElement) return;
-
     switch (e.key) {
       case 'ArrowUp':
       case 'PageUp':
+      case 'ArrowLeft':
         e.preventDefault();
         goToPage(currentPage - 1, 'smooth');
         break;
       case 'ArrowDown':
       case 'PageDown':
+      case 'ArrowRight':
       case ' ':
         e.preventDefault();
         goToPage(currentPage + 1, 'smooth');
+        break;
+      case 'Home':
+        e.preventDefault();
+        goToPage(1, 'smooth');
+        break;
+      case 'End':
+        e.preventDefault();
+        goToPage(pdfDoc?.numPages || 1, 'smooth');
         break;
       case 'f':
         btnFitWidth.click();
