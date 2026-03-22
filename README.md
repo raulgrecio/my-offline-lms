@@ -145,10 +145,15 @@ pnpm cli download-course <COURSE_ID> [all|video|guide]
 
 ## Web Interface (Frontend)
 
-To start the local viewer:
+The project includes a web application to consume the downloaded content conveniently.
+
+**To build and start the production viewer:**
 ```bash
-pnpm --filter @my-offline-lms/web run dev
+pnpm --filter @my-offline-lms/web build
+pnpm --filter @my-offline-lms/web preview
 ```
+
+_Note: For development/debugging purposes, you can use `pnpm --filter @my-offline-lms/web run dev` instead._
 
 Features:
 - Browse your offline catalog.
