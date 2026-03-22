@@ -5,18 +5,23 @@ import fs from "fs";
 
 import { env } from "@config/env";
 import { getAuthState } from "@config/paths";
+import { ILogger } from "@my-offline-lms/core";
 
 chromium.use(stealth());
 
 export class BrowserProvider {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
+  private logger?: ILogger;
 
-  constructor() {}
+  constructor(logger?: ILogger) {
+    this.logger = logger?.withContext("BrowserProvider");
+  }
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
   async getHeadfulContext(headless: boolean = false): Promise<BrowserContext> {
     if (!this.browser) {
+      this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
       this.browser = await chromium.launch({ 
         headless,
         executablePath: env.CHROME_EXECUTABLE_PATH || undefined,
@@ -30,8 +35,16 @@ export class BrowserProvider {
     
     // Always use state if it exists
     const stateFile = await getAuthState();
-    const exists = await fs.promises.access(stateFile).then(() => true).catch(() => false);
-    const contextOptions = exists 
+    const stats = await fs.promises.stat(stateFile).catch(() => null);
+    
+    if (stats) {
+      const hoursOld = (Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60);
+      if (hoursOld > 24) {
+        this.logger?.warn(`La sesión guardada tiene ${Math.round(hoursOld)} horas. Si falla el raseo, prueba a ejecutar 'pnpm cli login' de nuevo.`);
+      }
+    }
+
+    const contextOptions = stats 
       ? { storageState: stateFile } 
       : {};
 
@@ -56,7 +69,3 @@ export class BrowserProvider {
     this.browser = null;
   }
 }
-
-// Export a singleton instance for ease of use in most simple scripts, 
-// though full DI would prefer passing it around.
-export const browserProvider = new BrowserProvider();

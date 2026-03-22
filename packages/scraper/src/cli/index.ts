@@ -20,8 +20,7 @@ import { DownloadVideos } from '@features/asset-download/application/DownloadVid
 import { AuthSession } from '@features/auth-session/application/AuthSession';
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
-
-import { browserProvider } from '@platform/browser/BrowserProvider';
+import { BrowserProvider } from '@platform/browser/BrowserProvider';
 
 dotenv.config();
 
@@ -47,6 +46,7 @@ Comandos disponibles:
 
   // DI Setup (Manual Instantiation)
   const logger = new ConsoleLogger();
+  const browserProvider = new BrowserProvider(logger);
   const nodeFs = new NodeFileSystem();
   const universalFs = new UniversalFileSystem(nodeFs);
   universalFs.registerRemote('http', new HttpFileSystem());
@@ -58,7 +58,7 @@ Comandos disponibles:
   const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(logger);
   const authSessionStorage = new DiskAuthSessionStorage();
   const assetStorage = new DiskAssetStorage(undefined, universalFs);
-  const videoDownloader = new YtDlpVideoDownloader(authSessionStorage);
+  const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
   const urlProvider = new OraclePlatformUrlProvider();
   const namingService = new AssetNamingService();
 

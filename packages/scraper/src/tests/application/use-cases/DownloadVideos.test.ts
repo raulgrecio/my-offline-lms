@@ -71,12 +71,14 @@ describe('DownloadVideos Use Case', () => {
             waitForTimeout: vi.fn().mockResolvedValue(undefined),
             close: vi.fn().mockResolvedValue(undefined),
             url: vi.fn().mockReturnValue('http://mock-url'),
+            title: vi.fn().mockResolvedValue('Mock Title'),
             on: vi.fn(),
             $: vi.fn().mockResolvedValue({ click: vi.fn() }),
             locator: vi.fn().mockReturnValue({
                 first: vi.fn().mockReturnThis(),
                 getAttribute: vi.fn().mockResolvedValue('mock-attr'),
                 isVisible: vi.fn().mockResolvedValue(true),
+                waitFor: vi.fn().mockResolvedValue(undefined),
                 click: vi.fn().mockResolvedValue(undefined)
             })
         };

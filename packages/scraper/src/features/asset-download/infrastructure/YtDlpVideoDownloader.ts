@@ -1,9 +1,19 @@
 import { spawn } from "child_process";
 import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
+import { ILogger } from "@my-offline-lms/core";
 
 export class YtDlpVideoDownloader implements IVideoDownloader {
-  constructor(private authSessionStorage: IAuthSessionStorage) {}
+  private logger: ILogger;
+  private authSessionStorage: IAuthSessionStorage;
+
+  constructor(deps: { 
+    authSessionStorage: IAuthSessionStorage,
+    logger: ILogger 
+  }) {
+    this.authSessionStorage = deps.authSessionStorage;
+    this.logger = deps.logger.withContext("YtDlpVideoDownloader");
+  }
 
   async download(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
     const cookiesFile = await this.authSessionStorage.getCookiesFile();
@@ -15,28 +25,53 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
       "--write-subs",
       "--write-auto-subs",
       "--sub-langs", "es.*,en.*",
-      "--embed-subs"
+      "--embed-subs",
+      "--color", "always"
     ];
     if (referer) args.push("--referer", referer);
     args.push(url);
 
     return new Promise((resolve, reject) => {
-      const ytDlpProcess = spawn("yt-dlp", args, { stdio: "inherit" });
-      
+      // Pipe subprocess output to main process to show progress
+      const ytDlpProcess = spawn("yt-dlp", args);
+      let stderr = "";
+
+      ytDlpProcess.stdout.pipe(process.stdout);
+
+      ytDlpProcess.stderr.on("data", (data: any) => {
+        const msg = data.toString();
+        stderr += msg;
+        process.stderr.write(data);
+      });
+
       ytDlpProcess.on("close", (code: number | null) => {
         if (code === 0) {
             resolve();
-        } else {
-            if (retryCount < 3) {
-                const delay = 5000 * (retryCount + 1);
-                console.log(`[YtDlpVideoDownloader] ⚠️ yt-dlp devolvió error ${code}. Reintentando en ${delay/1000} segundos... (Intento ${retryCount + 1}/3)`);
-                setTimeout(() => {
-                    this.download(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
-                }, delay);
-            } else {
-                reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
-            }
+            return;
         }
+        // Detección de errores conocidos de sesión
+        const isAuthError = stderr.includes("403") || 
+                          stderr.includes("Forbidden") || 
+                          stderr.includes("Sign in") || 
+                          stderr.includes("login") ||
+                          stderr.includes("Unauthorized");
+
+        if (isAuthError) {
+            reject(new Error(`yt-dlp error 403 / Login requerido. Tu sesión ha expirado o no es válida. Por favor, ejecuta 'pnpm cli login'.`));
+            return;
+        }
+
+        if (retryCount >= 3) {
+            this.logger.error(`yt-dlp falló tras 3 intentos (code ${code}). Error original:\n${stderr}`);
+            reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
+            return;
+        }
+
+        const delay = 5000 * (retryCount + 1);
+        this.logger.warn(`yt-dlp falló (code ${code}). Reintentando en ${delay/1000}s... (${retryCount + 1}/3)`);
+        setTimeout(() => {
+            this.download(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
+        }, delay);
       });
       ytDlpProcess.on("error", (err: Error) => reject(err));
     });

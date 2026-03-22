@@ -101,25 +101,46 @@ export class DownloadVideos {
       });
 
       const cleanUrl = this.namingService.cleanUrl(asset.url);
+      const res = await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+      
+      // Detección de redirección a login
+      const currentUrl = page.url();
+      const isLoginPage = currentUrl.includes("identity.oraclecloud.com") || 
+                          currentUrl.includes("login") || 
+                          (await page.title()).toLowerCase().includes("oracle identity cloud service");
 
-      await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
+      if (isLoginPage) {
+        throw new Error("Página redirigida a login. La sesión ha expirado o no es válida. Ejecuta 'pnpm cli login'.");
+      }
+
       await page.waitForTimeout(18000);
 
       const videoId = asset.url.split('/').pop();
       if (videoId) {
-        const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
-        if (await startLearningBtn.isVisible({ timeout: 5000 })) {
+        try {
+          const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
+          await startLearningBtn.waitFor({ state: 'visible', timeout: 5000 });
           await startLearningBtn.click({ force: true });
-          await page.waitForTimeout(5000);
+          await page.waitForTimeout(2000);
+        } catch (e) {
+          this.logger.debug?.(`Botón 'Start Learning' no encontrado o no necesario para el vídeo ${assetId}`);
         }
-        // Trigger routing/player
-        const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
-        if (await playButton.isVisible({ timeout: 4000 })) await playButton.click({ force: true });
+
+        try {
+          const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
+          await playButton.waitFor({ state: 'visible', timeout: 4000 });
+          await playButton.click({ force: true });
+        } catch (e) {
+          this.logger.debug?.(`Botón 'Play' no encontrado para el vídeo ${assetId}`);
+        }
       }
 
-      await page.waitForTimeout(15000); // Dar a la API tiempo de negociar m3u8
+      await page.waitForTimeout(15000);
 
-      let targetDownloadUrl = m3u8Url || cleanUrl;
+      if (!m3u8Url) {
+          this.logger.warn(`⚠️ No se detectó stream de vídeo (.m3u8). Esto suele ocurrir por falta de login.`);
+      }
+      const targetDownloadUrl = m3u8Url || cleanUrl;
 
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       await page.close(); // Liberar memoria de playwright antes de yt-dlp
