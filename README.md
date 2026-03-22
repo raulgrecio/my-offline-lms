@@ -1,10 +1,10 @@
 # my-offline-lms
 
-> A personal project to sync and download course materials (PDFs, Videos, Transcripts) for offline study, built with Clean Architecture and a unified CLI.
+> A personal project to sync and download course materials (PDFs, Videos, Transcripts) for offline study, built with Clean Architecture and a monorepo structure.
 
 ---
 
-## Code Coverage
+## 📊 Code Coverage
 
 ![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
 
@@ -20,17 +20,20 @@ I would like to express my sincere gratitude to [**Oracle University**](https://
 
 ---
 
-## Table of Contents
+## 🗺️ Table of Contents
 
 1. [Description](#description)
-2. [Architecture](#architecture)
-3. [Tech Stack](#tech-stack)
-4. [Prerequisites](#prerequisites)
-5. [Installation](#installation)
-6. [Usage Guide (CLI)](#usage-guide)
-7. [Directory Structure](#directory-structure)
-8. [Environment Variables](#environment-variables)
-9. [License](#license)
+2. [Architecture & Monorepo Structure](#architecture--monorepo-structure)
+3. [Design Principles](#design-principles)
+4. [Tech Stack](#tech-stack)
+5. [Prerequisites](#prerequisites)
+6. [Installation](#installation)
+7. [Usage Guide (CLI)](#usage-guide-cli)
+8. [Web Interface (Frontend)](#web-interface-frontend)
+9. [Typical Workflow](#typical-workflow)
+10. [Data Structure](#data-structure)
+11. [Environment Variables](#environment-variables)
+12. [License](#license)
 
 ---
 
@@ -41,59 +44,70 @@ I would like to express my sincere gratitude to [**Oracle University**](https://
 **Key Features:**
 
 - **Clean Architecture**: Organized by Use Cases, Domain, and Infrastructure.
-- **Unified CLI**: Single entry point for all operations.
-- **Resilient**: Automatic resuming of downloads and error handling.
+- **Monorepo**: Clear separation between core logic, scraper, and web interface.
+- **Resilient**: Automatic resuming of downloads and advanced error handling.
 - **High-Quality PDFs**: Optimized PDF generation from interactive image-based viewers.
 
 ---
 
-## Architecture
+## Architecture & Monorepo Structure
 
-The project follows **Clean Architecture** principles:
+The project is organized as a monorepo using `pnpm workspaces` to separate responsibilities:
 
-- **src/domain**: Core business logic. Entities, Value Objects, and Repository/Service interfaces. No external dependencies.
-- **src/application**: Use Cases (Login, Sync, Download). Orchestrates the flow of data.
-- **src/infrastructure**: Technical implementations. Database (SQLite), Browser (Playwright), Services (yt-dlp, Filesystem).
-- **src/presentation**: Entry point. Currently a unified CLI in `cli.ts`.
+### 1. [`packages/core`](./packages/core) (The Heart)
+Contains shared logic and fundamental abstractions. It does not depend on any other package.
+- **`filesystem/`**: Abstractions for file access (Local, S3, Blob). Implements the *Adapter* pattern for storage independence.
+- **`database/`**: Base SQLite configuration and common data types.
+- **`logging/`**: Logging interface for system-wide consistency.
+
+### 2. [`packages/scraper`](./packages/scraper) (The Data Factory)
+Responsible for platform interaction and resource gathering.
+- **`application/`**: Use cases (`SyncCourse`, `SyncLearningPath`, `DownloadVideos`).
+- **`infrastructure/`**: Browser automation (Playwright) and video download services (`yt-dlp`).
+- **`presentation/`**: CLI entry point (`cli.ts`).
+
+### 3. [`packages/web`](./packages/web) (The Consumer)
+An **Astro** application providing a modern offline viewer for the downloaded content.
+- **`features/`**: Organized by domain (Courses, Learning Paths, Progress).
+- **`platform/`**: Web-specific adapters and database access.
+- **`components/`**: Modern, reactive UI components.
+
+---
+
+## Design Principles
+
+1. **Framework Independence**: Business logic is isolated from automation libraries or web frameworks.
+2. **Testability**: Dependency injection and interface-based design allow for >90% test coverage.
+3. **Dependency Rule**: Dependencies always point inwards towards the Domain layer.
+   - `Presentation` -> `Application` -> `Domain`
+   - `Infrastructure` -> `Domain`
 
 ---
 
 ## Tech Stack
 
-- **Runtime**: Node.js 18+
-- **Language**: TypeScript
+- **Runtime**: Node.js 18+ | **Language**: TypeScript
 - **Automation**: Playwright + playwright-extra (Stealth)
-- **Database**: better-sqlite3
-- **Video Downloader**: yt-dlp
+- **Database**: better-sqlite3 | **Video Downloader**: yt-dlp
 - **Processing**: sharp (images) & pdfkit (PDFs)
-- **Testing**: Vitest
+- **Testing**: Vitest | **Frontend**: Astro + Tailwind CSS
 
 ---
 
 ## Prerequisites
 
 ### System
-
-- **Node.js**: v18+
-- **pnpm**: Recommended (`npm install -g pnpm`)
+- **Node.js**: v18+ | **pnpm**: Recommended
 - **yt-dlp**: Required for videos.
-  - **Linux**:
-    ```bash
-    sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-    sudo chmod a+rx /usr/local/bin/yt-dlp
-    ```
-  - **Windows**: Download `yt-dlp.exe` from [GitHub Releases](https://github.com/yt-dlp/yt-dlp/releases) and place it in your PATH, or use Chocolatey: `choco install yt-dlp`
-
+  - **Linux**: `sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp`
 - **ffmpeg**: Required for video processing.
   - **Linux**: `sudo apt update && sudo apt install -y ffmpeg`
-  - **Windows**: `choco install ffmpeg` or download from [ffmpeg.org](https://ffmpeg.org/download.html) and add `bin` to PATH.
 
 ---
 
 ## Installation
 
 1. **Clone and Install**:
-
    ```bash
    pnpm install
    pnpm exec playwright install chromium
@@ -102,92 +116,67 @@ The project follows **Clean Architecture** principles:
 2. **Setup Environment**:
    ```bash
    cp .env.example .env
-   # IMPORTANT: *Configure PLATFORM_BASE_URL (famous name database url) and other variables in .env *
+   # IMPORTANT: Configure PLATFORM_BASE_URL and other variables in .env
    ```
 
 ---
 
-## Usage Guide
+## Usage Guide (CLI)
 
-All actions are performed through the `pnpm cli` command.
+Perform actions via `pnpm cli` in the scraper package.
 
 ### 1. Authentication
-
-Perform the login manually in the browser window that appears (including 2FA).
-
 ```bash
-pnpm cli login
+pnpm cli login # Perform login manually in the browser window
 ```
 
-_This saves the session in `data/.auth/` for future use._
-
-### 2. Synchronization (Mapping)
-
-Loads course or Learning Path metadata into the local database without downloading files.
-
+### 2. Synchronization
 ```bash
-# Sync an individual course
 pnpm cli sync-course <URL_OR_SLUG>
-
-# Sync a complete Learning Path
 pnpm cli sync-path <URL_OR_ID>
 ```
 
 ### 3. Downloading
-
-Download the actual assets (PDFs and Videos) after syncing.
-
 ```bash
-# Download everything pending for a course
-pnpm cli download-course <COURSE_ID>
-
-# Download only videos for a course
-pnpm cli download-course <COURSE_ID> video
-
-# Download only guides for a course
-pnpm cli download-course <COURSE_ID> guide
-
-# Download a full Learning Path
-pnpm cli download-path <PATH_ID> [all|video|guide]
+pnpm cli download-course <COURSE_ID> [all|video|guide]
 ```
 
 ---
 
-### Source Code (`src/`)
+## Web Interface (Frontend)
 
-- **application/**: Use Cases (Login, Sync, Download). Orchestrates the flow of data.
-- **config/**: Technical configuration.
-  - [`env.ts`](file:///home/my-user/my-offline-lms/src/config/env.ts): Environment variables validation (Zod).
-  - [`paths.ts`](file:///home/my-user/my-offline-lms/src/config/paths.ts): **Centralized directory paths**. Resolves `PROJECT_ROOT` and defines `DATA_DIR`, `AUTH_DIR`, `ASSETS_DIR`, etc.
-  - [`platform.ts`](file:///home/my-user/my-offline-lms/src/config/platform.ts): **Platform-specific constants**. Includes CSS selectors, URL patterns, and logic overrides for the LMS platform.
-- **db/**: SQLite initialization and schema definition.
-- **domain/**: Core business logic. Entities, interfaces, and pure domain services (e.g., `AssetNamingService`).
-- **infrastructure/**: Technical implementations (Browser automation, SQLite Repositories, yt-dlp service).
-- **presentation/**: CLI entry point (`cli.ts`).
-- **tests/**: Complete test suite using Vitest.
+To start the local viewer:
+```bash
+pnpm --filter @my-offline-lms/web run dev
+```
 
----
-
-## Directory Structure (Data)
-
-The project uses a `data/` folder at the root to persist state and downloads. These paths are managed via `src/config/paths.ts`.
+Features:
+- Browse your offline catalog.
+- Watch videos with persistence and progress tracking.
+- Interactive PDF viewing for study guides.
 
 ---
 
-## Data Persistence
+## Typical Workflow
+
+1. **CLI (Scraper)**: Sync a course to save metadata to the local SQLite database.
+2. **Download**: Run the download command to fetch PDFs and Videos.
+3. **Web UI**: Open the Astro app to consume content offline with a premium experience.
+
+---
+
+## Data Structure
 
 ```
 data/
-├── .auth/              # Cookies and session state
-├── assets/             # Final PDFs and Videos organized by course
-├── debug/              # Intercepted JSON payloads for debugging
-└── db.sqlite           # Central Database
+├── .auth/              # Session state
+├── assets/             # Final PDFs and Videos
+├── debug/              # Intercepted network payloads
+└── db.sqlite           # Central SQLite Database
 ```
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-In addition to the license terms, please respect the Terms of Service of the platforms you access.
-This tool is for personal and educational use only.
+MIT License. Respect the Terms of Service of platforms you access. For educational use only.
