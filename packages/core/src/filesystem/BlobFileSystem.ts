@@ -12,21 +12,21 @@ export class BlobFileSystem implements IFileSystem {
     this.logger = logger.withContext("BlobFileSystem");
   }
 
-  existsSync(p: string): boolean {
+  async exists(p: string): Promise<boolean> {
     this.logger.info(`Checking existence (Mocked as true) for ${p} in ${this.account}/${this.container}`);
     return true; 
   }
 
-  readFileSync(p: string): Buffer;
-  readFileSync(p: string, encoding: "utf-8"): string;
-  readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
-    this.logger.warn(`readFileSync not fully implemented for ${p}`);
+  async readFile(p: string): Promise<Buffer>;
+  async readFile(p: string, encoding: "utf-8"): Promise<string>;
+  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
+    this.logger.warn(`readFile not fully implemented for ${p}`);
     if (encoding === "utf-8") return "";
     return Buffer.alloc(0);
   }
 
-  writeFileSync(p: string, content: string | Buffer): void {
-    throw new Error(`[BlobFileSystem] writeFileSync not implemented for ${p}`);
+  async writeFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error(`[BlobFileSystem] writeFile not implemented for ${p}`);
   }
 
   resolve(...paths: string[]): string {
@@ -47,19 +47,19 @@ export class BlobFileSystem implements IFileSystem {
     return parts.join("/");
   }
 
-  readdirSync(p: string): string[] {
-    throw new Error(`[BlobFileSystem] readdirSync not implemented for ${p}`);
+  async readdir(p: string): Promise<string[]> {
+    throw new Error(`[BlobFileSystem] readdir not implemented for ${p}`);
   }
 
-  mkdirSync(p: string, options?: { recursive?: boolean }): void {
-    throw new Error(`[BlobFileSystem] mkdirSync not implemented for ${p}`);
+  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+    throw new Error(`[BlobFileSystem] mkdir not implemented for ${p}`);
   }
 
-  rmSync(p: string, options?: { recursive?: boolean; force?: boolean }): void {
-    throw new Error(`[BlobFileSystem] rmSync not implemented for ${p}`);
+  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+    throw new Error(`[BlobFileSystem] rm not implemented for ${p}`);
   }
 
-  statSync(p: string): FileStats {
+  async stat(p: string): Promise<FileStats> {
     return {
       size: 0,
       mtime: new Date(),

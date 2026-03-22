@@ -10,13 +10,13 @@ vi.mock('@my-offline-lms/core', async (importOriginal) => {
     return {
         ...actual,
         AssetPathResolver: class {
-            findAsset = vi.fn((courseId: string, type: string, filename: string) => {
+            findAsset = vi.fn(async (courseId: string, type: string, filename: string) => {
                 if (filename === 'custom-name.pdf') return '/path/to/custom-name.pdf';
                 if (filename === 'custom-name.mp4') return '/path/to/custom-name.mp4';
                 return null;
             });
-            getDefaultWritePath = vi.fn(() => '/default/path');
-            listAssets = vi.fn(() => []);
+            getDefaultWritePath = vi.fn(async () => '/default/path');
+            listAssets = vi.fn(async () => []);
         },
         ASSET_FOLDERS: {
             guide: 'guides',
@@ -50,14 +50,14 @@ vi.mock('fs', () => ({
 describe('verifyAssetFiles', () => {
     const courseId = 'course-123';
 
-    it('should prioritize meta.filename for guides', () => {
+    it('should prioritize meta.filename for guides', async () => {
         const metadata = JSON.stringify({
             name: 'Test Guide',
             order_index: 1,
             filename: 'custom-name.pdf'
         });
 
-        const result = verifyAssetFiles({
+        const result = await verifyAssetFiles({
             type: 'guide',
             courseId,
             metadataStr: metadata
@@ -66,14 +66,14 @@ describe('verifyAssetFiles', () => {
         expect(result.expectedPath).toContain('custom-name.pdf');
     });
 
-    it('should prioritize meta.filename for videos', () => {
+    it('should prioritize meta.filename for videos', async () => {
         const metadata = JSON.stringify({
             name: 'Test Video',
             order_index: 1,
             filename: 'custom-name.mp4'
         });
 
-        const result = verifyAssetFiles({
+        const result = await verifyAssetFiles({
             type: 'video',
             courseId,
             metadataStr: metadata
@@ -82,13 +82,13 @@ describe('verifyAssetFiles', () => {
         expect(result.expectedPath).toContain('custom-name.mp4');
     });
 
-    it('should fallback to safeName if meta.filename is missing (guides)', () => {
+    it('should fallback to safeName if meta.filename is missing (guides)', async () => {
         const metadata = JSON.stringify({
             name: 'Test Guide',
             order_index: 1
         });
 
-        const result = verifyAssetFiles({
+        const result = await verifyAssetFiles({
             type: 'guide',
             courseId,
             metadataStr: metadata
@@ -97,13 +97,13 @@ describe('verifyAssetFiles', () => {
         expect(result.expectedPath).toContain('01_Test_Guide.pdf');
     });
 
-    it('should fallback to safeName if meta.filename is missing (videos)', () => {
+    it('should fallback to safeName if meta.filename is missing (videos)', async () => {
         const metadata = JSON.stringify({
             name: 'Test Video',
             order_index: 1
         });
 
-        const result = verifyAssetFiles({
+        const result = await verifyAssetFiles({
             type: 'video',
             courseId,
             metadataStr: metadata

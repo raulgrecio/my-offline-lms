@@ -20,13 +20,14 @@ vi.mock("@my-offline-lms/core", async (importOriginal) => {
     ...actual,
     AssetPathResolver: function () {
       return {
-        resolveExistingPath: vi.fn().mockImplementation((p) => (p === "missing" ? null : "/test.pdf")),
+        resolveExistingPath: vi.fn().mockImplementation(async (p) => (p === "missing" ? null : "/test.pdf")),
+        ensureInitialized: vi.fn(async () => {}),
       };
     },
     UniversalFileSystem: function () {
       return {
         registerRemote: vi.fn(),
-        statSync: vi.fn().mockReturnValue({ size: 100 }),
+        stat: vi.fn().mockResolvedValue({ size: 100 }),
         createReadStream: vi.fn().mockReturnValue({}),
       };
     },

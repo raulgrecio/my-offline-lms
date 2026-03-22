@@ -11,24 +11,29 @@ export class NodeFileSystem implements IFileSystem {
     this.logger = logger.withContext("NodeFileSystem");
   }
 
-  existsSync(p: string): boolean {
-    const exists = fs.existsSync(p);
-    this.logger.debug?.(`existsSync check for ${p}: ${exists}`);
-    return exists;
-  }
-
-  readFileSync(p: string): Buffer;
-  readFileSync(p: string, encoding: "utf-8"): string;
-  readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
-    if (encoding === "utf-8") {
-      return fs.readFileSync(p, encoding);
+  async exists(p: string): Promise<boolean> {
+    try {
+      await fs.promises.access(p);
+      this.logger.debug?.(`exists check for ${p}: true`);
+      return true;
+    } catch {
+      this.logger.debug?.(`exists check for ${p}: false`);
+      return false;
     }
-    return fs.readFileSync(p);
   }
 
-  writeFileSync(p: string, content: string | Buffer): void {
-    this.logger.debug?.(`writeFileSync to ${p}`);
-    fs.writeFileSync(p, content);
+  async readFile(p: string): Promise<Buffer>;
+  async readFile(p: string, encoding: "utf-8"): Promise<string>;
+  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
+    if (encoding === "utf-8") {
+      return fs.promises.readFile(p, encoding);
+    }
+    return fs.promises.readFile(p);
+  }
+
+  async writeFile(p: string, content: string | Buffer): Promise<void> {
+    this.logger.debug?.(`writeFile to ${p}`);
+    await fs.promises.writeFile(p, content);
   }
 
   resolve(...paths: string[]): string {
@@ -47,20 +52,20 @@ export class NodeFileSystem implements IFileSystem {
     return path.dirname(p);
   }
 
-  readdirSync(p: string): string[] {
-    return fs.readdirSync(p);
+  async readdir(p: string): Promise<string[]> {
+    return fs.promises.readdir(p);
   }
 
-  mkdirSync(p: string, options?: { recursive?: boolean }): void {
-    fs.mkdirSync(p, options);
+  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+    await fs.promises.mkdir(p, options);
   }
 
-  rmSync(p: string, options?: { recursive?: boolean; force?: boolean }): void {
-    fs.rmSync(p, options);
+  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+    await fs.promises.rm(p, options);
   }
 
-  statSync(p: string): FileStats {
-    const stats = fs.statSync(p);
+  async stat(p: string): Promise<FileStats> {
+    const stats = await fs.promises.stat(p);
     return {
       size: stats.size,
       mtime: stats.mtime,

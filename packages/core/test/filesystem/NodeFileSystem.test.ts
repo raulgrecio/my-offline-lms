@@ -3,22 +3,44 @@ import { NodeFileSystem } from "@filesystem/NodeFileSystem";
 import fs from "fs";
 import path from "path";
 
-vi.mock("fs");
+vi.mock("fs", () => ({
+  default: {
+    existsSync: vi.fn(),
+    readFileSync: vi.fn(),
+    readdirSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    rmSync: vi.fn(),
+    statSync: vi.fn(),
+    createReadStream: vi.fn(),
+    createWriteStream: vi.fn(),
+    promises: {
+      access: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      readdir: vi.fn(),
+      mkdir: vi.fn(),
+      rm: vi.fn(),
+      stat: vi.fn(),
+      unlink: vi.fn(),
+    }
+  }
+}));
 vi.mock("path");
 
 describe("NodeFileSystem", () => {
   const nfs = new NodeFileSystem();
 
-  it("should delegate to fs and path methods", () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    expect(nfs.existsSync("foo")).toBe(true);
+  it("should delegate to fs and path methods", async () => {
+    vi.mocked(fs.promises.access).mockResolvedValue(undefined);
+    expect(await nfs.exists("foo")).toBe(true);
 
-    vi.mocked(fs.readFileSync).mockReturnValue("data");
-    expect(nfs.readFileSync("foo", "utf-8")).toBe("data");
-    expect(nfs.readFileSync("foo")).toBe("data");
+    vi.mocked(fs.promises.readFile).mockResolvedValue("data");
+    expect(await nfs.readFile("foo", "utf-8")).toBe("data");
+    expect(await nfs.readFile("foo")).toBe("data");
 
-    nfs.writeFileSync("foo", "data");
-    expect(fs.writeFileSync).toHaveBeenCalledWith("foo", "data");
+    vi.mocked(fs.promises.writeFile).mockResolvedValue(undefined);
+    await nfs.writeFile("foo", "data");
+    expect(fs.promises.writeFile).toHaveBeenCalledWith("foo", "data");
 
     vi.mocked(path.resolve).mockReturnValue("/abs");
     expect(nfs.resolve("rel")).toBe("/abs");
@@ -32,17 +54,19 @@ describe("NodeFileSystem", () => {
     vi.mocked(path.dirname).mockReturnValue("/dir");
     expect(nfs.dirname("/a/b")).toBe("/dir");
 
-    vi.mocked(fs.readdirSync).mockReturnValue(["a"] as any);
-    expect(nfs.readdirSync("/dir")).toEqual(["a"]);
+    vi.mocked(fs.promises.readdir).mockResolvedValue(["a"] as any);
+    expect(await nfs.readdir("/dir")).toEqual(["a"]);
 
-    nfs.mkdirSync("/dir", { recursive: true });
-    expect(fs.mkdirSync).toHaveBeenCalledWith("/dir", { recursive: true });
+    vi.mocked(fs.promises.mkdir).mockResolvedValue(undefined as any);
+    await nfs.mkdir("/dir", { recursive: true });
+    expect(fs.promises.mkdir).toHaveBeenCalledWith("/dir", { recursive: true });
 
-    nfs.rmSync("/dir", { force: true });
-    expect(fs.rmSync).toHaveBeenCalledWith("/dir", { force: true });
+    vi.mocked(fs.promises.rm).mockResolvedValue(undefined);
+    await nfs.rm("/dir", { force: true });
+    expect(fs.promises.rm).toHaveBeenCalledWith("/dir", { force: true });
 
-    vi.mocked(fs.statSync).mockReturnValue({ size: 10, mtime: new Date(), isDirectory: () => false } as any);
-    const stats = nfs.statSync("/file");
+    vi.mocked(fs.promises.stat).mockResolvedValue({ size: 10, mtime: new Date(), isDirectory: () => false } as any);
+    const stats = await nfs.stat("/file");
     expect(stats.size).toBe(10);
     expect(stats.isDirectory()).toBe(false);
 

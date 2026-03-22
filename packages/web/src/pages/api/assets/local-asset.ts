@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   }
 
   // Resolver: first try raw path, then search in other roots
-  const resolved = resolver.resolveExistingPath(filePath);
+  const resolved = await resolver.resolveExistingPath(filePath);
 
   if (!resolved) {
     return new Response('File not found at any location', { status: 404 });
@@ -39,7 +39,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const mimeType = getMimeType(ext);
 
   try {
-    const stat = universalFs.statSync(resolved);
+    const stat = await universalFs.stat(resolved);
     const fileSize = stat.size;
     const range = request.headers.get('range');
 

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { db, initDb } from '@db/schema';
 
 describe('Database Baseline', () => {
-    beforeAll(() => {
-        initDb();
+    beforeAll(async () => {
+        await initDb();
     });
 
     it('should be able to insert and retrieve a course', () => {

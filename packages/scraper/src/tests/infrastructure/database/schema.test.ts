@@ -4,9 +4,9 @@ import { initDb } from '@db/schema';
 import { SQLiteDatabase } from '@my-offline-lms/core';
 
 describe('Database Schema', () => {
-    it('should initialize database and tables', () => {
+    it('should initialize database and tables', async () => {
         const db = new SQLiteDatabase(':memory:');
-        initDb(db);
+        await initDb(db);
 
         const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
         expect(tables.length).toBeGreaterThan(0);

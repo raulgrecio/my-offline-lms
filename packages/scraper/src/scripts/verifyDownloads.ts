@@ -9,7 +9,7 @@ const assetRepository = new SQLiteAssetRepository(db);
 /**
  * Verifies all downloaded videos for a specific course.
  */
-export function verifyCourseDownloads({ courseId, repair }: { courseId: string, repair?: boolean }) {
+export async function verifyCourseDownloads({ courseId, repair }: { courseId: string, repair?: boolean }) {
     console.log(`\n🔍 Verifying downloads for Course ID: ${courseId}${repair ? ' [MODE: REPAIR]' : ''}`);
     
     const courseRows = db.prepare("SELECT title FROM Courses WHERE id = ?").get(courseId) as { title: string } | undefined;
@@ -36,7 +36,7 @@ export function verifyCourseDownloads({ courseId, repair }: { courseId: string, 
         if (asset.type === 'video') totalVideos++;
         if (asset.type === 'guide') totalGuides++;
 
-        const { videoExists, vttExists, guideExists, actualPath, safeName } = verifyAssetFiles({
+        const { videoExists, vttExists, guideExists, actualPath, safeName } = await verifyAssetFiles({
             type: asset.type,
             courseId,
             metadataStr: asset.metadata,
@@ -94,7 +94,7 @@ export function verifyCourseDownloads({ courseId, repair }: { courseId: string, 
 /**
  * Verifies all downloaded videos for all courses within a learning path.
  */
-export function verifyPathDownloads({ pathId, repair = false }: { pathId: string, repair?: boolean }) {
+export async function verifyPathDownloads({ pathId, repair = false }: { pathId: string, repair?: boolean }) {
     console.log(`\n===================================================`);
     console.log(`🚀 Verifying Learning Path ID: ${pathId}${repair ? ' [MODE: REPAIR]' : ''}`);
     console.log(`===================================================`);
@@ -112,7 +112,7 @@ export function verifyPathDownloads({ pathId, repair = false }: { pathId: string
     }
 
     for (const course of courses) {
-        verifyCourseDownloads({courseId: course.course_id, repair});
+        await verifyCourseDownloads({courseId: course.course_id, repair});
     }
 }
 
@@ -130,11 +130,16 @@ if (require.main === module) {
     const targetId = args[1];
     const repair = args.includes("--repair");
 
-    if (type === "course") {
-        verifyCourseDownloads({courseId: targetId, repair});
-    } else if (type === "path") {
-        verifyPathDownloads({pathId: targetId, repair});
-    } else {
-        console.log("Unknown command. Use 'course' or 'path'.");
-    }
+    (async () => {
+        if (type === "course") {
+            await verifyCourseDownloads({courseId: targetId, repair});
+        } else if (type === "path") {
+            await verifyPathDownloads({pathId: targetId, repair});
+        } else {
+            console.log("Unknown command. Use 'course' or 'path'.");
+        }
+    })().catch(err => {
+        console.error("Fatal error:", err);
+        process.exit(1);
+    });
 }

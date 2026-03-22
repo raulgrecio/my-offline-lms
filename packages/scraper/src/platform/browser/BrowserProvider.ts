@@ -32,7 +32,8 @@ export class BrowserProvider {
     }
     
     // Always use state if it exists
-    const contextOptions = fs.existsSync(this.stateFile) 
+    const exists = await fs.promises.access(this.stateFile).then(() => true).catch(() => false);
+    const contextOptions = exists 
       ? { storageState: this.stateFile } 
       : {};
 
@@ -42,7 +43,8 @@ export class BrowserProvider {
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
   async getAuthenticatedContext(): Promise<BrowserContext> {
-    if (!fs.existsSync(this.stateFile)) {
+    const exists = await fs.promises.access(this.stateFile).then(() => true).catch(() => false);
+    if (!exists) {
       throw new Error("No existe sesion guardada. Ejecute el login primero.");
     }
     return this.getHeadfulContext(true); // force headless for background ops

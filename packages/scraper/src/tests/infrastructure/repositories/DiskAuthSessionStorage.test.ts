@@ -1,9 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
 import fs from 'fs';
-import path from 'path';
 
-vi.mock('fs');
+vi.mock('fs', () => ({
+    default: {
+        promises: {
+            mkdir: vi.fn().mockResolvedValue(undefined),
+            writeFile: vi.fn().mockResolvedValue(undefined),
+        },
+        existsSync: vi.fn().mockReturnValue(true),
+    }
+}));
+
 vi.mock('path', async () => {
     const actual = await vi.importActual<typeof import('path')>('path');
     return {
@@ -28,28 +36,15 @@ describe('DiskAuthSessionStorage', () => {
         expect(storage.getCookiesFile()).toBe('/mock/base/dir/cookies.txt');
     });
 
-    it('should create auth directory if it does not exist', () => {
-        vi.mocked(fs.existsSync).mockReturnValue(false);
+    it('should create auth directory', async () => {
         const storage = new DiskAuthSessionStorage(mockBaseDir);
         
-        storage.ensureAuthDir();
+        await storage.ensureAuthDir();
         
-        expect(fs.existsSync).toHaveBeenCalledWith(mockBaseDir);
-        expect(fs.mkdirSync).toHaveBeenCalledWith(mockBaseDir, { recursive: true });
+        expect(fs.promises.mkdir).toHaveBeenCalledWith(mockBaseDir, { recursive: true });
     });
 
-    it('should not create auth directory if it already exists', () => {
-        vi.mocked(fs.existsSync).mockReturnValue(true);
-        const storage = new DiskAuthSessionStorage(mockBaseDir);
-        
-        storage.ensureAuthDir();
-        
-        expect(fs.existsSync).toHaveBeenCalledWith(mockBaseDir);
-        expect(fs.mkdirSync).not.toHaveBeenCalled();
-    });
-
-    it('should format and save cookies to txt file correctly', () => {
-        vi.mocked(fs.existsSync).mockReturnValue(true);
+    it('should format and save cookies to txt file correctly', async () => {
         const storage = new DiskAuthSessionStorage(mockBaseDir);
         
         const mockCookies = [
@@ -57,10 +52,10 @@ describe('DiskAuthSessionStorage', () => {
             { domain: 'api.example.com', path: '/api', secure: false, expires: -1, name: 'track', value: 'abc' }
         ];
 
-        storage.saveCookies(mockCookies);
+        await storage.saveCookies(mockCookies);
 
-        expect(fs.writeFileSync).toHaveBeenCalled();
-        const callArgs = vi.mocked(fs.writeFileSync).mock.calls[0];
+        expect(fs.promises.writeFile).toHaveBeenCalled();
+        const callArgs = vi.mocked(fs.promises.writeFile).mock.calls[0];
         expect(callArgs[0]).toBe('/mock/base/dir/cookies.txt');
         
         const savedContent = callArgs[1] as string;

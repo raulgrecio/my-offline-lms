@@ -17,6 +17,7 @@ export class AssetPathResolver {
   private fs: IFileSystem;
   private logger: ILogger;
   private config: AssetPathsJson | null = null;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor({
     configPath,
@@ -28,16 +29,26 @@ export class AssetPathResolver {
     this.monorepoRoot = monorepoRoot;
     this.fs = fs;
     this.logger = logger.withContext("AssetPathResolver");
-    this.loadConfig();
+  }
+
+  /**
+   * Asegura que la configuración esté cargada de forma asíncrona.
+   */
+  async ensureInitialized(): Promise<void> {
+    if (this.config) return;
+    if (this.initializationPromise) return this.initializationPromise;
+
+    this.initializationPromise = this.loadConfig();
+    return this.initializationPromise;
   }
 
   /**
    * Carga la configuración de rutas de assets desde el archivo JSON o aplica valores por defecto.
    */
-  private loadConfig() {
+  private async loadConfig() {
     try {
-      if (this.fs.existsSync(this.configPath)) {
-        const content = this.fs.readFileSync(this.configPath, "utf-8");
+      if (await this.fs.exists(this.configPath)) {
+        const content = await this.fs.readFile(this.configPath, "utf-8");
         this.config = JSON.parse(content);
       } else {
         // Valores por defecto si la configuración no existe
@@ -45,7 +56,7 @@ export class AssetPathResolver {
           defaultWritePath: "data/assets",
           searchPaths: [{ path: "data/assets", label: "Default" }],
         };
-        this.saveConfig();
+        await this.saveConfig();
       }
     } catch (error) {
       this.logger.error("Error loading asset paths config", error);
@@ -53,17 +64,17 @@ export class AssetPathResolver {
         defaultWritePath: "data/assets",
         searchPaths: [{ path: "data/assets", label: "Default" }],
       };
-      this.saveConfig();
+      await this.saveConfig();
     }
   }
 
-  private saveConfig() {
+  private async saveConfig() {
     if (!this.config) return;
     const dir = this.fs.dirname(this.configPath);
-    if (!this.fs.existsSync(dir)) {
-      this.fs.mkdirSync(dir, { recursive: true });
+    if (!(await this.fs.exists(dir))) {
+      await this.fs.mkdir(dir, { recursive: true });
     }
-    this.fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+    await this.fs.writeFile(this.configPath, JSON.stringify(this.config, null, 2));
   }
 
   /**
@@ -77,22 +88,26 @@ export class AssetPathResolver {
   /**
    * Devuelve todas las rutas de búsqueda disponibles, indicando si existen en el sistema.
    */
-  getAvailablePaths() {
+  async getAvailablePaths() {
+    await this.ensureInitialized();
     if (!this.config) return [];
-    return this.config.searchPaths.map((sp) => {
+    
+    const results = await Promise.all(this.config.searchPaths.map(async (sp) => {
       const fullPath = this.getAbsolutePath(sp.path);
       return {
         ...sp,
         fullPath,
-        available: this.fs.existsSync(fullPath),
+        available: await this.fs.exists(fullPath),
       };
-    });
+    }));
+    return results;
   }
 
   /**
    * Devuelve la ruta por defecto para nuevas descargas.
    */
-  getDefaultWritePath(): string {
+  async getDefaultWritePath(): Promise<string> {
+    await this.ensureInitialized();
     return this.getAbsolutePath(this.config?.defaultWritePath || "data/assets");
   }
 
@@ -102,18 +117,19 @@ export class AssetPathResolver {
    * @param type Tipo de asset (lógico). Se mapeará automáticamente al nombre de la carpeta física.
    * @param filename Nombre del archivo.
    */
-  findAsset(
+  async findAsset(
     courseId: string,
     type: AssetType,
     filename: string
-  ): string | null {
+  ): Promise<string | null> {
     const folderName = ASSET_FOLDERS[type];
     const relativePath = this.fs.join(String(courseId), folderName, filename);
-    const availablePaths = this.getAvailablePaths().filter((p) => p.available);
+    const allPaths = await this.getAvailablePaths();
+    const availablePaths = allPaths.filter((p) => p.available);
 
     for (const sp of availablePaths) {
       const fullPath = this.fs.join(sp.fullPath, relativePath);
-      if (this.fs.existsSync(fullPath)) {
+      if (await this.fs.exists(fullPath)) {
         return fullPath;
       }
     }
@@ -127,12 +143,12 @@ export class AssetPathResolver {
    * @param type Tipo de asset (lógico).
    * @param filename Nombre del archivo.
    */
-  assetExistsAnywhere(
+  async assetExistsAnywhere(
     courseId: string,
     type: AssetType,
     filename: string
-  ): boolean {
-    return this.findAsset(courseId, type, filename) !== null;
+  ): Promise<boolean> {
+    return (await this.findAsset(courseId, type, filename)) !== null;
   }
 
   /**
@@ -140,8 +156,8 @@ export class AssetPathResolver {
    * extrayendo el patrón courseId/folder/filename y buscando en otras ubicaciones.
    * Mapea automáticamente los nombres de carpeta ("videos", "guides") de vuelta a AssetType.
    */
-  resolveExistingPath(absolutePath: string): string | null {
-    if (this.fs.existsSync(absolutePath)) return absolutePath;
+  async resolveExistingPath(absolutePath: string): Promise<string | null> {
+    if (await this.fs.exists(absolutePath)) return absolutePath;
 
     // Patrón: .../{courseId}/{videos|guides}/{filename}
     // Buscamos desde el final
@@ -167,25 +183,27 @@ export class AssetPathResolver {
   /**
    * Guarda una nueva ruta de búsqueda en el archivo de configuración.
    */
-  saveNewPath(p: string, label: string): void {
+  async saveNewPath(p: string, label: string): Promise<void> {
+    await this.ensureInitialized();
     if (!this.config) return;
 
     // Evitar duplicados
     if (this.config.searchPaths.some((sp) => sp.path === p)) return;
 
     this.config.searchPaths.push({ path: p, label });
-    this.fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+    await this.saveConfig();
   }
 
   /**
    * Elimina una ruta de búsqueda del archivo de configuración.
    */
-  removePath(p: string): void {
+  async removePath(p: string): Promise<void> {
+    await this.ensureInitialized();
     if (!this.config) return;
     this.config.searchPaths = this.config.searchPaths.filter(
       (sp) => sp.path !== p
     );
-    this.fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+    await this.saveConfig();
   }
 
   /**
@@ -194,17 +212,18 @@ export class AssetPathResolver {
    * @param courseId ID del curso.
    * @param type Tipo de asset (lógico).
    */
-  listAssets(courseId: string, type: AssetType): string[] {
+  async listAssets(courseId: string, type: AssetType): Promise<string[]> {
     const results: string[] = [];
     const folderName = ASSET_FOLDERS[type];
     const relativePath = this.fs.join(String(courseId), folderName);
-    const availablePaths = this.getAvailablePaths().filter((p) => p.available);
+    const allPaths = await this.getAvailablePaths();
+    const availablePaths = allPaths.filter((p) => p.available);
 
     for (const sp of availablePaths) {
       const fullDir = this.fs.join(sp.fullPath, relativePath);
-      if (this.fs.existsSync(fullDir)) {
+      if (await this.fs.exists(fullDir)) {
         try {
-          const files = this.fs.readdirSync(fullDir);
+          const files = await this.fs.readdir(fullDir);
           files.forEach((f) => results.push(this.fs.join(fullDir, f)));
         } catch (e) {
           this.logger.error(`Error listing assets in ${fullDir}`, e);

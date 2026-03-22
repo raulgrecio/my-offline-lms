@@ -14,7 +14,7 @@ const resolver = new AssetPathResolver({
 
 export const GET: APIRoute = async () => {
   try {
-    const paths = resolver.getAvailablePaths();
+    const paths = await resolver.getAvailablePaths();
     return new Response(JSON.stringify(paths), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    resolver.saveNewPath(newPath, label);
+    await resolver.saveNewPath(newPath, label);
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
@@ -61,7 +61,7 @@ export const DELETE: APIRoute = async ({ request }) => {
       });
     }
 
-    resolver.removePath(pathToRemove);
+    await resolver.removePath(pathToRemove);
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

@@ -21,7 +21,7 @@ export class AuthSession {
   }
 
   async interactiveLogin(targetUrl: string): Promise<void> {
-    this.authStorage.ensureAuthDir();
+    await this.authStorage.ensureAuthDir();
 
     this.logger.info(`Iniciando navegador interactivo para: ${targetUrl}`);
     const context = await this.browserProvider.getHeadfulContext(false);
@@ -48,7 +48,7 @@ export class AuthSession {
         await context.storageState({ path: this.authStorage.getAuthFile() });
 
         const cookies = await context.cookies();
-        this.authStorage.saveCookies(cookies);
+        await this.authStorage.saveCookies(cookies);
 
         this.logger.info("✅ Sesión y cookies guardadas con éxito en data/.auth/");
       } catch (e) {

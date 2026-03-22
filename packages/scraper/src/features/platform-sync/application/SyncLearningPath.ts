@@ -62,7 +62,7 @@ export class SyncLearningPath {
 
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
+    const isolatedDirPath = await setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
 
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
@@ -80,7 +80,7 @@ export class SyncLearningPath {
     if (!env.KEEP_TEMP_WORKSPACES) {
       if (isolatedDirPath) {
         this.logger.info(`🧹 Limpiando espacio de trabajo temporal del path: ${isolatedDirPath}`);
-        isolatedInterceptedDataRepo.deleteWorkspace();
+        await isolatedInterceptedDataRepo.deleteWorkspace();
       }
     } else {
       if (isolatedDirPath) {
@@ -90,7 +90,7 @@ export class SyncLearningPath {
   }
 
   private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<IInterceptedDataRepositoryFactory['create']> }): Promise<void> {
-    const intercepted = isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
+    const intercepted = await isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
 
     for (const payload of intercepted) {
       const json = JSON.parse(payload.content);
@@ -135,7 +135,7 @@ export class SyncLearningPath {
 
       this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
 
-      isolatedInterceptedDataRepo.markAsProcessed(payload.filePath);
+      await isolatedInterceptedDataRepo.markAsProcessed(payload.filePath);
     }
   }
 }

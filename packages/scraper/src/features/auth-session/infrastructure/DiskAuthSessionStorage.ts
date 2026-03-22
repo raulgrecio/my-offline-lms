@@ -23,14 +23,12 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     return this.cookiesFile;
   }
 
-  ensureAuthDir(): void {
-    if (!fs.existsSync(this.authDir)) {
-      fs.mkdirSync(this.authDir, { recursive: true });
-    }
+  async ensureAuthDir(): Promise<void> {
+    await fs.promises.mkdir(this.authDir, { recursive: true });
   }
 
-  saveCookies(cookies: any[]): void {
-    this.ensureAuthDir();
+  async saveCookies(cookies: any[]): Promise<void> {
+    await this.ensureAuthDir();
     const cookiesStr = cookies
       .map((c: any) => {
         const includeSubdomains = c.domain.startsWith('.') ? "TRUE" : "FALSE";
@@ -39,7 +37,7 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
       })
       .join("\n");
 
-    fs.writeFileSync(
+    await fs.promises.writeFile(
       this.cookiesFile,
       `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
     );

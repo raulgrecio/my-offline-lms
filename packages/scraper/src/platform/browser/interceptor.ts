@@ -6,14 +6,12 @@ import { ConsoleLogger } from "@my-offline-lms/core";
 
 import { INTERCEPTED_DIR } from "@config/paths";
 
-export function setupInterceptor(page: Page, options?: { execTimestamp: number, prefix: string }): string {
+export async function setupInterceptor(page: Page, options?: { execTimestamp: number, prefix: string }): Promise<string> {
   const targetDir = options
     ? path.join(INTERCEPTED_DIR, `${options.prefix}_${options.execTimestamp}`)
     : INTERCEPTED_DIR;
 
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
+  await fs.promises.mkdir(targetDir, { recursive: true });
 
   const logger = new ConsoleLogger().withContext('SetupInterceptor');
 
@@ -26,25 +24,12 @@ export function setupInterceptor(page: Page, options?: { execTimestamp: number, 
       try {
         const json = await response.json();
 
-        /*
-        // TODO: REVISAR SI ES NECESARIO ESTE FILTRADO AGRESIVO O SE PUEDE QUITAR DEFINITIVAMENTE
-
-        // Removed aggressive filtering to capture all JSONs and find where the original guide filename is
-        const isCorePayload = (PLATFORM.INTERCEPTOR.FILTER_API as readonly (string | RegExp)[]).some(pattern => 
-          typeof pattern === "string" ? url.includes(pattern) : pattern.test(url)
-        );
-        
-        if (!isCorePayload) {
-          return;
-        }
-        */
-
         // Creamos un nombre de archivo seguro basado en la URL
         const urlObj = new URL(url);
         const safeName = urlObj.pathname.replace(/[^a-z0-9]/gi, '_').replace(/^_+|_+$/g, '');
         const filename = `${Date.now()}_${safeName}.json`;
 
-        fs.writeFileSync(
+        await fs.promises.writeFile(
           path.join(targetDir, filename),
           JSON.stringify({ url, method: response.request().method(), status: response.status(), data: json }, null, 2)
         );

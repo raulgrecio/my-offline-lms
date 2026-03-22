@@ -26,7 +26,7 @@ interface Props {
     localPath?: string
 }
 
-export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Props): VerifyAssetFilesResult {
+export async function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Props): Promise<VerifyAssetFilesResult> {
     const meta = JSON.parse(metadataStr || "{}");
     const namingService = new AssetNamingService();
     const safeName = namingService.generateSafeFilename(meta.name, meta.order_index);
@@ -39,12 +39,13 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Pro
     });
 
     // RESERVA DE COINCIDENCIA FUZZY para guías con nombres heredados/cortos (sg, ag, etc.)
-    if (localPath && fs.existsSync(localPath)) {
+    if (localPath && await fsAdapter.exists(localPath)) {
         const isGuide = type === 'guide';
+        const vttExists = !isGuide ? (await fsAdapter.readdir(path.dirname(localPath))).some((f: string) => f.startsWith(path.basename(localPath, '.mp4')) && f.endsWith('.vtt')) : false;
         return {
             guideExists: isGuide,
             videoExists: !isGuide,
-            vttExists: !isGuide ? fs.readdirSync(path.dirname(localPath)).some((f: string) => f.startsWith(path.basename(localPath, '.mp4')) && f.endsWith('.vtt')) : false,
+            vttExists,
             expectedPath: localPath,
             actualPath: localPath,
             safeName
@@ -53,11 +54,11 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Pro
 
     if (type === 'guide') {
         const filename = meta.filename || `${safeName}.pdf`;
-        const foundPath = resolver.findAsset(courseId, "guide", filename);
+        const foundPath = await resolver.findAsset(courseId, "guide", filename);
 
         return {
             guideExists: !!foundPath,
-            expectedPath: path.join(resolver.getDefaultWritePath(), courseId, ASSET_FOLDERS.guide, filename),
+            expectedPath: path.join(await resolver.getDefaultWritePath(), courseId, ASSET_FOLDERS.guide, filename),
             actualPath: foundPath || undefined,
             safeName
         };
@@ -65,13 +66,13 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Pro
 
     // Default to video
     const filename = meta.filename || `${safeName}.mp4`;
-    const foundPath = resolver.findAsset(courseId, "video", filename);
+    const foundPath = await resolver.findAsset(courseId, "video", filename);
 
     let vttExists = false;
     if (foundPath) {
         const courseVideosDir = path.dirname(foundPath);
-        if (fs.existsSync(courseVideosDir)) {
-            const files = fs.readdirSync(courseVideosDir);
+        if (await fsAdapter.exists(courseVideosDir)) {
+            const files = await fsAdapter.readdir(courseVideosDir);
             const vttBase = path.basename(filename, path.extname(filename));
             vttExists = files.some((f: string) => f.startsWith(vttBase) && f.endsWith('.vtt'));
         }
@@ -80,7 +81,7 @@ export function verifyAssetFiles({ type, courseId, metadataStr, localPath }: Pro
     return {
         videoExists: !!foundPath,
         vttExists,
-        expectedPath: path.join(resolver.getDefaultWritePath(), courseId, ASSET_FOLDERS.video, filename),
+        expectedPath: path.join(await resolver.getDefaultWritePath(), courseId, ASSET_FOLDERS.video, filename),
         actualPath: foundPath || undefined,
         safeName
     };

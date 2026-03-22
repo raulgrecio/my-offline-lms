@@ -26,9 +26,10 @@ vi.mock("@my-offline-lms/core", async (importOriginal) => {
     ...actual,
     AssetPathResolver: function () {
       return {
-        getAvailablePaths: vi.fn().mockReturnValue([]),
-        saveNewPath: vi.fn(),
-        removePath: vi.fn(),
+        getAvailablePaths: vi.fn().mockResolvedValue([]),
+        saveNewPath: vi.fn().mockResolvedValue(undefined),
+        removePath: vi.fn().mockResolvedValue(undefined),
+        ensureInitialized: vi.fn().mockResolvedValue(undefined),
       };
     },
   };

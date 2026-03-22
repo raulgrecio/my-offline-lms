@@ -4,11 +4,11 @@ export interface InterceptedPayload {
 }
 
 export interface IInterceptedDataRepository {
-  getPendingLearningPaths(): InterceptedPayload[];
-  getPendingForLearningPath(pathId: string): InterceptedPayload[];
-  getPendingCourses(): InterceptedPayload[];
-  getPendingForCourse(courseId: string): InterceptedPayload[];
-  deletePayload(filePath: string): void;
-  markAsProcessed(filePath: string): void;
-  deleteWorkspace(): void;
+  getPendingLearningPaths(): Promise<InterceptedPayload[]>;
+  getPendingForLearningPath(pathId: string): Promise<InterceptedPayload[]>;
+  getPendingCourses(): Promise<InterceptedPayload[]>;
+  getPendingForCourse(courseId: string): Promise<InterceptedPayload[]>;
+  deletePayload(filePath: string): Promise<void>;
+  markAsProcessed(filePath: string): Promise<void>;
+  deleteWorkspace(): Promise<void>;
 }

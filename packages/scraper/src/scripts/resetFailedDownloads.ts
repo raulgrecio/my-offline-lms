@@ -3,7 +3,7 @@ import path from "path";
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 
-function resetCourse(courseId: string) {
+async function resetCourse(courseId: string) {
     console.log(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
 
     const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ?").all(courseId) as any[];
@@ -15,7 +15,7 @@ function resetCourse(courseId: string) {
     let resetCount = 0;
 
     for (const asset of assets) {
-        const { videoExists, vttExists, guideExists, safeName } = verifyAssetFiles({
+        const { videoExists, vttExists, guideExists, safeName } = await verifyAssetFiles({
             type: asset.type,
             courseId,
             metadataStr: asset.metadata
@@ -52,7 +52,7 @@ function resetCourse(courseId: string) {
     }
 }
 
-function resetPath(pathId: string) {
+async function resetPath(pathId: string) {
     console.log(`\n===================================================`);
     console.log(`🚀 Resetting missing assets in Learning Path ID: ${pathId}`);
     console.log(`===================================================`);
@@ -60,7 +60,7 @@ function resetPath(pathId: string) {
     const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
 
     for (const course of courses) {
-        resetCourse(course.course_id);
+        await resetCourse(course.course_id);
     }
 }
 
@@ -77,11 +77,16 @@ if (require.main === module) {
     const type = args[0];
     const targetId = args[1];
 
-    if (type === "course") {
-        resetCourse(targetId);
-    } else if (type === "path") {
-        resetPath(targetId);
-    } else {
-        console.log("Unknown command. Use 'course' or 'path'.");
-    }
+    (async () => {
+        if (type === "course") {
+            await resetCourse(targetId);
+        } else if (type === "path") {
+            await resetPath(targetId);
+        } else {
+            console.log("Unknown command. Use 'course' or 'path'.");
+        }
+    })().catch(err => {
+        console.error("Fatal error:", err);
+        process.exit(1);
+    });
 }

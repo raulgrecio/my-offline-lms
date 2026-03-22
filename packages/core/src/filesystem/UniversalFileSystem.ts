@@ -45,21 +45,21 @@ export class UniversalFileSystem implements IFileSystem {
     return SUPPORTED_PROTOCOLS.includes(proto as any) ? (proto as FileSystemProtocol) : null;
   }
 
-  existsSync(p: string): boolean {
-    return this.getBackend(p).existsSync(p);
+  async exists(p: string): Promise<boolean> {
+    return this.getBackend(p).exists(p);
   }
 
-  readFileSync(p: string): Buffer;
-  readFileSync(p: string, encoding: "utf-8"): string;
-  readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
+  async readFile(p: string): Promise<Buffer>;
+  async readFile(p: string, encoding: "utf-8"): Promise<string>;
+  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
     if (encoding === "utf-8") {
-      return this.getBackend(p).readFileSync(p, encoding);
+      return this.getBackend(p).readFile(p, encoding);
     }
-    return this.getBackend(p).readFileSync(p);
+    return this.getBackend(p).readFile(p);
   }
 
-  writeFileSync(p: string, content: string | Buffer): void {
-    return this.getBackend(p).writeFileSync(p, content);
+  async writeFile(p: string, content: string | Buffer): Promise<void> {
+    return this.getBackend(p).writeFile(p, content);
   }
 
   resolve(...paths: string[]): string {
@@ -83,23 +83,23 @@ export class UniversalFileSystem implements IFileSystem {
     return this.getBackend(p).dirname(p);
   }
 
-  readdirSync(p: string): string[] {
-    return this.getBackend(p).readdirSync(p);
+  async readdir(p: string): Promise<string[]> {
+    return this.getBackend(p).readdir(p);
   }
 
-  mkdirSync(p: string, options?: { recursive?: boolean }): void {
-    return this.getBackend(p).mkdirSync(p, options);
+  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+    return this.getBackend(p).mkdir(p, options);
   }
 
-  rmSync(p: string, options?: { recursive?: boolean; force?: boolean }): void {
+  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
     const backend = this.getBackend(p);
-    if (backend.rmSync) {
-      backend.rmSync(p, options);
+    if (backend.rm) {
+      await backend.rm(p, options);
     }
   }
 
-  statSync(p: string): FileStats {
-    return this.getBackend(p).statSync(p);
+  async stat(p: string): Promise<FileStats> {
+    return this.getBackend(p).stat(p);
   }
 
   createReadStream(p: string, options?: any): any {

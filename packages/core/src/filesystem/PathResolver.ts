@@ -1,3 +1,4 @@
+import fs from "fs";
 import { IFileSystem } from "./IFileSystem";
 
 export interface PathResolverOptions {
@@ -22,10 +23,12 @@ export class PathResolver {
     if (this._monorepoRoot) return this._monorepoRoot;
 
     let currentDir = this.fs.resolve(this.startDir);
-    const root = this.fs.resolve("/"); // Note: this might differ on Windows if we don't use absolute paths
+    // Note: this might differ on Windows if we don't use absolute paths
+    const root = this.fs.resolve("/"); 
 
     while (currentDir !== this.fs.dirname(currentDir)) {
-      if (this.fs.existsSync(this.fs.join(currentDir, "pnpm-workspace.yaml"))) {
+      // Use native fs.existsSync for bootstrapping as it identifies local files
+      if (fs.existsSync(this.fs.join(currentDir, "pnpm-workspace.yaml"))) {
         this._monorepoRoot = currentDir;
         return currentDir;
       }

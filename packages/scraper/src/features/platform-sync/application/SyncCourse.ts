@@ -60,7 +60,7 @@ export class SyncCourse {
 
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
+    const isolatedDirPath = await setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
 
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
@@ -78,7 +78,7 @@ export class SyncCourse {
       this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
     }
 
-    const intercepted = isolatedInterceptedDataRepo.getPendingForCourse(courseId);
+    const intercepted = await isolatedInterceptedDataRepo.getPendingForCourse(courseId);
     const matchingPayloads: any[] = [];
     const processedPayloadPaths: string[] = [];
 
@@ -262,7 +262,9 @@ export class SyncCourse {
       this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
 
       // 5. Marcar todos los archivos interceptados del curso como procesados
-      processedPayloadPaths.forEach(p => isolatedInterceptedDataRepo.markAsProcessed(p));
+      for (const p of processedPayloadPaths) {
+        await isolatedInterceptedDataRepo.markAsProcessed(p);
+      }
 
     } else {
       this.logger.warn("No se encontraron datos interceptados válidos para este curso.");
@@ -272,7 +274,7 @@ export class SyncCourse {
     if (!env.KEEP_TEMP_WORKSPACES) {
       if (isolatedDirPath) {
         this.logger.info(`🧹 Limpiando espacio de trabajo temporal del curso: ${isolatedDirPath}`);
-        isolatedInterceptedDataRepo.deleteWorkspace();
+        await isolatedInterceptedDataRepo.deleteWorkspace();
       }
     } else {
       if (isolatedDirPath) {

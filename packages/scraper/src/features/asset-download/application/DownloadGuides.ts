@@ -90,10 +90,10 @@ export class DownloadGuides {
     }
 
     const filename = `${baseName}.pdf`;
-    const courseGuidesDir = this.assetStorage.ensureAssetDir(courseId, 'guide');
+    const courseGuidesDir = await this.assetStorage.ensureAssetDir(courseId, 'guide');
     const outputPath = `${courseGuidesDir}/${filename}`;
 
-    if (this.assetStorage.assetExists(outputPath)) {
+    if (await this.assetStorage.assetExists(outputPath)) {
       this.logger.info(`La guía ya existe: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...meta, filename }, outputPath);
       return;
@@ -101,7 +101,7 @@ export class DownloadGuides {
 
     // RESERVA: Si el metadata ya tiene un filename (ej: de una sync previa u otro scraper), buscarlo en todas las rutas
     if (meta.filename) {
-      const existingPath = this.assetStorage.findExistingAsset(courseId, 'guide', meta.filename);
+      const existingPath = await this.assetStorage.findExistingAsset(courseId, 'guide', meta.filename);
       if (existingPath) {
         this.logger.info(`La guía ya existe (nombre en meta): ${existingPath}`);
         this.assetRepo.updateAssetCompletion(assetId, meta, existingPath);
@@ -118,7 +118,7 @@ export class DownloadGuides {
     try {
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       page = await context.newPage();
-      const tempImagesDir = this.assetStorage.ensureTempDir(courseId, assetId);
+      const tempImagesDir = await this.assetStorage.ensureTempDir(courseId, assetId);
 
       const offeringId = meta.offeringId;
       if (!offeringId) {
@@ -164,8 +164,8 @@ export class DownloadGuides {
         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;
 
         // Skip if we already downloaded this page successfully in a previous run
-        if (this.assetStorage.assetExists(cachedImgPath)) {
-          const size = this.assetStorage.getTempImageSize(cachedImgPath);
+        if (await this.assetStorage.assetExists(cachedImgPath)) {
+          const size = await this.assetStorage.getTempImageSize(cachedImgPath);
           if (size > 0) {
             this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
             continue;
@@ -185,7 +185,7 @@ export class DownloadGuides {
         }
 
         if (buffer) {
-          this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
+          await this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
           this.logger.info(`  -> Descargada pág ${pageNum}/${pagesCount}`);
           // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
           await new Promise(r => setTimeout(r, 200));
@@ -203,7 +203,7 @@ export class DownloadGuides {
       await this.assetStorage.buildPDFFromImages(tempImagesDir, outputPath);
 
       if (!this.keepTempImages) {
-        this.assetStorage.removeTempDir(tempImagesDir);
+        await this.assetStorage.removeTempDir(tempImagesDir);
       }
 
       this.logger.info(`✅ Guía guardada en: ${outputPath}`);

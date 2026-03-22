@@ -8,21 +8,21 @@ export class HttpFileSystem implements IFileSystem {
     this.logger = logger.withContext("HttpFileSystem");
   }
 
-  existsSync(p: string): boolean {
+  async exists(p: string): Promise<boolean> {
     this.logger.info(`Checking existence (Mocked as true) for ${p}`);
     return true; 
   }
 
-  readFileSync(p: string): Buffer;
-  readFileSync(p: string, encoding: "utf-8"): string;
-  readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
+  async readFile(p: string): Promise<Buffer>;
+  async readFile(p: string, encoding: "utf-8"): Promise<string>;
+  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
     // In a real implementation: GET request
-    this.logger.warn(`readFileSync not fully implemented for ${p}`);
+    this.logger.warn(`readFile not fully implemented for ${p}`);
     return encoding === "utf-8" ? "" : Buffer.alloc(0);
   }
 
-  writeFileSync(p: string, content: string | Buffer): void {
-    throw new Error("HttpFileSystem does not support writeFileSync");
+  async writeFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error("HttpFileSystem does not support writeFile");
   }
 
   resolve(...paths: string[]): string {
@@ -45,15 +45,15 @@ export class HttpFileSystem implements IFileSystem {
     return url.toString();
   }
 
-  readdirSync(p: string): string[] {
-    throw new Error("HttpFileSystem does not support readdirSync");
+  async readdir(p: string): Promise<string[]> {
+    throw new Error("HttpFileSystem does not support readdir");
   }
 
-  mkdirSync(p: string, options?: { recursive?: boolean }): void {
-    throw new Error("HttpFileSystem does not support mkdirSync");
+  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+    throw new Error("HttpFileSystem does not support mkdir");
   }
 
-  statSync(p: string): FileStats {
+  async stat(p: string): Promise<FileStats> {
     // Mocked stats
     return {
       size: 0,

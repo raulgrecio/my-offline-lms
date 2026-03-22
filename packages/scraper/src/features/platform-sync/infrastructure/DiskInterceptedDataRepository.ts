@@ -20,68 +20,60 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
     this.logger = deps.logger.withContext("DiskInterceptedDataRepository");
   }
 
-  private initDir(): void {
-    if (!fs.existsSync(this.interceptedDir)) {
-      fs.mkdirSync(this.interceptedDir, { recursive: true });
-    }
+  private async initDir(): Promise<void> {
+    await fs.promises.mkdir(this.interceptedDir, { recursive: true });
   }
 
-  getPendingLearningPaths(): InterceptedPayload[] {
+  async getPendingLearningPaths(): Promise<InterceptedPayload[]> {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH);
   }
 
-  getPendingForLearningPath(pathId: string): InterceptedPayload[] {
+  async getPendingForLearningPath(pathId: string): Promise<InterceptedPayload[]> {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.LEARNING_PATH, pathId);
   }
 
-  getPendingCourses(): InterceptedPayload[] {
+  async getPendingCourses(): Promise<InterceptedPayload[]> {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.COURSE);
   }
 
-  private getPayloads(pattern: RegExp, id?: string): InterceptedPayload[] {
-    this.initDir();
-    let files = fs.readdirSync(this.interceptedDir)
-      .filter(
+  private async getPayloads(pattern: RegExp, id?: string): Promise<InterceptedPayload[]> {
+    await this.initDir();
+    const allFiles = await fs.promises.readdir(this.interceptedDir);
+    const files = allFiles.filter(
         file => pattern.test(file) && (!id || file.includes(id))
       );
 
-    return files.map(file => {
+    return Promise.all(files.map(async file => {
       const filePath = path.join(this.interceptedDir, file);
-      const content = fs.readFileSync(filePath, "utf-8");
+      const content = await fs.promises.readFile(filePath, "utf-8");
       return { filePath, content };
-    });
+    }));
   }
 
-  getPendingForCourse(courseId: string): InterceptedPayload[] {
+  async getPendingForCourse(courseId: string): Promise<InterceptedPayload[]> {
     return this.getPayloads(PLATFORM.INTERCEPTOR.FILES.COURSE, courseId);
   }
 
-  deletePayload(filePath: string): void {
+  async deletePayload(filePath: string): Promise<void> {
     try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      await fs.promises.unlink(filePath);
     } catch (e) {
-      this.logger.warn(`Could not delete ${filePath}`);
+      // Ignored if file doesn't exist
     }
   }
 
-  markAsProcessed(filePath: string): void {
+  async markAsProcessed(filePath: string): Promise<void> {
     try {
-      if (fs.existsSync(filePath)) {
-        const newPath = `${filePath}.processed`;
-        fs.renameSync(filePath, newPath);
-      }
+      const newPath = `${filePath}.processed`;
+      await fs.promises.rename(filePath, newPath);
     } catch (e) {
       this.logger.warn(`Could not mark as processed ${filePath}`);
     }
   }
 
-  deleteWorkspace(): void {
+  async deleteWorkspace(): Promise<void> {
     try {
-      if (fs.existsSync(this.interceptedDir)) {
-        fs.rmSync(this.interceptedDir, { recursive: true, force: true });
-      }
+      await fs.promises.rm(this.interceptedDir, { recursive: true, force: true });
     } catch (e) {
       this.logger.error(`Failed to delete workspace directory ${this.interceptedDir}:`, e);
     }

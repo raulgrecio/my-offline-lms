@@ -21,90 +21,90 @@ export class DiskAssetStorage implements IAssetStorage {
     });
   }
 
-  ensureAssetDir(courseId: string, assetType: AssetType): string {
+  async ensureAssetDir(courseId: string, assetType: AssetType): Promise<string> {
     const folderName = ASSET_FOLDERS[assetType];
     const dir = this.fs.join(this.assetsBaseDir, String(courseId), folderName);
-    if (!this.fs.existsSync(dir)) {
-      this.fs.mkdirSync(dir, { recursive: true });
+    if (!(await this.fs.exists(dir))) {
+      await this.fs.mkdir(dir, { recursive: true });
     }
     return dir;
   }
 
-  ensureTempDir(courseId: string, assetId: string): string {
-    const guidesDir = this.ensureAssetDir(courseId, 'guide');
+  async ensureTempDir(courseId: string, assetId: string): Promise<string> {
+    const guidesDir = await this.ensureAssetDir(courseId, 'guide');
     const tempDir = this.fs.join(guidesDir, `temp_${assetId}`);
-    if (!this.fs.existsSync(tempDir)) {
-      this.fs.mkdirSync(tempDir, { recursive: true });
+    if (!(await this.fs.exists(tempDir))) {
+      await this.fs.mkdir(tempDir, { recursive: true });
     }
     return tempDir;
   }
 
-  removeTempDir(tempDir: string): void {
-    if (this.fs.existsSync(tempDir) && this.fs.rmSync) {
-      this.fs.rmSync(tempDir, { recursive: true, force: true });
+  async removeTempDir(tempDir: string): Promise<void> {
+    if ((await this.fs.exists(tempDir)) && this.fs.rm) {
+      await this.fs.rm(tempDir, { recursive: true, force: true });
     }
   }
 
-  assetExists(filePath: string): boolean {
-    if (this.fs.existsSync(filePath)) return true;
-    return this.resolver.resolveExistingPath(filePath) !== null;
+  async assetExists(filePath: string): Promise<boolean> {
+    if (await this.fs.exists(filePath)) return true;
+    return (await this.resolver.resolveExistingPath(filePath)) !== null;
   }
 
-  findExistingAsset(courseId: string, assetType: AssetType, filename: string): string | null {
+  async findExistingAsset(courseId: string, assetType: AssetType, filename: string): Promise<string | null> {
     return this.resolver.findAsset(courseId, assetType, filename);
   }
 
-  verifyVideoIntegrity(videoPath: string): boolean {
-    const actualPath = this.resolver.resolveExistingPath(videoPath) || videoPath;
-    if (!this.fs.existsSync(actualPath)) return false;
-    const stats = this.fs.statSync(actualPath);
+  async verifyVideoIntegrity(videoPath: string): Promise<boolean> {
+    const actualPath = (await this.resolver.resolveExistingPath(videoPath)) || videoPath;
+    if (!(await this.fs.exists(actualPath))) return false;
+    const stats = await this.fs.stat(actualPath);
     if (stats.size < 200000) return false;
     return true;
   }
 
-  writeTempImage(imagePath: string, buffer: Buffer): void {
-    this.fs.writeFileSync(imagePath, buffer);
+  async writeTempImage(imagePath: string, buffer: Buffer): Promise<void> {
+    await this.fs.writeFile(imagePath, buffer);
   }
 
-  getTempImageSize(imagePath: string): number {
-    if (!this.fs.existsSync(imagePath)) return 0;
-    return this.fs.statSync(imagePath).size;
+  async getTempImageSize(imagePath: string): Promise<number> {
+    if (!(await this.fs.exists(imagePath))) return 0;
+    return (await this.fs.stat(imagePath)).size;
   }
 
-  buildPDFFromImages(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
+  async buildPDFFromImages(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
+    const files = (await this.fs.readdir(sourceDir)).filter(f => f.endsWith(".png")).sort();
+    if (files.length === 0) {
+      throw new Error("No hay imágenes para crear PDF");
+    }
+
+    const doc = new PDFDocument({ autoFirstPage: false });
+    if (!this.fs.createWriteStream) {
+      throw new Error("FileSystem does not support writing streams");
+    }
+    const stream = this.fs.createWriteStream(outputPath);
+    doc.pipe(stream);
+
+    try {
+      for (const file of files) {
+        const imgPath = this.fs.join(sourceDir, file);
+        if (options.optimize) {
+          const optBuffer = await sharp(await this.fs.readFile(imgPath)).jpeg({ quality: options.quality }).toBuffer();
+          const meta = await sharp(optBuffer).metadata();
+          doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
+          doc.image(optBuffer, 0, 0, { width: meta.width, height: meta.height });
+        } else {
+          const imgBuffer = await this.fs.readFile(imgPath);
+          const meta = await sharp(imgBuffer).metadata();
+          doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
+          doc.image(imgBuffer, 0, 0, { width: meta.width, height: meta.height });
+        }
+      }
+      doc.end();
+    } catch (e) {
+      throw e;
+    }
+
     return new Promise((resolve, reject) => {
-      const files = this.fs.readdirSync(sourceDir).filter(f => f.endsWith(".png")).sort();
-      if (files.length === 0) {
-        return reject(new Error("No hay imágenes para crear PDF"));
-      }
-
-      const doc = new PDFDocument({ autoFirstPage: false });
-      if (!this.fs.createWriteStream) {
-        return reject(new Error("FileSystem does not support writing streams"));
-      }
-      const stream = this.fs.createWriteStream(outputPath);
-      doc.pipe(stream);
-
-      (async () => {
-        try {
-          for (const file of files) {
-            const imgPath = this.fs.join(sourceDir, file);
-            if (options.optimize) {
-              const optBuffer = await sharp(this.fs.readFileSync(imgPath)).jpeg({ quality: options.quality }).toBuffer();
-              const meta = await sharp(optBuffer).metadata();
-              doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
-              doc.image(optBuffer, 0, 0, { width: meta.width, height: meta.height });
-            } else {
-              const imgBuffer = this.fs.readFileSync(imgPath);
-              const meta = await sharp(imgBuffer).metadata();
-              doc.addPage({ size: [meta.width!, meta.height!], margin: 0 });
-              doc.image(imgBuffer, 0, 0, { width: meta.width, height: meta.height });
-            }
-          }
-          doc.end();
-        } catch (e) { reject(e); }
-      })();
-
       stream.on("finish", () => resolve());
       stream.on("error", (e: any) => reject(e));
     });

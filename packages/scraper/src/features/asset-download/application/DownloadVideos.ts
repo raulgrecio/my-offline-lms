@@ -70,15 +70,15 @@ export class DownloadVideos {
 
     const safeName = this.namingService.generateSafeFilename(asset.metadata.name, asset.metadata.order_index);
     const filename = `${safeName}.mp4`;
-    const courseVideosDir = this.assetStorage.ensureAssetDir(courseId, 'video');
+    const courseVideosDir = await this.assetStorage.ensureAssetDir(courseId, 'video');
     const outputPath = `${courseVideosDir}/${filename}`;
 
     // [INTEGRITY CHECK] Verificamos si existe el .mp4 y el .vtt si se esperaba
     // yt-dlp guarda los subs incrustados y puede dejarlos sueltos. 
     // Por Clean Architecture, validaremos que al menos el mp4 tiene un tamaño aceptable (>1MB por ejemplo, o simplemente que existe si no fuimos estrictos).
-    if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
+    if (await this.assetStorage.verifyVideoIntegrity(outputPath)) {
       this.logger.info(`[Integridad] El vídeo y sus componentes ya parecen existir correctamente: ${outputPath}`);
-      this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename });
+      this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
       return;
     }
 
@@ -128,7 +128,7 @@ export class DownloadVideos {
       await this.videoDownloader.download(targetDownloadUrl, outputPath, cleanUrl);
 
       // Verificamos tras la descarga!
-      if (this.assetStorage.verifyVideoIntegrity(outputPath)) {
+      if (await this.assetStorage.verifyVideoIntegrity(outputPath)) {
         this.logger.info(`✅ Vídeo completado y verificado: ${outputPath}`);
         this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
       } else {
