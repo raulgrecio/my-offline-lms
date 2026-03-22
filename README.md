@@ -173,6 +173,9 @@ Features:
 - Watch videos with persistence and progress tracking.
 - Interactive PDF viewing for study guides.
 
+> [!IMPORTANT]
+> **First Step in Web UI**: Once you open the web interface, go to the **Settings** section and provide the absolute path to your `data/assets` directory. This ensures the application can find and serve your downloaded videos and PDFs.
+
 ---
 
 ## Typical Workflow
