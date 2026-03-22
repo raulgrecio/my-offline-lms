@@ -7,10 +7,15 @@
     "scraper": "pnpm --filter @my-offline-lms/scraper",
     "web": "pnpm --filter @my-offline-lms/web",
     "dev:web": "pnpm --filter @my-offline-lms/web dev",
+    "preview:web": "pnpm --filter @my-offline-lms/web preview",
+    "build:web": "pnpm --filter @my-offline-lms/web build",
     "dev:scraper": "pnpm --filter @my-offline-lms/scraper dev",
     "test": "pnpm --filter @my-offline-lms/scraper test",
     "test:run": "pnpm --filter @my-offline-lms/scraper test:run",
     "test:coverage": "pnpm --filter @my-offline-lms/scraper test:coverage",
     "cli": "pnpm --filter @my-offline-lms/scraper cli"
+  },
+  "devDependencies": {
+    "node-gyp": "^11.0.0"
   }
 }

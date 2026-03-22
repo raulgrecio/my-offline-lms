@@ -20,6 +20,9 @@ export default defineConfig({
     optimizeDeps: {
       include: ['pdfjs-dist'],
     },
+    ssr: {
+      external: ['better-sqlite3'],
+    },
   },
   server: {
     port: 4321,
