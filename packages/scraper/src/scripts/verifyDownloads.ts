@@ -1,7 +1,7 @@
 import path from "path";
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-import { ASSETS_DIR } from "@config/paths";
+import { getAssetsDir } from "@config/paths";
 import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
 
 const assetRepository = new SQLiteAssetRepository(db);
@@ -12,6 +12,8 @@ const assetRepository = new SQLiteAssetRepository(db);
 export async function verifyCourseDownloads({ courseId, repair }: { courseId: string, repair?: boolean }) {
     console.log(`\n🔍 Verifying downloads for Course ID: ${courseId}${repair ? ' [MODE: REPAIR]' : ''}`);
     
+    const assetsDir = await getAssetsDir();
+
     const courseRows = db.prepare("SELECT title FROM Courses WHERE id = ?").get(courseId) as { title: string } | undefined;
     if (courseRows) {
         console.log(`   Course Title: ${courseRows.title}`);
@@ -48,7 +50,7 @@ export async function verifyCourseDownloads({ courseId, repair }: { courseId: st
         let issues = [];
         let locationNote = "";
 
-        if (actualPath && !actualPath.includes(ASSETS_DIR)) {
+        if (actualPath && !actualPath.includes(assetsDir)) {
             locationNote = ` [Ubicación: ${path.dirname(actualPath)}]`;
         }
 

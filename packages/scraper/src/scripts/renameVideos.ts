@@ -3,11 +3,14 @@ import path from "path";
 
 import { db } from "@db/schema";
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
-import { ASSETS_DIR } from "@config/paths";
+import { getAssetsDir } from "@config/paths";
 
-function renameVideosForCourse(courseId: string) {
-    const courseVideosDir = path.join(ASSETS_DIR, courseId, "videos");
-    if (!fs.existsSync(courseVideosDir)) {
+async function renameVideosForCourse(courseId: string) {
+    const assetsDir = await getAssetsDir();
+    const courseVideosDir = path.join(assetsDir, courseId, "videos");
+    try {
+        await fs.promises.access(courseVideosDir);
+    } catch (e) {
         console.error(`No folder found at ${courseVideosDir}`);
         return;
     }
@@ -31,7 +34,7 @@ function renameVideosForCourse(courseId: string) {
         const prefixedName = namingService.generateSafeFilename(meta.name, meta.order_index);
 
         // Check all files in the directory that start with rawName
-        const allFiles = fs.readdirSync(courseVideosDir);
+        const allFiles = await fs.promises.readdir(courseVideosDir);
         let renamedSomething = false;
 
         for (const file of allFiles) {
@@ -43,7 +46,7 @@ function renameVideosForCourse(courseId: string) {
                 const oldPath = path.join(courseVideosDir, file);
                 const newPath = path.join(courseVideosDir, `${prefixedName}${suffix}`);
                 
-                fs.renameSync(oldPath, newPath);
+                await fs.promises.rename(oldPath, newPath);
                 console.log(`Renamed: ${file} -> ${prefixedName}${suffix}`);
                 renamedSomething = true;
             }
@@ -59,4 +62,4 @@ function renameVideosForCourse(courseId: string) {
 
 const args = process.argv.slice(2);
 const targetCourse = args[0] || "86212";
-renameVideosForCourse(targetCourse);
+renameVideosForCourse(targetCourse).catch(console.error);

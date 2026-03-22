@@ -13,10 +13,10 @@ describe('YtDlpVideoDownloader', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockAuthSession = {
-            getCookiesFile: vi.fn().mockReturnValue('/mock/cookies.txt'),
-            getAuthFile: vi.fn(),
-            ensureAuthDir: vi.fn(),
-            saveCookies: vi.fn(),
+            getCookiesFile: vi.fn().mockResolvedValue('/mock/cookies.txt'),
+            getAuthFile: vi.fn().mockResolvedValue('/mock/state.json'),
+            ensureAuthDir: vi.fn().mockResolvedValue(undefined),
+            saveCookies: vi.fn().mockResolvedValue(undefined),
         };
         downloader = new YtDlpVideoDownloader(mockAuthSession);
         
@@ -29,6 +29,10 @@ describe('YtDlpVideoDownloader', () => {
         vi.mocked(spawn).mockReturnValue(mockProcess);
 
         const promise = downloader.download('http://example.com/video', '/mock/out.mp4');
+        
+        // Wait for async setup in download()
+        await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 1);
+        
         mockProcess.emit('close', 0);
 
         await expect(promise).resolves.toBeUndefined();
@@ -45,9 +49,14 @@ describe('YtDlpVideoDownloader', () => {
 
         const promise = downloader.download('http://example.com/video', '/mock/out.mp4');
         
+        // Wait for first spawn
+        await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 1);
         mockProcess1.emit('close', 1); // Fail first time
         
         await vi.runAllTimersAsync(); // Fast-forward setTimeout delay
+        
+        // Wait for second spawn (which happens async after delay)
+        await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 2);
         
         mockProcess2.emit('close', 0); // Succeed second time
 
@@ -69,16 +78,15 @@ describe('YtDlpVideoDownloader', () => {
 
         const promise = downloader.download('http://example.com/video', '/mock/out.mp4');
         
-        mockProcess1.emit('close', 1); // 0 -> 1
-        await vi.runAllTimersAsync();
-        
-        mockProcess2.emit('close', 1); // 1 -> 2
-        await vi.runAllTimersAsync();
+        for (let i = 1; i <= 3; i++) {
+            await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === i);
+            const currentMock = i === 1 ? mockProcess1 : i === 2 ? mockProcess2 : mockProcess3;
+            currentMock.emit('close', 1);
+            await vi.runAllTimersAsync();
+        }
 
-        mockProcess3.emit('close', 1); // 2 -> 3
-        await vi.runAllTimersAsync();
-
-        mockProcess4.emit('close', 1); // 3 -> fail
+        await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 4);
+        mockProcess4.emit('close', 1); // 4th failure
 
         await expect(promise).rejects.toThrow('yt-dlp error 1 después de 3 reintentos');
         expect(spawn).toHaveBeenCalledTimes(4);

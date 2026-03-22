@@ -5,25 +5,25 @@ import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSe
 export class YtDlpVideoDownloader implements IVideoDownloader {
   constructor(private authSessionStorage: IAuthSessionStorage) {}
 
-  download(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const cookiesFile = this.authSessionStorage.getCookiesFile();
-      const args = [
-        "--cookies", cookiesFile,
-        "-o", outputPath,
-        "-f", "bestvideo+bestaudio/best",
-        "--merge-output-format", "mp4",
-        "--write-subs",
-        "--write-auto-subs",
-        "--sub-langs", "es.*,en.*",
-        "--embed-subs"
-      ];
-      if (referer) args.push("--referer", referer);
-      args.push(url);
+  async download(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
+    const cookiesFile = await this.authSessionStorage.getCookiesFile();
+    const args: string[] = [
+      "--cookies", cookiesFile,
+      "-o", outputPath,
+      "-f", "bestvideo+bestaudio/best",
+      "--merge-output-format", "mp4",
+      "--write-subs",
+      "--write-auto-subs",
+      "--sub-langs", "es.*,en.*",
+      "--embed-subs"
+    ];
+    if (referer) args.push("--referer", referer);
+    args.push(url);
 
+    return new Promise((resolve, reject) => {
       const ytDlpProcess = spawn("yt-dlp", args, { stdio: "inherit" });
       
-      ytDlpProcess.on("close", (code) => {
+      ytDlpProcess.on("close", (code: number | null) => {
         if (code === 0) {
             resolve();
         } else {
@@ -38,7 +38,7 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
             }
         }
       });
-      ytDlpProcess.on("error", (err) => reject(err));
+      ytDlpProcess.on("error", (err: Error) => reject(err));
     });
   }
 }

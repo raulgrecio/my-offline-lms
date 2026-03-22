@@ -2,32 +2,42 @@ import fs from "fs";
 import path from "path";
 
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { AUTH_DIR } from "@config/paths";
+import { getAuthDir } from "@config/paths";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
-  private authDir: string;
-  private authFile: string;
-  private cookiesFile: string;
+  private authDir: string | undefined;
+  private authFile: string | undefined;
+  private cookiesFile: string | undefined;
+  private baseDirArg?: string;
 
   constructor(baseDir?: string) {
-    this.authDir = baseDir || AUTH_DIR;
+    this.baseDirArg = baseDir;
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (this.authDir) return;
+    this.authDir = this.baseDirArg || (await getAuthDir());
     this.authFile = path.join(this.authDir, "state.json");
     this.cookiesFile = path.join(this.authDir, "cookies.txt");
   }
 
-  getAuthFile(): string {
-    return this.authFile;
+  async getAuthFile(): Promise<string> {
+    await this.ensureInitialized();
+    return this.authFile!;
   }
 
-  getCookiesFile(): string {
-    return this.cookiesFile;
+  async getCookiesFile(): Promise<string> {
+    await this.ensureInitialized();
+    return this.cookiesFile!;
   }
 
   async ensureAuthDir(): Promise<void> {
-    await fs.promises.mkdir(this.authDir, { recursive: true });
+    await this.ensureInitialized();
+    await fs.promises.mkdir(this.authDir!, { recursive: true });
   }
 
   async saveCookies(cookies: any[]): Promise<void> {
+    await this.ensureInitialized();
     await this.ensureAuthDir();
     const cookiesStr = cookies
       .map((c: any) => {
@@ -38,7 +48,7 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
       .join("\n");
 
     await fs.promises.writeFile(
-      this.cookiesFile,
+      this.cookiesFile!,
       `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
     );
   }

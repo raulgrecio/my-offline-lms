@@ -4,12 +4,13 @@ import path from "path";
 
 import { ConsoleLogger } from "@my-offline-lms/core";
 
-import { INTERCEPTED_DIR } from "@config/paths";
+import { getInterceptedDir } from "@config/paths";
 
 export async function setupInterceptor(page: Page, options?: { execTimestamp: number, prefix: string }): Promise<string> {
+  const interceptedDir = await getInterceptedDir();
   const targetDir = options
-    ? path.join(INTERCEPTED_DIR, `${options.prefix}_${options.execTimestamp}`)
-    : INTERCEPTED_DIR;
+    ? path.join(interceptedDir, `${options.prefix}_${options.execTimestamp}`)
+    : interceptedDir;
 
   await fs.promises.mkdir(targetDir, { recursive: true });
 

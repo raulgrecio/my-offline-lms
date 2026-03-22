@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { ASSET_PATHS_CONFIG, MONOREPO_ROOT } from "@config/paths";
+import { getAssetPathsConfig, getMonorepoRoot } from "@config/paths";
 
 import { AssetPathResolver, NodeFileSystem, AssetType, ASSET_FOLDERS } from "@my-offline-lms/core";
 
@@ -33,10 +33,11 @@ export async function verifyAssetFiles({ type, courseId, metadataStr, localPath 
 
     const fsAdapter = new NodeFileSystem();
     const resolver = new AssetPathResolver({
-        configPath: ASSET_PATHS_CONFIG,
-        monorepoRoot: MONOREPO_ROOT,
+        configPath: await getAssetPathsConfig(),
+        monorepoRoot: await getMonorepoRoot(),
         fs: fsAdapter
     });
+    await resolver.ensureInitialized();
 
     // RESERVA DE COINCIDENCIA FUZZY para guías con nombres heredados/cortos (sg, ag, etc.)
     if (localPath && await fsAdapter.exists(localPath)) {

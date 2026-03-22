@@ -3,25 +3,32 @@ import path from "path";
 
 import { ILogger } from "@my-offline-lms/core";
 
-import { INTERCEPTED_DIR } from "@config/paths";
+import { getInterceptedDir } from "@config/paths";
 import { PLATFORM } from "@config/platform";
 
 import { IInterceptedDataRepository, InterceptedPayload } from "@features/platform-sync/domain/ports/IInterceptedDataRepository";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
-  private interceptedDir: string;
+  private interceptedDir: string | undefined;
   private logger: ILogger;
+  private baseDirArg?: string;
 
   constructor(deps: {
     baseDir?: string,
     logger: ILogger
   }) {
-    this.interceptedDir = deps.baseDir || INTERCEPTED_DIR;
+    this.baseDirArg = deps.baseDir;
     this.logger = deps.logger.withContext("DiskInterceptedDataRepository");
   }
 
+  private async ensureInitialized(): Promise<void> {
+    if (this.interceptedDir) return;
+    this.interceptedDir = this.baseDirArg || (await getInterceptedDir());
+  }
+
   private async initDir(): Promise<void> {
-    await fs.promises.mkdir(this.interceptedDir, { recursive: true });
+    await this.ensureInitialized();
+    await fs.promises.mkdir(this.interceptedDir!, { recursive: true });
   }
 
   async getPendingLearningPaths(): Promise<InterceptedPayload[]> {
@@ -38,13 +45,13 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
 
   private async getPayloads(pattern: RegExp, id?: string): Promise<InterceptedPayload[]> {
     await this.initDir();
-    const allFiles = await fs.promises.readdir(this.interceptedDir);
+    const allFiles = await fs.promises.readdir(this.interceptedDir!);
     const files = allFiles.filter(
         file => pattern.test(file) && (!id || file.includes(id))
       );
 
     return Promise.all(files.map(async file => {
-      const filePath = path.join(this.interceptedDir, file);
+      const filePath = path.join(this.interceptedDir!, file);
       const content = await fs.promises.readFile(filePath, "utf-8");
       return { filePath, content };
     }));
@@ -72,8 +79,9 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
   }
 
   async deleteWorkspace(): Promise<void> {
+    await this.ensureInitialized();
     try {
-      await fs.promises.rm(this.interceptedDir, { recursive: true, force: true });
+      await fs.promises.rm(this.interceptedDir!, { recursive: true, force: true });
     } catch (e) {
       this.logger.error(`Failed to delete workspace directory ${this.interceptedDir}:`, e);
     }

@@ -2,13 +2,13 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 
 import { env } from "@config/env";
-import { AUTH_STATE } from "@config/paths";
+import { getAuthState } from "@config/paths";
 
 chromium.use(stealth());
 
 (async () => {
     const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({ storageState: AUTH_STATE });
+    const context = await browser.newContext({ storageState: await getAuthState() });
     const page = await context.newPage();
     
     console.log("Navigating...");

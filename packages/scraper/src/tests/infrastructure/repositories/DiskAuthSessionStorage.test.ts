@@ -30,10 +30,10 @@ describe('DiskAuthSessionStorage', () => {
         vi.clearAllMocks();
     });
 
-    it('should initialize paths correctly with a base directory', () => {
+    it('should initialize paths correctly with a base directory', async () => {
         const storage = new DiskAuthSessionStorage(mockBaseDir);
-        expect(storage.getAuthFile()).toBe('/mock/base/dir/state.json');
-        expect(storage.getCookiesFile()).toBe('/mock/base/dir/cookies.txt');
+        expect(await storage.getAuthFile()).toBe('/mock/base/dir/state.json');
+        expect(await storage.getCookiesFile()).toBe('/mock/base/dir/cookies.txt');
     });
 
     it('should create auth directory', async () => {

@@ -17,8 +17,8 @@ describe('AuthSession Use Case', () => {
     } as any;
 
     const mockAuthStorage = {
-        getAuthFile: vi.fn().mockReturnValue('/mock/state.json'),
-        getCookiesFile: vi.fn(),
+        getAuthFile: vi.fn().mockResolvedValue('/mock/state.json'),
+        getCookiesFile: vi.fn().mockResolvedValue('/mock/cookies.txt'),
         saveCookies: vi.fn(),
         ensureAuthDir: vi.fn(),
     } as any;

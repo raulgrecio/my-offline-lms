@@ -11,11 +11,11 @@
     "build:web": "pnpm --filter @my-offline-lms/web build",
     "dev:scraper": "pnpm --filter @my-offline-lms/scraper dev",
     "test": "pnpm recursive test",
-    "test:run": "pnpm --filter @my-offline-lms/core test && pnpm --filter @my-offline-lms/scraper test:run && pnpm --filter @my-offline-lms/web exec vitest run",
+    "test:run": "pnpm --filter @my-offline-lms/core test:run && pnpm --filter @my-offline-lms/scraper test:run && pnpm --filter @my-offline-lms/web test:run",
     "test:core": "pnpm --filter @my-offline-lms/core test",
     "test:scraper": "pnpm --filter @my-offline-lms/scraper test",
     "test:web": "pnpm --filter @my-offline-lms/web test",
-    "test:coverage": "pnpm recursive run test:coverage --if-present",
+    "test:coverage": "pnpm recursive run test:coverage",
     "cli": "pnpm --filter @my-offline-lms/scraper cli"
   },
   "devDependencies": {

@@ -5,7 +5,9 @@
   "main": "src/index.ts",
   "private": true,
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0"

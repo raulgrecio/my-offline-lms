@@ -45,7 +45,7 @@ export class AuthSession {
     const saveSession = async () => {
       this.logger.info("Guardando estado de la sesión y cookies... (Automático / Manual)");
       try {
-        await context.storageState({ path: this.authStorage.getAuthFile() });
+        await context.storageState({ path: await this.authStorage.getAuthFile() });
 
         const cookies = await context.cookies();
         await this.authStorage.saveCookies(cookies);

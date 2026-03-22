@@ -10,6 +10,7 @@ vi.mock('@my-offline-lms/core', async (importOriginal) => {
     return {
         ...actual,
         AssetPathResolver: class {
+            ensureInitialized = vi.fn(async () => {});
             findAsset = vi.fn(async (courseId: string, type: string, filename: string) => {
                 if (filename === 'custom-name.pdf') return '/path/to/custom-name.pdf';
                 if (filename === 'custom-name.mp4') return '/path/to/custom-name.mp4';

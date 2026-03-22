@@ -4,18 +4,15 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 
 import { env } from "@config/env";
-import { AUTH_STATE } from "@config/paths";
+import { getAuthState } from "@config/paths";
 
 chromium.use(stealth());
 
 export class BrowserProvider {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
-  private readonly stateFile: string;
 
-  constructor() {
-    this.stateFile = AUTH_STATE;
-  }
+  constructor() {}
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
   async getHeadfulContext(headless: boolean = false): Promise<BrowserContext> {
@@ -32,9 +29,10 @@ export class BrowserProvider {
     }
     
     // Always use state if it exists
-    const exists = await fs.promises.access(this.stateFile).then(() => true).catch(() => false);
+    const stateFile = await getAuthState();
+    const exists = await fs.promises.access(stateFile).then(() => true).catch(() => false);
     const contextOptions = exists 
-      ? { storageState: this.stateFile } 
+      ? { storageState: stateFile } 
       : {};
 
     this.context = await this.browser.newContext(contextOptions);
@@ -43,7 +41,8 @@ export class BrowserProvider {
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
   async getAuthenticatedContext(): Promise<BrowserContext> {
-    const exists = await fs.promises.access(this.stateFile).then(() => true).catch(() => false);
+    const stateFile = await getAuthState();
+    const exists = await fs.promises.access(stateFile).then(() => true).catch(() => false);
     if (!exists) {
       throw new Error("No existe sesion guardada. Ejecute el login primero.");
     }

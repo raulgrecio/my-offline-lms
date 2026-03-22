@@ -1,5 +1,3 @@
-import path from "path";
-
 import { NodeFileSystem, PathResolver } from "@my-offline-lms/core";
 
 // Inicializamos el resolver
@@ -11,20 +9,20 @@ const resolver = new PathResolver({
 });
 
 /** Root del monorepo */
-export const MONOREPO_ROOT = resolver.getMonorepoRoot();
+export const getMonorepoRoot = async () => resolver.getMonorepoRoot();
 
 /** Root del package scraper */
-export const SCRAPER_ROOT = resolver.getScraperRoot();
+export const getScraperRoot = async () => resolver.getScraperRoot();
 
 // Dirs privados del scraper (auth, intercepted)
-export const DATA_DIR = fs.join(SCRAPER_ROOT, "data");
-export const AUTH_DIR = fs.join(DATA_DIR, ".auth");
-export const AUTH_STATE = fs.join(AUTH_DIR, "state.json");
-export const INTERCEPTED_DIR = fs.join(DATA_DIR, "intercepted");
+export const getDataDir = async () => fs.join(await getScraperRoot(), "data");
+export const getAuthDir = async () => fs.join(await getDataDir(), ".auth");
+export const getAuthState = async () => fs.join(await getAuthDir(), "state.json");
+export const getInterceptedDir = async () => fs.join(await getDataDir(), "intercepted");
 
 /** Configuración de rutas de assets compartida */
-export const ASSET_PATHS_CONFIG = resolver.getAssetConfigPath();
+export const getAssetPathsConfig = async () => resolver.getAssetConfigPath();
 
 // DB compartida
-export const DB_PATH = resolver.getDbPath();
-export const ASSETS_DIR = fs.join(resolver.getDataRoot(), "assets");
+export const getDbPath = async () => resolver.getDbPath();
+export const getAssetsDir = async () => fs.join(resolver.getDataRoot(), "assets");

@@ -1,6 +1,6 @@
 export interface IAuthSessionStorage {
-  getAuthFile(): string;
-  getCookiesFile(): string;
+  getAuthFile(): Promise<string>;
+  getCookiesFile(): Promise<string>;
   saveCookies(cookies: any[]): Promise<void>;
   ensureAuthDir(): Promise<void>;
 }

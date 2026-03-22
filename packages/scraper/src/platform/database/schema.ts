@@ -1,18 +1,44 @@
 import fs from 'fs';
-
 import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core';
 
-import { DATA_DIR, DB_PATH } from '@config/paths';
+import { getDataDir, getDbPath } from '@config/paths';
 
-export const db = new SQLiteDatabase(DB_PATH, { verbose: console.log });
+let _db: SQLiteDatabase | undefined;
 
 /**
- * Initializes the database schema using the provided database instance.
- * By default, it uses the global `db` instance.
-*/
-export async function initDb(database: IDatabase = db) {
-  await fs.promises.mkdir(DATA_DIR, { recursive: true });
+ * Proxy para la base de datos que permite exportar 'db' como constante 
+ * pero inicializarla asíncronamente en initDb().
+ */
+export const db: IDatabase = new Proxy({} as IDatabase, {
+  get(target, prop) {
+    if (!_db) {
+      throw new Error("Database not initialized. Please call await initDb() first.");
+    }
+    const val = (_db as any)[prop];
+    if (typeof val === 'function') {
+      return val.bind(_db);
+    }
+    return val;
+  }
+});
 
-  database.initialize();
+/**
+ * Initializes the database schema.
+*/
+export async function initDb(database?: IDatabase) {
+  if (database) {
+    _db = database as SQLiteDatabase;
+    _db.initialize();
+    console.log("Database schema initialized with provided instance.");
+    return;
+  }
+
+  const dataDir = await getDataDir();
+  const dbPath = await getDbPath();
+  
+  await fs.promises.mkdir(dataDir, { recursive: true });
+
+  _db = new SQLiteDatabase(dbPath, { verbose: console.log });
+  _db.initialize();
   console.log("Database schema initialized.");
 }

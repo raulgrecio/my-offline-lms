@@ -3,27 +3,36 @@ import { AssetPathResolver, NodeFileSystem, ASSET_FOLDERS } from "@my-offline-lm
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 
-import { ASSET_PATHS_CONFIG, ASSETS_DIR, MONOREPO_ROOT } from "@config/paths";
+import { getAssetPathsConfig, getAssetsDir, getMonorepoRoot } from "@config/paths";
 import { IAssetStorage, PDFOptions } from "@features/asset-download/domain/ports/IAssetStorage";
 
 export class DiskAssetStorage implements IAssetStorage {
-  private assetsBaseDir: string;
-  private resolver: AssetPathResolver;
+  private assetsBaseDir: string | undefined;
+  private resolver: AssetPathResolver | undefined;
   private fs: IFileSystem;
+  private baseDirArg?: string;
 
   constructor(baseDir?: string, fsAdapter?: IFileSystem) {
     this.fs = fsAdapter || new NodeFileSystem();
-    this.assetsBaseDir = baseDir || ASSETS_DIR;
+    this.baseDirArg = baseDir;
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (this.assetsBaseDir && this.resolver) return;
+
+    this.assetsBaseDir = this.baseDirArg || (await getAssetsDir());
     this.resolver = new AssetPathResolver({
-      configPath: ASSET_PATHS_CONFIG,
-      monorepoRoot: MONOREPO_ROOT,
+      configPath: await getAssetPathsConfig(),
+      monorepoRoot: await getMonorepoRoot(),
       fs: this.fs,
     });
+    await this.resolver.ensureInitialized();
   }
 
   async ensureAssetDir(courseId: string, assetType: AssetType): Promise<string> {
+    await this.ensureInitialized();
     const folderName = ASSET_FOLDERS[assetType];
-    const dir = this.fs.join(this.assetsBaseDir, String(courseId), folderName);
+    const dir = this.fs.join(this.assetsBaseDir!, String(courseId), folderName);
     if (!(await this.fs.exists(dir))) {
       await this.fs.mkdir(dir, { recursive: true });
     }
@@ -46,16 +55,19 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   async assetExists(filePath: string): Promise<boolean> {
+    await this.ensureInitialized();
     if (await this.fs.exists(filePath)) return true;
-    return (await this.resolver.resolveExistingPath(filePath)) !== null;
+    return (await this.resolver!.resolveExistingPath(filePath)) !== null;
   }
 
   async findExistingAsset(courseId: string, assetType: AssetType, filename: string): Promise<string | null> {
-    return this.resolver.findAsset(courseId, assetType, filename);
+    await this.ensureInitialized();
+    return this.resolver!.findAsset(courseId, assetType, filename);
   }
 
   async verifyVideoIntegrity(videoPath: string): Promise<boolean> {
-    const actualPath = (await this.resolver.resolveExistingPath(videoPath)) || videoPath;
+    await this.ensureInitialized();
+    const actualPath = (await this.resolver!.resolveExistingPath(videoPath)) || videoPath;
     if (!(await this.fs.exists(actualPath))) return false;
     const stats = await this.fs.stat(actualPath);
     if (stats.size < 200000) return false;
