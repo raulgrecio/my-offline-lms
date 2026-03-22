@@ -126,19 +126,27 @@ An **Astro** application providing a modern offline viewer for the downloaded co
 Perform actions via `pnpm cli` in the scraper package.
 
 ### 1. Authentication
+Perform the login manually in the browser window that appears. **Keep the browser open** until you have authenticated (including 2FA).
 ```bash
-pnpm cli login # Perform login manually in the browser window
+pnpm cli login
 ```
+_**Important**: Press **ENTER** in the terminal to save the session once you are logged in. This saves cookies to `data/.auth/` for future use._
 
 ### 2. Synchronization
+Load course or learning path metadata into the local database.
 ```bash
+# Sync an individual course
 pnpm cli sync-course <URL_OR_SLUG>
+
+# Sync a full Learning Path
 pnpm cli sync-path <URL_OR_ID>
 ```
 
 ### 3. Downloading
+Download assets (PDFs and Videos) after syncing.
 ```bash
-pnpm cli download-course <COURSE_ID> [all|video|guide]
+# Download everything pending for a course
+pnpm cli download-course <COURSE_ID>
 ```
 
 ---
@@ -147,13 +155,12 @@ pnpm cli download-course <COURSE_ID> [all|video|guide]
 
 The project includes a web application to consume the downloaded content conveniently.
 
-**To build and start the production viewer:**
+**To build and start the production viewer (accessible from other devices):**
 ```bash
 pnpm --filter @my-offline-lms/web build
-pnpm --filter @my-offline-lms/web preview
+pnpm --filter @my-offline-lms/web run preview:host
 ```
-
-_Note: For development/debugging purposes, you can use `pnpm --filter @my-offline-lms/web run dev` instead._
+_Note: `preview:host` allows you to access the viewer from a tablet or phone using your computer's local IP address._
 
 Features:
 - Browse your offline catalog.

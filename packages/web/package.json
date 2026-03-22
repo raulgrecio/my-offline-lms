@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "preview:host": "astro preview --host",
     "astro": "astro",
     "type-check": "NODE_OPTIONS='--max-old-space-size=8192' astro check",
     "test": "vitest",
