@@ -8,7 +8,8 @@ const envSchema = z.object({
   /** Language for subtitles, e.g., 'es', 'en' */
   SUBTITLE_LANGUAGE: z.string().default('es'),
 
-  /** Other variables can be added here */
+  /** Path to the data directory (database and assets) */
+  DATA_DIR: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

@@ -7,9 +7,11 @@ vi.mock("fs", () => ({
   default: {
     statSync: vi.fn().mockReturnValue({ size: 100 }),
     createReadStream: vi.fn().mockReturnValue({}),
+    existsSync: vi.fn().mockReturnValue(true),
   },
   statSync: vi.fn().mockReturnValue({ size: 100 }),
   createReadStream: vi.fn().mockReturnValue({}),
+  existsSync: vi.fn().mockReturnValue(true),
 }));
 
 vi.mock("@my-offline-lms/core", () => {
@@ -19,8 +21,16 @@ vi.mock("@my-offline-lms/core", () => {
     };
   }
   const NodeFileSystem = vi.fn();
+  function UniversalFileSystem() {
+    return {
+      registerRemote: vi.fn(),
+      statSync: vi.fn().mockReturnValue({ size: 100 }),
+      createReadStream: vi.fn().mockReturnValue({}),
+    };
+  }
+  const HttpFileSystem = vi.fn();
   const getMimeType = vi.fn().mockReturnValue("application/pdf");
-  return { AssetPathResolver, NodeFileSystem, getMimeType };
+  return { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType };
 });
 
 describe("local-asset API route", () => {

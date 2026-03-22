@@ -2,6 +2,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 
+import { env } from "./env";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -26,12 +28,18 @@ function findMonorepoRoot(startDir: string): string {
   return path.resolve(__dirname, "../../../../");
 }
 
+
 // El root del monorepo (donde está pnpm-workspace.yaml)
 export const MONOREPO_ROOT = findMonorepoRoot(__dirname);
 export const WEB_ROOT = path.join(MONOREPO_ROOT, "packages", "web");
 
-// DB compartida en la raíz del monorepo
-export const DB_PATH = path.join(MONOREPO_ROOT, "data", "db.sqlite");
+// Directorio de datos: usa DATA_DIR de .env si existe, si no usa 'data' en el root
+export const DATA_ROOT = env.DATA_DIR
+  ? (path.isAbsolute(env.DATA_DIR) ? env.DATA_DIR : path.join(MONOREPO_ROOT, env.DATA_DIR))
+  : path.join(MONOREPO_ROOT, "data");
 
-// Configuración de rutas de assets compartida en la raíz del monorepo
-export const CONFIG_PATH = path.join(MONOREPO_ROOT, "data", "asset-paths.json");
+// DB compartida
+export const DB_PATH = path.join(DATA_ROOT, "db.sqlite");
+
+// Configuración de rutas de assets compartida
+export const CONFIG_PATH = path.join(DATA_ROOT, "asset-paths.json");
