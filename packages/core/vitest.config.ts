@@ -6,10 +6,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     alias: {
-      '@filesystem': path.resolve(__dirname, './src/filesystem'),
       '@database': path.resolve(__dirname, './src/database'),
       '@domain': path.resolve(__dirname, './src/domain'),
-      '@core': path.resolve(__dirname, './src')
+      '@filesystem': path.resolve(__dirname, './src/filesystem'),
+      '@logging': path.resolve(__dirname, './src/logging'),
     },
     coverage: {
       provider: 'v8',

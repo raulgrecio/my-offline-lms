@@ -2,10 +2,19 @@ import fs from "fs";
 import path from "path";
 
 import type { IFileSystem, FileStats } from "./IFileSystem";
+import { ILogger, NoopLogger } from "../logging";
 
 export class NodeFileSystem implements IFileSystem {
+  private logger: ILogger;
+
+  constructor(logger: ILogger = new NoopLogger()) {
+    this.logger = logger.withContext("NodeFileSystem");
+  }
+
   existsSync(p: string): boolean {
-    return fs.existsSync(p);
+    const exists = fs.existsSync(p);
+    this.logger.debug?.(`existsSync check for ${p}: ${exists}`);
+    return exists;
   }
 
   readFileSync(p: string): Buffer;
@@ -18,6 +27,7 @@ export class NodeFileSystem implements IFileSystem {
   }
 
   writeFileSync(p: string, content: string | Buffer): void {
+    this.logger.debug?.(`writeFileSync to ${p}`);
     fs.writeFileSync(p, content);
   }
 

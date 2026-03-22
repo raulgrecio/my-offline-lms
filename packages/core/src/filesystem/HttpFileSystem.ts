@@ -1,12 +1,15 @@
 import type { IFileSystem, FileStats } from "./IFileSystem";
-// Note: We would use a library like axios or cross-fetch here
-// For demonstration, we'll use a simplified implementation or just placeholders
-// In a real project, we'd add 'axios' or 'cross-fetch' to packages/core/package.json
+import { ILogger, NoopLogger } from "../logging";
 
 export class HttpFileSystem implements IFileSystem {
+  private logger: ILogger;
+
+  constructor(logger: ILogger = new NoopLogger()) {
+    this.logger = logger.withContext("HttpFileSystem");
+  }
+
   existsSync(p: string): boolean {
-    // In a real implementation: HEAD request to check 200/404
-    console.warn(`[HttpFileSystem] Checking existence of ${p} (Mocked as true)`);
+    this.logger.info(`Checking existence (Mocked as true) for ${p}`);
     return true; 
   }
 
@@ -14,7 +17,7 @@ export class HttpFileSystem implements IFileSystem {
   readFileSync(p: string, encoding: "utf-8"): string;
   readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
     // In a real implementation: GET request
-    console.error(`[HttpFileSystem] readFileSync not fully implemented for ${p}`);
+    this.logger.warn(`readFileSync not fully implemented for ${p}`);
     return encoding === "utf-8" ? "" : Buffer.alloc(0);
   }
 

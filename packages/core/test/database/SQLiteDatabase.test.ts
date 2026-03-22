@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { SQLiteDatabase } from "@core/database/SQLiteDatabase";
-import Database from "better-sqlite3";
+import { SQLiteDatabase } from "@database/SQLiteDatabase";
 
 const mockDb = {
   prepare: vi.fn(),
@@ -11,7 +10,7 @@ const mockDb = {
 
 vi.mock("better-sqlite3", () => {
   return {
-    default: vi.fn().mockImplementation(function() {
+    default: vi.fn().mockImplementation(function () {
       return mockDb;
     })
   };
@@ -20,7 +19,7 @@ vi.mock("better-sqlite3", () => {
 describe("SQLiteDatabase", () => {
   it("should initialize and delegate correctly", () => {
     const db = new SQLiteDatabase(":memory:");
-    
+
     db.initialize();
     expect(mockDb.exec).toHaveBeenCalled();
 
@@ -30,7 +29,7 @@ describe("SQLiteDatabase", () => {
     db.exec("UPDATE foo");
     expect(mockDb.exec).toHaveBeenCalledWith("UPDATE foo");
 
-    const fn = () => {};
+    const fn = () => { };
     db.transaction(fn);
     expect(mockDb.transaction).toHaveBeenCalledWith(fn);
 

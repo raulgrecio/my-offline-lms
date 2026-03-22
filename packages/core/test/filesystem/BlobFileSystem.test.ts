@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { BlobFileSystem } from "@filesystem/BlobFileSystem";
 
 describe("BlobFileSystem", () => {
-  const blob = new BlobFileSystem();
+  const blob = new BlobFileSystem("test-account", "test-container");
 
   it("should implement placeholder methods", () => {
     expect(blob.existsSync("blob://account/container/test.mp4")).toBe(true);

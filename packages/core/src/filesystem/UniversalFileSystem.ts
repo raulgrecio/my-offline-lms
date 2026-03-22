@@ -1,18 +1,23 @@
 import path from "path";
 import type { IFileSystem, FileStats } from "./IFileSystem";
+import { ILogger, NoopLogger } from "../logging";
 
 export type FileSystemProtocol = "http" | "tcp" | "s3" | "blob";
 
+const SUPPORTED_PROTOCOLS: FileSystemProtocol[] = ["http", "tcp", "s3", "blob"];
+
 /**
- * UniversalFileSystem selects the appropriate file system implementation
- * based on the path format or protocol.
+ * UniversalFileSystem selecciona la implementación de sistema de archivos adecuada
+ * basándose en el formato de la ruta o el protocolo.
  */
 export class UniversalFileSystem implements IFileSystem {
   private localFs: IFileSystem;
   private remotes: Map<FileSystemProtocol, IFileSystem> = new Map();
+  private logger: ILogger;
 
-  constructor(defaultLocalFs: IFileSystem) {
+  constructor(defaultLocalFs: IFileSystem, logger: ILogger = new NoopLogger()) {
     this.localFs = defaultLocalFs;
+    this.logger = logger.withContext("UniversalFileSystem");
   }
 
   registerRemote(protocol: FileSystemProtocol, fs: IFileSystem) {
@@ -20,14 +25,24 @@ export class UniversalFileSystem implements IFileSystem {
   }
 
   private getBackend(p: string): IFileSystem {
-    if (p.startsWith("http://") || p.startsWith("https://")) {
-      return this.remotes.get("http") || this.localFs;
+    const proto = this.getProtocol(p);
+    if (proto) {
+      const b = this.remotes.get(proto) || this.localFs;
+      if (b === this.localFs) {
+        this.logger.debug?.(`No remote for ${proto}, using local for ${p}`);
+      }
+      return b;
     }
-    if (p.startsWith("tcp://")) return this.remotes.get("tcp") || this.localFs;
-    if (p.startsWith("s3://")) return this.remotes.get("s3") || this.localFs;
-    if (p.startsWith("blob://")) return this.remotes.get("blob") || this.localFs;
-    
     return this.localFs;
+  }
+
+  private getProtocol(p: string): FileSystemProtocol | null {
+    const match = p.match(/^([a-z0-9]+):\/\//i);
+    if (!match) return null;
+    const proto = match[1].toLowerCase();
+    if (proto === "https") return "http";
+    // Check if it's one of our supported protocols
+    return SUPPORTED_PROTOCOLS.includes(proto as any) ? (proto as FileSystemProtocol) : null;
   }
 
   existsSync(p: string): boolean {
@@ -48,21 +63,19 @@ export class UniversalFileSystem implements IFileSystem {
   }
 
   resolve(...paths: string[]): string {
-    // Resolve usually happens on the first path's backend
     return this.getBackend(paths[0] || "").resolve(...paths);
   }
 
   join(...paths: string[]): string {
-    // Join should be careful with mixing protocols, but usually we join relative parts to a base
     return this.getBackend(paths[0] || "").join(...paths);
   }
 
   isAbsolute(p: string): boolean {
-    if (p.startsWith("http://") || p.startsWith("https://") || p.startsWith("tcp://")) return true;
-    
-    // Check for Windows drive letter like C:\ or UNC path like \\
-    if (/^[a-zA-Z]:[\\\/]/.test(p) || p.startsWith("\\\\")) return true;
-    
+    if (this.getProtocol(p)) return true;
+
+    // Check for Windows drive letter like C:\ or UNC path like \\ or //
+    if (/^[a-zA-Z]:[\\\/]/.test(p) || p.startsWith("\\\\") || p.startsWith("//")) return true;
+
     return path.isAbsolute(p);
   }
 
@@ -100,8 +113,6 @@ export class UniversalFileSystem implements IFileSystem {
   }
 
   get sep(): string {
-    // This is tricky for Universal. Defaulting to local platform sep for now.
-    // In a more complex scenario, this would be backend-specific.
     return path.sep;
   }
 }

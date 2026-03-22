@@ -2,25 +2,32 @@ import type { AssetType } from "../domain/models/Asset";
 import { ASSET_FOLDERS } from "../domain/models/Asset";
 import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
 import type { IFileSystem } from "./IFileSystem";
+import { ILogger, NoopLogger } from "../logging";
+
+interface AssetPathResolverProps {
+  configPath: string;
+  monorepoRoot: string;
+  fs: IFileSystem;
+  logger?: ILogger;
+}
 
 export class AssetPathResolver {
   private configPath: string;
   private monorepoRoot: string;
   private fs: IFileSystem;
+  private logger: ILogger;
   private config: AssetPathsJson | null = null;
 
   constructor({
     configPath,
     monorepoRoot,
     fs,
-  }: {
-    configPath: string;
-    monorepoRoot: string;
-    fs: IFileSystem;
-  }) {
+    logger = new NoopLogger(),
+  }: AssetPathResolverProps) {
     this.configPath = configPath;
     this.monorepoRoot = monorepoRoot;
     this.fs = fs;
+    this.logger = logger.withContext("AssetPathResolver");
     this.loadConfig();
   }
 
@@ -41,7 +48,7 @@ export class AssetPathResolver {
         this.saveConfig();
       }
     } catch (error) {
-      console.error("Error loading asset paths config:", error);
+      this.logger.error("Error loading asset paths config", error);
       this.config = {
         defaultWritePath: "data/assets",
         searchPaths: [{ path: "data/assets", label: "Default" }],
@@ -200,7 +207,7 @@ export class AssetPathResolver {
           const files = this.fs.readdirSync(fullDir);
           files.forEach((f) => results.push(this.fs.join(fullDir, f)));
         } catch (e) {
-          console.error(`Error listing assets in ${fullDir}:`, e);
+          this.logger.error(`Error listing assets in ${fullDir}`, e);
         }
       }
     }

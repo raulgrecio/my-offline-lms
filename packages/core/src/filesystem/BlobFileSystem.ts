@@ -1,15 +1,26 @@
 import { IFileSystem, FileStats } from "./IFileSystem";
+import { ILogger, NoopLogger } from "../logging";
 
 export class BlobFileSystem implements IFileSystem {
+  private logger: ILogger;
+
+  constructor(
+    private readonly account: string,
+    private readonly container: string,
+    logger: ILogger = new NoopLogger()
+  ) {
+    this.logger = logger.withContext("BlobFileSystem");
+  }
+
   existsSync(p: string): boolean {
-    console.log(`[BlobFileSystem] Checking existence of ${p} (Mocked as true)`);
+    this.logger.info(`Checking existence (Mocked as true) for ${p} in ${this.account}/${this.container}`);
     return true; 
   }
 
   readFileSync(p: string): Buffer;
   readFileSync(p: string, encoding: "utf-8"): string;
   readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
-    console.log(`[BlobFileSystem] readFileSync not fully implemented for ${p}`);
+    this.logger.warn(`readFileSync not fully implemented for ${p}`);
     if (encoding === "utf-8") return "";
     return Buffer.alloc(0);
   }
@@ -57,12 +68,12 @@ export class BlobFileSystem implements IFileSystem {
   }
 
   createReadStream(p: string, options?: any): any {
-    console.log(`[BlobFileSystem] createReadStream not fully implemented for ${p}`);
+    this.logger.warn(`createReadStream not fully implemented for ${p}`);
     return null;
   }
 
   createWriteStream(p: string): any {
-    console.log(`[BlobFileSystem] createWriteStream not fully implemented for ${p}`);
+    this.logger.warn(`createWriteStream not fully implemented for ${p}`);
     return null;
   }
 

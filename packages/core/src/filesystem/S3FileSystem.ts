@@ -1,15 +1,22 @@
 import { IFileSystem, FileStats } from "./IFileSystem";
+import { ILogger, NoopLogger } from "../logging";
 
 export class S3FileSystem implements IFileSystem {
+  private logger: ILogger;
+
+  constructor(private readonly bucket: string, logger: ILogger = new NoopLogger()) {
+    this.logger = logger.withContext("S3FileSystem");
+  }
+
   existsSync(p: string): boolean {
-    console.log(`[S3FileSystem] Checking existence of ${p} (Mocked as true)`);
+    this.logger.info(`Checking existence (Mocked as true) for ${p} in bucket ${this.bucket}`);
     return true; 
   }
 
   readFileSync(p: string): Buffer;
   readFileSync(p: string, encoding: "utf-8"): string;
   readFileSync(p: string, encoding?: "utf-8"): string | Buffer {
-    console.log(`[S3FileSystem] readFileSync not fully implemented for ${p}`);
+    this.logger.warn(`readFileSync not fully implemented for ${p}`);
     if (encoding === "utf-8") return "";
     return Buffer.alloc(0);
   }
@@ -57,12 +64,12 @@ export class S3FileSystem implements IFileSystem {
   }
 
   createReadStream(p: string, options?: any): any {
-    console.log(`[S3FileSystem] createReadStream not fully implemented for ${p}`);
+    this.logger.warn(`createReadStream not fully implemented for ${p}`);
     return null;
   }
 
   createWriteStream(p: string): any {
-    console.log(`[S3FileSystem] createWriteStream not fully implemented for ${p}`);
+    this.logger.warn(`createWriteStream not fully implemented for ${p}`);
     return null;
   }
 

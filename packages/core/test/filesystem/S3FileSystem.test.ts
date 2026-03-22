@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { S3FileSystem } from "@filesystem/S3FileSystem";
 
 describe("S3FileSystem", () => {
-  const s3 = new S3FileSystem();
+  const s3 = new S3FileSystem("test-bucket");
 
   it("should implement placeholder methods", () => {
     expect(s3.existsSync("s3://bucket/test.mp4")).toBe(true);
