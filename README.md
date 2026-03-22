@@ -162,6 +162,12 @@ pnpm --filter @my-offline-lms/web run preview:host
 ```
 _Note: `preview:host` allows you to access the viewer from a tablet or phone using your computer's local IP address._
 
+> [!IMPORTANT]
+> **External Access**: If you use `preview:host`, make sure to **open the port (default 4321) in your computer's firewall** to allow connections from other devices on your local network.
+
+> [!TIP]
+> **Troubleshooting**: If you get an `EADDRINUSE` error, it's likely because you have another instance (like `pnpm dev`) running. Close any previous terminal running the web server or use `pnpm --filter @my-offline-lms/web preview --port 4322` to use a different port.
+
 Features:
 - Browse your offline catalog.
 - Watch videos with persistence and progress tracking.
