@@ -1,22 +1,30 @@
 import path from "path";
 
-// __dirname = packages/scraper/src/config (ts-node) or packages/scraper/dist/config (compiled)
+import { NodeFileSystem, PathResolver } from "@my-offline-lms/core";
 
-/** Root del package scraper — para sus propios directorios de datos */
-const SCRAPER_ROOT = path.resolve(__dirname, "../../");
+// Inicializamos el resolver
+const fs = new NodeFileSystem();
+const resolver = new PathResolver({
+  fs,
+  env: process.env,
+  startDir: __dirname
+});
+
+/** Root del monorepo */
+export const MONOREPO_ROOT = resolver.getMonorepoRoot();
+
+/** Root del package scraper */
+export const SCRAPER_ROOT = resolver.getScraperRoot();
 
 // Dirs privados del scraper (auth, intercepted)
-export const DATA_DIR = path.join(SCRAPER_ROOT, "data");
-export const AUTH_DIR = path.join(DATA_DIR, ".auth");
-export const AUTH_STATE = path.join(AUTH_DIR, "state.json");
-export const INTERCEPTED_DIR = path.join(DATA_DIR, "intercepted");
+export const DATA_DIR = fs.join(SCRAPER_ROOT, "data");
+export const AUTH_DIR = fs.join(DATA_DIR, ".auth");
+export const AUTH_STATE = fs.join(AUTH_DIR, "state.json");
+export const INTERCEPTED_DIR = fs.join(DATA_DIR, "intercepted");
 
-/** Root del monorepo — solo para recursos compartidos con otros packages (ej: la DB) */
-export const MONOREPO_ROOT = path.resolve(__dirname, "../../../../");
+/** Configuración de rutas de assets compartida */
+export const ASSET_PATHS_CONFIG = resolver.getAssetConfigPath();
 
-/** Configuración de rutas de assets multi-ubicación */
-export const ASSET_PATHS_CONFIG = path.join(MONOREPO_ROOT, "data", "asset-paths.json");
-
-// DB compartida (database, assets descargados, leída también por el frontend web)
-export const DB_PATH = path.join(MONOREPO_ROOT, "data", "db.sqlite");
-export const ASSETS_DIR = path.join(MONOREPO_ROOT, "data", "assets");
+// DB compartida
+export const DB_PATH = resolver.getDbPath();
+export const ASSETS_DIR = fs.join(resolver.getDataRoot(), "assets");

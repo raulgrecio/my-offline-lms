@@ -21,6 +21,9 @@ const envSchema = z.object({
 
   // Limpieza
   KEEP_TEMP_WORKSPACES: z.coerce.boolean().default(false),
+
+  // DATA_DIR for shared database and assets
+  DATA_DIR: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

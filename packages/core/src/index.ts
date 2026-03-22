@@ -16,6 +16,7 @@ export * from './filesystem/HttpFileSystem';
 export * from './filesystem/S3FileSystem';
 export * from './filesystem/BlobFileSystem';
 export * from './filesystem/AssetPathResolver';
+export * from './filesystem/PathResolver';
 export * from './filesystem/MimeTypes';
 
 export * from './logging/ILogger';

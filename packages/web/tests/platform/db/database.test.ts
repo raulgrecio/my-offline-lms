@@ -4,12 +4,14 @@ import fs from "node:fs";
 import { SQLiteDatabase } from "@my-offline-lms/core";
 import { getDb } from "@platform/db/database";
 
-vi.mock("@my-offline-lms/core", () => {
+vi.mock("@my-offline-lms/core", async (importOriginal) => {
+  const actual = await importOriginal<any>();
   const mockDb = {
     exec: vi.fn(),
     initialize: vi.fn(),
   };
   return {
+    ...actual,
     SQLiteDatabase: vi.fn().mockImplementation(function () {
       return mockDb;
     }),

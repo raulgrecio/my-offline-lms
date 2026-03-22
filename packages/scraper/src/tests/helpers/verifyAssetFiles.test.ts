@@ -5,28 +5,25 @@ import { AssetPathResolver } from '@my-offline-lms/core';
 import { verifyAssetFiles } from '../../scripts/helpers/verifyAssetFiles';
 
 // Mock dependencies
-vi.mock('@my-offline-lms/core', () => ({
-    AssetPathResolver: class {
-        findAsset = vi.fn((courseId: string, type: string, filename: string) => {
-            if (filename === 'custom-name.pdf') return '/path/to/custom-name.pdf';
-            if (filename === 'custom-name.mp4') return '/path/to/custom-name.mp4';
-            return null;
-        });
-        getDefaultWritePath = vi.fn(() => '/default/path');
-        listAssets = vi.fn(() => []);
-    },
-    NodeFileSystem: class {
-        existsSync = vi.fn(() => true);
-        readFileSync = vi.fn(() => '{}');
-        resolve = vi.fn((...args) => args.join('/'));
-        join = vi.fn((...args) => args.join('/'));
-        sep = '/';
-    },
-    ASSET_FOLDERS: {
-        guide: 'guides',
-        video: 'videos',
-    }
-}));
+vi.mock('@my-offline-lms/core', async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        AssetPathResolver: class {
+            findAsset = vi.fn((courseId: string, type: string, filename: string) => {
+                if (filename === 'custom-name.pdf') return '/path/to/custom-name.pdf';
+                if (filename === 'custom-name.mp4') return '/path/to/custom-name.mp4';
+                return null;
+            });
+            getDefaultWritePath = vi.fn(() => '/default/path');
+            listAssets = vi.fn(() => []);
+        },
+        ASSET_FOLDERS: {
+            guide: 'guides',
+            video: 'videos',
+        }
+    };
+});
 
 vi.mock('../../infrastructure/adapters/NodeFileSystem', () => {
     return {

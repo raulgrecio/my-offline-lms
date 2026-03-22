@@ -15,8 +15,10 @@ vi.mock('path', async () => {
     };
 });
 
-vi.mock('@my-offline-lms/core', () => {
+vi.mock('@my-offline-lms/core', async (importOriginal) => {
+    const actual = await importOriginal<any>();
     return {
+        ...actual,
         ConsoleLogger: class {
             withContext() { return this; }
             info() { }

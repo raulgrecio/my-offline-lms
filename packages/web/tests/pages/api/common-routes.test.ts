@@ -20,16 +20,18 @@ vi.mock("@features/courses", () => ({
   updateAssetTotalPages: vi.fn(),
 }));
 
-vi.mock("@my-offline-lms/core", () => {
-  function AssetPathResolver() {
-    return {
-      getAvailablePaths: vi.fn().mockReturnValue([]),
-      saveNewPath: vi.fn(),
-      removePath: vi.fn(),
-    };
-  }
-  const NodeFileSystem = vi.fn();
-  return { AssetPathResolver, NodeFileSystem };
+vi.mock("@my-offline-lms/core", async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    AssetPathResolver: function () {
+      return {
+        getAvailablePaths: vi.fn().mockReturnValue([]),
+        saveNewPath: vi.fn(),
+        removePath: vi.fn(),
+      };
+    },
+  };
 });
 
 describe("API Routes: Common", () => {
