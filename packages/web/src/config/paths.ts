@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import path from "path";
 import { NodeFileSystem, PathResolver } from "@my-offline-lms/core";
-import { env as webEnv } from "./env";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

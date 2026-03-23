@@ -1,5 +1,5 @@
 import type { AssetType } from "@my-offline-lms/core";
-import { VIDEO_SEGMENT_SIZE, GUIDE_SEGMENT_SIZE } from "./constants";
+import { VIDEO_SEGMENT_SIZE } from "./constants";
 
 export interface AssetProgressConfig {
   getSegment: (position: number) => number;

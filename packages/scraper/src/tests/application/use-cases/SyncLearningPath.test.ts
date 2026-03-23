@@ -105,7 +105,7 @@ describe('SyncLearningPath Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingForLearningPath.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([mockPayload]);
 
         await useCase.execute('http://lp-url');
 
@@ -122,7 +122,7 @@ describe('SyncLearningPath Use Case', () => {
             filePath: 'f1',
             content: JSON.stringify({ data: { lpPageData: { id: '', name: '' } } }) // missing containerChildren
         };
-        mockInterceptedDataRepo.getPendingForLearningPath.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([mockPayload]);
 
         await (useCase as any).processInterceptedData({ pathId: 'lp123', isolatedInterceptedDataRepo: mockInterceptedDataRepo });
 
@@ -145,7 +145,7 @@ describe('SyncLearningPath Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingForLearningPath.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([mockPayload]);
 
         await (useCase as any).processInterceptedData({ pathId: 'lp1', isolatedInterceptedDataRepo: mockInterceptedDataRepo });
 
@@ -166,7 +166,7 @@ describe('SyncLearningPath Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingForLearningPath.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([mockPayload]);
 
         await (useCase as any).processInterceptedData({ pathId: 'lp2', isolatedInterceptedDataRepo: mockInterceptedDataRepo });
 

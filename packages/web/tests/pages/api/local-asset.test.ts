@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import fs from "fs";
+
 
 import { GET } from "@pages/api/assets/local-asset";
 

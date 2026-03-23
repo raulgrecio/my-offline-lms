@@ -1,5 +1,5 @@
 import type { IFileSystem, FileStats } from "./IFileSystem";
-import { ILogger, NoopLogger } from "../logging";
+import { type ILogger, NoopLogger } from "../logging";
 
 export class HttpFileSystem implements IFileSystem {
   private logger: ILogger;

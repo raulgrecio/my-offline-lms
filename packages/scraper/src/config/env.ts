@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 const envSchema = z.object({
-  PLATFORM_BASE_URL: z.string().url(),
+  PLATFORM_BASE_URL: z.url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
   LOGIN_SUCCESS_SELECTOR: z.string().default("body"),
 
