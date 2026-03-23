@@ -1,7 +1,7 @@
 import type { ILogger } from "./ILogger";
 
 export class ConsoleLogger implements ILogger {
-  constructor(private readonly defaultContext?: string) {}
+  constructor(private readonly defaultContext?: string) { }
 
   info(message: string, context?: string): void {
     console.log(this.format('INFO', message, context));
@@ -19,7 +19,12 @@ export class ConsoleLogger implements ILogger {
   }
 
   debug(message: string, context?: string): void {
-    if (process.env.DEBUG === 'true') {
+    const isTest = typeof process !== 'undefined';
+    const isDebug = isTest
+      ? process.env.DEBUG === 'true'
+      : (typeof window !== 'undefined' && (window as any).DEBUG === 'true');
+
+    if (isDebug) {
       console.debug(this.format('DEBUG', message, context));
     }
   }

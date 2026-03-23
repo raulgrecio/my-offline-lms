@@ -2,6 +2,7 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -17,11 +18,11 @@ async function run() {
   const baseUrl = env.PLATFORM_BASE_URL;
   const viewerUrl = new URL(`/ou/ekit/${courseId}/${offerId}/${ekitId}/course`, baseUrl).href;
   
-  console.log(`[TEST] Navigating to: ${viewerUrl}`);
+  logger.info(`[TEST] Navigating to: ${viewerUrl}`);
   
   page.on("response", res => {
       if(res.status() >= 400) {
-          console.log(`[HTTP ERROR] ${res.status()} ${res.url()}`);
+          logger.info(`[HTTP ERROR] ${res.status()} ${res.url()}`);
       }
   });
 
@@ -35,14 +36,14 @@ async function run() {
   
   const content = await page.content();
   if(content.includes('Not Found') || content.includes('404')) {
-       console.log("PAGE SHOWS 404!");
+       logger.info("PAGE SHOWS 404!");
   } else if (iframeSrc) {
-       console.log(`✅ SUCCESS! Found iframe with src: ${iframeSrc}`);
+       logger.info(`✅ SUCCESS! Found iframe with src: ${iframeSrc}`);
   } else {
-       console.log("No 404, but no iframe either. HTML snippet:");
-       console.log(content.substring(0, 500));
+       logger.info("No 404, but no iframe either. HTML snippet:");
+       logger.info(content.substring(0, 500));
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);

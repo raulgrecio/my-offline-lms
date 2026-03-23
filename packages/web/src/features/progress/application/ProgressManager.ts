@@ -1,4 +1,6 @@
-import type { AssetType } from "@my-offline-lms/core";
+import { logger } from '@platform/logging';
+import { type ILogger } from '@my-offline-lms/core/logging';
+import { type Course, type Asset, type AssetType } from '@my-offline-lms/core/models';
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
 import { getAssetProgress, type GetAssetProgressRequest } from "./use-cases/getAssetProgress";
 import { getCollectionProgress, type GetCollectionProgressRequest } from "./use-cases/getCollectionProgress";

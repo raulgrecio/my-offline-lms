@@ -304,7 +304,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 
 <script>
   // Route relative imports
-  import { apiClient } from "../../platform/api/client";
+  import { apiClient } from "@platform/api/client";
+  import { logger } from "@platform/logging";
 
   const context = document.getElementById('course-page-context') as HTMLElement;
   const COURSE_PROGRESS_URL = context.dataset.progressUrl!;
@@ -331,7 +332,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
       await apiClient.post(COURSE_PROGRESS_URL, { courseId, status: newStatus });
       window.location.reload();
     } catch (err) {
-      console.error('Failed to update course progress:', err);
+      logger.error('Failed to update course progress:', err);
     }
   });
 
@@ -428,7 +429,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             return true;
           }
       } catch (e) {
-        console.error('Error polling metadata:', e);
+        logger.error('Error polling metadata:', e);
       }
       return false;
     };

@@ -1,5 +1,6 @@
 import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
 import { db } from "@db/schema";
+import { logger } from "@platform/logging";
 
 async function fix79688Guide() {
     const assetRepository = new SQLiteAssetRepository(db);
@@ -9,14 +10,14 @@ async function fix79688Guide() {
 
     const asset = assetRepository.getAssetById(assetId);
     if (!asset) {
-        console.error(`Asset ${assetId} not found`);
+        logger.error(`Asset ${assetId} not found`);
         return;
     }
 
-    console.log(`Updating asset ${assetId} using repository...`);
+    logger.info(`Updating asset ${assetId} using repository...`);
     const metadata = { ...asset.metadata, filename };
     assetRepository.updateAssetCompletion(assetId, metadata, actualPath);
-    console.log("Done.");
+    logger.info("Done.");
 }
 
 fix79688Guide();

@@ -1,4 +1,5 @@
-import { Course, IDatabase, LearningPath, LearningPathCourse } from '@my-offline-lms/core';
+import { Course, LearningPath, LearningPathCourse } from '@my-offline-lms/core/models';
+import { IDatabase } from '@my-offline-lms/core/database';
 
 import { ILearningPathRepository } from '@features/platform-sync/domain/ports/ILearningPathRepository';
 

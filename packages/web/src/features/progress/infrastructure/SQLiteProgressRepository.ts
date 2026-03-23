@@ -1,4 +1,6 @@
-import { type Asset, type AssetType, type IDatabase } from "@my-offline-lms/core";
+import { type Asset, type AssetType } from '@my-offline-lms/core/models';
+import type { IDatabase } from '@my-offline-lms/core/database';
+
 
 import type { AssetProgress } from "../domain/model/AssetProgress";
 import type { CollectionProgress } from "../domain/model/CollectionProgress";

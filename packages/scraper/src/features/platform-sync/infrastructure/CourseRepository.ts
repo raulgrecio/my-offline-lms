@@ -1,4 +1,5 @@
-import { Asset, Course, IDatabase } from '@my-offline-lms/core';
+import { Asset, Course } from '@my-offline-lms/core/models';
+import { IDatabase } from '@my-offline-lms/core/database';
 
 import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
 

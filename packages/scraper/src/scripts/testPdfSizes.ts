@@ -1,13 +1,14 @@
 import path from "path";
 
 import { DiskAssetStorage } from "@features/asset-download/infrastructure/DiskAssetStorage";
+import { logger } from "@platform/logging";
 
 async function runTests() {
   const args = process.argv.slice(2);
   
   if (args.length < 1) {
-    console.log("Uso: ts-node src/scripts/testPdfSizes.ts <directorio_imagenes_crudo>");
-    console.log("Ej:  ts-node src/scripts/testPdfSizes.ts data/assets/guides/.temp_594144ed-4db7-453c-a110-0cb40f5b0f87");
+    logger.info("Uso: ts-node src/scripts/testPdfSizes.ts <directorio_imagenes_crudo>");
+    logger.info("Ej:  ts-node src/scripts/testPdfSizes.ts data/assets/guides/.temp_594144ed-4db7-453c-a110-0cb40f5b0f87");
     process.exit(1);
   }
 
@@ -22,7 +23,7 @@ async function runTests() {
     { name: "Optimizado 50%", optimize: true, quality: 50 },
   ];
 
-  console.log(`[Test] Empezando generación de prueba de PDFs desde: ${sourceDir}`);
+  logger.info(`[Test] Empezando generación de prueba de PDFs desde: ${sourceDir}`);
 
   // Use the new infrastructure storage implementation
   const storage = new DiskAssetStorage();
@@ -32,23 +33,23 @@ async function runTests() {
     const outFileName = `TEST_${ekitId}_${label}.pdf`;
     const outputPath = path.join(outputBaseDir, outFileName);
 
-    console.log(`\n---------------------------------`);
-    console.log(`[Test] Ejecutando: ${config.name}`);
-    console.log(`[Test] Parámetros: optimize=${config.optimize}, quality=${config.quality}`);
+    logger.info(`\n---------------------------------`);
+    logger.info(`[Test] Ejecutando: ${config.name}`);
+    logger.info(`[Test] Parámetros: optimize=${config.optimize}, quality=${config.quality}`);
 
     const startTime = Date.now();
     try {
       await storage.buildPDFFromImages(sourceDir, outputPath, { optimize: config.optimize, quality: config.quality });
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      console.log(`[Test] ✅ PDF generado: ${outFileName} (en ${duration}s)`);
+      logger.info(`[Test] ✅ PDF generado: ${outFileName} (en ${duration}s)`);
     } catch (err) {
-      console.error(`[Test] ❌ Error generando ${config.name}:`, err);
+      logger.error(`[Test] ❌ Error generando ${config.name}:`, err);
     }
   }
 
-  console.log(`\n[Test] ¡Pruebas finalizadas! Revisa el directorio: ${outputBaseDir} para comparar tamaños y calidades.`);
+  logger.info(`\n[Test] ¡Pruebas finalizadas! Revisa el directorio: ${outputBaseDir} para comparar tamaños y calidades.`);
 }
 
 if (require.main === module) {
-  runTests().catch(console.error);
+  runTests().catch(logger.error);
 }

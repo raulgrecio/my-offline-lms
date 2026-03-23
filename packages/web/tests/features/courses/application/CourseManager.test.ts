@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { CourseManager } from "@features/courses/application/CourseManager";
 import { type ICourseRepository } from "@features/courses/domain/ports/ICourseRepository";
-import { type Course } from "@my-offline-lms/core";
+import { type Course } from '@my-offline-lms/core/models';
 
 describe("CourseManager", () => {
   const mockRepo: ICourseRepository = {

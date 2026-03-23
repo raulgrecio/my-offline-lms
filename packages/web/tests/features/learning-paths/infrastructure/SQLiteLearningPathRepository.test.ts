@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import type { IDatabase } from "@my-offline-lms/core";
+import { type IDatabase } from '@my-offline-lms/core/database';
 import { SQLiteLearningPathRepository } from "@features/learning-paths/infrastructure/SQLiteLearningPathRepository";
 
 describe("SQLiteLearningPathRepository", () => {

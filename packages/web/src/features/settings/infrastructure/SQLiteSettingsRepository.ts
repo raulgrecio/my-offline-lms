@@ -1,8 +1,8 @@
-import { type IDatabase } from "@my-offline-lms/core";
+import type { IDatabase } from '@my-offline-lms/core/database';
 import type { ISettingsRepository } from "../domain/ports/ISettingsRepository";
 
 export class SQLiteSettingsRepository implements ISettingsRepository {
-  constructor(private db: IDatabase) {}
+  constructor(private db: IDatabase) { }
 
   getActiveLearningPath(): string | null {
     const row = this.db

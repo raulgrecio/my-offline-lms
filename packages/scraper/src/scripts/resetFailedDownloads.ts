@@ -1,92 +1,93 @@
-import path from "path";
-
 import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
+import { logger as baseLogger } from "@platform/logging";
+
+const logger = baseLogger.withContext("resetFailedDownloads");
 
 async function resetCourse(courseId: string) {
-    console.log(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
+  logger.info(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
 
-    const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ?").all(courseId) as any[];
+  const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ?").all(courseId) as any[];
 
-    if (assets.length === 0) {
-        return;
+  if (assets.length === 0) {
+    return;
+  }
+
+  let resetCount = 0;
+
+  for (const asset of assets) {
+    const { videoExists, vttExists, guideExists, safeName } = await verifyAssetFiles({
+      type: asset.type,
+      courseId,
+      metadataStr: asset.metadata
+    });
+
+    let needsReset = false;
+    let reason = "";
+
+    if (asset.type === 'video') {
+      if (!videoExists || !vttExists) {
+        needsReset = true;
+        reason = !videoExists ? "Missing .mp4" : "Missing .vtt";
+      }
+    } else if (asset.type === 'guide') {
+      if (!guideExists) {
+        needsReset = true;
+        reason = "Missing .pdf";
+      }
     }
 
-    let resetCount = 0;
+    // We want to reset it if it needs resetting AND is not already PENDING
+    if (needsReset && asset.status !== 'PENDING') {
+      db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
 
-    for (const asset of assets) {
-        const { videoExists, vttExists, guideExists, safeName } = await verifyAssetFiles({
-            type: asset.type,
-            courseId,
-            metadataStr: asset.metadata
-        });
-
-        let needsReset = false;
-        let reason = "";
-
-        if (asset.type === 'video') {
-            if (!videoExists || !vttExists) {
-                needsReset = true;
-                reason = !videoExists ? "Missing .mp4" : "Missing .vtt";
-            }
-        } else if (asset.type === 'guide') {
-            if (!guideExists) {
-                needsReset = true;
-                reason = "Missing .pdf";
-            }
-        }
-
-        // We want to reset it if it needs resetting AND is not already PENDING
-        if (needsReset && asset.status !== 'PENDING') {
-            db.prepare("UPDATE Course_Assets SET status = 'PENDING' WHERE id = ?").run(asset.id);
-
-            console.log(`   🔄 Resetting [${asset.type.toUpperCase()}] ${safeName} to PENDING (${reason})`);
-            resetCount++;
-        }
+      logger.info(`   🔄 Resetting [${asset.type.toUpperCase()}] ${safeName} to PENDING (${reason})`);
+      resetCount++;
     }
+  }
 
-    if (resetCount > 0) {
-        console.log(`   ✅ Reset ${resetCount} assets to PENDING status for Course ${courseId}.`);
-    } else {
-        console.log(`   No assets needed resetting in Course ${courseId}.`);
-    }
+  if (resetCount > 0) {
+    logger.info(`   ✅ Reset ${resetCount} assets to PENDING status for Course ${courseId}.`);
+  } else {
+    logger.info(`   No assets needed resetting in Course ${courseId}.`);
+  }
 }
 
 async function resetPath(pathId: string) {
-    console.log(`\n===================================================`);
-    console.log(`🚀 Resetting missing assets in Learning Path ID: ${pathId}`);
-    console.log(`===================================================`);
+  logger.info(`\n===================================================`);
+  logger.info(`🚀 Resetting missing assets in Learning Path ID: ${pathId}`);
+  logger.info(`===================================================`);
 
-    const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
+  const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
 
-    for (const course of courses) {
-        await resetCourse(course.course_id);
-    }
+  for (const course of courses) {
+    await resetCourse(course.course_id);
+  }
 }
 
 // CLI Integration
 if (require.main === module) {
-    const args = process.argv.slice(2);
-    if (args.length < 2) {
-        console.log("Usage:");
-        console.log("  pnpm exec ts-node src/scripts/resetFailedDownloads.ts course <courseId>");
-        console.log("  pnpm exec ts-node src/scripts/resetFailedDownloads.ts path <pathId>");
-        process.exit(1);
+  const args = process.argv.slice(2);
+  if (args.length < 2) {
+    logger.info("Usage:");
+    logger.info("  pnpm exec ts-node src/scripts/resetFailedDownloads.ts course <courseId>");
+    logger.info("  pnpm exec ts-node src/scripts/resetFailedDownloads.ts path <pathId>");
+    process.exit(1);
+  }
+
+  const type = args[0];
+  const targetId = args[1];
+
+  (async () => {
+    if (type === "course") {
+      await resetCourse(targetId);
+    } else if (type === "path") {
+      await resetPath(targetId);
+    } else {
+      logger.info("Unknown command. Use 'course' or 'path'.");
     }
-
-    const type = args[0];
-    const targetId = args[1];
-
-    (async () => {
-        if (type === "course") {
-            await resetCourse(targetId);
-        } else if (type === "path") {
-            await resetPath(targetId);
-        } else {
-            console.log("Unknown command. Use 'course' or 'path'.");
-        }
-    })().catch(err => {
-        console.error("Fatal error:", err);
-        process.exit(1);
-    });
+  })().catch(err => {
+    logger.error("Fatal error:", err);
+    process.exit(1);
+  });
 }

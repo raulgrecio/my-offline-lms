@@ -1,4 +1,4 @@
-import { type Course, type Asset, type Metadata } from "@my-offline-lms/core";
+import { type Course, type Asset, type Metadata } from '@my-offline-lms/core/models';
 
 export interface ICourseRepository {
   getAllCourses(): Course[];

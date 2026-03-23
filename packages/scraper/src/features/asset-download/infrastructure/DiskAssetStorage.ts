@@ -1,7 +1,10 @@
-import type { IFileSystem, AssetType } from "@my-offline-lms/core";
-import { AssetPathResolver, NodeFileSystem, ASSET_FOLDERS } from "@my-offline-lms/core";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
+import { type IFileSystem } from "@my-offline-lms/core/filesystem";
+import { type AssetType, ASSET_FOLDERS } from "@my-offline-lms/core/models";
+import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core/filesystem';
+import { type ILogger } from "@my-offline-lms/core/logging";
+
 
 import { getAssetPathsConfig, getAssetsDir, getMonorepoRoot } from "@config/paths";
 import { IAssetStorage, PDFOptions } from "@features/asset-download/domain/ports/IAssetStorage";
@@ -84,7 +87,7 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   async buildPDFFromImages(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
-    const files = (await this.fs.readdir(sourceDir)).filter(f => f.endsWith(".png")).sort();
+    const files = (await this.fs.readdir(sourceDir)).filter((f: string) => f.endsWith(".png")).sort();
     if (files.length === 0) {
       throw new Error("No hay imágenes para crear PDF");
     }

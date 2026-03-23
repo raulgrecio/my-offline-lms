@@ -1,8 +1,9 @@
 import { db } from "@db/schema";
+import { logger } from "@platform/logging";
 
 const courseId = process.argv[2] || "77517";
 
-console.log(`[FixIndices] Recovering missing order_index for course: ${courseId}`);
+logger.info(`[FixIndices] Recovering missing order_index for course: ${courseId}`);
 
 const rows = db.prepare("SELECT rowid, id, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video' ORDER BY rowid ASC").all(courseId) as any[];
 
@@ -15,11 +16,11 @@ for (const row of rows) {
         meta.order_index = index;
         
         db.prepare("UPDATE Course_Assets SET metadata = ? WHERE id = ?").run(JSON.stringify(meta), row.id);
-        console.log(`Updated ${row.id} with order_index: ${index} (${meta.name})`);
+        logger.info(`Updated ${row.id} with order_index: ${index} (${meta.name})`);
     } else {
-        console.log(`Skipped ${row.id}, already has order_index: ${meta.order_index}`);
+        logger.info(`Skipped ${row.id}, already has order_index: ${meta.order_index}`);
     }
     index++;
 }
 
-console.log(`[FixIndices] Accomplished.`);
+logger.info(`[FixIndices] Accomplished.`);

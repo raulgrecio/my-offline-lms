@@ -1,4 +1,4 @@
-import { Course, LearningPath, LearningPathCourse } from '@my-offline-lms/core';
+import { Course, LearningPath, LearningPathCourse } from '@my-offline-lms/core/models';
 
 export interface ILearningPathRepository {
   /** Save or update a Learning Path */

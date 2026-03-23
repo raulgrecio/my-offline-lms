@@ -1,6 +1,6 @@
 import readline from "readline";
 
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
 import { BrowserProvider } from "@platform/browser/BrowserProvider";
@@ -58,7 +58,7 @@ export class AuthSession {
 
     // Autoguardado silencioso cada 15 minutos
     const autoSaveInterval = setInterval(() => {
-      saveSession().catch(console.error);
+      saveSession().catch(err => this.logger.error("Error en el autoguardado de sesión", err));
     }, 15 * 60 * 1000);
 
     await new Promise<void>((resolve) => {

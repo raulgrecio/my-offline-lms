@@ -1,6 +1,7 @@
 import { db } from "@db/schema";
+import { logger } from "@platform/logging";
 
-console.log("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");
+logger.info("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");
 
 try {
     // 1. Deshabilitar FKs temporalmente para poder borrar la tabla
@@ -23,12 +24,12 @@ try {
         db.prepare(`DROP TABLE Courses;`).run();
         db.prepare(`ALTER TABLE Courses_new RENAME TO Courses;`).run();
 
-        console.log("✅ Migración completada con éxito.");
+        logger.info("✅ Migración completada con éxito.");
     })();
 
     // 5. Re-habilitar FKs
     db.exec('PRAGMA foreign_keys = ON');
 } catch (error) {
-    console.error("❌ Error durante la migración:", error);
+    logger.error("❌ Error durante la migración:", error);
     process.exit(1);
 }

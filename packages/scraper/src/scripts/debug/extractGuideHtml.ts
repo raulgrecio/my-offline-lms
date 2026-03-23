@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -13,13 +14,13 @@ async function run() {
   
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  console.log("Navigating to course page:", courseUrl);
+  logger.info("Navigating to course page:", courseUrl);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(10000); 
   
   const guidesTab = await page.getByText("Guides", { exact: true }).first();
   if (guidesTab) {
-    console.log("Found guides tab, clicking...");
+    logger.info("Found guides tab, clicking...");
     await guidesTab.click();
     await page.waitForTimeout(5000); 
     
@@ -38,9 +39,9 @@ async function run() {
     });
     
     fs.writeFileSync('/tmp/guide_row.html', html || '');
-    console.log("Wrote guide row HTML to /tmp/guide_row.html");
+    logger.info("Wrote guide row HTML to /tmp/guide_row.html");
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);

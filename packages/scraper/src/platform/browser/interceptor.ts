@@ -2,7 +2,7 @@ import { Page } from "playwright";
 import fs from "fs";
 import path from "path";
 
-import { ConsoleLogger } from "@my-offline-lms/core";
+import { ConsoleLogger } from '@my-offline-lms/core/logging';
 
 import { getInterceptedDir } from "@config/paths";
 

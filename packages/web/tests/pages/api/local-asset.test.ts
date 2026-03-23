@@ -14,14 +14,14 @@ vi.mock("fs", () => ({
   existsSync: vi.fn().mockReturnValue(true),
 }));
 
-vi.mock("@my-offline-lms/core", async (importOriginal) => {
+vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
     AssetPathResolver: function () {
       return {
         resolveExistingPath: vi.fn().mockImplementation(async (p) => (p === "missing" ? null : "/test.pdf")),
-        ensureInitialized: vi.fn(async () => {}),
+        ensureInitialized: vi.fn(async () => { }),
       };
     },
     UniversalFileSystem: function () {

@@ -23,7 +23,8 @@ const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(',') : targetIds;
 </a>
 
 <script>
-  import { apiClient } from "../platform/api/client";
+  import { apiClient } from "@platform/api/client";
+  import { logger } from "@platform/logging";
 
   function init() {
     const toggleLinks = document.querySelectorAll('[data-visibility-toggle]');
@@ -69,7 +70,7 @@ const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(',') : targetIds;
 
           window.history.pushState({}, '', url);
         } catch (error) {
-          console.error('Failed to fetch filtered list:', error);
+          logger.error('Failed to fetch filtered list:', error);
           window.location.href = url;
         } finally {
           newLink.classList.remove('opacity-50', 'pointer-events-none');

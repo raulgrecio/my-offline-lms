@@ -93,7 +93,8 @@ const effectClass = effects[hoverEffect] || effects.scale;
 </style>
 
 <script>
-  import { apiClient } from "../platform/api/client";
+  import { logger } from "@platform/logging";
+  import { apiClient } from "@platform/api/client";
 
   // Handle favorites toggle using event delegation. 
   // Astro bundles this script once per page.
@@ -124,10 +125,10 @@ const effectClass = effects[hoverEffect] || effects.scale;
       if (!data.ok) throw new Error("API reported failure");
       
       // Successfully toggled. No reload needed.
-      console.log(`Favorite toggled for ${type} ${id}: ${nextFavorite}`);
+      logger.info(`Favorite toggled for ${type} ${id}: ${nextFavorite}`);
 
     } catch (err) {
-      console.error("Failed to toggle favorite:", err);
+      logger.error("Failed to toggle favorite:", err);
       // REVERT on error
       updateButtonState(btn, wasFavorite);
     } finally {

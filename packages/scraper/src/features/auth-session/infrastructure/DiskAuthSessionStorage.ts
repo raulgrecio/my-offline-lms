@@ -17,8 +17,8 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private async ensureInitialized(): Promise<void> {
     if (this.authDir) return;
     this.authDir = this.baseDirArg || (await getAuthDir());
-    this.authFile = path.join(this.authDir, "state.json");
-    this.cookiesFile = path.join(this.authDir, "cookies.txt");
+    this.authFile = path.join(this.authDir!, "state.json");
+    this.cookiesFile = path.join(this.authDir!, "cookies.txt");
   }
 
   async getAuthFile(): Promise<string> {

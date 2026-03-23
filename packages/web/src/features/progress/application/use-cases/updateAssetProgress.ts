@@ -1,4 +1,4 @@
-import type { AssetType } from "@my-offline-lms/core";
+import type { AssetType } from '@my-offline-lms/core/models';
 import type { AssetProgress } from "../../domain/model/AssetProgress";
 import type { IProgressRepository } from "../../domain/ports/IProgressRepository";
 import { calculateRealProgress } from "../calculateRealProgress";

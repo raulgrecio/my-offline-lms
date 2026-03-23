@@ -12,9 +12,10 @@
       "@pages/*": ["src/pages/*"],
       "@platform/*": ["src/platform/*"],
       "@config/*": ["src/config/*"],
+      "@/*": ["src/*"],
     },
     "skipLibCheck": true
   },
-  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*"],
+  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./e2e/**/*"],
   "exclude": ["node_modules", "dist"]
 }

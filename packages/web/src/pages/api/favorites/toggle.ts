@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIContext, APIRoute } from 'astro';
 import { toggleFavorite } from '@features/favorites';
 import type { FavoriteType } from '@features/favorites/domain/ports/IFavoritesRepository';
+import { logger } from '@platform/logging';
 
 export const POST: APIRoute = async ({ request }: APIContext): Promise<Response> => {
   try {
@@ -24,7 +25,7 @@ export const POST: APIRoute = async ({ request }: APIContext): Promise<Response>
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('API Favorites Error:', err);
+    logger.error('API Favorites Error:', err);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

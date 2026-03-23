@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -13,12 +14,12 @@ async function run() {
   
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  console.log("Navigating to viewer page:", courseUrl);
+  logger.info("Navigating to viewer page:", courseUrl);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   
   const iframeElement = await page.waitForSelector("#ekitIframe", { timeout: 30000 });
   const iframeSrc = await iframeElement?.getAttribute("src");
-  console.log("Found ekitIframe src:", iframeSrc);
+  logger.info("Found ekitIframe src:", iframeSrc || undefined);
   
   if (iframeSrc) {
       await page.goto(iframeSrc, { waitUntil: "networkidle", timeout: 45000 });
@@ -26,16 +27,15 @@ async function run() {
       
       const html = await page.content();
       fs.writeFileSync('/tmp/iframe_content.html', html);
-      console.log("Wrote iframe content to /tmp/iframe_content.html");
+      logger.info("Wrote iframe content to /tmp/iframe_content.html");
       
       const globals = await page.evaluate(() => {
           return Object.keys(window).filter(k => k.toLowerCase().includes('pdf') || k.toLowerCase().includes('viewer') || k.toLowerCase().includes('ekit') || k.toLowerCase().includes('doc'));
       });
       
-      console.log("Globals matching pdf/viewer/ekit:");
-      console.log(globals);
+      logger.info(`Globals matching pdf/viewer/ekit: ${globals.join(', ')}`);
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(err => logger.error("Fatal error in debugIframeGlobals", err));

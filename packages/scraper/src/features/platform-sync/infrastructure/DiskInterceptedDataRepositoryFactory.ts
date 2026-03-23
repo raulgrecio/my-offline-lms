@@ -1,4 +1,4 @@
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { IInterceptedDataRepository } from "@features/platform-sync/domain/ports/IInterceptedDataRepository";
 import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";

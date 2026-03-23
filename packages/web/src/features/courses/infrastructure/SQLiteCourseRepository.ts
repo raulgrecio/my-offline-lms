@@ -1,4 +1,5 @@
-import { type Course, type Asset, type IDatabase, type Metadata } from "@my-offline-lms/core";
+import { type Course, type Asset, type Metadata } from '@my-offline-lms/core/models';
+import type { IDatabase } from '@my-offline-lms/core/database';
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 
 export class SQLiteCourseRepository implements ICourseRepository {

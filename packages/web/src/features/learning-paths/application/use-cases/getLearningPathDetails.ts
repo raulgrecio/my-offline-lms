@@ -1,4 +1,4 @@
-import type { LearningPath } from "@my-offline-lms/core";
+import type { LearningPath } from '@my-offline-lms/core/models';
 import type { ILearningPathRepository } from "../../domain/ports/ILearningPathRepository";
 import type { CourseWithOrderInPath } from "../../domain/model/CourseWithOrderInPath";
 import { getCoursesForPathId } from "./getCoursesForPathId";

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DownloadCourse } from '@features/asset-download/application/DownloadCourse';
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { ILogger } from '@my-offline-lms/core';
+import { ILogger } from '@my-offline-lms/core/logging';
 
 describe('DownloadCourse Use Case', () => {
     const mockCourseRepo = {

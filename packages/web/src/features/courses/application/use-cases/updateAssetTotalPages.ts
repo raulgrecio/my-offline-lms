@@ -1,4 +1,4 @@
-import { type GuideMetadata } from "@my-offline-lms/core";
+import { type GuideMetadata } from '@my-offline-lms/core/models';
 import type { ICourseRepository } from "../../domain/ports/ICourseRepository";
 
 export interface UpdateAssetTotalPagesRequest {

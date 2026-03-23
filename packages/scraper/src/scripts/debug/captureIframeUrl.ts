@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -14,7 +15,7 @@ async function run() {
   page.on("request", req => {
       const url = req.url();
       if (url.includes("ekit") || url.includes("brm-materials") || url.includes("htmlViewer") || url.includes("pdf")) {
-          console.log(`[NETWORK] ${req.method()} ${url}`);
+          logger.info(`[NETWORK] ${req.method()} ${url}`);
       }
   });
 
@@ -25,7 +26,7 @@ async function run() {
   
   const guidesTab = await page.$("#guides-tab");
   if (guidesTab) {
-    console.log("Found guides tab, clicking...");
+    logger.info("Found guides tab, clicking...");
     await guidesTab.click();
     await page.waitForTimeout(5000); // let guides list render
     
@@ -43,22 +44,22 @@ async function run() {
     });
     
     if (clicked) {
-        console.log("Clicked on a Guide! Waiting for iframe...");
+        logger.info("Clicked on a Guide! Waiting for iframe...");
         await page.waitForTimeout(10000);
         
         const iframeSrc = await page.evaluate(() => {
             const iframe = document.querySelector('iframe');
             return iframe ? iframe.src : null;
         });
-        console.log(`[IFRAME SRC] ${iframeSrc}`);
+        logger.info(`[IFRAME SRC] ${iframeSrc}`);
     } else {
-        console.log("Could not find a guide to click.");
+        logger.info("Could not find a guide to click.");
     }
 
   } else {
-      console.log("No guides tab.");
+      logger.info("No guides tab.");
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);

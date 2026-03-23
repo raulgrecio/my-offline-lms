@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -15,41 +16,41 @@ async function run() {
   page.on("request", req => {
       const url = req.url();
       if(url.includes("ekit") || url.includes("pdf") || url.includes("viewer")) {
-          console.log(`[NETWORK] ${req.method()} ${url}`);
+          logger.info(`[NETWORK] ${req.method()} ${url}`);
       }
   });
 
   context.on('page', async newPage => {
-      console.log(`\n[NEW TAB DETECTED!] URL: ${newPage.url()}`);
+      logger.info(`\n[NEW TAB DETECTED!] URL: ${newPage.url()}`);
       await newPage.waitForLoadState('domcontentloaded');
-      console.log(`[NEW TAB LOADED] URL: ${newPage.url()}`);
+      logger.info(`[NEW TAB LOADED] URL: ${newPage.url()}`);
       await newPage.screenshot({ path: "/tmp/guide_viewer_tab.png" });
       
       const content = await newPage.content();
       fs.writeFileSync('/tmp/guide_viewer.html', content);
-      console.log(`[NEW TAB] Wrote HTML to /tmp/guide_viewer.html`);
+      logger.info(`[NEW TAB] Wrote HTML to /tmp/guide_viewer.html`);
   });
 
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  console.log("Navigating to course page:", courseUrl);
+  logger.info("Navigating to course page:", courseUrl);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   
-  console.log("Waiting 10s for UI render...");
+  logger.info("Waiting 10s for UI render...");
   await page.waitForTimeout(10000); 
   
   const guidesTab = await page.getByText("Guides", { exact: true }).first();
   if (guidesTab) {
-    console.log("Found guides tab, clicking...");
+    logger.info("Found guides tab, clicking...");
     await guidesTab.click();
     await page.waitForTimeout(5000); 
     
     // Find the guide item and click the eye icon. 
     // In the screenshot, each guide is a row with an eye icon.
     // Let's find any button or link inside the container that has the text "Student Guide"
-    console.log("Looking for guide row...");
+    logger.info("Looking for guide row...");
     const guideCards = await page.locator(':has-text("Student Guide")').all();
-    console.log(`Found ${guideCards.length} elements containing 'Student Guide'`);
+    logger.info(`Found ${guideCards.length} elements containing 'Student Guide'`);
     
     // The most reliable way is often to click on an svg/icon or the rightmost part, or just click the whole row.
     // Wait, the eye icon might just be an SVG or font icon. Let's try locating any SVG inside the first guide element's parent.
@@ -81,17 +82,17 @@ async function run() {
         return "Not found using precise search";
     });
     
-    console.log(`Evaluation result: ${success}`);
+    logger.info(`Evaluation result: ${success}`);
     
     if (success !== "Not found using precise search") {
-        console.log("Waiting 15s to see if iframe or popup appears...");
+        logger.info("Waiting 15s to see if iframe or popup appears...");
         await page.waitForTimeout(15000);
         await page.screenshot({ path: "/tmp/guide_ui_3.png", fullPage: true });
         fs.writeFileSync('/tmp/course_after_click.html', await page.content());
-        console.log("Screenshots and HTML saved.");
+        logger.info("Screenshots and HTML saved.");
     }
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);
