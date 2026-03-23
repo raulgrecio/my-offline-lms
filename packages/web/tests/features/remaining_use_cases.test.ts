@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import { getLearningPathDetails } from "@features/learning-paths/application/use-cases/getLearningPathDetails";
 import { getDashboardStatus } from "@features/progress/application/use-cases/getDashboardStatus";
@@ -11,7 +11,7 @@ describe("Remaining Use Cases", () => {
         getCoursesForPathId: vi.fn().mockReturnValue(["c1", "c2"]),
       };
 
-      const result = await getLearningPathDetails(mockRepo as any, { id: "p1" });
+      const result = getLearningPathDetails(mockRepo as any, { id: "p1" });
 
       expect(result).not.toBeNull();
       expect(result?.courses).toHaveLength(2);
@@ -29,7 +29,7 @@ describe("Remaining Use Cases", () => {
         getLastWatchedAsset: vi.fn().mockReturnValue(null),
       };
 
-      const result = await getDashboardStatus(mockRepo as any);
+      const result = getDashboardStatus(mockRepo as any);
 
       expect(result.allProgress).toHaveLength(2);
       expect(result.allProgress[0].status).toBe("completed");

@@ -1,5 +1,5 @@
-import { IFileSystem, FileStats } from "./IFileSystem";
-import { ILogger, NoopLogger } from "../logging";
+import { type IFileSystem, type FileStats } from "./IFileSystem";
+import { type ILogger, NoopLogger } from "../logging";
 
 export class BlobFileSystem implements IFileSystem {
   private logger: ILogger;

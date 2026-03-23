@@ -27,7 +27,7 @@ describe('SyncCourse Use Case', () => {
 
     const mockAssetRepo = {
         saveAsset: vi.fn(),
-        getCourseAssets: vi.fn().mockReturnValue([]),
+        assetExists: vi.fn().mockResolvedValue(false),
     } as any;
 
     const mockInterceptedDataRepo: Mocked<IInterceptedDataRepository> = {
@@ -68,7 +68,7 @@ describe('SyncCourse Use Case', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([]);
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([]);
 
         useCase = new SyncCourse({
             browserProvider: mockBrowserProvider,
@@ -135,7 +135,7 @@ describe('SyncCourse Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([mockPayload]);
 
         await useCase.execute({ courseInput: 'https://platform.com/ou/course/test-course/123' });
 
@@ -168,7 +168,7 @@ describe('SyncCourse Use Case', () => {
                 data: { id: '123', name: 'Simple Course' } // No modules, no eKits
             })
         };
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([mockPayload]);
 
         await useCase.execute({ courseInput: 'https://platform.com/ou/course/simple-course/123' });
 
@@ -202,7 +202,7 @@ describe('SyncCourse Use Case', () => {
                 }
             })
         };
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([mockPayload]);
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([mockPayload]);
 
         await useCase.execute({ courseInput: 'https://platform.com/ou/course/mixed/123' });
 
@@ -218,7 +218,7 @@ describe('SyncCourse Use Case', () => {
         const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() } as any;
         mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
             { filePath: 'f1', content: JSON.stringify({ data: { id: 'other', name: 'other' } }) }
         ]);
 
@@ -282,7 +282,7 @@ describe('SyncCourse Use Case', () => {
             })
         };
 
-        mockInterceptedDataRepo.getPendingForCourse.mockReturnValue([payload1, payload2]);
+        mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([payload1, payload2]);
 
         await useCase.execute({ courseInput: 'https://platform.com/ou/course/test/123' });
 

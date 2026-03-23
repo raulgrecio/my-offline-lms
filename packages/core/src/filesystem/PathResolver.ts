@@ -1,5 +1,5 @@
 import fs from "fs";
-import { IFileSystem } from "./IFileSystem";
+import { type IFileSystem } from "./IFileSystem";
 
 export interface PathResolverOptions {
   fs: IFileSystem;

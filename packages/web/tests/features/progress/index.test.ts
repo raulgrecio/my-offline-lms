@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Mock the dependencies BEFORE importing the module to cover the top-level wiring
 vi.mock("@platform/db/database", () => ({

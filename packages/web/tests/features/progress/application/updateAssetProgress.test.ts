@@ -18,6 +18,7 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
     incrementVisitedSegments: vi.fn(),
     setTotalSegments: vi.fn(),
     getVisitedSegmentsCount: vi.fn().mockReturnValue(0),
+    getVisitedSegments: vi.fn().mockReturnValue([]),
   });
 
   it("should correctly record page 6 of 552 without marking it as completed", () => {

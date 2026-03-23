@@ -2,7 +2,7 @@ import type { AssetType } from "../domain/models/Asset";
 import { ASSET_FOLDERS } from "../domain/models/Asset";
 import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
 import type { IFileSystem } from "./IFileSystem";
-import { ILogger, NoopLogger } from "../logging";
+import { type ILogger, NoopLogger } from "../logging";
 
 interface AssetPathResolverProps {
   configPath: string;

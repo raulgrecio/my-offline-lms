@@ -1,6 +1,6 @@
 import path from "path";
 import type { IFileSystem, FileStats } from "./IFileSystem";
-import { ILogger, NoopLogger } from "../logging";
+import { type ILogger, NoopLogger } from "../logging";
 
 export type FileSystemProtocol = "http" | "tcp" | "s3" | "blob";
 

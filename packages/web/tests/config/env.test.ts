@@ -10,7 +10,7 @@ describe("Environment Variables", () => {
 
   it("should log error on invalid variables", async () => {
     vi.resetModules();
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     
     // We override the internal behavior to force failure for coverage
     // This is tricky because it's a constant. We can't easily override 'envSchema'

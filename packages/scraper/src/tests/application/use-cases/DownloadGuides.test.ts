@@ -36,12 +36,12 @@ describe('DownloadGuides Use Case', () => {
         mockAssetStorage = {
             verifyVideoIntegrity: vi.fn(),
             ensureAssetDir: vi.fn(),
-            ensureTempDir: vi.fn().mockReturnValue('/mock/temp'),
+            ensureTempDir: vi.fn().mockResolvedValue('/mock/temp'),
             assetExists: vi.fn(),
             writeTempImage: vi.fn(),
-            getTempImageSize: vi.fn().mockReturnValue(0),
+            getTempImageSize: vi.fn().mockResolvedValue(0),
             buildPDFFromImages: vi.fn().mockResolvedValue(undefined),
-            removeTempDir: vi.fn(),
+            removeTempDir: vi.fn().mockResolvedValue(undefined),
             findExistingAsset: vi.fn(),
         };
 
@@ -91,8 +91,8 @@ describe('DownloadGuides Use Case', () => {
             { id: 'g1', type: 'guide', metadata: { name: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' }, url: 'http://g1' }
         ]);
         mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
-        mockAssetStorage.assetExists.mockReturnValue(true);
-        mockAssetStorage.getTempImageSize.mockReturnValue(100);
+        mockAssetStorage.assetExists.mockResolvedValue(true);
+        mockAssetStorage.getTempImageSize.mockResolvedValue(100);
 
         await useCase.executeForCourse('c1');
 
@@ -125,7 +125,7 @@ describe('DownloadGuides Use Case', () => {
             metadata: { name: "Test Guide", ekitId: "ekit123", order_index: 1, offeringId: 'off1' },
             courseId: 'c1'
         });
-        mockAssetStorage.assetExists.mockReturnValue(false);
+        mockAssetStorage.assetExists.mockResolvedValue(false);
         mockAssetStorage.buildPDFFromImages.mockResolvedValue(undefined);
 
         await useCase.executeForCourse('c1');
@@ -255,8 +255,8 @@ describe('DownloadGuides Use Case', () => {
 
         // First call for assetExists(outputPath) -> false
         // Second call for cachedImgPath -> true
-        mockAssetStorage.assetExists.mockReturnValueOnce(false).mockReturnValueOnce(true);
-        mockAssetStorage.getTempImageSize.mockReturnValue(500);
+        mockAssetStorage.assetExists.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+        mockAssetStorage.getTempImageSize.mockResolvedValue(500);
 
         await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' });
 
@@ -363,17 +363,17 @@ describe('DownloadGuides Use Case', () => {
                 }
             };
             mockAssetRepo.getAssetById.mockReturnValue(asset);
-            mockAssetStorage.ensureTempDir.mockReturnValue(tempDir);
-            mockAssetStorage.ensureAssetDir.mockReturnValue(outputDir);
+            mockAssetStorage.ensureTempDir.mockResolvedValue(tempDir);
+            mockAssetStorage.ensureAssetDir.mockResolvedValue(outputDir);
             
             // Simulate that the output PDF DOES NOT exist yet
             mockAssetStorage.assetExists.mockImplementation((path: string) => {
-                if (path === outputPath) return false;
-                if (path.includes('page_')) return true; // Images exist
-                return false;
+                if (path === outputPath) return Promise.resolve(false);
+                if (path.includes('page_')) return Promise.resolve(true); // Images exist
+                return Promise.resolve(false);
             });
 
-            mockAssetStorage.getTempImageSize.mockReturnValue(1000);
+            mockAssetStorage.getTempImageSize.mockResolvedValue(1000);
 
             // Mock browser interactions
             const mockPage = {
@@ -417,17 +417,17 @@ describe('DownloadGuides Use Case', () => {
                 }
             };
             mockAssetRepo.getAssetById.mockReturnValue(asset);
-            mockAssetStorage.ensureTempDir.mockReturnValue(tempDir);
-            mockAssetStorage.ensureAssetDir.mockReturnValue(outputDir);
+            mockAssetStorage.ensureTempDir.mockResolvedValue(tempDir);
+            mockAssetStorage.ensureAssetDir.mockResolvedValue(outputDir);
             
             mockAssetStorage.assetExists.mockImplementation((path: string) => {
-                if (path === outputPath) return false;
-                if (path.includes('page_0001')) return true; // Page 1 exists
-                if (path.includes('page_0002')) return false; // Page 2 missing
-                return false;
+                if (path === outputPath) return Promise.resolve(false);
+                if (path.includes('page_0001')) return Promise.resolve(true); // Page 1 exists
+                if (path.includes('page_0002')) return Promise.resolve(false); // Page 2 missing
+                return Promise.resolve(false);
             });
 
-            mockAssetStorage.getTempImageSize.mockReturnValue(1000);
+            mockAssetStorage.getTempImageSize.mockResolvedValue(1000);
 
             const mockPage = {
                 goto: vi.fn().mockResolvedValue(undefined),
@@ -471,7 +471,7 @@ describe('DownloadGuides Use Case', () => {
             mockAssetRepo.getAssetById.mockReturnValue(asset);
             
             const existingPath = `/external/path/${courseId}/guides/${originalFilename}`;
-            mockAssetStorage.findExistingAsset.mockReturnValue(existingPath);
+            mockAssetStorage.findExistingAsset.mockResolvedValue(existingPath);
 
             // Act
             await useCase.downloadSingleGuide({ assetId, courseId });
@@ -506,9 +506,9 @@ describe('DownloadGuides Use Case', () => {
                 }
             };
             mockAssetRepo.getAssetById.mockReturnValue(asset);
-            mockAssetStorage.ensureAssetDir.mockReturnValue(`/mock/assets/${courseId}/guides`);
-            mockAssetStorage.ensureTempDir.mockReturnValue(`/mock/temp/foo`);
-            mockAssetStorage.assetExists.mockReturnValue(false);
+            mockAssetStorage.ensureAssetDir.mockResolvedValue(`/mock/assets/${courseId}/guides`);
+            mockAssetStorage.ensureTempDir.mockResolvedValue(`/mock/temp/foo`);
+            mockAssetStorage.assetExists.mockResolvedValue(false);
 
             const mockPage = {
                 goto: vi.fn().mockResolvedValue(undefined),
@@ -556,9 +556,9 @@ describe('DownloadGuides Use Case', () => {
                 }
             };
             mockAssetRepo.getAssetById.mockReturnValue(asset);
-            mockAssetStorage.ensureAssetDir.mockReturnValue(`/mock/assets/${courseId}/guides`);
-            mockAssetStorage.ensureTempDir.mockReturnValue(`/mock/temp/foo2`);
-            mockAssetStorage.assetExists.mockReturnValue(false);
+            mockAssetStorage.ensureAssetDir.mockResolvedValue(`/mock/assets/${courseId}/guides`);
+            mockAssetStorage.ensureTempDir.mockResolvedValue(`/mock/temp/foo2`);
+            mockAssetStorage.assetExists.mockResolvedValue(false);
 
             const mockPage = {
                 goto: vi.fn().mockResolvedValue(undefined),
