@@ -1,6 +1,6 @@
 import { BrowserContext } from "playwright";
 
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { PLATFORM } from "@config/platform";
 

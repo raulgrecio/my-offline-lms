@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { getInterceptedDir } from "@config/paths";
 import { PLATFORM } from "@config/platform";

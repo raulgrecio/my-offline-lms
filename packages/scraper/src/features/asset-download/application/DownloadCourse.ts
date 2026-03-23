@@ -1,4 +1,5 @@
-import { DownloadType, ILogger } from "@my-offline-lms/core";
+import { DownloadType } from '@my-offline-lms/core/models';
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";

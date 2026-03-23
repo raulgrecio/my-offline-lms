@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 import fs from 'fs';
 
-import { ILogger } from '@my-offline-lms/core';
+import { ILogger } from '@my-offline-lms/core/logging';
 import { DiskInterceptedDataRepository } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepository';
 
 vi.mock('fs', () => ({

@@ -1,4 +1,4 @@
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { env } from "@config/env";
 import { PLATFORM } from "@config/platform";

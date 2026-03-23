@@ -91,7 +91,7 @@ export class AssetPathResolver {
   async getAvailablePaths() {
     await this.ensureInitialized();
     if (!this.config) return [];
-    
+
     const results = await Promise.all(this.config.searchPaths.map(async (sp) => {
       const fullPath = this.getAbsolutePath(sp.path);
       return {

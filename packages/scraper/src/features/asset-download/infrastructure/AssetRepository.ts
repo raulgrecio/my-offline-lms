@@ -1,4 +1,5 @@
-import { Asset, AssetStatus, AssetType, IDatabase } from '@my-offline-lms/core';
+import { Asset, AssetStatus, AssetType } from '@my-offline-lms/core/models';
+import { IDatabase } from '@my-offline-lms/core/database';
 
 import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
 

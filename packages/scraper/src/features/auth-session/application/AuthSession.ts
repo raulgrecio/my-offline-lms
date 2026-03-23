@@ -1,6 +1,6 @@
 import readline from "readline";
 
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
 import { BrowserProvider } from "@platform/browser/BrowserProvider";

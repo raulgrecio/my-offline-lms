@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ILogger } from '@my-offline-lms/core';
+import { ILogger } from '@my-offline-lms/core/logging';
 
 import { AuthSession } from '@features/auth-session/application/AuthSession';
 

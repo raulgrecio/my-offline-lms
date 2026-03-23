@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 import { SQLiteProgressRepository } from "@features/progress/infrastructure/SQLiteProgressRepository";
-import type { IDatabase } from "@my-offline-lms/core";
+import { type IDatabase } from '@my-offline-lms/core/database';
 
 describe("SQLiteProgressRepository", () => {
   let mockDb: IDatabase;
@@ -238,16 +238,16 @@ describe("SQLiteProgressRepository", () => {
 
     it("should get all collections progress", () => {
       const mockAll = vi.fn().mockReturnValue([{
-          id: "c1",
-          type: "course",
-          status: "in_progress",
-          completed_items: 2,
-          in_progress_items: 1,
-          total_items: 5,
-          updated_at: "2024-01-01"
+        id: "c1",
+        type: "course",
+        status: "in_progress",
+        completed_items: 2,
+        in_progress_items: 1,
+        total_items: 5,
+        updated_at: "2024-01-01"
       }]);
       vi.mocked(mockDb.prepare).mockReturnValue({ all: mockAll } as any);
-      
+
       const result = repository.getAllCollectionsProgress("course");
       expect(result[0].id).toBe("c1");
       expect(result[0].completedItems).toBe(2);

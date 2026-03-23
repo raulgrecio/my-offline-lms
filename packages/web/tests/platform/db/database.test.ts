@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import fs from "node:fs";
 
-import { SQLiteDatabase } from "@my-offline-lms/core";
+import { SQLiteDatabase } from '@my-offline-lms/core/database';
 import { getDb } from "@platform/db/database";
 
-vi.mock("@my-offline-lms/core", async (importOriginal) => {
+vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
   const actual = await importOriginal<any>();
   const mockDb = {
     exec: vi.fn(),

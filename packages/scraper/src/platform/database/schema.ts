@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core';
+import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core/database';
 
 import { getDataDir, getDbPath } from '@config/paths';
 import { logger } from '@platform/logging';

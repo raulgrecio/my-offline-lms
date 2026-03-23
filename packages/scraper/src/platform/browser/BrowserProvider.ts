@@ -5,7 +5,7 @@ import fs from "fs";
 
 import { env } from "@config/env";
 import { getAuthState } from "@config/paths";
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 chromium.use(stealth());
 

@@ -1,4 +1,4 @@
-import { AssetType } from "@my-offline-lms/core";
+import { AssetType } from '@my-offline-lms/core/models';
 
 export interface PDFOptions {
   optimize: boolean;

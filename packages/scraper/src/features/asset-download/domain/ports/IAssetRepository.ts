@@ -1,4 +1,4 @@
-import { Asset, AssetStatus, AssetType } from "@my-offline-lms/core";
+import { Asset, AssetStatus, AssetType } from '@my-offline-lms/core/models';
 
 export interface IAssetRepository {
   /** Get assets by type and status */

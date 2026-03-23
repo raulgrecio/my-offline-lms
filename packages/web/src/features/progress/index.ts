@@ -1,4 +1,4 @@
-import { type AssetType } from "@my-offline-lms/core";
+import { type AssetType } from '@my-offline-lms/core/models';
 import { getDb } from "@platform/db/database";
 import { ProgressManager } from "./application/ProgressManager";
 import type { GetAssetProgressRequest } from "./application/use-cases/getAssetProgress";
@@ -54,5 +54,5 @@ export const getAllCourseProgress = () => manager.getAllCourseProgress();
 /** @deprecated Use getDashboardStatus().lastWatched o getLastWatchedAsset */
 export const getLastWatchedAsset = () => manager.getLastWatchedAsset();
 
-export const getVisitedSegments = (params: { id: string, type: AssetType }) => 
+export const getVisitedSegments = (params: { id: string, type: AssetType }) =>
   manager.getVisitedSegments(params);

@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { ILogger } from "@my-offline-lms/core";
+import { ILogger } from '@my-offline-lms/core/logging';
 
 export class YtDlpVideoDownloader implements IVideoDownloader {
   private logger: ILogger;

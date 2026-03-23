@@ -1,7 +1,10 @@
 import { env } from '@config/env';
 import dotenv from 'dotenv';
 
-import { ConsoleLogger, DownloadType, IDatabase, NodeFileSystem, UniversalFileSystem, HttpFileSystem } from '@my-offline-lms/core';
+import { ConsoleLogger } from '@my-offline-lms/core/logging';
+import { DownloadType } from '@my-offline-lms/core/models';
+import { IDatabase } from '@my-offline-lms/core/database';
+import { NodeFileSystem, UniversalFileSystem, HttpFileSystem } from '@my-offline-lms/core/filesystem';
 
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
 import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';

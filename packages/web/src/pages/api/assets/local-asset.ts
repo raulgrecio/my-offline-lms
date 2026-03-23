@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import path from 'path';
 
-import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType } from '@my-offline-lms/core';
+import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType } from '@my-offline-lms/core/filesystem';
 import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
 import { logger } from '@platform/logging';
 

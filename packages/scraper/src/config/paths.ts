@@ -1,4 +1,4 @@
-import { NodeFileSystem, PathResolver } from "@my-offline-lms/core";
+import { PathResolver, NodeFileSystem } from '@my-offline-lms/core/filesystem';
 
 // Inicializamos el resolver
 const fs = new NodeFileSystem();

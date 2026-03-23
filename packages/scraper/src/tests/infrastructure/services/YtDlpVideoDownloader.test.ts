@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { YtDlpVideoDownloader } from '@features/asset-download/infrastructure/YtDlpVideoDownloader';
 import { IAuthSessionStorage } from '@features/auth-session/domain/ports/IAuthSessionStorage';
-import { ILogger } from '@my-offline-lms/core';
+import { ILogger } from '@my-offline-lms/core/logging';
 import { spawn } from 'child_process';
 import EventEmitter from 'events';
 

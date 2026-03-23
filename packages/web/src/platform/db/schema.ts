@@ -1,4 +1,5 @@
-import { SQLiteDatabase, type ILogger } from "@my-offline-lms/core";
+import { type ILogger } from "@my-offline-lms/core/logging";
+import { SQLiteDatabase } from "@my-offline-lms/core/database";
 
 export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   // --- Migraciones de esquema ---
@@ -19,12 +20,12 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   try {
     const tableInfo = db.prepare("PRAGMA table_info(UserProgress)").all() as any[];
     const hasAssetType = tableInfo.some(c => c.name === 'asset_type');
-    
+
     if (!hasAssetType) {
       logger.info("Migrating UserProgress to multi-type schema...");
       db.exec("PRAGMA foreign_keys=OFF;");
       db.exec("ALTER TABLE UserProgress RENAME TO UserProgress_old;");
-      
+
       db.exec(`
         CREATE TABLE UserProgress (
           asset_id         TEXT,
@@ -38,13 +39,13 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
           PRIMARY KEY (asset_id, asset_type)
         );
       `);
-      
+
       db.exec(`
         INSERT INTO UserProgress (asset_id, asset_type, position, max_position, visited_segments, completed, updated_at)
         SELECT asset_id, 'video', position, max_position, visited_segments, completed, updated_at 
         FROM UserProgress_old;
       `);
-      
+
       db.exec("DROP TABLE UserProgress_old;");
       logger.info("Successfully migrated UserProgress schema");
     }
@@ -52,11 +53,11 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
     // Migración de UserAssetSegments
     const segmentsInfo = db.prepare("PRAGMA table_info(UserAssetSegments)").all() as any[];
     const hasSegmentsType = segmentsInfo.some(c => c.name === 'asset_type');
-    
+
     if (!hasSegmentsType) {
       logger.info("Migrating UserAssetSegments to multi-type schema...");
       db.exec("ALTER TABLE UserAssetSegments RENAME TO UserAssetSegments_old;");
-      
+
       db.exec(`
         CREATE TABLE UserAssetSegments (
           asset_id   TEXT,
@@ -65,13 +66,13 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
           PRIMARY KEY (asset_id, asset_type, segment)
         );
       `);
-      
+
       db.exec(`
         INSERT INTO UserAssetSegments (asset_id, asset_type, segment)
         SELECT asset_id, 'video', segment 
         FROM UserAssetSegments_old;
       `);
-      
+
       db.exec("DROP TABLE UserAssetSegments_old;");
       db.exec("PRAGMA foreign_keys=ON;");
       logger.info("Successfully migrated UserAssetSegments schema");
@@ -116,7 +117,7 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   // 7. Migración de favoritos: learning_path -> learning-path y actualización de CHECK constraint
   try {
     const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='UserFavorites'").get();
-    
+
     if (tableExists) {
       db.exec("PRAGMA foreign_keys=OFF;");
       db.exec("DROP TABLE IF EXISTS UserFavorites_new;");

@@ -3,6 +3,20 @@
   "version": "1.0.0",
   "description": "Core business logic and shared services for My Offline LMS",
   "main": "src/index.ts",
+  "exports": {
+    "./database": "./src/database/index.ts",
+    "./filesystem": "./src/filesystem/index.ts",
+    "./logging": "./src/logging/index.ts",
+    "./models": "./src/domain/index.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "database": ["src/database/index.ts"],
+      "filesystem": ["src/filesystem/index.ts"],
+      "logging": ["src/logging/index.ts"],
+      "models": ["src/domain/index.ts"]
+    }
+  },
   "private": true,
   "scripts": {
     "test": "vitest",

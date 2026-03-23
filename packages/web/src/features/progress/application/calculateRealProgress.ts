@@ -1,4 +1,4 @@
-import type { AssetType } from "@my-offline-lms/core";
+import type { AssetType } from '@my-offline-lms/core/models';
 import type { ProgressStatus } from "../domain/model/ProgressStatus";
 import { COMPLETION_THRESHOLD } from "./constants";
 

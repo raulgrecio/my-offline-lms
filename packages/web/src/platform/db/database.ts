@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { SQLiteDatabase, type ILogger, ConsoleLogger, NoopLogger } from "@my-offline-lms/core";
+import { type ILogger, ConsoleLogger, NoopLogger } from "@my-offline-lms/core/logging";
+import { SQLiteDatabase } from "@my-offline-lms/core/database";
 import { DB_PATH } from "@config/paths";
 import { runMigrations } from "./schema";
 
