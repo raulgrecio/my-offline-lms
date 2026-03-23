@@ -94,7 +94,8 @@ describe("SubtitleDisplay Component", () => {
     render(<SubtitleDisplay src="subs.vtt" currentTime={2} isVisible={true} />);
     
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error fetching subtitles:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Error fetching subtitles:'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     });
     consoleSpy.mockRestore();
   });

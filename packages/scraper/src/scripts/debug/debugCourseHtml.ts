@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -25,9 +26,9 @@ async function run() {
   
   const html = await page.content();
   fs.writeFileSync("/tmp/course_with_guides.html", html);
-  console.log("Saved full HTML to /tmp/course_with_guides.html");
+  logger.info("Saved full HTML to /tmp/course_with_guides.html");
   
   await browser.close();
 }
 
-run().catch(console.error);
+run().catch(logger.error);

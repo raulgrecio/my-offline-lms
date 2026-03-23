@@ -5,6 +5,7 @@ import fs from "fs";
 
 import { env } from "@config/env";
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -18,7 +19,7 @@ async function run() {
     if (url.includes(".json") || response.headers()["content-type"]?.includes("application/json")) {
         try {
             const body = await response.json();
-            console.log(`[JSON Dump] ${url}`);
+            logger.info(`[JSON Dump] ${url}`);
             
             // Si el body contiene ba43ef1c o ekitId o htmlViewer, guardarlo
             const strBody = JSON.stringify(body);
@@ -27,7 +28,7 @@ async function run() {
                 const urlObj = new URL(url);
                 const safeUrl = namingService.generateSafeFilename(urlObj.pathname.replace(/\//g, ' '));
                 fs.writeFileSync(`/tmp/intercept_${safeUrl}.json`, JSON.stringify(body, null, 2));
-                console.log(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
+                logger.info(`✅ Saved suspicious JSON: /tmp/intercept_${safeUrl}.json`);
             }
         } catch(e) {}
     }
@@ -35,17 +36,17 @@ async function run() {
 
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  console.log("Navigating to course page:", courseUrl);
+  logger.info("Navigating to course page:", courseUrl);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(8000);
   
   const guidesTab = await page.$("#guides-tab");
   if (guidesTab) {
-    console.log("Found guides tab, clicking...");
+    logger.info("Found guides tab, clicking...");
     await guidesTab.click();
     await page.waitForTimeout(6000);
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);

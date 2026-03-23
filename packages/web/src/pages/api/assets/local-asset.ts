@@ -5,6 +5,7 @@ import path from 'path';
 
 import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType } from '@my-offline-lms/core';
 import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
+import { logger } from '@platform/logging';
 
 const nodeFs = new NodeFileSystem();
 const universalFs = new UniversalFileSystem(nodeFs);
@@ -83,7 +84,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       });
     }
   } catch (err) {
-    console.error('[Local Asset Error]', err);
+    logger.error('[Local Asset Error]', err);
     return new Response('Error reading file', { status: 500 });
   }
 };

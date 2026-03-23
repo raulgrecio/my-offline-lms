@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 
 import { env } from "@config/env";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -13,13 +14,13 @@ async function run() {
   
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  console.log("Navigating to course page:", courseUrl);
+  logger.info("Navigating to course page:", courseUrl);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(8000); 
   
   const guidesTab = await page.$("#guides-tab");
   if (guidesTab) {
-    console.log("Found guides tab, clicking...");
+    logger.info("Found guides tab, clicking...");
     await guidesTab.click();
     await page.waitForTimeout(5000); 
     
@@ -35,14 +36,14 @@ async function run() {
         }
     });
     
-    console.log("Clicked guide element. Waiting 10s...");
+    logger.info("Clicked guide element. Waiting 10s...");
     await page.waitForTimeout(10000);
     
     // Screenshot 2: After clicking a specific guide
     await page.screenshot({ path: "/tmp/screenshot2.png", fullPage: true });
-    console.log("Screenshots saved to /tmp/screenshot1.png and /tmp/screenshot2.png");
+    logger.info("Screenshots saved to /tmp/screenshot1.png and /tmp/screenshot2.png");
   }
   
   await browser.close();
 }
-run().catch(console.error);
+run().catch(logger.error);

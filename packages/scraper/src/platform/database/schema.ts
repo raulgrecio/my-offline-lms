@@ -2,6 +2,7 @@ import fs from 'fs';
 import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core';
 
 import { getDataDir, getDbPath } from '@config/paths';
+import { logger } from '@platform/logging';
 
 let _db: SQLiteDatabase | undefined;
 
@@ -22,6 +23,7 @@ export const db: IDatabase = new Proxy({} as IDatabase, {
   }
 });
 
+
 /**
  * Initializes the database schema.
 */
@@ -29,16 +31,20 @@ export async function initDb(database?: IDatabase) {
   if (database) {
     _db = database as SQLiteDatabase;
     _db.initialize();
-    console.log("Database schema initialized with provided instance.");
+    logger.info("Database schema initialized with provided instance.");
     return;
   }
 
   const dataDir = await getDataDir();
   const dbPath = await getDbPath();
-  
+
   await fs.promises.mkdir(dataDir, { recursive: true });
 
-  _db = new SQLiteDatabase(dbPath, { verbose: console.log });
+  _db = new SQLiteDatabase(dbPath, {
+    verbose: (msg?: unknown) => {
+      if (typeof msg === 'string') logger.debug(msg);
+    }
+  });
   _db.initialize();
-  console.log("Database schema initialized.");
+  logger.info("Database schema initialized.");
 }

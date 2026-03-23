@@ -5,6 +5,7 @@ import { GlobalWorkerOptions } from "pdfjs-dist";
 
 import { apiClient } from '@platform/api/client';
 import { API_ROUTES } from '@platform/api/routes';
+import { logger } from '@platform/logging';
 
 interface InitPdfViewerProps {
   assetId: string,
@@ -112,7 +113,7 @@ export function initPdfViewer({
       await fetchVisitedSegments();
 
     } catch (error) {
-      console.error('Error loading PDF:', error);
+      logger.error('Error loading PDF:', error);
       if (container && errorTemplate) {
         container.innerHTML = '';
         const clone = errorTemplate.content.cloneNode(true) as DocumentFragment;
@@ -241,7 +242,7 @@ export function initPdfViewer({
       await page.render({ canvasContext: ctx, viewport, transform: [dpr, 0, 0, dpr, 0, 0], canvas }).promise;
       renderThumbnail(num); // Render thumb as well if needed
     } catch (e) {
-      console.error(`Page ${num} render error:`, e);
+      logger.error(`Page ${num} render error:`, e);
       renderedPages.delete(num);
     }
   }

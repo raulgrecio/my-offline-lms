@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { logger } from '@platform/logging';
 
 // Load variables if they haven't been loaded yet by the entrypoint
 if (process.env.NODE_ENV === 'test') {
@@ -31,8 +32,7 @@ type Env = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("❌ Invalid environment variables. Verifique su archivo .env:");
-  console.error(z.treeifyError(parsed.error));
+  logger.error("❌ Invalid environment variables. Verifique su archivo .env:", z.treeifyError(parsed.error));
   if (process.env.NODE_ENV !== 'test') {
     process.exit(1);
   }

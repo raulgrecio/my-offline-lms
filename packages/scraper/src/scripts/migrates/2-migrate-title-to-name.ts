@@ -1,6 +1,7 @@
 import { db } from "@db/schema";
+import { logger } from "@platform/logging";
 
-console.log("Iniciando migración de metadatos: title -> name en Course_Assets...");
+logger.info("Iniciando migración de metadatos: title -> name en Course_Assets...");
 
 try {
     const assets = db.prepare("SELECT id, metadata FROM Course_Assets").all() as { id: string, metadata: string }[];
@@ -28,13 +29,13 @@ try {
                     updatedCount++;
                 }
             } catch (e) {
-                console.error(`Error procesando asset ${asset.id}:`, e);
+                logger.error(`Error procesando asset ${asset.id}:`, e);
             }
         }
     })();
 
-    console.log(`✅ Migración completada. Se actualizaron ${updatedCount} registros.`);
+    logger.info(`✅ Migración completada. Se actualizaron ${updatedCount} registros.`);
 } catch (error) {
-    console.error("❌ Error durante la migración:", error);
+    logger.error("❌ Error durante la migración:", error);
     process.exit(1);
 }

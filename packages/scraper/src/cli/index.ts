@@ -29,7 +29,7 @@ export async function runCLI(db: IDatabase) {
   const command = args[0];
 
   if (!command || command === '--help' || command === '-h') {
-    console.log(`
+    const helpMessage = `
 Uso: pnpm cli <comando> [argumentos]
 
 Comandos disponibles:
@@ -40,7 +40,8 @@ Comandos disponibles:
   download-guides <id>       Descarga solo las guías pendientes de un curso.
   download-videos <id>       Descarga solo los vídeos pendientes de un curso.
   download-path <id> [type]  Descarga un Learning Path entero. type opcional: "video", "guide" o "all".
-    `);
+    `;
+    console.log(helpMessage); // Keeping this one as console.log because it's a help message and we don't want [INFO] prefix
     process.exit(0);
   }
 
@@ -236,7 +237,7 @@ Comandos disponibles:
         break;
       }
       default:
-        console.log(`Comando desconocido: ${command}`);
+        logger.info(`Comando desconocido: ${command}`);
     }
   } catch (err: any) {
     logger.error("Error ejecutando comando:", err.message);

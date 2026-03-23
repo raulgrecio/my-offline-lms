@@ -3,29 +3,31 @@ import { db } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { getAssetsDir } from "@config/paths";
 import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
+import { logger as baseLogger } from "@platform/logging";
 
+const logger = baseLogger.withContext("verifyDownloads");
 const assetRepository = new SQLiteAssetRepository(db);
 
 /**
  * Verifies all downloaded videos for a specific course.
  */
 export async function verifyCourseDownloads({ courseId, repair }: { courseId: string, repair?: boolean }) {
-    console.log(`\n🔍 Verifying downloads for Course ID: ${courseId}${repair ? ' [MODE: REPAIR]' : ''}`);
-    
+    logger.info(`\n🔍 Verifying downloads for Course ID: ${courseId}${repair ? ' [MODE: REPAIR]' : ''}`);
+
     const assetsDir = await getAssetsDir();
 
     const courseRows = db.prepare("SELECT title FROM Courses WHERE id = ?").get(courseId) as { title: string } | undefined;
     if (courseRows) {
-        console.log(`   Course Title: ${courseRows.title}`);
+        logger.info(`   Course Title: ${courseRows.title}`);
     } else {
-        console.log(`   (Course not found in database)`);
+        logger.info(`   (Course not found in database)`);
     }
 
     // Get ALL assets for the course (videos and guides)
     const assets = db.prepare("SELECT id, type, status, metadata, local_path FROM Course_Assets WHERE course_id = ? ORDER BY type, json_extract(metadata, '$.order_index') ASC").all(courseId) as any[];
 
     if (assets.length === 0) {
-        console.log(`   No assets found for this course.`);
+        logger.info(`   No assets found for this course.`);
         return;
     }
 
@@ -44,7 +46,7 @@ export async function verifyCourseDownloads({ courseId, repair }: { courseId: st
             metadataStr: asset.metadata,
             localPath: asset.local_path
         });
-        
+
         let found = (asset.type === 'video' && videoExists) || (asset.type === 'guide' && guideExists);
         let statusSymbol = "✅";
         let issues = [];
@@ -73,48 +75,48 @@ export async function verifyCourseDownloads({ courseId, repair }: { courseId: st
             issues.push(`Missing ${asset.type === 'video' ? '.mp4' : '.pdf'}`);
             missingFiles++;
         } else if (asset.type === 'video' && !vttExists) {
-             statusSymbol = "⚠️";
-             issues.push("Missing .vtt (Subtitles)");
+            statusSymbol = "⚠️";
+            issues.push("Missing .vtt (Subtitles)");
         }
 
         if (issues.length > 0) {
-             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}  -> [${issues.join(", ")}]`);
+            logger.info(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}  -> [${issues.join(", ")}]`);
         } else if (locationNote) {
-             console.log(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}`);
+            logger.info(`   ${statusSymbol} [${asset.type.toUpperCase()}] ${safeName}${locationNote}`);
         }
     }
 
-    console.log(`\n📊 Summary for Course ${courseId}:`);
-    console.log(`   Total Assets: ${assets.length} (${totalVideos} vids, ${totalGuides} guides)`);
-    console.log(`   Found on disk: ${assets.length - missingFiles}`);
-    console.log(`   Missing on disk: ${missingFiles}`);
-    if (healedCount > 0) console.log(`   ✨ Healed in DB: ${healedCount}`);
-    
-    console.log("---------------------------------------------------");
+    logger.info(`\n📊 Summary for Course ${courseId}:`);
+    logger.info(`   Total Assets: ${assets.length} (${totalVideos} vids, ${totalGuides} guides)`);
+    logger.info(`   Found on disk: ${assets.length - missingFiles}`);
+    logger.info(`   Missing on disk: ${missingFiles}`);
+    if (healedCount > 0) logger.info(`   ✨ Healed in DB: ${healedCount}`);
+
+    logger.info("---------------------------------------------------");
 }
 
 /**
  * Verifies all downloaded videos for all courses within a learning path.
  */
 export async function verifyPathDownloads({ pathId, repair = false }: { pathId: string, repair?: boolean }) {
-    console.log(`\n===================================================`);
-    console.log(`🚀 Verifying Learning Path ID: ${pathId}${repair ? ' [MODE: REPAIR]' : ''}`);
-    console.log(`===================================================`);
+    logger.info(`\n===================================================`);
+    logger.info(`🚀 Verifying Learning Path ID: ${pathId}${repair ? ' [MODE: REPAIR]' : ''}`);
+    logger.info(`===================================================`);
 
     const pathRows = db.prepare("SELECT title FROM LearningPaths WHERE id = ?").get(pathId) as { title: string } | undefined;
     if (pathRows) {
-        console.log(`Path Title: ${pathRows.title}`);
+        logger.info(`Path Title: ${pathRows.title}`);
     }
 
     const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
 
     if (courses.length === 0) {
-        console.error(`No courses found for learning path ${pathId}.`);
+        logger.error(`No courses found for learning path ${pathId}.`);
         return;
     }
 
     for (const course of courses) {
-        await verifyCourseDownloads({courseId: course.course_id, repair});
+        await verifyCourseDownloads({ courseId: course.course_id, repair });
     }
 }
 
@@ -122,9 +124,9 @@ export async function verifyPathDownloads({ pathId, repair = false }: { pathId: 
 if (require.main === module) {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.log("Usage:");
-        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts course <courseId> [--repair]");
-        console.log("  pnpm exec ts-node src/scripts/verifyDownloads.ts path <pathId> [--repair]");
+        logger.info("Usage:");
+        logger.info("  pnpm exec ts-node src/scripts/verifyDownloads.ts course <courseId> [--repair]");
+        logger.info("  pnpm exec ts-node src/scripts/verifyDownloads.ts path <pathId> [--repair]");
         process.exit(1);
     }
 
@@ -134,14 +136,14 @@ if (require.main === module) {
 
     (async () => {
         if (type === "course") {
-            await verifyCourseDownloads({courseId: targetId, repair});
+            await verifyCourseDownloads({ courseId: targetId, repair });
         } else if (type === "path") {
-            await verifyPathDownloads({pathId: targetId, repair});
+            await verifyPathDownloads({ pathId: targetId, repair });
         } else {
-            console.log("Unknown command. Use 'course' or 'path'.");
+            logger.info("Unknown command. Use 'course' or 'path'.");
         }
     })().catch(err => {
-        console.error("Fatal error:", err);
+        logger.error("Fatal error:", err);
         process.exit(1);
     });
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { runMigrations } from "../../../src/platform/db/schema";
+import { NoopLogger } from "@my-offline-lms/core";
 
 describe("Database Schema Migrations", () => {
   it("should run all migrations", () => {
@@ -11,7 +12,7 @@ describe("Database Schema Migrations", () => {
       }),
     };
 
-    runMigrations(mockDb as any);
+    runMigrations(mockDb as any, new NoopLogger());
 
     // Initial table rename/column add (try-catch blocks)
     expect(mockDb.exec).toHaveBeenCalled();
@@ -33,6 +34,6 @@ describe("Database Schema Migrations", () => {
       }),
     };
 
-    expect(() => runMigrations(mockDb as any)).toThrow("Base creation failed");
+    expect(() => runMigrations(mockDb as any, new NoopLogger())).toThrow("Base creation failed");
   });
 });

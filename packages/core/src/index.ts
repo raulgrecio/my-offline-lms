@@ -21,3 +21,4 @@ export * from './filesystem/MimeTypes';
 
 export * from './logging/ILogger';
 export * from './logging/ConsoleLogger';
+export * from './logging/NoopLogger';

@@ -1,18 +1,18 @@
-import { SQLiteDatabase } from "@my-offline-lms/core";
+import { SQLiteDatabase, type ILogger } from "@my-offline-lms/core";
 
-export function runMigrations(db: SQLiteDatabase) {
+export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   // --- Migraciones de esquema ---
 
   // 1. Renombrar position_sec -> position (versión antigua)
   try {
     db.exec("ALTER TABLE UserProgress RENAME COLUMN position_sec TO position;");
-    console.log("[DB] Renamed UserProgress.position_sec to position");
+    logger.info("Renamed UserProgress.position_sec to position");
   } catch (e) { }
 
   // 2. Asegurar que max_position existe
   try {
     db.exec("ALTER TABLE UserProgress ADD COLUMN max_position REAL DEFAULT 0;");
-    console.log("[DB] Added UserProgress.max_position column");
+    logger.info("Added UserProgress.max_position column");
   } catch (e) { }
 
   // [NUEVO] Migración estructural de UserProgress para incluir asset_type en PK
@@ -21,7 +21,7 @@ export function runMigrations(db: SQLiteDatabase) {
     const hasAssetType = tableInfo.some(c => c.name === 'asset_type');
     
     if (!hasAssetType) {
-      console.log("[DB] Migrating UserProgress to multi-type schema...");
+      logger.info("Migrating UserProgress to multi-type schema...");
       db.exec("PRAGMA foreign_keys=OFF;");
       db.exec("ALTER TABLE UserProgress RENAME TO UserProgress_old;");
       
@@ -46,7 +46,7 @@ export function runMigrations(db: SQLiteDatabase) {
       `);
       
       db.exec("DROP TABLE UserProgress_old;");
-      console.log("[DB] Successfully migrated UserProgress schema");
+      logger.info("Successfully migrated UserProgress schema");
     }
 
     // Migración de UserAssetSegments
@@ -54,7 +54,7 @@ export function runMigrations(db: SQLiteDatabase) {
     const hasSegmentsType = segmentsInfo.some(c => c.name === 'asset_type');
     
     if (!hasSegmentsType) {
-      console.log("[DB] Migrating UserAssetSegments to multi-type schema...");
+      logger.info("Migrating UserAssetSegments to multi-type schema...");
       db.exec("ALTER TABLE UserAssetSegments RENAME TO UserAssetSegments_old;");
       
       db.exec(`
@@ -74,19 +74,17 @@ export function runMigrations(db: SQLiteDatabase) {
       
       db.exec("DROP TABLE UserAssetSegments_old;");
       db.exec("PRAGMA foreign_keys=ON;");
-      console.log("[DB] Successfully migrated UserAssetSegments schema");
+      logger.info("Successfully migrated UserAssetSegments schema");
     }
   } catch (e: any) {
-    console.error("[DB] Progress migration failed:", e.message);
+    logger.error("Progress migration failed:", e.message);
     db.exec("PRAGMA foreign_keys=ON;");
   }
 
   // 3. Añadir columnas de agregación a UserCourseProgress
   try {
-    db.exec("ALTER TABLE UserCourseProgress ADD COLUMN completed_assets INTEGER DEFAULT 0;");
-    db.exec("ALTER TABLE UserCourseProgress ADD COLUMN in_progress_assets INTEGER DEFAULT 0;");
     db.exec("ALTER TABLE UserCourseProgress ADD COLUMN total_assets INTEGER DEFAULT 0;");
-    console.log("[DB] Added aggregation columns to UserCourseProgress");
+    logger.info("Added aggregation columns to UserCourseProgress");
   } catch (e) { }
 
   // 8. Unificación de colecciones (Course + LearningPath -> Collection)
@@ -105,14 +103,12 @@ export function runMigrations(db: SQLiteDatabase) {
         SELECT path_id, 'learning-path', status, completed_courses, in_progress_courses, total_courses, updated_at 
         FROM UserLearningPathProgress;
       `);
-      console.log("[DB] Migrated collections progress to UserCollectionProgress");
+      logger.info("Migrated collections progress to UserCollectionProgress");
     }
   } catch (e) { }
   try {
-    db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN completed_courses INTEGER DEFAULT 0;");
-    db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN in_progress_courses INTEGER DEFAULT 0;");
     db.exec("ALTER TABLE UserLearningPathProgress ADD COLUMN total_courses INTEGER DEFAULT 0;");
-    console.log("[DB] Added aggregation columns to UserLearningPathProgress");
+    logger.info("Added aggregation columns to UserLearningPathProgress");
   } catch (e) { }
 
   // 5. [Eliminado] Refactorización de progreso global (course_id eliminado)
@@ -138,10 +134,10 @@ export function runMigrations(db: SQLiteDatabase) {
       db.exec("DROP TABLE IF EXISTS UserFavorites;");
       db.exec("ALTER TABLE UserFavorites_new RENAME TO UserFavorites;");
       db.exec("PRAGMA foreign_keys=ON;");
-      console.log("[DB] Migrated UserFavorites constraint: learning_path -> learning-path");
+      logger.info("Migrated UserFavorites constraint: learning_path -> learning-path");
     }
   } catch (e: any) {
-    console.error("[DB] Migration 7 failed:", e.message);
+    logger.error("Migration 7 failed:", e.message);
   }
 
   // 6. Crear tablas base si no existen

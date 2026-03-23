@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@platform/logging';
 
 /**
  * Validated environment variables for the web package.
@@ -17,11 +18,12 @@ type Env = z.infer<typeof envSchema>;
 // In Astro, we access environment variables via import.meta.env
 // but it only includes variables prefixed with PUBLIC_ unless we are in SSR
 // Since we are using SSR (prerender = false), we can also use process.env
+
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("❌ Invalid web environment variables:");
-  console.error(z.treeifyError(parsed.error));
+  logger.error("❌ Invalid web environment variables:");
+  logger.error("Environment validation failed", parsed.error);
 }
 
 export const env: Env = parsed.success ? parsed.data : envSchema.parse({});

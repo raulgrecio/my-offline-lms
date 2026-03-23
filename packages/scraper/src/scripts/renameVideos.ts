@@ -4,6 +4,9 @@ import path from "path";
 import { db } from "@db/schema";
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
 import { getAssetsDir } from "@config/paths";
+import { logger as baseLogger } from "@platform/logging";
+
+const logger = baseLogger.withContext("renameVideos");
 
 async function renameVideosForCourse(courseId: string) {
     const assetsDir = await getAssetsDir();
@@ -11,22 +14,22 @@ async function renameVideosForCourse(courseId: string) {
     try {
         await fs.promises.access(courseVideosDir);
     } catch (e) {
-        console.error(`No folder found at ${courseVideosDir}`);
+        logger.error(`No folder found at ${courseVideosDir}`);
         return;
     }
 
     const rows = db.prepare("SELECT id, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video' AND status = 'COMPLETED'").all(courseId) as any[];
 
-    console.log(`Checking ${rows.length} completed videos for renaming...`);
+    logger.info(`Checking ${rows.length} completed videos for renaming...`);
 
     let renamedCount = 0;
 
     for (const row of rows) {
         const meta = JSON.parse(row.metadata || "{}");
-        
+
         const namingService = new AssetNamingService();
         let rawName = namingService.generateSafeFilename(meta.name) || row.id;
-        
+
         if (!meta.order_index) {
             continue; // Nothing to prefix
         }
@@ -42,12 +45,12 @@ async function renameVideosForCourse(courseId: string) {
             if (file.startsWith(rawName) && !file.startsWith(prefixedName)) {
                 // The part after rawName (e.g. ".mp4", ".es.vtt")
                 const suffix = file.substring(rawName.length);
-                
+
                 const oldPath = path.join(courseVideosDir, file);
                 const newPath = path.join(courseVideosDir, `${prefixedName}${suffix}`);
-                
+
                 await fs.promises.rename(oldPath, newPath);
-                console.log(`Renamed: ${file} -> ${prefixedName}${suffix}`);
+                logger.info(`Renamed: ${file} -> ${prefixedName}${suffix}`);
                 renamedSomething = true;
             }
         }
@@ -57,9 +60,9 @@ async function renameVideosForCourse(courseId: string) {
         }
     }
 
-    console.log(`All done! Renamed ${renamedCount} videos.`);
+    logger.info(`All done! Renamed ${renamedCount} videos.`);
 }
 
 const args = process.argv.slice(2);
 const targetCourse = args[0] || "86212";
-renameVideosForCourse(targetCourse).catch(console.error);
+renameVideosForCourse(targetCourse).catch(logger.error);

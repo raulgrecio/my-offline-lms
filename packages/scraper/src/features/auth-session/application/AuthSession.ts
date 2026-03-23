@@ -58,7 +58,7 @@ export class AuthSession {
 
     // Autoguardado silencioso cada 15 minutos
     const autoSaveInterval = setInterval(() => {
-      saveSession().catch(console.error);
+      saveSession().catch(err => this.logger.error("Error en el autoguardado de sesión", err));
     }, 15 * 60 * 1000);
 
     await new Promise<void>((resolve) => {

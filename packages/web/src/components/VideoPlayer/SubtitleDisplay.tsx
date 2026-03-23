@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 import { apiClient } from '@platform/api/client';
+import { logger } from '@platform/logging';
 
 interface Cue {
   start: number;
@@ -77,7 +78,7 @@ export default function SubtitleDisplay({ src, currentTime, isVisible, opacity =
         const text = await apiClient.getText(src);
         parseVTT(text);
       } catch (error) {
-        console.error('Error fetching subtitles:', error);
+        logger.error('Error fetching subtitles:', error);
       }
     };
 

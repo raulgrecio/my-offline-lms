@@ -3,6 +3,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 
 import { env } from "@config/env";
 import { getAuthState } from "@config/paths";
+import { logger } from "@platform/logging";
 
 chromium.use(stealth());
 
@@ -10,22 +11,22 @@ chromium.use(stealth());
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ storageState: await getAuthState() });
     const page = await context.newPage();
-    
-    console.log("Navigating...");
+
+    logger.info("Navigating...");
     const baseUrl = env.PLATFORM_BASE_URL;
     const coursePath = new URL(`/ou/course/oracle-database-19c-multitenant-architecture/86212/122711`, baseUrl).href
     await page.goto(coursePath, { waitUntil: "domcontentloaded" });
-    
-    console.log("Waiting 20 seconds for SPA...");
-    await page.waitForTimeout(20000); 
-    
-    console.log("Analyzing DOM...");
-    
+
+    logger.info("Waiting 20 seconds for SPA...");
+    await page.waitForTimeout(20000);
+
+    logger.info("Analyzing DOM...");
+
     // Dump iframe src attributes
     const iframes = await page.locator("iframe").all();
-    console.log(`Found ${iframes.length} iframes:`);
+    logger.info(`Found ${iframes.length} iframes:`);
     for (let i = 0; i < iframes.length; i++) {
-        console.log(`Iframe ${i}: ${await iframes[i].getAttribute("src")}`);
+        logger.info(`Iframe ${i}: ${await iframes[i].getAttribute("src")}`);
     }
 
     const buttons = await page.evaluate(() => {
@@ -36,7 +37,7 @@ chromium.use(stealth());
         })).filter(b => b.className?.toLowerCase().includes('play') || (b.text && b.text.toLowerCase().includes('play')));
     });
 
-    console.log("Potential play buttons:", buttons);
+    logger.info(`Potential play buttons: ${JSON.stringify(buttons, null, 2)}`);
 
     await browser.close();
-})().catch(console.error);
+})().catch(err => logger.error("Fatal error in screenshot debug script", err));
