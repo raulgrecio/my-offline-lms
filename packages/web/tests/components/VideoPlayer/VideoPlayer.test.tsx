@@ -47,8 +47,14 @@ describe("VideoPlayer Component", () => {
   });
 
   it("should render correctly with title", async () => {
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     
+    await waitFor(() => {
+        expect(apiClient.get).toHaveBeenCalled();
+    });
+
     expect(screen.getByText("Test Video")).toBeInTheDocument();
     const video = document.querySelector("video");
     expect(video).toHaveAttribute("src", "test-video.mp4");
@@ -57,7 +63,9 @@ describe("VideoPlayer Component", () => {
   it("should fetch visited segments on mount", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ segments: [1, 2] });
     
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     
     await waitFor(() => {
       expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining("asset-1"));
@@ -65,26 +73,34 @@ describe("VideoPlayer Component", () => {
   });
 
   it("should toggle play/pause when video container is clicked", async () => {
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
+    
+    await waitFor(() => {
+      expect(apiClient.get).toHaveBeenCalled();
+    });
     
     const container = document.querySelector(".video-player-container");
     if (!container) throw new Error("Container not found");
 
     // Click to play
-    fireEvent.click(container);
+    await act(async () => {
+      fireEvent.click(container);
+    });
     expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
-
-    // Click to pause (since we can't easily simulate video.paused state changes in JSDOM, we just check the call)
-    // Actually, JSDOM video element state might not update automatically.
-    // We can manually set the internal state or just verify the first call.
   });
 
-  it("should update current time when video time updates", () => {
-    render(<VideoPlayer {...defaultProps} />);
+  it("should update current time when video time updates", async () => {
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     const video = document.querySelector("video");
     if (!video) throw new Error("Video not found");
 
-    fireEvent.timeUpdate(video, { target: { currentTime: 10 } });
+    await act(async () => {
+      fireEvent.timeUpdate(video, { target: { currentTime: 10 } });
+    });
     
     // Check if TimeDisplay reflects the change (0:10 / 0:00 since duration is 0 initially)
     expect(screen.getByText(/0:10/)).toBeInTheDocument();
@@ -92,7 +108,9 @@ describe("VideoPlayer Component", () => {
 
   it("should save progress periodically", async () => {
     vi.useFakeTimers();
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+        render(<VideoPlayer {...defaultProps} />);
+    });
     
     const video = document.querySelector("video");
     if (!video) throw new Error("Video not found");
@@ -112,83 +130,107 @@ describe("VideoPlayer Component", () => {
   });
 
   it("should handle ended event", async () => {
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     const video = document.querySelector("video");
     if (!video) throw new Error("Video not found");
 
-    fireEvent.ended(video);
+    await act(async () => {
+      fireEvent.ended(video);
+    });
     
     expect(apiClient.post).toHaveBeenCalledWith("/api/progress", expect.objectContaining({
         assetId: "asset-1",
         // completed: true logic is inside saveProgress call redirected from handleEnded
     }));
   });
-  it("should handle volume changes", () => {
-    render(<VideoPlayer {...defaultProps} />);
+  it("should handle volume changes", async () => {
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     const volumeInput = screen.getByLabelText(/Volumen/);
     
-    fireEvent.change(volumeInput, { target: { value: "0.5" } });
+    await act(async () => {
+      fireEvent.change(volumeInput, { target: { value: "0.5" } });
+    });
     
     const video = document.querySelector("video");
     expect(video?.volume).toBe(0.5);
   });
 
-  it("should handle seeking via ProgressVideoBar", () => {
-    render(<VideoPlayer {...defaultProps} />);
+  it("should handle seeking via ProgressVideoBar", async () => {
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     const seekInput = document.querySelector('input[type="range"]'); // ProgressVideoBar's input
     if (!seekInput) throw new Error("Seek input not found");
 
-    fireEvent.change(seekInput, { target: { value: "50" } });
+    await act(async () => {
+      fireEvent.change(seekInput, { target: { value: "50" } });
+    });
     
     const video = document.querySelector("video");
     expect(video?.currentTime).toBe(50);
   });
 
-  it("should toggle settings popup", () => {
+  it("should toggle settings popup", async () => {
     // Need subtitleSrc to show settings button
-    render(<VideoPlayer {...defaultProps} subtitleSrc="subs.vtt" />);
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} subtitleSrc="subs.vtt" />);
+    });
     
     const settingsBtn = screen.getByLabelText(/Configuración de subtítulos/);
-    fireEvent.click(settingsBtn);
+    await act(async () => {
+      fireEvent.click(settingsBtn);
+    });
     
     expect(screen.getAllByText(/Subtítulos/i).length).toBeGreaterThan(0);
     
     // Close it
-    fireEvent.click(settingsBtn);
+    await act(async () => {
+      fireEvent.click(settingsBtn);
+    });
     expect(screen.queryByText(/Subtítulos/i)).not.toBeInTheDocument();
   });
 
-  it("should toggle fullscreen", () => {
+  it("should toggle fullscreen", async () => {
     // Mock requestFullscreen and exitFullscreen
     const container = document.createElement("div");
     container.requestFullscreen = vi.fn();
     document.exitFullscreen = vi.fn();
 
-    render(<VideoPlayer {...defaultProps} />, { container: document.body.appendChild(container) });
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />, { container: document.body.appendChild(container) });
+    });
     
     const fullscreenBtn = screen.getByLabelText(/Pantalla completa/);
     
     // Enter fullscreen
-    fireEvent.click(fullscreenBtn);
-    // Since we are mocking, we just check if it was called (it might not be called on the wrapper but we'll check)
-    // Actually, in VideoPlayer.tsx it's called on containerRef.current
+    await act(async () => {
+      fireEvent.click(fullscreenBtn);
+    });
   });
 
   it("should show controls on mouse move and hide them after timeout", async () => {
     vi.useFakeTimers();
-    render(<VideoPlayer {...defaultProps} />);
+    await act(async () => {
+        render(<VideoPlayer {...defaultProps} />);
+    });
     
     const container = document.querySelector(".video-player-container");
     if (!container) throw new Error("Container not found");
 
-    fireEvent.mouseMove(container);
+    await act(async () => {
+        fireEvent.mouseMove(container);
+    });
     // Controls should be visible (opacity checks are hard in JSDOM, but state is updated)
     
     // Mock video playing so it auto-hides
     const video = document.querySelector("video");
     if (video) Object.defineProperty(video, "paused", { value: false });
 
-    act(() => {
+    await act(async () => {
         vi.advanceTimersByTime(4000);
     });
     

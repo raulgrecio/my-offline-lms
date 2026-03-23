@@ -6,14 +6,18 @@ import { initPdfViewer } from "@components/PDFViewer/pdf-viewer-client";
 
 // Mock pdfjs-dist
 vi.mock("pdfjs-dist", () => ({
-  getDocument: vi.fn().mockReturnValue({
-    promise: Promise.resolve({
-      numPages: 10,
-      getPage: vi.fn().mockResolvedValue({
-        getViewport: vi.fn().mockReturnValue({ width: 600, height: 800 }),
-        render: vi.fn().mockReturnValue({ promise: Promise.resolve() }),
+  getDocument: vi.fn(function() {
+    return {
+      promise: Promise.resolve({
+        numPages: 10,
+        getPage: vi.fn(async function() {
+          return {
+            getViewport: vi.fn(function() { return { width: 600, height: 800 }; }),
+            render: vi.fn(function() { return { promise: Promise.resolve() }; }),
+          };
+        }),
       }),
-    }),
+    };
   }),
   GlobalWorkerOptions: {
     workerSrc: "",
@@ -29,18 +33,22 @@ vi.mock("@platform/api/client", () => ({
 }));
 
 // Mock ResizeObserver
-window.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+window.ResizeObserver = vi.fn().mockImplementation(function() {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock IntersectionObserver
-window.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+window.IntersectionObserver = vi.fn().mockImplementation(function() {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  };
+});
 
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
