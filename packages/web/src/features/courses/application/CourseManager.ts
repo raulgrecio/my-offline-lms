@@ -1,3 +1,4 @@
+import { type Course, type Asset } from '@my-offline-lms/core/models';
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 import { getAllCourses } from "./use-cases/getAllCourses";
 import { getAssetById, type GetAssetByIdRequest } from "./use-cases/getAssetById";
@@ -8,23 +9,23 @@ import { updateAssetTotalPages, type UpdateAssetTotalPagesRequest } from "./use-
 export class CourseManager {
   constructor(private repo: ICourseRepository) { }
 
-  getAllCourses() {
+  getAllCourses(): Course[] {
     return getAllCourses(this.repo);
   }
 
-  getAssetById(request: GetAssetByIdRequest) {
+  getAssetById(request: GetAssetByIdRequest): Asset | null {
     return getAssetById(this.repo, request);
   }
 
-  getCourseById(request: GetCourseByIdRequest) {
+  getCourseById(request: GetCourseByIdRequest): Course | null {
     return getCourseById(this.repo, request);
   }
 
-  getAssetsByCourseId(request: GetAssetsByCourseIdRequest) {
+  getAssetsByCourseId(request: GetAssetsByCourseIdRequest): Asset[] {
     return getAssetsByCourseId(this.repo, request);
   }
 
-  updateAssetTotalPages(request: UpdateAssetTotalPagesRequest) {
+  updateAssetTotalPages(request: UpdateAssetTotalPagesRequest): void {
     return updateAssetTotalPages(this.repo, request);
   }
 }

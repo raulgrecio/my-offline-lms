@@ -7,6 +7,7 @@ import type { CollectionProgress } from "../domain/model/CollectionProgress";
 import type { CollectionType } from "../domain/model/CollectionType";
 import type { ProgressStatus } from "../domain/model/ProgressStatus";
 import type { IProgressRepository } from "../domain/ports/IProgressRepository";
+import type { AssetWithPosition } from "../domain/model/AssetWithPosition";
 
 export class SQLiteProgressRepository implements IProgressRepository {
   constructor(private db: IDatabase) { }
@@ -71,7 +72,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
     }));
   }
 
-  getLastWatchedAsset(): (Asset & { position: number }) | null {
+  getLastWatchedAsset(): AssetWithPosition | null {
     const row = this.db
       .prepare(
         `
