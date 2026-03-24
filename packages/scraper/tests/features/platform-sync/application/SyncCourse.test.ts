@@ -10,9 +10,9 @@ import { AssetNamingService } from '@features/asset-download/infrastructure/Asse
 import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
 
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
-import { BrowserInterceptor } from '../../../platform/browser/BrowserInterceptor';
+import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
 
-vi.mock('../../../platform/browser/BrowserInterceptor', () => {
+vi.mock('@platform/browser/BrowserInterceptor', () => {
   return {
     BrowserInterceptor: vi.fn().mockImplementation(function () {
       return {

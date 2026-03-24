@@ -8,10 +8,10 @@
     "cli": "ts-node -r tsconfig-paths/register src/index.ts",
     "dev": "nodemon -x ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
-    "test": "vitest ./src",
-    "test:run": "vitest run ./src",
-    "test:watch": "vitest watch ./src",
-    "test:coverage": "vitest run --coverage ./src"
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@my-offline-lms/core": "workspace:*",

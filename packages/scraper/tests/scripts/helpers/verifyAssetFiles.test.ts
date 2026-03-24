@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { verifyAssetFiles } from '../../scripts/helpers/verifyAssetFiles';
+import { verifyAssetFiles } from '../../../src/scripts/helpers/verifyAssetFiles';
 
 // Mock dependencies
 vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
@@ -17,28 +17,28 @@ vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
       listAssets = vi.fn(async () => []);
     },
     NodeFileSystem: class {
-        exists = vi.fn(async (p: string) => {
-            if (p === '/missing/path.pdf') return false;
-            if (p.includes('course-other')) return false; // This triggers missing video dir
-            return true;
-        });
-        readdir = vi.fn(async (p: string) => {
-            if (p.includes('course-course-123/videos')) return ['custom-name.vtt'];
-            if (p.includes('already')) return ['exists.vtt'];
-            return [];
-        });
-        readFileSync = vi.fn(() => '{}');
+      exists = vi.fn(async (p: string) => {
+        if (p === '/missing/path.pdf') return false;
+        if (p.includes('course-other')) return false; // This triggers missing video dir
+        return true;
+      });
+      readdir = vi.fn(async (p: string) => {
+        if (p.includes('course-course-123/videos')) return ['custom-name.vtt'];
+        if (p.includes('already')) return ['exists.vtt'];
+        return [];
+      });
+      readFileSync = vi.fn(() => '{}');
     },
     NodePath: class {
-        resolve = vi.fn((...args) => args.join('/'));
-        join = vi.fn((...args) => args.join('/'));
-        dirname = vi.fn((p) => p.split('/').slice(0, -1).join('/'));
-        basename = vi.fn((p, ext) => {
-            const b = p.split('/').pop() || '';
-            return ext ? b.replace(ext, '') : b;
-        });
-        extname = vi.fn((p) => p.includes('.') ? '.' + p.split('.').pop() : '');
-        sep = '/';
+      resolve = vi.fn((...args) => args.join('/'));
+      join = vi.fn((...args) => args.join('/'));
+      dirname = vi.fn((p) => p.split('/').slice(0, -1).join('/'));
+      basename = vi.fn((p, ext) => {
+        const b = p.split('/').pop() || '';
+        return ext ? b.replace(ext, '') : b;
+      });
+      extname = vi.fn((p) => p.includes('.') ? '.' + p.split('.').pop() : '');
+      sep = '/';
     },
     ASSET_FOLDERS: {
       guide: 'guides',
@@ -115,24 +115,24 @@ describe('verifyAssetFiles', () => {
   });
 
   it('should handle video directory not existing for VTT check', async () => {
-      // foundPath: /default/path/course-other/videos/missing.mp4
-      // videoDir: /default/path/course-other/videos
-      const result = await verifyAssetFiles({
-          type: 'video',
-          courseId: 'other', // specific courseId to trigger missing path in mock
-          metadataStr: JSON.stringify({ filename: 'custom-name.mp4' })
-      });
-      expect(result.videoExists).toBe(true);
-      expect(result.vttExists).toBe(false);
+    // foundPath: /default/path/course-other/videos/missing.mp4
+    // videoDir: /default/path/course-other/videos
+    const result = await verifyAssetFiles({
+      type: 'video',
+      courseId: 'other', // specific courseId to trigger missing path in mock
+      metadataStr: JSON.stringify({ filename: 'custom-name.mp4' })
+    });
+    expect(result.videoExists).toBe(true);
+    expect(result.vttExists).toBe(false);
   });
 
   it('should fuzzy match VTT for localPath videos', async () => {
-      const result = await verifyAssetFiles({
-          type: 'video',
-          courseId,
-          metadataStr: '{}',
-          localPath: '/already/exists.mp4'
-      });
-      expect(result.vttExists).toBe(true);
+    const result = await verifyAssetFiles({
+      type: 'video',
+      courseId,
+      metadataStr: '{}',
+      localPath: '/already/exists.mp4'
+    });
+    expect(result.vttExists).toBe(true);
   });
 });
