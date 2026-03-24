@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import Icon from "@components/Icon/Icon";
+import { Icon } from "@components/Icon";
 
 describe("Icon Component", () => {
   it("should render correctly with a given name", () => {

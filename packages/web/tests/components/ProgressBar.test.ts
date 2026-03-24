@@ -1,14 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+/** @vitest-environment node */
+import { describe, it, expect } from "vitest";
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 // @ts-ignore
 import ProgressBar from "@components/ProgressBar.astro";
 
-describe("ProgressBar Component", () => {
-  it("should be defined", () => {
-    expect(ProgressBar).toBeDefined();
-  });
-
-  it("should have a render function or be a component function", () => {
-    // Astro components are functions that take (result, props, slots)
-    expect(typeof ProgressBar).toBe("function");
+describe("ProgressBar.astro", () => {
+  it("should render with correct width", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(ProgressBar, { props: { progress: 75 } });
+    expect(html).toContain('width: 75%');
   });
 });
