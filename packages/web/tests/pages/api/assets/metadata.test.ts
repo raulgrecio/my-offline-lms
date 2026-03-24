@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET, POST } from "../../../src/pages/api/assets/metadata";
+import { GET, POST } from "@pages/api/assets/metadata";
 import * as CoursesFeature from "@features/courses";
 
 vi.mock("@features/courses", () => ({

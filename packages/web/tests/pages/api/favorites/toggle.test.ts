@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "../../../src/pages/api/favorites/toggle";
+import { POST } from "@pages/api/favorites/toggle";
 import * as FavoritesFeature from "@features/favorites";
 
 vi.mock("@features/favorites", () => ({

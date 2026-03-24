@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "../../../src/pages/api/progress/course";
+import { POST } from "@pages/api/progress/course";
 import * as ProgressFeature from "@features/progress";
 
 vi.mock("@features/progress", () => ({

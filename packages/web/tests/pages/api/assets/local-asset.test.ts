@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET } from "../../../src/pages/api/assets/local-asset";
+import { GET } from "@pages/api/assets/local-asset";
 import { AssetPathResolver, UniversalFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
 
 const { mockFs, mockPath, mockResolver } = vi.hoisted(() => ({
@@ -17,11 +17,11 @@ const { mockFs, mockPath, mockResolver } = vi.hoisted(() => ({
 }));
 
 vi.mock("@my-offline-lms/core/filesystem", () => ({
-  AssetPathResolver: vi.fn().mockImplementation(function() { return mockResolver; }),
-  UniversalFileSystem: vi.fn().mockImplementation(function() { return mockFs; }),
+  AssetPathResolver: vi.fn().mockImplementation(function () { return mockResolver; }),
+  UniversalFileSystem: vi.fn().mockImplementation(function () { return mockFs; }),
   NodeFileSystem: vi.fn(),
   HttpFileSystem: vi.fn(),
-  NodePath: vi.fn().mockImplementation(function() { return mockPath; }),
+  NodePath: vi.fn().mockImplementation(function () { return mockPath; }),
   getMimeType: vi.fn(() => "application/octet-stream"),
 }));
 
