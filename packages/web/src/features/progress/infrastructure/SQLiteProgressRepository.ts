@@ -63,7 +63,7 @@ export class SQLiteProgressRepository implements IProgressRepository {
         .all(type) as any[]
     ).map((row) => ({
       id: row.id,
-      type: row.type as CollectionType,
+      type: (row.type || type) as CollectionType,
       status: row.status as ProgressStatus,
       completedItems: row.completed_items || 0,
       inProgressItems: row.in_progress_items || 0,
@@ -246,6 +246,6 @@ export class SQLiteProgressRepository implements IProgressRepository {
         "SELECT segment FROM UserAssetSegments WHERE asset_id = ? AND asset_type = ? ORDER BY segment ASC",
       )
       .all(id, type) as any[];
-    return rows.map((r) => r.segment) || [];
+    return (rows || []).map((r) => r.segment);
   }
 }

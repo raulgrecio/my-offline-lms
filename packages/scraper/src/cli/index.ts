@@ -27,7 +27,6 @@ import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
 import { BrowserProvider } from '@platform/browser/BrowserProvider';
 import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
-import { initDb } from '@platform/database/schema';
 
 dotenv.config();
 
@@ -112,7 +111,7 @@ Comandos disponibles:
           authStorage: authSessionStorage,
           logger,
         });
-        await auth.interactiveLogin(baseUrl);
+        await auth.execute({ baseUrl });
         break;
       }
       case 'sync-course': {
@@ -178,7 +177,7 @@ Comandos disponibles:
             keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
           }
         });
-        await syncPath.execute(target);
+        await syncPath.execute({ pathInput: target });
         break;
       }
       case 'download-guides': {
@@ -200,7 +199,7 @@ Comandos disponibles:
             }
           }
         });
-        await guides.executeForCourse(id);
+        await guides.execute({ courseId: id });
         break;
       }
       case 'download-videos': {
@@ -223,7 +222,7 @@ Comandos disponibles:
             }
           }
         });
-        await videos.executeForCourse(id);
+        await videos.execute({ courseId: id });
         break;
       }
       case 'download-path': {

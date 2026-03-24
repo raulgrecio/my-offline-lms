@@ -110,14 +110,52 @@ describe('DiskAssetStorage', () => {
     expect(tempDir).toBe('/mock/assets/123/guides/.temp_asset456');
   });
 
+  it('should skip mkdir if temp directory already exists', async () => {
+    mockFs.exists.mockResolvedValue(true);
+    await storage.ensureTempDir('123', 'asset456');
+    expect(mockFs.mkdir).not.toHaveBeenCalledWith(expect.stringContaining('.temp_'), expect.any(Object));
+  });
+
+  it('should initialize base directory from getAssetsDir if not provided', async () => {
+    const storageNoBaseDir = new DiskAssetStorage({
+      fs: mockFs,
+      path: mockPath,
+      resolver: mockResolver
+    });
+    // @ts-ignore - accessing private to verify
+    expect(storageNoBaseDir.assetsBaseDir).toBeUndefined();
+    await storageNoBaseDir.ensureAssetDir('123', 'video');
+    // @ts-ignore
+    expect(storageNoBaseDir.assetsBaseDir).toBe('/mock/assets');
+    expect(mockResolver.ensureInitialized).toHaveBeenCalled();
+  });
+
   it('should remove temp directory', async () => {
     await storage.removeTempDir('/mock/tempDir');
     expect(mockFs.rm).toHaveBeenCalledWith('/mock/tempDir', { recursive: true, force: true });
   });
 
+  it('should do nothing in removeTempDir if fs.rm is missing', async () => {
+    mockFs.rm = undefined;
+    await expect(storage.removeTempDir('/mock/tempDir')).resolves.toBeUndefined();
+  });
+
   it('should check if asset exists', async () => {
     mockFs.exists.mockResolvedValue(true);
     expect(await storage.assetExists('/mock/file.pdf')).toBe(true);
+  });
+
+  it('should check if asset exists via resolver if fs.exists is false', async () => {
+    mockFs.exists.mockResolvedValue(false);
+    mockResolver.resolveExistingPath.mockResolvedValue('/mock/resolved/path');
+    expect(await storage.assetExists('/mock/file.pdf')).toBe(true);
+    expect(mockResolver.resolveExistingPath).toHaveBeenCalledWith('/mock/file.pdf');
+  });
+
+  it('should find existing asset using resolver', async () => {
+    const assetPath = await storage.findExistingAsset('c1', 'guide', 'test.pdf');
+    expect(assetPath).toBe('/mock/found/asset');
+    expect(mockResolver.findAsset).toHaveBeenCalledWith('c1', 'guide', 'test.pdf');
   });
 
   it('should verify video integrity false if file does not exist', async () => {
@@ -148,6 +186,11 @@ describe('DiskAssetStorage', () => {
     mockFs.exists.mockResolvedValue(true);
     mockFs.stat.mockResolvedValue({ size: 100 });
     expect(await storage.getTempImageSize('/mock/test.png')).toBe(100);
+  });
+
+  it('should return 0 from getTempImageSize if file does not exist', async () => {
+    mockFs.exists.mockResolvedValue(false);
+    expect(await storage.getTempImageSize('/mock/not-exist.png')).toBe(0);
   });
 
   it('should throw error if no images found for PDF', async () => {
@@ -184,5 +227,43 @@ describe('DiskAssetStorage', () => {
     setTimeout(() => mockWriteStream.emit('finish'), 10);
 
     await expect(promise).resolves.toBeUndefined();
+  });
+
+  it('should throw error if createWriteStream is not supported', async () => {
+    mockFs.readdir.mockResolvedValue(['img.png']);
+    mockFs.createWriteStream = undefined;
+    await expect(storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf'))
+      .rejects.toThrow('FileSystem does not support writing streams');
+  });
+
+  it('should throw error if createWriteStream returns null', async () => {
+    mockFs.readdir.mockResolvedValue(['img.png']);
+    mockFs.createWriteStream.mockReturnValue(null);
+    await expect(storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf'))
+      .rejects.toThrow('Failed to create write stream');
+  });
+
+  it('should rethrow errors from build loop', async () => {
+    mockFs.readdir.mockResolvedValue(['img.png']);
+    mockFs.readFile.mockRejectedValue(new Error('Read error'));
+    const mockWriteStream = new (require('events').EventEmitter)();
+    mockFs.createWriteStream.mockReturnValue(mockWriteStream);
+
+    await expect(storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf'))
+      .rejects.toThrow('Read error');
+  });
+
+  it('should reject if write stream emits an error event', async () => {
+    mockFs.readdir.mockResolvedValue(['img.png']);
+    mockFs.readFile.mockResolvedValue(Buffer.from('mock'));
+
+    const mockWriteStream = new (require('events').EventEmitter)();
+    mockFs.createWriteStream.mockReturnValue(mockWriteStream);
+
+    const promise = storage.buildPDFFromImages('/mock/dir', '/mock/out.pdf');
+
+    setTimeout(() => mockWriteStream.emit('error', new Error('Stream error')), 10);
+
+    await expect(promise).rejects.toThrow('Stream error');
   });
 });

@@ -22,6 +22,7 @@ vi.mock("fs", () => ({
       rm: vi.fn(),
       stat: vi.fn(),
       unlink: vi.fn(),
+      rename: vi.fn(),
     }
   }
 }));
@@ -63,5 +64,19 @@ describe("NodeFileSystem", () => {
 
     nfs.createWriteStream("/file");
     expect(fs.createWriteStream).toHaveBeenCalledWith("/file", undefined);
+
+    // exists false branch
+    vi.mocked(fs.promises.access).mockRejectedValue(new Error("not found"));
+    expect(await nfs.exists("not-found")).toBe(false);
+
+    // unlink
+    vi.mocked(fs.promises.unlink).mockResolvedValue(undefined);
+    await nfs.unlink("foo");
+    expect(fs.promises.unlink).toHaveBeenCalledWith("foo");
+
+    // rename
+    vi.mocked(fs.promises.rename).mockResolvedValue(undefined);
+    await nfs.rename("old", "new");
+    expect(fs.promises.rename).toHaveBeenCalledWith("old", "new");
   });
 });

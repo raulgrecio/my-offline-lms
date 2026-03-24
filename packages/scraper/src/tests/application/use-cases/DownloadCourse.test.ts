@@ -9,11 +9,11 @@ describe('DownloadCourse Use Case', () => {
     } as any;
 
     const mockDownloadGuides = {
-        executeForCourse: vi.fn()
+        execute: vi.fn()
     } as any;
 
     const mockDownloadVideos = {
-        executeForCourse: vi.fn()
+        execute: vi.fn()
     } as any;
 
     const mockLogger: ILogger = {
@@ -43,8 +43,8 @@ describe('DownloadCourse Use Case', () => {
         await useCase.execute({courseInput: 'course123', type: 'all'});
         
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontró el curso'));
-        expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
-        expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+        expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
+        expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
     });
 
     it('should call both guides and videos when type is all', async () => {
@@ -53,8 +53,8 @@ describe('DownloadCourse Use Case', () => {
         
         await useCase.execute({courseInput: 'course1', type: 'all'});
         
-        expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course1');
-        expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course1');
+        expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course1' });
+        expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course1' });
     });
 
     it('should only call guides download when type is guide', async () => {
@@ -62,8 +62,8 @@ describe('DownloadCourse Use Case', () => {
         
         await useCase.execute({courseInput: 'c1', type: 'guide'});
         
-        expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('c1');
-        expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+        expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+        expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
     });
 
     it('should only call videos download when type is video', async () => {
@@ -71,7 +71,7 @@ describe('DownloadCourse Use Case', () => {
         
         await useCase.execute({courseInput: 'c1', type: 'video'});
         
-        expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('c1');
-        expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
+        expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+        expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
     });
 });

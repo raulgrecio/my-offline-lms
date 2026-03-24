@@ -16,6 +16,8 @@ describe("BlobFileSystem", () => {
     await expect(blob.mkdir("blob://foo")).rejects.toThrow();
     await expect(blob.rm("blob://foo")).rejects.toThrow();
     await expect(blob.readdir("blob://foo")).rejects.toThrow();
+    await expect(blob.unlink("blob://foo")).rejects.toThrow();
+    await expect(blob.rename("blob://foo", "blob://bar")).rejects.toThrow();
 
     expect(blob.createReadStream("blob://foo")).toBeNull();
     expect(blob.createWriteStream("blob://foo")).toBeNull();

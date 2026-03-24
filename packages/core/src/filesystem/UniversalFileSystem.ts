@@ -36,13 +36,19 @@ export class UniversalFileSystem implements IFileSystem {
     return this.localFs;
   }
 
-  private getProtocol(p: string): FileSystemProtocol | null {
-    const match = p.match(/^([a-z0-9]+):\/\//i);
+  private getProtocol(path: string): FileSystemProtocol | null {
+    const match = path.match(/^([a-z0-9]+):\/\//i);
     if (!match) return null;
+
     const proto = match[1].toLowerCase();
     if (proto === "https") return "http";
-    // Check if it's one of our supported protocols
-    return SUPPORTED_PROTOCOLS.includes(proto as any) ? (proto as FileSystemProtocol) : null;
+
+    const isSupportedProtocol = SUPPORTED_PROTOCOLS.includes(proto as any)
+    if (!isSupportedProtocol) {
+      throw new Error(`Unsupported protocol: ${match[1]}`);
+    }
+
+    return (proto as FileSystemProtocol);
   }
 
   async exists(p: string): Promise<boolean> {

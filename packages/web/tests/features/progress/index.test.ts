@@ -37,5 +37,10 @@ describe("Progress Feature: Public API", () => {
     await updateGuideProgress({ assetId: "a1", id: "c1", position: 5, duration: 10 });
 
     expect(await getVisitedSegments({ id: "a1", type: "video" })).toEqual([]);
+
+    // Call deprecated helpers
+    const { getAllCourseProgress, getLastWatchedAsset: getLastWatchedHelper } = await import("@features/progress/index");
+    expect(await getAllCourseProgress()).toBeDefined();
+    expect(await getLastWatchedHelper()).toBeNull();
   });
 });

@@ -1,15 +1,29 @@
 import { DownloadType } from '@my-offline-lms/core/models';
 import { ILogger } from '@my-offline-lms/core/logging';
 
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
-
 import { SyncLearningPath } from "@features/platform-sync/application/SyncLearningPath";
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 
-export class DownloadPath {
+export interface DownloadPathInput {
+  pathInput: string;
+  type: DownloadType;
+}
+
+export interface DownloadPathOptions {
+  learningPathRepo: ILearningPathRepository;
+  syncLearningPath: SyncLearningPath;
+  downloadGuides: DownloadGuides;
+  downloadVideos: DownloadVideos;
+  namingService: INamingService;
+  logger: ILogger;
+}
+
+export class DownloadPath implements IUseCase<DownloadPathInput, void> {
   private learningPathRepo: ILearningPathRepository;
   private syncLearningPath: SyncLearningPath;
   private downloadGuides: DownloadGuides;
@@ -17,23 +31,17 @@ export class DownloadPath {
   private namingService: INamingService;
   private logger: ILogger;
 
-  constructor(deps: {
-    learningPathRepo: ILearningPathRepository,
-    syncLearningPath: SyncLearningPath,
-    downloadGuides: DownloadGuides,
-    downloadVideos: DownloadVideos,
-    namingService: INamingService,
-    logger: ILogger
-  }) {
-    this.learningPathRepo = deps.learningPathRepo;
-    this.syncLearningPath = deps.syncLearningPath;
-    this.downloadGuides = deps.downloadGuides;
-    this.downloadVideos = deps.downloadVideos;
-    this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("DownloadPath");
+  constructor(options: DownloadPathOptions) {
+    this.learningPathRepo = options.learningPathRepo;
+    this.syncLearningPath = options.syncLearningPath;
+    this.downloadGuides = options.downloadGuides;
+    this.downloadVideos = options.downloadVideos;
+    this.namingService = options.namingService;
+    this.logger = options.logger.withContext("DownloadPath");
   }
 
-  async execute({ pathInput, type = 'all' }: { pathInput: string, type: DownloadType }): Promise<void> {
+  async execute(input: DownloadPathInput): Promise<void> {
+    const { pathInput, type = 'all' } = input;
     const pathId = this.namingService.extractIdFromInput(pathInput);
 
     this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);
@@ -53,11 +61,11 @@ export class DownloadPath {
       this.logger.info(`======================================================`, "");
 
       if (type === 'guide' || type === 'all') {
-        await this.downloadGuides.executeForCourse(course.id);
+        await this.downloadGuides.execute({ courseId: course.id });
       }
 
       if (type === 'video' || type === 'all') {
-        await this.downloadVideos.executeForCourse(course.id);
+        await this.downloadVideos.execute({ courseId: course.id });
       }
     }
 

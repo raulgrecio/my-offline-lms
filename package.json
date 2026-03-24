@@ -16,6 +16,9 @@
     "test:scraper": "pnpm --filter @my-offline-lms/scraper test",
     "test:web": "pnpm --filter @my-offline-lms/web test",
     "test:coverage": "pnpm recursive run test:coverage",
+    "test:coverage:web": "pnpm --filter @my-offline-lms/web run test:coverage",
+    "test:coverage:scraper": "pnpm --filter @my-offline-lms/scraper run test:coverage",
+    "test:coverage:core": "pnpm --filter @my-offline-lms/core run test:coverage",
     "check:types": "pnpm --filter @my-offline-lms/core exec tsc --noEmit && pnpm --filter @my-offline-lms/scraper exec tsc --noEmit && pnpm --filter @my-offline-lms/web exec tsc --noEmit",
     "cli": "pnpm --filter @my-offline-lms/scraper cli"
   },

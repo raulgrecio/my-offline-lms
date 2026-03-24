@@ -12,6 +12,8 @@ describe("HttpFileSystem", () => {
     await expect(hfs.writeFile("http://foo", "data")).rejects.toThrow();
     await expect(hfs.mkdir("http://foo")).rejects.toThrow();
     await expect(hfs.readdir("http://foo")).rejects.toThrow();
+    await expect(hfs.unlink("http://foo")).rejects.toThrow();
+    await expect(hfs.rename("http://foo", "http://bar")).rejects.toThrow();
 
     
     const stats = await hfs.stat("http://foo");

@@ -109,6 +109,30 @@ describe("UniversalFileSystem & UniversalPath", () => {
       vi.mocked(mockLocalFs.stat).mockResolvedValue({ size: 10 } as any);
       expect((await ufs.stat("/file")).size).toBe(10);
 
+      // Protocol fallback (supported protocol but not registered)
+      await ufs.readdir("s3://foo");
+      expect(mockLocalFs.readdir).toHaveBeenCalledWith("s3://foo");
+
+      // Unsupported protocol should throw
+      await expect(ufs.readdir("unknown://foo")).rejects.toThrow("Unsupported protocol: unknown");
+
+      // https redirects to http
+      ufs.registerRemote("http", mockHttpFs);
+      await ufs.exists("https://foo.com");
+      expect(mockHttpFs.exists).toHaveBeenCalledWith("https://foo.com");
+
+      // unlink
+      const mockUnlink = vi.fn().mockResolvedValue(undefined);
+      mockLocalFs.unlink = mockUnlink;
+      await ufs.unlink("foo");
+      expect(mockUnlink).toHaveBeenCalledWith("foo");
+
+      // rename
+      const mockRename = vi.fn().mockResolvedValue(undefined);
+      mockLocalFs.rename = mockRename;
+      await ufs.rename("foo", "bar");
+      expect(mockRename).toHaveBeenCalledWith("foo", "bar");
+
       // streams
       const mockReadStream = {};
       const mockWriteStream = {};

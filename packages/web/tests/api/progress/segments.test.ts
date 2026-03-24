@@ -46,4 +46,15 @@ describe("Segments API Endpoint", () => {
     const body = await response.json();
     expect(body.segments).toEqual([]);
   });
+
+  it("should return a 500 error on internal failure", async () => {
+    vi.mocked(ProgressFeature.getVisitedSegments).mockRejectedValue(new Error("Database error"));
+
+    const url = new URL("http://localhost/api/progress/segments?assetId=test&type=video");
+    const response = await GET({ url } as any);
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.error).toBe("Internal server error");
+  });
 });

@@ -25,12 +25,24 @@ describe("PlayerSettings Component", () => {
   });
 
   it("should call onChangeSubtitleMode when a mode is clicked", () => {
-    render(<PlayerSettings {...defaultProps} />);
+    const { rerender } = render(<PlayerSettings {...defaultProps} />);
     
+    // Test native click
     const nativeBtn = screen.getAllByText("Nativos")[0];
     fireEvent.click(nativeBtn);
-    
     expect(defaultProps.onChangeSubtitleMode).toHaveBeenCalledWith('native');
+
+    // Test custom click when currently native
+    rerender(<PlayerSettings {...defaultProps} subtitleMode="native" />);
+    const customBtn = screen.getAllByText("Personalizados")[0];
+    fireEvent.click(customBtn);
+    expect(defaultProps.onChangeSubtitleMode).toHaveBeenCalledWith('custom');
+  });
+
+  it("should disable opacity slider when mode is native", () => {
+    const { container } = render(<PlayerSettings {...defaultProps} subtitleMode="native" />);
+    const sliderContainer = container.querySelector(".opacity-20");
+    expect(sliderContainer).toBeInTheDocument();
   });
 
   it("should call onChangeSubtitleOpacity when range input changes", () => {

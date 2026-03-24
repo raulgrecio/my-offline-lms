@@ -18,6 +18,8 @@ describe('AssetNamingService', () => {
 
     it('should return empty string for empty input', () => {
       expect(service.slugify('')).toBe('');
+      // @ts-ignore
+      expect(service.slugify(null)).toBe('');
     });
   });
 
@@ -28,6 +30,12 @@ describe('AssetNamingService', () => {
 
     it('should preserve single trailing slash if present', () => {
       expect(service.cleanUrl('https://example.com/path/')).toBe('https://example.com/path/');
+    });
+
+    it('should handle empty or null input', () => {
+      expect(service.cleanUrl('')).toBe('');
+      // @ts-ignore
+      expect(service.cleanUrl(null)).toBe('');
     });
   });
 
@@ -63,6 +71,12 @@ describe('AssetNamingService', () => {
       const url = new URL('/api/eml-content/random/url', env.PLATFORM_BASE_URL).href;
       expect(service.extractOfferingId(url)).toBeNull();
     });
+
+    it('should handle empty or null input', () => {
+      expect(service.extractOfferingId('')).toBeNull();
+      // @ts-ignore
+      expect(service.extractOfferingId(null)).toBeNull();
+    });
   });
 
   describe('extractIdFromInput', () => {
@@ -81,6 +95,19 @@ describe('AssetNamingService', () => {
 
     it('should cleanup malformed URLs before extracting', () => {
       expect(service.extractIdFromInput(new URL('//path//148510//', env.PLATFORM_BASE_URL).href)).toBe('148510');
+    });
+
+    it('should handle empty or null input', () => {
+      expect(service.extractIdFromInput('')).toBe('');
+      // @ts-ignore
+      expect(service.extractIdFromInput(null)).toBe('');
+    });
+
+    it('should fallback to input if pop() is empty', () => {
+      // This happens if baseClean ends with / after replace(/\/$/, "")
+      // For example, "http://" -> cleanUrl -> "http://" -> baseClean -> "http:/"
+      // split('/').pop() is ""
+      expect(service.extractIdFromInput('http://')).toBe('http://');
     });
   });
 });

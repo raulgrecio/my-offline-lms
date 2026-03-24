@@ -13,11 +13,11 @@ describe('DownloadPath Use Case', () => {
   } as any;
 
   const mockDownloadGuides = {
-    executeForCourse: vi.fn()
+    execute: vi.fn()
   } as any;
 
   const mockDownloadVideos = {
-    executeForCourse: vi.fn()
+    execute: vi.fn()
   } as any;
 
   const mockLogger: ILogger = {
@@ -48,8 +48,8 @@ describe('DownloadPath Use Case', () => {
     await useCase.execute({ pathInput: 'path123', type: 'all' });
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('No se encontraron cursos'));
-    expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
-    expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+    expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
+    expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
   it('should call both guides and videos when type is all', async () => {
@@ -61,12 +61,12 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'path123', type: 'all' });
 
-    expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledTimes(2);
-    expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledTimes(2);
-    expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course1');
-    expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course1');
-    expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('course2');
-    expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('course2');
+    expect(mockDownloadGuides.execute).toHaveBeenCalledTimes(2);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledTimes(2);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course1' });
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course1' });
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course2' });
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course2' });
   });
 
   it('should only call guides download when type is guide', async () => {
@@ -74,8 +74,8 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'guide' });
 
-    expect(mockDownloadGuides.executeForCourse).toHaveBeenCalledWith('c1');
-    expect(mockDownloadVideos.executeForCourse).not.toHaveBeenCalled();
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
   it('should only call videos download when type is video', async () => {
@@ -83,7 +83,7 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'video' });
 
-    expect(mockDownloadVideos.executeForCourse).toHaveBeenCalledWith('c1');
-    expect(mockDownloadGuides.executeForCourse).not.toHaveBeenCalled();
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
 });

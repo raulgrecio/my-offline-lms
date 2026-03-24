@@ -1,5 +1,6 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
 import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
@@ -16,7 +17,22 @@ export interface DownloadGuidesConfig {
   };
 }
 
-export class DownloadGuides {
+export interface DownloadGuidesInput {
+  courseId: string;
+}
+
+export interface DownloadGuidesOptions {
+  browserProvider: IBrowserProvider;
+  courseRepo: ICourseRepository;
+  assetRepo: IAssetRepository;
+  assetStorage: IAssetStorage;
+  namingService: INamingService;
+  urlProvider: IPlatformUrlProvider;
+  logger: ILogger;
+  config: DownloadGuidesConfig;
+}
+
+export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
   private browserProvider: IBrowserProvider;
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
@@ -26,27 +42,19 @@ export class DownloadGuides {
   private logger: ILogger;
   private config: DownloadGuidesConfig;
 
-  constructor(deps: {
-    browserProvider: IBrowserProvider,
-    courseRepo: ICourseRepository,
-    assetRepo: IAssetRepository,
-    assetStorage: IAssetStorage,
-    namingService: INamingService,
-    urlProvider: IPlatformUrlProvider,
-    logger: ILogger,
-    config: DownloadGuidesConfig
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.courseRepo = deps.courseRepo;
-    this.assetRepo = deps.assetRepo;
-    this.assetStorage = deps.assetStorage;
-    this.namingService = deps.namingService;
-    this.urlProvider = deps.urlProvider;
-    this.logger = deps.logger.withContext("DownloadGuides");
-    this.config = deps.config;
+  constructor(options: DownloadGuidesOptions) {
+    this.browserProvider = options.browserProvider;
+    this.courseRepo = options.courseRepo;
+    this.assetRepo = options.assetRepo;
+    this.assetStorage = options.assetStorage;
+    this.namingService = options.namingService;
+    this.urlProvider = options.urlProvider;
+    this.logger = options.logger.withContext("DownloadGuides");
+    this.config = options.config;
   }
 
-  async executeForCourse(courseId: string): Promise<void> {
+  async execute(input: DownloadGuidesInput): Promise<void> {
+    const { courseId } = input;
     this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
 
     const pendingGuides = this.assetRepo.getPendingAssets(courseId, 'guide');
@@ -60,14 +68,21 @@ export class DownloadGuides {
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
     const context = await this.browserProvider.getAuthenticatedContext();
 
-    for (let i = 0; i < pendingGuides.length; i++) {
-      this.logger.info(`======================================================`, '');
-      this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
-      await this.downloadSingleGuide({ assetId: pendingGuides[i].id, courseId: pendingGuides[i].courseId, sharedContext: context });
-      await new Promise(r => setTimeout(r, 2000));
+    try {
+      for (let i = 0; i < pendingGuides.length; i++) {
+        this.logger.info(`======================================================`, '');
+        this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
+        await this.downloadSingleGuide({
+          assetId: pendingGuides[i].id,
+          courseId: pendingGuides[i].courseId,
+          sharedContext: context
+        });
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    } finally {
+      await this.browserProvider.close();
     }
 
-    await this.browserProvider.close();
     this.logger.info(`======================================================`, '');
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }

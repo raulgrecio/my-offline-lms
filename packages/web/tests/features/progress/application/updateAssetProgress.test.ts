@@ -23,9 +23,7 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
 
   it("should correctly record page 6 of 552 without marking it as completed", () => {
     const repo = mockRepo();
-    // Simulate first visit: existing is null
     vi.mocked(repo.getAssetProgress).mockReturnValue(null);
-    // saveSegment will return true for a new page
     vi.mocked(repo.saveSegment).mockReturnValue(true);
 
     updateAssetProgress(repo, {
@@ -36,37 +34,34 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
       duration: 552
     });
 
-    // 1. Should set totalSegments to 552
     expect(repo.setTotalSegments).toHaveBeenCalledWith({
       id: "pdf_1",
       type: "guide",
       totalSegments: 552
     });
 
-    // 2. Should save position 6 AND maxPosition 6 (NOT 552)
     expect(repo.saveAssetProgress).toHaveBeenCalledWith({
       id: "pdf_1",
       type: "guide",
       position: 6,
-      maxPosition: 6, // Furthest reached is 6
+      maxPosition: 6,
       completed: false
     });
   });
 
   it("should NOT mark as completed when going back to page 3 after reaching page 6", () => {
     const repo = mockRepo();
-    // Already visited page 6
     vi.mocked(repo.getAssetProgress).mockReturnValue({
       id: "pdf_1",
       type: "guide",
       position: 6,
       maxPosition: 6,
-      visitedSegments: 2, // simplified for test
+      visitedSegments: 2,
       totalSegments: 552,
       completed: false,
       updatedAt: ""
-    });
-    vi.mocked(repo.saveSegment).mockReturnValue(false); // already visited
+    } as any);
+    vi.mocked(repo.saveSegment).mockReturnValue(false);
 
     updateAssetProgress(repo, {
       assetId: "pdf_1",
@@ -79,15 +74,14 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
     expect(repo.saveAssetProgress).toHaveBeenCalledWith({
       id: "pdf_1",
       type: "guide",
-      position: 3, // current position for resume
-      maxPosition: 3, // repository handles MAX(6, 3) = 6 internally
+      position: 3,
+      maxPosition: 3,
       completed: false
     });
   });
 
   it("should mark as completed only when threshold (90%) is reached", () => {
     const repo = mockRepo();
-    // User has visited 496 unique pages of 552 (89.8% -> not completed)
     vi.mocked(repo.getAssetProgress).mockReturnValue({
       id: "pdf_1",
       type: "guide",
@@ -97,10 +91,9 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
       totalSegments: 552,
       completed: false,
       updatedAt: ""
-    });
-    vi.mocked(repo.saveSegment).mockReturnValue(true); // new page visited
+    } as any);
+    vi.mocked(repo.saveSegment).mockReturnValue(true);
 
-    // Visit page 497 (497/552 = 90.03% -> COMPLETED)
     updateAssetProgress(repo, {
       assetId: "pdf_1",
       id: "course_1",
@@ -116,7 +109,6 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
 
   it("should handle recalibration of totalSegments if it changes", () => {
     const repo = mockRepo();
-    // Previously recorded with wrong totalSegments (e.g. 10)
     vi.mocked(repo.getAssetProgress).mockReturnValue({
       id: "pdf_1",
       type: "guide",
@@ -126,10 +118,9 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
       totalSegments: 10,
       completed: false,
       updatedAt: ""
-    });
+    } as any);
     vi.mocked(repo.saveSegment).mockReturnValue(true);
 
-    // Now visit with correct duration 552
     updateAssetProgress(repo, {
       assetId: "pdf_1",
       id: "course_1",
@@ -138,11 +129,78 @@ describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
       duration: 552
     });
 
-    // Should update totalSegments to 552
     expect(repo.setTotalSegments).toHaveBeenCalledWith({
       id: "pdf_1",
       type: "guide",
       totalSegments: 552
     });
+  });
+
+  it("should recalculate learning paths when a course is affected by completion", () => {
+    const repo = mockRepo();
+    vi.mocked(repo.getAssetProgress).mockReturnValue({
+      id: "v1", type: "video", position: 0, maxPosition: 0, visitedSegments: 0, totalSegments: 1, completed: false, updatedAt: ""
+    } as any);
+    vi.mocked(repo.saveSegment).mockReturnValue(true);
+    vi.mocked(repo.getCourseIdsForAsset).mockReturnValue(["c1"]);
+    vi.mocked(repo.getLearningPathsForCourse).mockReturnValue(["p1"]);
+
+    updateAssetProgress(repo, {
+      assetId: "v1", id: "c1", type: "video", position: 1, duration: 1
+    });
+
+    expect(repo.recalculateCourseProgress).toHaveBeenCalledWith("c1");
+    expect(repo.recalculateLearningPathProgress).toHaveBeenCalledWith("p1");
+  });
+
+  it("should fallback to maxPosition if duration is 0", () => {
+    const repo = mockRepo();
+    vi.mocked(repo.getAssetProgress).mockReturnValue({
+      id: "g1", type: "guide", position: 5, maxPosition: 100, visitedSegments: 0, totalSegments: 0, completed: false, updatedAt: ""
+    } as any);
+    
+    updateAssetProgress(repo, {
+      assetId: "g1", id: "c1", type: "guide", position: 10
+    });
+    
+    // should use 100 as duration
+    expect(repo.setTotalSegments).toHaveBeenCalledWith(expect.objectContaining({ totalSegments: 100 }));
+  });
+
+  it("should skip status calculation if wasCompleted is true", () => {
+    const repo = mockRepo();
+    vi.mocked(repo.getAssetProgress).mockReturnValue({
+      id: "v1", type: "video", position: 1, maxPosition: 1, visitedSegments: 1, totalSegments: 1, completed: true, updatedAt: ""
+    } as any);
+    
+    updateAssetProgress(repo, {
+      assetId: "v1", id: "c1", type: "video", position: 1, duration: 1
+    });
+
+    expect(repo.saveAssetProgress).toHaveBeenCalledWith(expect.objectContaining({ completed: true }));
+  });
+
+  it("should skip setting total segments if duration is same as current total", () => {
+    const repo = mockRepo();
+    vi.mocked(repo.getAssetProgress).mockReturnValue({
+      id: "v1", type: "video", position: 5, maxPosition: 10, visitedSegments: 0, totalSegments: 2, completed: false, updatedAt: ""
+    } as any);
+    
+    updateAssetProgress(repo, {
+      assetId: "v1", id: "c1", type: "video", position: 10, duration: 10 // 10/5 = 2, so it's the same
+    });
+    
+    expect(repo.setTotalSegments).not.toHaveBeenCalled();
+  });
+
+  it("should skip setting total segments if finalDuration is 0", () => {
+    const repo = mockRepo();
+    vi.mocked(repo.getAssetProgress).mockReturnValue(null);
+    
+    updateAssetProgress(repo, {
+      assetId: "v1", id: "c1", type: "video", position: 10 // duration missing, existing null -> finalDuration 0
+    });
+    
+    expect(repo.setTotalSegments).not.toHaveBeenCalled();
   });
 });

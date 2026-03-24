@@ -60,6 +60,18 @@ describe('OraclePlatformUrlProvider', () => {
             });
         });
 
+        it('should resolve relative learning path URL', () => {
+            const rel = 'ou/learning-path/slug/123';
+            const result = provider.resolveLearningPathUrl(rel);
+            expect(result.url).toBe(new URL(rel + '/', env.PLATFORM_BASE_URL).href);
+        });
+
+        it('should handle learning path URL that already ends with slash', () => {
+            const url = new URL('ou/learning-path/slug/123/', env.PLATFORM_BASE_URL).href;
+            const result = provider.resolveLearningPathUrl(url);
+            expect(result.url).toBe(url);
+        });
+
         it('should throw an error if pathId cannot be extracted', () => {
             expect(() => provider.resolveLearningPathUrl('malformed-url')).toThrow('No se pudo extraer el ID del learning path');
         });
@@ -69,6 +81,11 @@ describe('OraclePlatformUrlProvider', () => {
         it('should return a valid course URL from slug and id', () => {
             const result = provider.getCourseUrl({ slug: 'course-slug', id: '999' });
             expect(result).toBe(new URL('ou/course/course-slug/999', env.PLATFORM_BASE_URL).href);
+        });
+
+        it('should use "path" as default slug if empty', () => {
+            const result = provider.getCourseUrl({ slug: '', id: '999' });
+            expect(result).toContain('/path/999');
         });
     });
 
@@ -97,14 +114,19 @@ describe('OraclePlatformUrlProvider', () => {
         it('should replace flipbook suffix and ensure trailing slash', () => {
             const iframeSrc = 'https://some-cdn.com/mobile/index.html';
             const result = provider.getGuideImageBaseUrl(iframeSrc);
-            // Replace /mobile/index.html with /files/mobile/
             expect(result).toBe('https://some-cdn.com/files/mobile/');
         });
 
-        it('should handle query parameters in iframe src', () => {
-            const iframeSrc = 'https://some-cdn.com/mobile/index.html?v=123';
+        it('should handle already slashed guide image base url', () => {
+            const iframeSrc = 'https://some-cdn.com/mobile/index.html';
+            const result = provider.getGuideImageBaseUrl(iframeSrc); 
+            expect(result.endsWith('/')).toBe(true);
+        });
+
+        it('should handle source that does not match replacement regex and ensure trailing slash', () => {
+            const iframeSrc = 'https://other.com/viewer.html';
             const result = provider.getGuideImageBaseUrl(iframeSrc);
-            expect(result).toBe('https://some-cdn.com/files/mobile/');
+            expect(result).toBe('https://other.com/viewer.html/');
         });
     });
 });
