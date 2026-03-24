@@ -1,4 +1,4 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { verifyCourseDownloads } from "./verifyDownloads";
 import { logger } from "@platform/logging";
 
@@ -8,7 +8,7 @@ import { logger } from "@platform/logging";
 async function reconnectAll() {
   logger.info("🚀 Starting reconnection of all courses...");
 
-  const db = await initDb();
+  const db = await getDb();
   const courses = db.prepare("SELECT id FROM Courses").all() as { id: string }[];
 
   logger.info(`found ${courses.length} courses to verify.`);

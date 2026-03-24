@@ -1,5 +1,5 @@
 import { getDb } from "@platform/db/database";
-import { createLazyService } from "@platform/utils/lazy";
+import { createLazyService } from "@my-offline-lms/core/di";
 import { LearningPathManager } from "./application/LearningPathManager";
 import { type GetLearningPathDetailsRequest, type PathWithCourses } from "./application/use-cases/getLearningPathDetails";
 import { SQLiteLearningPathRepository } from "./infrastructure/SQLiteLearningPathRepository";

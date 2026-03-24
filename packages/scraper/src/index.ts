@@ -1,6 +1,6 @@
 import { NodeFileSystem } from "@my-offline-lms/core/filesystem";
 import { ConsoleLogger } from "@my-offline-lms/core/logging";
-import { initDb } from "./platform/database/schema";
+import { getDb } from "@platform/database/database";
 import { runCLI } from "./cli";
 
 async function main() {
@@ -9,7 +9,7 @@ async function main() {
 
   try {
     logger.info("Inicializando servidor local...");
-    const database = await initDb({ fsAdapter: fs });
+    const database = await getDb({ fsAdapter: fs });
     process.title = "my-offline-lms-scraper";
     logger.info("Backend preparado. Todo listo para iniciar el scraping.");
 

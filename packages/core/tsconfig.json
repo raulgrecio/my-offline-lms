@@ -16,7 +16,8 @@
       "@domain/*": ["src/domain/*"],
       "@database/*": ["src/database/*"],
       "@filesystem/*": ["src/filesystem/*"],
-      "@logging": ["src/logging"]
+      "@logging": ["src/logging"],
+      "@di": ["src/di"]
     }
   },
   "include": ["src/**/*", "test/**/*"]

@@ -72,17 +72,17 @@ describe("Logging Module", () => {
 
     it("should log debug messages in browser environment", () => {
       const logger = new ConsoleLogger("browser");
-      
+
       const originalProcess = globalThis.process;
       // @ts-ignore
       globalThis.process = undefined;
-      
+
       const originalWindow = globalThis.window;
       globalThis.window = { DEBUG: "true" } as any;
-      
+
       logger.debug("browser debug");
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG [browser]: browser debug"));
-      
+
       // Cleanup
       globalThis.window = originalWindow;
       globalThis.process = originalProcess;

@@ -1,4 +1,4 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { logger as baseLogger } from "@platform/logging";
 import { IDatabase } from "@my-offline-lms/core/database";
@@ -80,7 +80,7 @@ if (require.main === module) {
   const targetId = args[1];
 
   (async () => {
-    const db = await initDb();
+    const db = await getDb();
     if (type === "course") {
       await resetCourse(db, targetId);
     } else if (type === "path") {

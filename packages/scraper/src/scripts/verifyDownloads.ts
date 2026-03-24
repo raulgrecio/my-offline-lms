@@ -1,5 +1,5 @@
 import path from "path";
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { getAssetsDir } from "@config/paths";
 import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
@@ -136,7 +136,7 @@ if (require.main === module) {
   const repair = args.includes("--repair");
 
   (async () => {
-    const db = await initDb();
+    const db = await getDb();
     if (type === "course") {
       await verifyCourseDownloads({ db, courseId: targetId, repair });
     } else if (type === "path") {

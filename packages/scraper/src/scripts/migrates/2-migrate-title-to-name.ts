@@ -1,10 +1,10 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { logger } from "@platform/logging";
 
 async function main() {
   logger.info("Iniciando migración de metadatos: title -> name en Course_Assets...");
 
-  const db = await initDb();
+  const db = await getDb();
 
   try {
     const assets = db.prepare("SELECT id, metadata FROM Course_Assets").all() as { id: string, metadata: string }[];

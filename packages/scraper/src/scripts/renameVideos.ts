@@ -1,4 +1,4 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
 import { getAssetsDir } from "@config/paths";
 import { logger as baseLogger } from "@platform/logging";
@@ -17,7 +17,7 @@ async function renameVideosForCourse(courseId: string) {
     return;
   }
 
-  const db = await initDb();
+  const db = await getDb();
   const rows = db.prepare("SELECT id, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video' AND status = 'COMPLETED'").all(courseId) as any[];
 
   logger.info(`Checking ${rows.length} completed videos for renaming...`);

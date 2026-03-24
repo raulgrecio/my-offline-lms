@@ -5,7 +5,7 @@ import { getDbPath } from "@config/paths";
 import { runMigrations } from "./schema";
 
 // Singleton connection
-import { createLazyService } from "@platform/utils/lazy";
+import { createLazyService } from "@my-offline-lms/core/di";
 
 export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteDatabase> => {
   const isTest = process.env.NODE_ENV === 'test';

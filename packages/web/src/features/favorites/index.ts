@@ -1,5 +1,5 @@
 import { getDb } from "@platform/db/database";
-import { createLazyService } from "@platform/utils/lazy";
+import { createLazyService } from "@my-offline-lms/core/di";
 import { FavoriteManager } from "./application/FavoriteManager";
 import { type GetIsFavoriteRequest } from "./application/use-cases/getIsFavorite";
 import { type ToggleFavoriteRequest } from "./application/use-cases/toggleFavorite";

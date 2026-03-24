@@ -1,10 +1,10 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { logger } from "@platform/logging";
 
 async function main() {
   logger.info("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");
 
-  const db = await initDb();
+  const db = await getDb();
 
   try {
     // 1. Deshabilitar FKs temporalmente para poder borrar la tabla

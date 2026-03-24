@@ -1,5 +1,5 @@
 import { type AssetType } from '@my-offline-lms/core/models';
-import { createLazyService } from "@platform/utils/lazy";
+import { createLazyService } from "@my-offline-lms/core/di";
 import { getDb } from "@platform/db/database";
 import { ProgressManager } from "./application/ProgressManager";
 import type { GetAssetProgressRequest } from "./application/use-cases/getAssetProgress";

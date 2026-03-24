@@ -1,4 +1,4 @@
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { logger } from "@platform/logging";
 
 async function main() {
@@ -6,7 +6,7 @@ async function main() {
 
   logger.info(`[FixIndices] Recovering missing order_index for course: ${courseId}`);
 
-  const db = await initDb();
+  const db = await getDb();
 
   const rows = db.prepare("SELECT rowid, id, metadata FROM Course_Assets WHERE course_id = ? AND type = 'video' ORDER BY rowid ASC").all(courseId) as any[];
 

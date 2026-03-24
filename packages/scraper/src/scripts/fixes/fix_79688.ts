@@ -1,9 +1,9 @@
 import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
-import { initDb } from "@db/schema";
+import { getDb } from "@db/database";
 import { logger } from "@platform/logging";
 
 async function fix79688Guide() {
-  const db = await initDb();
+  const db = await getDb();
   const assetRepository = new SQLiteAssetRepository(db);
   const assetId = "pdf_110015";
   const filename = "S106689GC10_sg.pdf";
