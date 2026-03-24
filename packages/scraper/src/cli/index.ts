@@ -25,6 +25,7 @@ import { DownloadVideos } from '@features/asset-download/application/DownloadVid
 import { AuthSession } from '@features/auth-session/application/AuthSession';
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
+import { ValidateAuthSession } from '@features/auth-session/application/ValidateAuthSession';
 import { BrowserProvider } from '@platform/browser/BrowserProvider';
 import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
 
@@ -101,8 +102,17 @@ Comandos disponibles:
   const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
   const urlProvider = new OraclePlatformUrlProvider();
   const namingService = new AssetNamingService();
-
+  const validateAuthSession = new ValidateAuthSession({ authStorage: authSessionStorage, logger });
+ 
   try {
+    // Validar sesión proactivamente para comandos que la requieran
+    const publicCommands = ['login', 'help'];
+    if (command && !publicCommands.includes(command)) {
+      if (!(await validateAuthSession.execute())) {
+        return; 
+      }
+    }
+
     switch (command) {
       case 'login': {
         const baseUrl = env.PLATFORM_BASE_URL;
@@ -183,6 +193,7 @@ Comandos disponibles:
       case 'download-guides': {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
+
         const guides = new DownloadGuides({
           browserProvider,
           courseRepo,
@@ -205,6 +216,7 @@ Comandos disponibles:
       case 'download-videos': {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
+
         const videos = new DownloadVideos({
           browserProvider,
           courseRepository: courseRepo,

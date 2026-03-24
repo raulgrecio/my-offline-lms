@@ -99,4 +99,62 @@ describe('DiskAuthSessionStorage', () => {
     const content = vi.mocked(mockFs.writeFile).mock.calls[0][1] as string;
     expect(content).toContain('a.com\tFALSE\t/\tTRUE\t0\tn\tv');
   });
+
+  describe('isValidSession', () => {
+    vi.mock('@config/env', () => ({
+      env: { PLATFORM_BASE_URL: 'https://mylearn.myplatform.com' }
+    }));
+
+    it('should return false if auth file does not exist', async () => {
+      const storage = new DiskAuthSessionStorage({
+        fs: mockFs,
+        path: mockPath,
+        getAuthDir: async () => mockBaseDir
+      });
+      mockFs.exists.mockResolvedValue(false);
+      expect(await storage.isValidSession()).toBe(false);
+    });
+
+    it('should return false if no cookies match the domain', async () => {
+      const storage = new DiskAuthSessionStorage({
+        fs: mockFs,
+        path: mockPath,
+        getAuthDir: async () => mockBaseDir
+      });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: [{ domain: 'other.com', name: 'n', value: 'v' }]
+      })));
+      expect(await storage.isValidSession()).toBe(false);
+    });
+
+    it('should return false if all cookies are expired', async () => {
+      const storage = new DiskAuthSessionStorage({
+        fs: mockFs,
+        path: mockPath,
+        getAuthDir: async () => mockBaseDir
+      });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: [{ domain: 'myplatform.com', name: 'n', value: 'v', expires: (Date.now() / 1000) - 100 }]
+      })));
+      expect(await storage.isValidSession()).toBe(false);
+    });
+
+    it('should return true if at least one cookie is valid', async () => {
+      const storage = new DiskAuthSessionStorage({
+        fs: mockFs,
+        path: mockPath,
+        getAuthDir: async () => mockBaseDir
+      });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: [
+          { domain: '.myplatform.com', name: 'n', value: 'v', expires: (Date.now() / 1000) + 3600 },
+          { domain: 'myplatform.com', name: 'n2', value: 'v2', expires: -1 }
+        ]
+      })));
+      expect(await storage.isValidSession()).toBe(true);
+    });
+  });
 });

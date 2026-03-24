@@ -1,5 +1,6 @@
 import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
+import { env } from "@config/env";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string | undefined;
@@ -10,11 +11,11 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private path: IPath;
   private getAuthDirFn: () => Promise<string>;
 
-  constructor(deps: { 
-    fs: IFileSystem, 
-    path: IPath, 
+  constructor(deps: {
+    fs: IFileSystem,
+    path: IPath,
     getAuthDir: () => Promise<string>,
-    baseDir?: string 
+    baseDir?: string
   }) {
     this.fs = deps.fs;
     this.path = deps.path;
@@ -43,6 +44,30 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     await this.ensureInitialized();
     if (!(await this.fs.exists(this.authDir!))) {
       await this.fs.mkdir(this.authDir!, { recursive: true });
+    }
+  }
+
+  async isValidSession(): Promise<boolean> {
+    const authFile = await this.getAuthFile();
+
+    try {
+      const content = await this.fs.readFile(authFile);
+      const state = JSON.parse(content.toString());
+
+      if (!state.cookies || !Array.isArray(state.cookies) || state.cookies.length === 0) {
+        return false;
+      }
+
+      const now = Date.now() / 1000;
+      const platformDomain = new URL(env.PLATFORM_BASE_URL).hostname;
+
+      return state.cookies.some((c: any) => {
+        const isCorrectDomain = c.domain.includes(platformDomain) || platformDomain.includes(c.domain.replace(/^\./, ''));
+        const isNotExpired = !c.expires || c.expires <= 0 || c.expires > now;
+        return isCorrectDomain && isNotExpired;
+      });
+    } catch {
+      return false;
     }
   }
 
