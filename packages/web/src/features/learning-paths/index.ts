@@ -1,4 +1,5 @@
 import { getDb } from "@platform/db/database";
+import { createLazyService } from "@platform/utils/lazy";
 import { LearningPathManager } from "./application/LearningPathManager";
 import { type GetLearningPathDetailsRequest, type PathWithCourses } from "./application/use-cases/getLearningPathDetails";
 import { SQLiteLearningPathRepository } from "./infrastructure/SQLiteLearningPathRepository";
@@ -13,18 +14,21 @@ export type {
   PathWithCourses,
 };
 
-// 2. Wiring
-const repo = new SQLiteLearningPathRepository(getDb());
-const manager = new LearningPathManager(repo);
+// 2. Wiring (Lazy)
+const getManager = createLazyService(async () => {
+  const db = await getDb();
+  const repo = new SQLiteLearningPathRepository(db);
+  return new LearningPathManager(repo);
+});
 
 // 3. Public API
-export const getAllLearningPaths = () => manager.getAllLearningPaths();
+export const getAllLearningPaths = async () => (await getManager()).getAllLearningPaths();
 
-export const getCoursesForPathId = (request: GetCoursesForPathIdRequest) =>
-  manager.getCoursesForPathId(request);
+export const getCoursesForPathId = async (request: GetCoursesForPathIdRequest) =>
+  (await getManager()).getCoursesForPathId(request);
 
-export const getLearningPathById = (request: GetLearningPathByIdRequest) =>
-  manager.getLearningPathById(request);
+export const getLearningPathById = async (request: GetLearningPathByIdRequest) =>
+  (await getManager()).getLearningPathById(request);
 
-export const getLearningPathDetails = (request: GetLearningPathDetailsRequest) =>
-  manager.getLearningPathDetails(request);
+export const getLearningPathDetails = async (request: GetLearningPathDetailsRequest) =>
+  (await getManager()).getLearningPathDetails(request);

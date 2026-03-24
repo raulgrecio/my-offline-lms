@@ -1,3 +1,4 @@
+import { type MakeDirectoryOptions, type RmOptions } from "fs";
 import { type IFileSystem, type FileStats } from "./IFileSystem";
 import { type ILogger, NoopLogger } from "../logging";
 
@@ -14,14 +15,14 @@ export class BlobFileSystem implements IFileSystem {
 
   async exists(p: string): Promise<boolean> {
     this.logger.info(`Checking existence (Mocked as true) for ${p} in ${this.account}/${this.container}`);
-    return true; 
+    return true;
   }
 
   async readFile(p: string): Promise<Buffer>;
-  async readFile(p: string, encoding: "utf-8"): Promise<string>;
-  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
+  async readFile(p: string, encoding: BufferEncoding): Promise<string>;
+  async readFile(p: string, encoding?: BufferEncoding): Promise<string | Buffer> {
     this.logger.warn(`readFile not fully implemented for ${p}`);
-    if (encoding === "utf-8") return "";
+    if (encoding) return "";
     return Buffer.alloc(0);
   }
 
@@ -29,33 +30,15 @@ export class BlobFileSystem implements IFileSystem {
     throw new Error(`[BlobFileSystem] writeFile not implemented for ${p}`);
   }
 
-  resolve(...paths: string[]): string {
-    return paths.join("/");
-  }
-
-  join(...paths: string[]): string {
-    return paths.join("/");
-  }
-
-  isAbsolute(p: string): boolean {
-    return p.startsWith("blob://");
-  }
-
-  dirname(p: string): string {
-    const parts = p.split("/");
-    parts.pop();
-    return parts.join("/");
-  }
-
   async readdir(p: string): Promise<string[]> {
     throw new Error(`[BlobFileSystem] readdir not implemented for ${p}`);
   }
 
-  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+  async mkdir(p: string, options?: MakeDirectoryOptions): Promise<void> {
     throw new Error(`[BlobFileSystem] mkdir not implemented for ${p}`);
   }
 
-  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+  async rm(p: string, options?: RmOptions): Promise<void> {
     throw new Error(`[BlobFileSystem] rm not implemented for ${p}`);
   }
 
@@ -67,17 +50,21 @@ export class BlobFileSystem implements IFileSystem {
     };
   }
 
-  createReadStream(p: string, options?: any): any {
+  createReadStream(p: string, options?: any): NodeJS.ReadableStream | null {
     this.logger.warn(`createReadStream not fully implemented for ${p}`);
     return null;
   }
 
-  createWriteStream(p: string): any {
+  createWriteStream(p: string, options?: any): NodeJS.WritableStream | null {
     this.logger.warn(`createWriteStream not fully implemented for ${p}`);
     return null;
   }
 
-  get sep(): string {
-    return "/";
+  async unlink(p: string): Promise<void> {
+    throw new Error(`[BlobFileSystem] unlink not implemented for ${p}`);
+  }
+
+  async rename(oldPath: string, newPath: string): Promise<void> {
+    throw new Error(`[BlobFileSystem] rename not implemented from ${oldPath} to ${newPath}`);
   }
 }

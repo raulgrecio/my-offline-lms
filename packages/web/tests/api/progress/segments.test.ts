@@ -22,7 +22,7 @@ describe("Segments API Endpoint", () => {
 
   it("should return segments for a valid request", async () => {
     const segments = [1, 2, 5];
-    vi.mocked(ProgressFeature.getVisitedSegments).mockReturnValue(segments);
+    vi.mocked(ProgressFeature.getVisitedSegments).mockResolvedValue(segments);
 
     const url = new URL("http://localhost/api/progress/segments?assetId=test&type=video");
     const response = await GET({ url } as any);
@@ -37,7 +37,7 @@ describe("Segments API Endpoint", () => {
   });
 
   it("should return an empty array if getVisitedSegments returns null", async () => {
-    vi.mocked(ProgressFeature.getVisitedSegments).mockReturnValue(null as any);
+    vi.mocked(ProgressFeature.getVisitedSegments).mockResolvedValue(null as any);
 
     const url = new URL("http://localhost/api/progress/segments?assetId=test&type=guide");
     const response = await GET({ url } as any);

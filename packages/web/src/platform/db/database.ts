@@ -1,34 +1,34 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
-import { type ILogger, ConsoleLogger, NoopLogger } from "@my-offline-lms/core/logging";
+import { type ILogger, ConsoleLogger } from "@my-offline-lms/core/logging";
 import { SQLiteDatabase } from "@my-offline-lms/core/database";
-import { DB_PATH } from "@config/paths";
+import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
+import { getDbPath } from "@config/paths";
 import { runMigrations } from "./schema";
 
 // Singleton connection
-let _db: SQLiteDatabase | null = null;
+import { createLazyService } from "@platform/utils/lazy";
 
-export function getDb(logger?: ILogger): SQLiteDatabase {
-  if (!_db) {
-    const isTest = process.env.NODE_ENV === 'test';
-    const effectiveLogger = logger ?? new ConsoleLogger("DB");
+export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteDatabase> => {
+  const isTest = process.env.NODE_ENV === 'test';
+  const effectiveLogger = logger ?? new ConsoleLogger("DB");
 
-    const verbose = !isTest
-      ? (sql: any) => effectiveLogger.debug?.(String(sql))
-      : undefined
+  const verbose = !isTest
+    ? (sql: any) => effectiveLogger.debug?.(String(sql))
+    : undefined
 
-    // Asegurar que el directorio de datos existe
-    const dbDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dbDir)) {
-      effectiveLogger.info(`Creating directory: ${dbDir}`);
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
+  const dbPath = await getDbPath();
+  const fs = new NodeFileSystem();
 
-    _db = new SQLiteDatabase(DB_PATH, { verbose });
-    _db.exec("PRAGMA journal_mode=WAL;");
-    _db.initialize(); // Create core schema (LearningPaths, etc.)
-    runMigrations(_db, effectiveLogger); // Create web schema (UserProgress, etc.)
+  // Asegurar que el directorio de datos existe
+  const dbDir = dbPath.substring(0, dbPath.lastIndexOf('/'));
+  if (!(await fs.exists(dbDir))) {
+    effectiveLogger.info(`Creating directory: ${dbDir}`);
+    await fs.mkdir(dbDir, { recursive: true });
   }
-  return _db;
-}
+
+  const db = new SQLiteDatabase(dbPath, { verbose });
+  db.exec("PRAGMA journal_mode=WAL;");
+  db.initialize(); // Create core schema (LearningPaths, etc.)
+  runMigrations(db, effectiveLogger); // Create web schema (UserProgress, etc.)
+  
+  return db;
+});

@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    const segments = getVisitedSegments({ id: assetId, type }) || [];
+    const segments = await getVisitedSegments({ id: assetId, type });
     return new Response(JSON.stringify({ segments }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

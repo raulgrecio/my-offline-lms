@@ -1,10 +1,12 @@
 import { env } from '@config/env';
+import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir, getDataDir } from '@config/paths';
 import dotenv from 'dotenv';
 
 import { ConsoleLogger } from '@my-offline-lms/core/logging';
 import { DownloadType } from '@my-offline-lms/core/models';
+import { PLATFORM } from '@config/platform';
 import { IDatabase } from '@my-offline-lms/core/database';
-import { NodeFileSystem, UniversalFileSystem, HttpFileSystem } from '@my-offline-lms/core/filesystem';
+import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@my-offline-lms/core/filesystem';
 
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
 import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';
@@ -24,10 +26,12 @@ import { AuthSession } from '@features/auth-session/application/AuthSession';
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
 import { BrowserProvider } from '@platform/browser/BrowserProvider';
+import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
+import { initDb } from '@platform/database/schema';
 
 dotenv.config();
 
-export async function runCLI(db: IDatabase) {
+export async function runCLI(existingDb: IDatabase) {
   const args = process.argv.slice(2);
   const command = args[0];
 
@@ -44,24 +48,57 @@ Comandos disponibles:
   download-videos <id>       Descarga solo los vídeos pendientes de un curso.
   download-path <id> [type]  Descarga un Learning Path entero. type opcional: "video", "guide" o "all".
     `;
-    console.log(helpMessage); // Keeping this one as console.log because it's a help message and we don't want [INFO] prefix
+    console.log(helpMessage);
     process.exit(0);
   }
 
-  // DI Setup (Manual Instantiation)
+  // Core Dependencies
   const logger = new ConsoleLogger();
-  const browserProvider = new BrowserProvider(logger);
-  const nodeFs = new NodeFileSystem();
-  const universalFs = new UniversalFileSystem(nodeFs);
+  const nodeFs = new NodeFileSystem(logger);
+  const nodePath = new NodePath();
+  const universalFs = new UniversalFileSystem(nodeFs, logger);
   universalFs.registerRemote('http', new HttpFileSystem());
 
+  // Database Initialization
+  const db = existingDb;
+
+  // Repository Setup
   const courseRepo = new SQLiteCourseRepository(db);
   const assetRepo = new SQLiteAssetRepository(db);
   const pathRepo = new SQLiteLearningPathRepository(db);
 
-  const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(logger);
-  const authSessionStorage = new DiskAuthSessionStorage();
-  const assetStorage = new DiskAssetStorage(undefined, universalFs);
+  // Platform Services
+  const browserProvider = new BrowserProvider({
+    fs: universalFs,
+    path: nodePath,
+    config: {
+      chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
+      authStateFile: await getAuthState(),
+    },
+    logger
+  });
+
+  const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(universalFs, nodePath, logger);
+  const authSessionStorage = new DiskAuthSessionStorage({
+    fs: universalFs,
+    path: nodePath,
+    getAuthDir,
+  });
+  const browserInterceptor = new BrowserInterceptor({
+    fs: universalFs,
+    path: nodePath,
+    logger,
+    getInterceptedDir
+  });
+
+  const assetPathResolver = new AssetPathResolver({
+    configPath: await getAssetPathsConfig(),
+    monorepoRoot: await getMonorepoRoot(),
+    fs: universalFs,
+    path: nodePath,
+    logger,
+  });
+  const assetStorage = new DiskAssetStorage({ fs: universalFs, path: nodePath, resolver: assetPathResolver });
   const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
   const urlProvider = new OraclePlatformUrlProvider();
   const namingService = new AssetNamingService();
@@ -87,9 +124,19 @@ Comandos disponibles:
           courseRepository: courseRepo,
           assetRepository: assetRepo,
           interceptedDataRepoFactory,
+          browserInterceptor,
           urlProvider,
           namingService,
           logger,
+          config: {
+            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
+            selectors: {
+              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+            },
+            oracleConstants: {
+              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+            }
+          }
         });
         await syncCourse.execute({ courseInput: target });
         break;
@@ -103,9 +150,19 @@ Comandos disponibles:
           courseRepository: courseRepo,
           assetRepository: assetRepo,
           interceptedDataRepoFactory,
+          browserInterceptor,
           urlProvider,
           namingService,
           logger,
+          config: {
+            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
+            selectors: {
+              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+            },
+            oracleConstants: {
+              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+            }
+          }
         });
         const syncPath = new SyncLearningPath({
           browserProvider,
@@ -113,9 +170,13 @@ Comandos disponibles:
           courseRepo,
           syncCourse,
           interceptedDataRepoFactory,
+          browserInterceptor,
           urlProvider,
           namingService,
           logger,
+          config: {
+            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
+          }
         });
         await syncPath.execute(target);
         break;
@@ -131,6 +192,13 @@ Comandos disponibles:
           namingService,
           urlProvider,
           logger,
+          config: {
+            keepTempImages: env.KEEP_TEMP_IMAGES,
+            selectors: {
+              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
+              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
+            }
+          }
         });
         await guides.executeForCourse(id);
         break;
@@ -146,6 +214,14 @@ Comandos disponibles:
           videoDownloader,
           namingService,
           logger,
+          config: {
+            selectors: {
+              video: {
+                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
+                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
+              }
+            }
+          }
         });
         await videos.executeForCourse(id);
         break;
@@ -160,9 +236,19 @@ Comandos disponibles:
           courseRepository: courseRepo,
           assetRepository: assetRepo,
           interceptedDataRepoFactory,
+          browserInterceptor,
           urlProvider,
           namingService,
           logger,
+          config: {
+            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
+            selectors: {
+              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+            },
+            oracleConstants: {
+              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+            }
+          }
         });
         const syncPath = new SyncLearningPath({
           browserProvider,
@@ -170,9 +256,13 @@ Comandos disponibles:
           courseRepo,
           syncCourse,
           interceptedDataRepoFactory,
+          browserInterceptor,
           urlProvider,
           namingService,
           logger,
+          config: {
+            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
+          }
         });
         const guides = new DownloadGuides({
           browserProvider,
@@ -182,6 +272,13 @@ Comandos disponibles:
           namingService,
           urlProvider,
           logger,
+          config: {
+            keepTempImages: env.KEEP_TEMP_IMAGES,
+            selectors: {
+              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
+              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
+            }
+          }
         });
         const videos = new DownloadVideos({
           browserProvider,
@@ -191,6 +288,14 @@ Comandos disponibles:
           videoDownloader,
           namingService,
           logger,
+          config: {
+            selectors: {
+              video: {
+                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
+                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
+              }
+            }
+          }
         });
         const downloadPath = new DownloadPath({
           learningPathRepo: pathRepo,
@@ -217,6 +322,13 @@ Comandos disponibles:
           namingService,
           urlProvider,
           logger,
+          config: {
+            keepTempImages: env.KEEP_TEMP_IMAGES,
+            selectors: {
+              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
+              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
+            }
+          }
         });
         const videos = new DownloadVideos({
           browserProvider,
@@ -226,6 +338,14 @@ Comandos disponibles:
           videoDownloader,
           namingService,
           logger,
+          config: {
+            selectors: {
+              video: {
+                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
+                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
+              }
+            }
+          }
         });
 
         const downloadCourse = new DownloadCourse({

@@ -1,10 +1,14 @@
 export * from './IFileSystem';
+export * from './IPath';
+export * from './IAssetPathResolver';
 export * from './NodeFileSystem';
+export * from './NodePath';
+export * from './WebPath';
 export * from './UniversalFileSystem';
+export * from './UniversalPath';
 export * from './HttpFileSystem';
 export * from './S3FileSystem';
 export * from './BlobFileSystem';
 export * from './AssetPathResolver';
 export * from './PathResolver';
 export * from './MimeTypes';
-

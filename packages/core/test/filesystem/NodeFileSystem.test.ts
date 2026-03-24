@@ -42,18 +42,6 @@ describe("NodeFileSystem", () => {
     await nfs.writeFile("foo", "data");
     expect(fs.promises.writeFile).toHaveBeenCalledWith("foo", "data");
 
-    vi.mocked(path.resolve).mockReturnValue("/abs");
-    expect(nfs.resolve("rel")).toBe("/abs");
-
-    vi.mocked(path.join).mockReturnValue("a/b");
-    expect(nfs.join("a", "b")).toBe("a/b");
-
-    vi.mocked(path.isAbsolute).mockReturnValue(true);
-    expect(nfs.isAbsolute("/a")).toBe(true);
-
-    vi.mocked(path.dirname).mockReturnValue("/dir");
-    expect(nfs.dirname("/a/b")).toBe("/dir");
-
     vi.mocked(fs.promises.readdir).mockResolvedValue(["a"] as any);
     expect(await nfs.readdir("/dir")).toEqual(["a"]);
 
@@ -74,10 +62,6 @@ describe("NodeFileSystem", () => {
     expect(fs.createReadStream).toHaveBeenCalledWith("/file", undefined);
 
     nfs.createWriteStream("/file");
-    expect(fs.createWriteStream).toHaveBeenCalledWith("/file");
-    
-    // @ts-ignore
-    path.sep = "/";
-    expect(nfs.sep).toBe("/");
+    expect(fs.createWriteStream).toHaveBeenCalledWith("/file", undefined);
   });
 });

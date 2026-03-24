@@ -2,32 +2,41 @@ import { BrowserContext } from "playwright";
 
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { PLATFORM } from "@config/platform";
-
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
 import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+
+export interface DownloadVideosConfig {
+  selectors: {
+    video: {
+      startBtn: string;
+      playBtn: string;
+    };
+  };
+}
 
 export class DownloadVideos {
-  private browserProvider: BrowserProvider;
+  private browserProvider: IBrowserProvider;
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
   private videoDownloader: IVideoDownloader;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: DownloadVideosConfig;
 
   constructor(deps: {
-    browserProvider: BrowserProvider,
+    browserProvider: IBrowserProvider,
     courseRepository: ICourseRepository,
     assetRepository: IAssetRepository,
     assetStorage: IAssetStorage,
     videoDownloader: IVideoDownloader,
     namingService: INamingService,
-    logger: ILogger
+    logger: ILogger,
+    config: DownloadVideosConfig
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepo = deps.courseRepository;
@@ -36,6 +45,7 @@ export class DownloadVideos {
     this.videoDownloader = deps.videoDownloader;
     this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("DownloadVideos");
+    this.config = deps.config;
   }
 
   async executeForCourse(courseId: string): Promise<void> {
@@ -118,7 +128,7 @@ export class DownloadVideos {
       const videoId = asset.url.split('/').pop();
       if (videoId) {
         try {
-          const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
+          const startLearningBtn = page.locator(this.config.selectors.video.startBtn).first();
           await startLearningBtn.waitFor({ state: 'visible', timeout: 5000 });
           await startLearningBtn.click({ force: true });
           await page.waitForTimeout(2000);
@@ -127,7 +137,7 @@ export class DownloadVideos {
         }
 
         try {
-          const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
+          const playButton = page.locator(this.config.selectors.video.playBtn).first();
           await playButton.waitFor({ state: 'visible', timeout: 4000 });
           await playButton.click({ force: true });
         } catch (e) {

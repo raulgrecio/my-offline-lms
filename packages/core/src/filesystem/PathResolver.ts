@@ -1,65 +1,72 @@
-import fs from "fs";
-import { type IFileSystem } from "./IFileSystem";
+import type { IFileSystem } from "./IFileSystem";
+import type { IPath } from "./IPath";
 
 export interface PathResolverOptions {
   fs: IFileSystem;
+  path: IPath;
   env?: Record<string, string | undefined>;
   startDir?: string;
 }
 
 export class PathResolver {
   private fs: IFileSystem;
+  private path: IPath;
   private env: Record<string, string | undefined>;
   private startDir: string;
   private _monorepoRoot: string | null = null;
 
   constructor(options: PathResolverOptions) {
     this.fs = options.fs;
+    this.path = options.path;
     this.env = options.env || process.env;
     this.startDir = options.startDir || process.cwd();
+    
+    if (!this.path) {
+      throw new Error("PathResolver requires a path adapter (IPath)");
+    }
   }
 
-  getMonorepoRoot(): string {
+  async getMonorepoRoot(): Promise<string> {
     if (this._monorepoRoot) return this._monorepoRoot;
 
-    let currentDir = this.fs.resolve(this.startDir);
+    let currentDir = this.path.resolve(this.startDir);
     // Note: this might differ on Windows if we don't use absolute paths
-    const root = this.fs.resolve("/"); 
+    const root = this.path.resolve("/");
 
-    while (currentDir !== this.fs.dirname(currentDir)) {
-      // Use native fs.existsSync for bootstrapping as it identifies local files
-      if (fs.existsSync(this.fs.join(currentDir, "pnpm-workspace.yaml"))) {
+    while (currentDir !== this.path.dirname(currentDir)) {
+      if (await this.fs.exists(this.path.join(currentDir, "pnpm-workspace.yaml"))) {
         this._monorepoRoot = currentDir;
         return currentDir;
       }
-      currentDir = this.fs.dirname(currentDir);
+      currentDir = this.path.dirname(currentDir);
     }
 
     // Fallback if not found (shouldn't happen in monorepo, but for safety)
-    return this.fs.resolve(this.startDir);
+    return this.path.resolve(this.startDir);
   }
 
-  getDataRoot(): string {
+  async getDataRoot(): Promise<string> {
     const dataDir = this.env.DATA_DIR || "data";
-    if (this.fs.isAbsolute(dataDir)) {
+    if (this.path.isAbsolute(dataDir)) {
       return dataDir;
     }
-    return this.fs.join(this.getMonorepoRoot(), dataDir);
+    const root = await this.getMonorepoRoot();
+    return this.path.join(root, dataDir);
   }
 
-  getDbPath(filename: string = "db.sqlite"): string {
-    return this.fs.join(this.getDataRoot(), filename);
+  async getDbPath(filename: string = "db.sqlite"): Promise<string> {
+    return this.path.join(await this.getDataRoot(), filename);
   }
 
-  getAssetConfigPath(filename: string = "asset-paths.json"): string {
-    return this.fs.join(this.getDataRoot(), filename);
+  async getAssetConfigPath(filename: string = "asset-paths.json"): Promise<string> {
+    return this.path.join(await this.getDataRoot(), filename);
   }
 
-  getWebRoot(): string {
-    return this.fs.join(this.getMonorepoRoot(), "packages", "web");
+  async getWebRoot(): Promise<string> {
+    return this.path.join(await this.getMonorepoRoot(), "packages", "web");
   }
 
-  getScraperRoot(): string {
-    return this.fs.join(this.getMonorepoRoot(), "packages", "scraper");
+  async getScraperRoot(): Promise<string> {
+    return this.path.join(await this.getMonorepoRoot(), "packages", "scraper");
   }
 }

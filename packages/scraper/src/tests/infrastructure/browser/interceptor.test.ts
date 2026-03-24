@@ -1,46 +1,21 @@
-import fs from 'fs';
 import { Page, Request, Response } from 'playwright';
 import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 
-import { setupInterceptor } from '@platform/browser/interceptor';
+import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
 
-vi.mock('fs', () => ({
-  default: {
-    promises: {
-      mkdir: vi.fn().mockResolvedValue(undefined),
-      writeFile: vi.fn().mockResolvedValue(undefined),
-    },
-    existsSync: vi.fn().mockReturnValue(true),
-  }
-}));
-
-vi.mock('path', async () => {
-  const actual = await vi.importActual<typeof import('path')>('path');
-  return {
-    default: {
-      ...actual,
-    }
-  };
-});
-
-vi.mock('@my-offline-lms/core/logging', async (importOriginal) => {
-  const actual = await importOriginal<any>();
-  return {
-    ...actual,
-    ConsoleLogger: class {
-      withContext() { return this; }
-      info() { }
-      warn() { }
-      error() { }
-      debug() { }
-    }
-  };
-});
-
-describe('setupInterceptor', () => {
+describe('BrowserInterceptor', () => {
   let mockPage: Mocked<Page>;
   let mockResponse: Mocked<Response>;
   let mockRequest: Mocked<Request>;
+  let interceptor: BrowserInterceptor;
+  const mockFs = {
+    mkdir: vi.fn(),
+    writeFile: vi.fn(),
+    exists: vi.fn().mockResolvedValue(true),
+  } as any;
+  const mockPath = {
+    join: vi.fn((...args) => args.join('/')),
+  } as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,30 +35,36 @@ describe('setupInterceptor', () => {
       status: vi.fn().mockReturnValue(200),
       json: vi.fn(),
     } as unknown as Mocked<Response>;
+
+    interceptor = new BrowserInterceptor({
+      fs: mockFs,
+      path: mockPath,
+      logger: {
+        withContext: vi.fn().mockReturnThis(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn()
+      } as any,
+      getInterceptedDir: async () => '/mock/intercepted'
+    });
   });
 
-  it('should create default intercepted directory if no options provided', async () => {
-    const targetDir = await setupInterceptor(mockPage);
+  it('should create custom target directory when setup is called', async () => {
+    mockFs.exists.mockResolvedValue(false);
+    const targetDir = await interceptor.setup(mockPage);
 
-    expect(fs.promises.mkdir).toHaveBeenCalledWith(targetDir, { recursive: true });
-    expect(targetDir).toContain('intercepted'); // Check fallback
-  });
-
-  it('should create custom target directory if options provided', async () => {
-    const options = { prefix: 'test', execTimestamp: 12345 };
-    const targetDir = await setupInterceptor(mockPage, options);
-
-    expect(targetDir).toContain('test_12345');
-    expect(fs.promises.mkdir).toHaveBeenCalledWith(targetDir, { recursive: true });
+    expect(mockFs.mkdir).toHaveBeenCalledWith(targetDir, { recursive: true });
+    expect(targetDir).toContain('/mock/intercepted');
   });
 
   it('should attach a response listener to the page', async () => {
-    await setupInterceptor(mockPage);
+    await interceptor.setup(mockPage);
     expect(mockPage.on).toHaveBeenCalledWith('response', expect.any(Function));
   });
 
   it('should save JSON payload when response URL matches intercept criteria', async () => {
-    const targetDir = await setupInterceptor(mockPage);
+    const targetDir = await interceptor.setup(mockPage);
     const responseHandler = mockPage.on.mock.calls[0][1] as unknown as ((response: Response) => Promise<void>);
 
     // Simulate a learning path JSON response
@@ -95,8 +76,8 @@ describe('setupInterceptor', () => {
     await responseHandler(mockResponse);
 
     // Verify that the file was written
-    expect(fs.promises.writeFile).toHaveBeenCalledTimes(1);
-    const writeCallArgs = vi.mocked(fs.promises.writeFile).mock.calls[0];
+    expect(mockFs.writeFile).toHaveBeenCalledTimes(1);
+    const writeCallArgs = vi.mocked(mockFs.writeFile).mock.calls[0];
 
     expect(writeCallArgs[0]).toContain(targetDir);
     expect(writeCallArgs[0]).toContain('api_learning_paths_123');
@@ -109,7 +90,7 @@ describe('setupInterceptor', () => {
   });
 
   it('should ignore non-JSON responses', async () => {
-    await setupInterceptor(mockPage);
+    await interceptor.setup(mockPage);
     const responseHandler = mockPage.on.mock.calls[0][1] as unknown as ((response: Response) => Promise<void>);
 
     // Simulate an image response
@@ -118,11 +99,11 @@ describe('setupInterceptor', () => {
 
     await responseHandler(mockResponse);
 
-    expect(fs.promises.writeFile).not.toHaveBeenCalled();
+    expect(mockFs.writeFile).not.toHaveBeenCalled();
   });
 
   it('should safely catch errors if response body cannot be parsed as JSON', async () => {
-    await setupInterceptor(mockPage);
+    await interceptor.setup(mockPage);
     const responseHandler = mockPage.on.mock.calls[0][1] as unknown as ((response: Response) => Promise<void>);
 
     // Simulate JSON type but non-JSON body (e.g. malformed or empty)
@@ -134,6 +115,6 @@ describe('setupInterceptor', () => {
     await expect(responseHandler(mockResponse)).resolves.not.toThrow();
 
     // But should not write file
-    expect(fs.promises.writeFile).not.toHaveBeenCalled();
+    expect(mockFs.writeFile).not.toHaveBeenCalled();
   });
 });

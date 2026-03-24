@@ -245,6 +245,6 @@ export class SQLiteProgressRepository implements IProgressRepository {
         "SELECT segment FROM UserAssetSegments WHERE asset_id = ? AND asset_type = ? ORDER BY segment ASC",
       )
       .all(id, type) as any[];
-    return rows.map((r) => r.segment);
+    return rows.map((r) => r.segment) || [];
   }
 }

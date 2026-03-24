@@ -1,29 +1,29 @@
 import { fileURLToPath } from "url";
-import path from "path";
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { PathResolver } from '@my-offline-lms/core/filesystem';
+import { NodeFileSystem, NodePath, PathResolver } from '@my-offline-lms/core/filesystem';
 
+const pathAdapter = new NodePath();
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = pathAdapter.dirname(__filename);
 
 // Inicializamos el sistema de archivos y el resolver
 const fs = new NodeFileSystem();
 const resolver = new PathResolver({
   fs,
+  path: pathAdapter,
   env: process.env, // O webEnv, pero PathResolver espera un Record<string, string|undefined>
   startDir: __dirname
 });
 
 // El root del monorepo
-export const MONOREPO_ROOT = resolver.getMonorepoRoot();
-export const WEB_ROOT = resolver.getWebRoot();
-export const DATA_ROOT = resolver.getDataRoot();
+export const getMonorepoRoot = async () => resolver.getMonorepoRoot();
+export const getWebRoot = async () => resolver.getWebRoot();
+export const getDataRoot = async () => resolver.getDataRoot();
 
 // DB compartida
-export const DB_PATH = resolver.getDbPath();
+export const getDbPath = async () => resolver.getDbPath();
 
 // Configuración de rutas de assets compartida
-export const CONFIG_PATH = resolver.getAssetConfigPath();
+export const getAssetConfigPath = async () => resolver.getAssetConfigPath();
 
 // Exportamos el resolver por si alguien necesita rutas personalizadas
 export { resolver };

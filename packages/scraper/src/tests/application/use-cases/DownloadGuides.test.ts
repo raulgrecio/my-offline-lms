@@ -76,6 +76,13 @@ describe('DownloadGuides Use Case', () => {
             namingService: new AssetNamingService(),
             urlProvider: mockUrlProvider,
             logger: mockLogger,
+            config: {
+                keepTempImages: false,
+                selectors: {
+                    iframe: 'iframe',
+                    flipbookPages: '.title'
+                }
+            }
         });
     });
 

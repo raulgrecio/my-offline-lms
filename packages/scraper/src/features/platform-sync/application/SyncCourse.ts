@@ -1,41 +1,54 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { env } from "@config/env";
-import { PLATFORM } from "@config/platform";
-
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
 import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
-import { setupInterceptor } from "@platform/browser/interceptor";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
+
+export interface SyncCourseConfig {
+  keepTempWorkspaces: boolean;
+  selectors: {
+    guidesTab: string;
+  };
+  oracleConstants: {
+    videoTypeId: string | number;
+  };
+}
 
 export class SyncCourse {
-  private browserProvider: BrowserProvider;
+  private browserProvider: IBrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
   private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: SyncCourseConfig;
 
   constructor(deps: {
-    browserProvider: BrowserProvider,
+    browserProvider: IBrowserProvider,
     courseRepository: ICourseRepository,
     assetRepository: IAssetRepository,
     interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
+    browserInterceptor: BrowserInterceptor,
     urlProvider: IPlatformUrlProvider,
     namingService: INamingService,
     logger: ILogger,
+    config: SyncCourseConfig
   }) {
     this.browserProvider = deps.browserProvider;
     this.courseRepository = deps.courseRepository;
     this.assetRepository = deps.assetRepository;
     this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
+    this.browserInterceptor = deps.browserInterceptor;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncCourse");
+    this.config = deps.config;
   }
 
   async execute({ courseInput, offeringId }: { courseInput: string, offeringId?: string }): Promise<void> {
@@ -59,8 +72,8 @@ export class SyncCourse {
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
-    // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = await setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
+    // (We will initialize the actual path when setup returns it)
+    const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: "course", execTimestamp: Date.now() });
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
 
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
@@ -70,8 +83,8 @@ export class SyncCourse {
 
     this.logger.info("Click en el tab de Guides para desencadenar json...");
     try {
-      await page.waitForSelector(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, { timeout: 15000 });
-      await page.click(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
+      await page.waitForSelector(this.config.selectors.guidesTab, { timeout: 15000 });
+      await page.click(this.config.selectors.guidesTab);
       this.logger.info("👆 Click en Guides completado. Esperando interceptaciones (7s)...");
       await page.waitForTimeout(7000);
     } catch (e) {
@@ -189,7 +202,10 @@ export class SyncCourse {
           data.modules.forEach((mod: any) => {
             if (mod.components && Array.isArray(mod.components)) {
               mod.components.forEach((comp: any) => {
-                if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
+                const videoTypeId = typeof this.config.oracleConstants.videoTypeId === 'string' 
+                  ? parseInt(this.config.oracleConstants.videoTypeId) 
+                  : this.config.oracleConstants.videoTypeId;
+                if (comp.typeId === videoTypeId) {
                   const vidId = comp.id.toString();
                   if (!videosMap.has(vidId)) {
                     videosMap.set(vidId, {
@@ -271,7 +287,7 @@ export class SyncCourse {
     }
 
     // --- Isolated Execution Environment Cleanup ---
-    if (!env.KEEP_TEMP_WORKSPACES) {
+    if (!this.config.keepTempWorkspaces) {
       if (isolatedDirPath) {
         this.logger.info(`🧹 Limpiando espacio de trabajo temporal del curso: ${isolatedDirPath}`);
         await isolatedInterceptedDataRepo.deleteWorkspace();

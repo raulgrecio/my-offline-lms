@@ -1,17 +1,16 @@
 import readline from "readline";
-
 import { ILogger } from '@my-offline-lms/core/logging';
 
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
 
 export class AuthSession {
-  private browserProvider: BrowserProvider;
+  private browserProvider: IBrowserProvider;
   private authStorage: IAuthSessionStorage;
   private logger: ILogger;
 
   constructor(deps: {
-    browserProvider: BrowserProvider,
+    browserProvider: IBrowserProvider,
     authStorage: IAuthSessionStorage,
     logger: ILogger
   }) {

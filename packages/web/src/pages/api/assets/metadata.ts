@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   }
 
-  const asset = getAssetById({ id: assetId });
+  const asset = await getAssetById({ id: assetId });
   if (!asset) {
     return new Response(JSON.stringify({ error: 'Asset not found' }), {
       status: 404,
@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    updateAssetTotalPages({ id: assetId, totalPages: Number(totalPages) });
+    await updateAssetTotalPages({ id: assetId, totalPages: Number(totalPages) });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

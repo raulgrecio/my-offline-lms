@@ -18,14 +18,15 @@ import {
 import { getIsFavorite } from "@features/favorites";
 import { APP_ROUTES } from "@platform/router/routes";
 
-const learningPaths = getAllLearningPaths();
-const courses = getAllCourses();
-const { lastWatched } = getDashboardStatus();
+const learningPaths = await getAllLearningPaths();
+const courses = (await getAllCourses()).slice(0, 8);
+const { lastWatched } = await getDashboardStatus();
 
 // LP progress and stats
-const lpStats = learningPaths.map((lp) => {
-  const progress = getLearningPathProgress({ id: lp.id });
-  const isFavorite = getIsFavorite({ id: lp.id, type: "learning-path" });
+const lpStats = await Promise.all(learningPaths.map(async (lp) => {
+  const progress = await getLearningPathProgress({ id: lp.id });
+  const isFavorite = await getIsFavorite({ id: lp.id, type: "learning-path" });
+  
   return {
     ...lp,
     isFavorite,
@@ -35,11 +36,25 @@ const lpStats = learningPaths.map((lp) => {
     progress: progress.progress,
     status: progress.status,
   };
-});
+}));
+
+// Latest courses stats
+const latestCourses = await Promise.all(courses.map(async (course) => {
+  const progress = await getCourseProgress({ id: course.id });
+  const isFavorite = await getIsFavorite({ id: course.id, type: "course" });
+  
+  return {
+    ...course,
+    status: progress.status,
+    totalAssets: progress.totalItems,
+    progress: progress.progress,
+    isFavorite
+  };
+}));
 
 // Last watched course title
 let lastWatchedCourse = lastWatched
-  ? getCourseById({ id: lastWatched.courseId })
+  ? await getCourseById({ id: lastWatched.courseId })
   : null;
 
 const hasContent = courses.length > 0 || lpStats.length > 0;
@@ -74,24 +89,20 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
         )}
 
         <!-- ─── All Courses ────────────────────────────────────────────── -->
-        {courses.length > 0 && (
+        {latestCourses.length > 0 && (
           <section>
             <SectionHeader id="cursos-section" title="Cursos" icon="book-open" />
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {courses.slice(0, 8).map((course) => {
-                const progress = getCourseProgress({ id: course.id });
-                const isFavorite = getIsFavorite({ id: course.id, type: "course" });
-                return (
-                  <CourseCard
-                    id={course.id}
-                    title={course.title}
-                    status={progress.status}
-                    totalAssets={progress.totalItems}
-                    progress={progress.progress}
-                    isFavorite={isFavorite}
-                  />
-                );
-              })}
+              {latestCourses.map((course) => (
+                <CourseCard
+                  id={course.id}
+                  title={course.title}
+                  status={course.status}
+                  totalAssets={course.totalAssets}
+                  progress={course.progress}
+                  isFavorite={course.isFavorite}
+                />
+              ))}
             </div>
             
             {courses.length > 8 && (

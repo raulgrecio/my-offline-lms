@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 // Mock the dependencies BEFORE importing the module to cover the top-level wiring
 vi.mock("@platform/db/database", () => ({
-  getDb: vi.fn().mockReturnValue({
+  getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
       all: vi.fn().mockReturnValue([]),
@@ -24,18 +24,18 @@ import {
 } from "@features/progress/index";
 
 describe("Progress Feature: Public API", () => {
-  it("should provide access to all public methods", () => {
-    expect(getDashboardStatus()).toBeDefined();
-    expect(getAssetProgress({ assetId: "a1", type: "video" })).toBeNull();
-    expect(getCourseProgress({ id: "c1" })).toBeDefined();
-    expect(getLearningPathProgress({ id: "p1" })).toBeDefined();
+  it("should provide access to all public methods", async () => {
+    expect(await getDashboardStatus()).toBeDefined();
+    expect(await getAssetProgress({ assetId: "a1", type: "video" })).toBeNull();
+    expect(await getCourseProgress({ id: "c1" })).toBeDefined();
+    expect(await getLearningPathProgress({ id: "p1" })).toBeDefined();
 
-    markCourseStatus({ id: "c1", status: "completed" });
-    markLearningPathStatus({ id: "p1", status: "completed" });
+    await markCourseStatus({ id: "c1", status: "completed" });
+    await markLearningPathStatus({ id: "p1", status: "completed" });
 
-    updateVideoProgress({ assetId: "a1", id: "c1", position: 10, duration: 20 });
-    updateGuideProgress({ assetId: "a1", id: "c1", position: 5, duration: 10 });
+    await updateVideoProgress({ assetId: "a1", id: "c1", position: 10, duration: 20 });
+    await updateGuideProgress({ assetId: "a1", id: "c1", position: 5, duration: 10 });
 
-    expect(getVisitedSegments({ id: "a1", type: "video" })).toEqual([]);
+    expect(await getVisitedSegments({ id: "a1", type: "video" })).toEqual([]);
   });
 });

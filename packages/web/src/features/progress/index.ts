@@ -1,4 +1,5 @@
 import { type AssetType } from '@my-offline-lms/core/models';
+import { createLazyService } from "@platform/utils/lazy";
 import { getDb } from "@platform/db/database";
 import { ProgressManager } from "./application/ProgressManager";
 import type { GetAssetProgressRequest } from "./application/use-cases/getAssetProgress";
@@ -15,44 +16,47 @@ export type {
   UpdateAssetProgressRequest,
 };
 
-// 2. Wiring
-const repo = new SQLiteProgressRepository(getDb());
-const manager = new ProgressManager(repo);
+// 2. Wiring (Lazy)
+const getManager = createLazyService(async () => {
+  const db = await getDb();
+  const repo = new SQLiteProgressRepository(db);
+  return new ProgressManager(repo);
+});
 
 // 3. Public API
 
 // get
-export const getAssetProgress = (params: GetAssetProgressRequest) =>
-  manager.getAssetProgress(params);
+export const getAssetProgress = async (params: GetAssetProgressRequest) =>
+  (await getManager()).getAssetProgress(params);
 
-export const getCourseProgress = (params: Omit<GetCollectionProgressRequest, "type">) =>
-  manager.getCollectionProgress({ ...params, type: "course" });
+export const getCourseProgress = async (params: Omit<GetCollectionProgressRequest, "type">) =>
+  (await getManager()).getCollectionProgress({ ...params, type: "course" });
 
-export const getLearningPathProgress = (params: Omit<GetCollectionProgressRequest, "type">) =>
-  manager.getCollectionProgress({ ...params, type: "learning-path" });
+export const getLearningPathProgress = async (params: Omit<GetCollectionProgressRequest, "type">) =>
+  (await getManager()).getCollectionProgress({ ...params, type: "learning-path" });
 
-export const getDashboardStatus = () => manager.getDashboardStatus();
+export const getDashboardStatus = async () => (await getManager()).getDashboardStatus();
 
 // mark
-export const markCourseStatus = (params: Omit<MarkCollectionStatusRequest, "type">) =>
-  manager.markCollectionStatus({ ...params, type: "course" });
+export const markCourseStatus = async (params: Omit<MarkCollectionStatusRequest, "type">) =>
+  (await getManager()).markCollectionStatus({ ...params, type: "course" });
 
-export const markLearningPathStatus = (params: Omit<MarkCollectionStatusRequest, "type">) =>
-  manager.markCollectionStatus({ ...params, type: "learning-path" });
+export const markLearningPathStatus = async (params: Omit<MarkCollectionStatusRequest, "type">) =>
+  (await getManager()).markCollectionStatus({ ...params, type: "learning-path" });
 
 // update
-export const updateVideoProgress = (params: Omit<UpdateAssetProgressRequest, "type">) =>
-  manager.updateAssetProgress({ ...params, type: "video" });
+export const updateVideoProgress = async (params: Omit<UpdateAssetProgressRequest, "type">) =>
+  (await getManager()).updateAssetProgress({ ...params, type: "video" });
 
-export const updateGuideProgress = (params: Omit<UpdateAssetProgressRequest, "type">) =>
-  manager.updateAssetProgress({ ...params, type: "guide" });
+export const updateGuideProgress = async (params: Omit<UpdateAssetProgressRequest, "type">) =>
+  (await getManager()).updateAssetProgress({ ...params, type: "guide" });
 
 // Helper para mantener compatibilidad con Dashboard y otras vistas
 /** @deprecated Use getDashboardStatus().allProgress o getCollectionProgress */
-export const getAllCourseProgress = () => manager.getAllCourseProgress();
+export const getAllCourseProgress = async () => (await getManager()).getAllCourseProgress();
 
 /** @deprecated Use getDashboardStatus().lastWatched o getLastWatchedAsset */
-export const getLastWatchedAsset = () => manager.getLastWatchedAsset();
+export const getLastWatchedAsset = async () => (await getManager()).getLastWatchedAsset();
 
-export const getVisitedSegments = (params: { id: string, type: AssetType }) =>
-  manager.getVisitedSegments(params);
+export const getVisitedSegments = async (params: { id: string, type: AssetType }) =>
+  (await getManager()).getVisitedSegments(params);

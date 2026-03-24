@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@platform/db/database", () => ({
-  getDb: vi.fn().mockReturnValue({
+  getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
       all: vi.fn().mockReturnValue([]),
@@ -13,13 +13,13 @@ vi.mock("@platform/db/database", () => ({
 import { getActiveLearningPath, setActiveLearningPath } from "@features/settings/index";
 
 describe("Settings Feature: Public API", () => {
-  it("should provide access to active learning path", () => {
-    const path = getActiveLearningPath();
+  it("should provide access to active learning path", async () => {
+    const path = await getActiveLearningPath();
     expect(path).toBeNull();
   });
 
-  it("should set active learning path", () => {
-    setActiveLearningPath({ id: "p1" });
+  it("should set active learning path", async () => {
+    await setActiveLearningPath({ id: "p1" });
     // Verify it doesn't throw
   });
 });

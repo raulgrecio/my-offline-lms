@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@platform/db/database", () => ({
-  getDb: vi.fn().mockReturnValue({
+  getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
       all: vi.fn().mockReturnValue([]),
@@ -17,10 +17,10 @@ import {
 } from "@features/favorites/index";
 
 describe("Favorites Feature: Public API", () => {
-  it("should provide access to all public methods", () => {
-    expect(getAllFavorites()).toBeInstanceOf(Array);
-    expect(getIsFavorite({ id: "a1", type: "course" })).toBe(false);
+  it("should provide access to all public methods", async () => {
+    expect(await getAllFavorites()).toBeInstanceOf(Array);
+    expect(await getIsFavorite({ id: "a1", type: "course" })).toBe(false);
 
-    toggleFavorite({ id: "a1", type: "course" });
+    await toggleFavorite({ id: "a1", type: "course" });
   });
 });

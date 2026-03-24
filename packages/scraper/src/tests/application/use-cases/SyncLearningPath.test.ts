@@ -8,10 +8,17 @@ import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlat
 
 import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
+import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
 
-vi.mock('@platform/browser/interceptor', () => ({
-  setupInterceptor: vi.fn()
-}));
+vi.mock('@platform/browser/BrowserInterceptor', () => {
+  return {
+    BrowserInterceptor: vi.fn().mockImplementation(function () {
+      return {
+        setup: vi.fn().mockResolvedValue('/tmp/intercepted')
+      };
+    })
+  };
+});
 
 describe('SyncLearningPath Use Case', () => {
   const mockBrowserProvider = {
@@ -74,9 +81,13 @@ describe('SyncLearningPath Use Case', () => {
       courseRepo: mockCourseRepo,
       syncCourse: mockSyncCourseUseCase,
       interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
+      browserInterceptor: new BrowserInterceptor({} as any),
       urlProvider: mockUrlProvider,
       namingService: new AssetNamingService(),
-      logger: mockLogger
+      logger: mockLogger,
+      config: {
+        keepTempWorkspaces: false
+      }
     });
   });
 

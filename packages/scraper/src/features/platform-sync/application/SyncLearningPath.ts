@@ -1,45 +1,54 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { env } from "@config/env";
-
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
 import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
 import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
-import { setupInterceptor } from "@platform/browser/interceptor";
+
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
 
 import { SyncCourse } from "./SyncCourse";
 
+export interface SyncLearningPathConfig {
+  keepTempWorkspaces: boolean;
+}
+
 export class SyncLearningPath {
-  private browserProvider: BrowserProvider;
+  private browserProvider: IBrowserProvider;
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
   private syncCourse: SyncCourse;
   private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: SyncLearningPathConfig;
 
   constructor(deps: {
-    browserProvider: BrowserProvider,
+    browserProvider: IBrowserProvider,
     learningPathRepo: ILearningPathRepository,
     courseRepo: ICourseRepository,
     syncCourse: SyncCourse,
     interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
+    browserInterceptor: BrowserInterceptor,
     urlProvider: IPlatformUrlProvider,
     namingService: INamingService,
-    logger: ILogger
+    logger: ILogger,
+    config: SyncLearningPathConfig
   }) {
     this.browserProvider = deps.browserProvider;
     this.learningPathRepo = deps.learningPathRepo;
     this.courseRepo = deps.courseRepo;
     this.syncCourse = deps.syncCourse;
     this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
+    this.browserInterceptor = deps.browserInterceptor;
     this.urlProvider = deps.urlProvider;
     this.namingService = deps.namingService;
     this.logger = deps.logger.withContext("SyncLearningPath");
+    this.config = deps.config;
   }
 
   async execute(pathInput: string): Promise<void> {
@@ -61,8 +70,8 @@ export class SyncLearningPath {
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
-    // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = await setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
+    // (We will initialize the actual path when setup returns it)
+    const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'path', execTimestamp: Date.now() });
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
 
     this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
@@ -77,7 +86,7 @@ export class SyncLearningPath {
     await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
 
     // --- Isolated Execution Environment Cleanup ---
-    if (!env.KEEP_TEMP_WORKSPACES) {
+    if (!this.config.keepTempWorkspaces) {
       if (isolatedDirPath) {
         this.logger.info(`🧹 Limpiando espacio de trabajo temporal del path: ${isolatedDirPath}`);
         await isolatedInterceptedDataRepo.deleteWorkspace();

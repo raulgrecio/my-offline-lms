@@ -1,16 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
-import fs from 'fs';
-
-vi.mock('fs', () => ({
-    default: {
-        promises: {
-            mkdir: vi.fn().mockResolvedValue(undefined),
-            writeFile: vi.fn().mockResolvedValue(undefined),
-        },
-        existsSync: vi.fn().mockReturnValue(true),
-    }
-}));
 
 vi.mock('path', async () => {
     const actual = await vi.importActual<typeof import('path')>('path');
@@ -25,27 +14,51 @@ vi.mock('path', async () => {
 
 describe('DiskAuthSessionStorage', () => {
     const mockBaseDir = '/mock/base/dir';
+    const mockFs = {
+        exists: vi.fn().mockResolvedValue(true),
+        mkdir: vi.fn().mockResolvedValue(undefined),
+        writeFile: vi.fn().mockResolvedValue(undefined),
+    } as any;
+    const mockPath = {
+        join: vi.fn((...args) => args.join('/')),
+    } as any;
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     it('should initialize paths correctly with a base directory', async () => {
-        const storage = new DiskAuthSessionStorage(mockBaseDir);
+        const storage = new DiskAuthSessionStorage({
+            fs: mockFs,
+            path: mockPath,
+            getAuthDir: async () => '/never/called',
+            baseDir: mockBaseDir
+        });
         expect(await storage.getAuthFile()).toBe('/mock/base/dir/state.json');
         expect(await storage.getCookiesFile()).toBe('/mock/base/dir/cookies.txt');
     });
 
     it('should create auth directory', async () => {
-        const storage = new DiskAuthSessionStorage(mockBaseDir);
+        const storage = new DiskAuthSessionStorage({
+            fs: mockFs,
+            path: mockPath,
+            getAuthDir: async () => '/never/called',
+            baseDir: mockBaseDir
+        });
         
+        mockFs.exists.mockResolvedValue(false);
         await storage.ensureAuthDir();
         
-        expect(fs.promises.mkdir).toHaveBeenCalledWith(mockBaseDir, { recursive: true });
+        expect(mockFs.mkdir).toHaveBeenCalledWith(mockBaseDir, { recursive: true });
     });
 
     it('should format and save cookies to txt file correctly', async () => {
-        const storage = new DiskAuthSessionStorage(mockBaseDir);
+        const storage = new DiskAuthSessionStorage({
+            fs: mockFs,
+            path: mockPath,
+            getAuthDir: async () => '/never/called',
+            baseDir: mockBaseDir
+        });
         
         const mockCookies = [
             { domain: '.example.com', path: '/', secure: true, expires: 1690000000, name: 'session', value: '123' },
@@ -54,8 +67,8 @@ describe('DiskAuthSessionStorage', () => {
 
         await storage.saveCookies(mockCookies);
 
-        expect(fs.promises.writeFile).toHaveBeenCalled();
-        const callArgs = vi.mocked(fs.promises.writeFile).mock.calls[0];
+        expect(mockFs.writeFile).toHaveBeenCalled();
+        const callArgs = vi.mocked(mockFs.writeFile).mock.calls[0];
         expect(callArgs[0]).toBe('/mock/base/dir/cookies.txt');
         
         const savedContent = callArgs[1] as string;

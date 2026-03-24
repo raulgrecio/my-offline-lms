@@ -1,10 +1,11 @@
-import { db } from "@db/schema";
+import { initDb } from "@db/schema";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { logger as baseLogger } from "@platform/logging";
+import { IDatabase } from "@my-offline-lms/core/database";
 
 const logger = baseLogger.withContext("resetFailedDownloads");
 
-async function resetCourse(courseId: string) {
+async function resetCourse(db: IDatabase, courseId: string) {
   logger.info(`\n🔍 Checking missing assets for Course ID: ${courseId} to reset...`);
 
   const assets = db.prepare("SELECT id, type, status, metadata FROM Course_Assets WHERE course_id = ?").all(courseId) as any[];
@@ -53,7 +54,7 @@ async function resetCourse(courseId: string) {
   }
 }
 
-async function resetPath(pathId: string) {
+async function resetPath(db: IDatabase, pathId: string) {
   logger.info(`\n===================================================`);
   logger.info(`🚀 Resetting missing assets in Learning Path ID: ${pathId}`);
   logger.info(`===================================================`);
@@ -61,7 +62,7 @@ async function resetPath(pathId: string) {
   const courses = db.prepare("SELECT course_id FROM LearningPath_Courses WHERE path_id = ? ORDER BY order_index ASC").all(pathId) as { course_id: string }[];
 
   for (const course of courses) {
-    await resetCourse(course.course_id);
+    await resetCourse(db, course.course_id);
   }
 }
 
@@ -79,10 +80,11 @@ if (require.main === module) {
   const targetId = args[1];
 
   (async () => {
+    const db = await initDb();
     if (type === "course") {
-      await resetCourse(targetId);
+      await resetCourse(db, targetId);
     } else if (type === "path") {
-      await resetPath(targetId);
+      await resetPath(db, targetId);
     } else {
       logger.info("Unknown command. Use 'course' or 'path'.");
     }

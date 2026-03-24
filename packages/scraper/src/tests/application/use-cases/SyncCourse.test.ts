@@ -10,10 +10,17 @@ import { AssetNamingService } from '@features/asset-download/infrastructure/Asse
 import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
 
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
+import { BrowserInterceptor } from '../../../platform/browser/BrowserInterceptor';
 
-vi.mock('@platform/browser/interceptor', () => ({
-  setupInterceptor: vi.fn(),
-}));
+vi.mock('../../../platform/browser/BrowserInterceptor', () => {
+  return {
+    BrowserInterceptor: vi.fn().mockImplementation(function() {
+      return {
+        setup: vi.fn().mockResolvedValue('/tmp/intercepted')
+      };
+    })
+  };
+});
 
 describe('SyncCourse Use Case', () => {
   const mockBrowserProvider = {
@@ -75,9 +82,19 @@ describe('SyncCourse Use Case', () => {
       courseRepository: mockCourseRepo,
       assetRepository: mockAssetRepo,
       interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
+      browserInterceptor: new BrowserInterceptor({} as any),
       urlProvider: mockUrlProvider,
       namingService: new AssetNamingService(),
       logger: mockLogger,
+      config: {
+        keepTempWorkspaces: false,
+        selectors: {
+          guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+        },
+        oracleConstants: {
+          videoTypeId: '1'
+        }
+      }
     });
   });
 
@@ -125,12 +142,12 @@ describe('SyncCourse Use Case', () => {
             {
               id: 'm1',
               components: [
-                { id: 'v1', typeId: '1', name: 'Video 1', duration: 100 }
+                { id: 'v1', typeId: 1, name: 'Video 1', duration: 100 }
               ]
             }
           ],
           eKits: [
-            { ekitId: 'g1', name: 'Guide 1' }
+            { id: 'g1', ekitId: 'g1', name: 'Guide 1' }
           ]
         }
       })
@@ -195,7 +212,7 @@ describe('SyncCourse Use Case', () => {
           modules: [{
             id: 'm1',
             components: [
-              { id: 'v1', typeId: '1', name: 'Video' },
+              { id: 'v1', typeId: 1, name: 'Video' },
               { id: 'o1', typeId: '99', name: 'Other' }
             ]
           }]

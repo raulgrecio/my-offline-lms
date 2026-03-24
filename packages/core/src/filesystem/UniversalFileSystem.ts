@@ -1,5 +1,5 @@
-import path from "path";
-import type { IFileSystem, FileStats } from "./IFileSystem";
+import { type MakeDirectoryOptions, type RmOptions } from "fs";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 import { type ILogger, NoopLogger } from "../logging";
 
 export type FileSystemProtocol = "http" | "tcp" | "s3" | "blob";
@@ -50,9 +50,9 @@ export class UniversalFileSystem implements IFileSystem {
   }
 
   async readFile(p: string): Promise<Buffer>;
-  async readFile(p: string, encoding: "utf-8"): Promise<string>;
-  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
-    if (encoding === "utf-8") {
+  async readFile(p: string, encoding: BufferEncoding): Promise<string>;
+  async readFile(p: string, encoding?: BufferEncoding): Promise<string | Buffer> {
+    if (encoding) {
       return this.getBackend(p).readFile(p, encoding);
     }
     return this.getBackend(p).readFile(p);
@@ -62,36 +62,15 @@ export class UniversalFileSystem implements IFileSystem {
     return this.getBackend(p).writeFile(p, content);
   }
 
-  resolve(...paths: string[]): string {
-    return this.getBackend(paths[0] || "").resolve(...paths);
-  }
-
-  join(...paths: string[]): string {
-    return this.getBackend(paths[0] || "").join(...paths);
-  }
-
-  isAbsolute(p: string): boolean {
-    if (this.getProtocol(p)) return true;
-
-    // Check for Windows drive letter like C:\ or UNC path like \\ or //
-    if (/^[a-zA-Z]:[\\\/]/.test(p) || p.startsWith("\\\\") || p.startsWith("//")) return true;
-
-    return path.isAbsolute(p);
-  }
-
-  dirname(p: string): string {
-    return this.getBackend(p).dirname(p);
-  }
-
   async readdir(p: string): Promise<string[]> {
     return this.getBackend(p).readdir(p);
   }
 
-  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+  async mkdir(p: string, options?: MakeDirectoryOptions): Promise<void> {
     return this.getBackend(p).mkdir(p, options);
   }
 
-  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+  async rm(p: string, options?: RmOptions): Promise<void> {
     const backend = this.getBackend(p);
     if (backend.rm) {
       await backend.rm(p, options);
@@ -102,17 +81,21 @@ export class UniversalFileSystem implements IFileSystem {
     return this.getBackend(p).stat(p);
   }
 
-  createReadStream(p: string, options?: any): any {
+  async unlink(p: string): Promise<void> {
+    return this.getBackend(p).unlink(p);
+  }
+
+  async rename(oldPath: string, newPath: string): Promise<void> {
+    return this.getBackend(oldPath).rename(oldPath, newPath);
+  }
+
+  createReadStream(p: string, options?: any): NodeJS.ReadableStream | null {
     const backend = this.getBackend(p);
     return backend.createReadStream ? backend.createReadStream(p, options) : null;
   }
 
-  createWriteStream(p: string): any {
+  createWriteStream(p: string, options?: any): NodeJS.WritableStream | null {
     const backend = this.getBackend(p);
-    return backend.createWriteStream ? backend.createWriteStream(p) : null;
-  }
-
-  get sep(): string {
-    return path.sep;
+    return backend.createWriteStream ? backend.createWriteStream(p, options) : null;
   }
 }

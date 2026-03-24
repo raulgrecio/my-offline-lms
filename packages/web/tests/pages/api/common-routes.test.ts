@@ -7,20 +7,20 @@ import { GET as GetMetadata, POST as PostMetadata } from "@pages/api/assets/meta
 import { GET as GetAssetPaths, POST as PostAssetPaths, DELETE as DeleteAssetPaths } from "@pages/api/settings/asset-paths";
 
 vi.mock("@features/settings", () => ({
-  setActiveLearningPath: vi.fn(),
+  setActiveLearningPath: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@features/progress", () => ({
-  markCourseStatus: vi.fn(),
-  updateGuideProgress: vi.fn(),
+  markCourseStatus: vi.fn().mockResolvedValue(undefined),
+  updateGuideProgress: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@features/courses", () => ({
-  getAssetById: vi.fn().mockReturnValue({ metadata: { duration: 100 } }),
-  updateAssetTotalPages: vi.fn(),
+  getAssetById: vi.fn().mockResolvedValue({ metadata: { duration: 100 } }),
+  updateAssetTotalPages: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@my-offline-lms/core", async (importOriginal) => {
+vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -113,7 +113,7 @@ describe("API Routes: Common", () => {
     expect(res1.status).toBe(400);
 
     const { getAssetById } = await import("@features/courses");
-    vi.mocked(getAssetById).mockReturnValueOnce(null);
+    vi.mocked(getAssetById).mockResolvedValueOnce(null);
     const res2 = await GetMetadata({ url: new URL("http://l?assetId=missing") } as any);
     expect(res2.status).toBe(404);
   });

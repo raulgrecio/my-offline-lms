@@ -99,6 +99,14 @@ describe('DownloadVideos Use Case', () => {
       videoDownloader: mockVideoDownloader,
       namingService: new AssetNamingService(),
       logger: mockRootLogger,
+      config: {
+        selectors: {
+            video: {
+                startBtn: '.start',
+                playBtn: '.play'
+            }
+        }
+      }
     });
   });
 

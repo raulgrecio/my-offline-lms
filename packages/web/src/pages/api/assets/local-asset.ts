@@ -1,23 +1,26 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import path from 'path';
 
-import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType } from '@my-offline-lms/core/filesystem';
-import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
+
+import { AssetPathResolver, NodeFileSystem, UniversalFileSystem, HttpFileSystem, getMimeType, NodePath } from '@my-offline-lms/core/filesystem';
+import { getAssetConfigPath, getMonorepoRoot } from '@config/paths';
 import { logger } from '@platform/logging';
 
 const nodeFs = new NodeFileSystem();
 const universalFs = new UniversalFileSystem(nodeFs);
 universalFs.registerRemote('http', new HttpFileSystem());
-
-const resolver = new AssetPathResolver({
-  configPath: CONFIG_PATH,
-  monorepoRoot: MONOREPO_ROOT,
-  fs: universalFs,
-});
+const nodePath = new NodePath();
 
 export const GET: APIRoute = async ({ request, url }) => {
+  const resolver = new AssetPathResolver({
+    configPath: await getAssetConfigPath(),
+    monorepoRoot: await getMonorepoRoot(),
+    fs: universalFs,
+    path: nodePath,
+    logger,
+  });
+
   const filePath = url.searchParams.get('path');
 
   if (!filePath) {
@@ -36,7 +39,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     return Response.redirect(resolved, 302);
   }
 
-  const ext = path.extname(resolved).toLowerCase();
+  const ext = nodePath.extname(resolved).toLowerCase();
   const mimeType = getMimeType(ext);
 
   try {

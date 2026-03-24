@@ -20,7 +20,7 @@ describe("API: Progress Segments", () => {
   it("should return segments and 200 on success", async () => {
     const url = new URL("http://localhost/api/progress/segments?assetId=a1&type=video");
     const mockSegments = [1, 2, 3];
-    vi.mocked(getVisitedSegments).mockReturnValue(mockSegments);
+    vi.mocked(getVisitedSegments).mockResolvedValue(mockSegments);
 
     const response = await GET({ url } as any);
 
