@@ -36,8 +36,8 @@ describe("Segments API Endpoint", () => {
     });
   });
 
-  it("should return an empty array if getVisitedSegments returns null", async () => {
-    vi.mocked(ProgressFeature.getVisitedSegments).mockResolvedValue(null as any);
+  it("should return an empty array if no segments are found", async () => {
+    vi.mocked(ProgressFeature.getVisitedSegments).mockResolvedValue([]);
 
     const url = new URL("http://localhost/api/progress/segments?assetId=test&type=guide");
     const response = await GET({ url } as any);
