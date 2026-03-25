@@ -6,14 +6,21 @@ import { SQLiteSettingsRepository } from "./infrastructure/SQLiteSettingsReposit
 // 1. Types
 export type { SetActiveLearningPathRequest };
 
-// 2. Wiring
-const repo = new SQLiteSettingsRepository(getDb());
-const manager = new SettingManager(repo);
+// 2. Wiring (Lazy)
+let _manager: SettingManager | null = null;
+async function getManager() {
+  if (!_manager) {
+    const db = await getDb();
+    const repo = new SQLiteSettingsRepository(db);
+    _manager = new SettingManager(repo);
+  }
+  return _manager;
+}
 
 // 3. Public API
 /** @deprecated el sistema de path activo está en desuso */
-export const getActiveLearningPath = () => manager.getActiveLearningPath();
+export const getActiveLearningPath = async () => (await getManager()).getActiveLearningPath();
 
 /** @deprecated el sistema de path activo está en desuso */
-export const setActiveLearningPath = (request: SetActiveLearningPathRequest) =>
-  manager.setActiveLearningPath(request);
+export const setActiveLearningPath = async (request: SetActiveLearningPathRequest) =>
+  (await getManager()).setActiveLearningPath(request);

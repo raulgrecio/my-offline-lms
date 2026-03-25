@@ -13,12 +13,14 @@ import VisibilityToggle from "@components/VisibilityToggle.astro";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = APP_ROUTES.COURSES.INDEX;
-const courses = getAllCourses();
 
-const coursesWithStats = courses
-  .map((c) => {
-    const progress = getCourseProgress({ id: c.id });
-    const isFavorite = getIsFavorite({ id: c.id, type: "course" });
+const courses = await getAllCourses();
+
+const coursesWithStatsResults = await Promise.all(
+  courses.map(async (c) => {
+    const progress = await getCourseProgress({ id: c.id });
+    const isFavorite = await getIsFavorite({ id: c.id, type: "course" });
+    
     return {
       ...c,
       status: progress.status,
@@ -27,7 +29,9 @@ const coursesWithStats = courses
       isFavorite,
     };
   })
-  .filter((c) => showAll || c.totalAssets > 0);
+);
+
+const coursesWithStats = coursesWithStatsResults.filter((c) => showAll || c.totalAssets > 0);
 ---
 
 <Layout title="Cursos">

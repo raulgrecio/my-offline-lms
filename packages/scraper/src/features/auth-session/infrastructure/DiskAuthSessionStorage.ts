@@ -1,24 +1,33 @@
-import fs from "fs";
-import path from "path";
-
+import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { getAuthDir } from "@config/paths";
+import { env } from "@config/env";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string | undefined;
   private authFile: string | undefined;
   private cookiesFile: string | undefined;
   private baseDirArg?: string;
+  private fs: IFileSystem;
+  private path: IPath;
+  private getAuthDirFn: () => Promise<string>;
 
-  constructor(baseDir?: string) {
-    this.baseDirArg = baseDir;
+  constructor(deps: {
+    fs: IFileSystem,
+    path: IPath,
+    getAuthDir: () => Promise<string>,
+    baseDir?: string
+  }) {
+    this.fs = deps.fs;
+    this.path = deps.path;
+    this.getAuthDirFn = deps.getAuthDir;
+    this.baseDirArg = deps.baseDir;
   }
 
   private async ensureInitialized(): Promise<void> {
     if (this.authDir) return;
-    this.authDir = this.baseDirArg || (await getAuthDir());
-    this.authFile = path.join(this.authDir!, "state.json");
-    this.cookiesFile = path.join(this.authDir!, "cookies.txt");
+    this.authDir = this.baseDirArg || (await this.getAuthDirFn());
+    this.authFile = this.path.join(this.authDir!, "state.json");
+    this.cookiesFile = this.path.join(this.authDir!, "cookies.txt");
   }
 
   async getAuthFile(): Promise<string> {
@@ -33,7 +42,33 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
 
   async ensureAuthDir(): Promise<void> {
     await this.ensureInitialized();
-    await fs.promises.mkdir(this.authDir!, { recursive: true });
+    if (!(await this.fs.exists(this.authDir!))) {
+      await this.fs.mkdir(this.authDir!, { recursive: true });
+    }
+  }
+
+  async isValidSession(): Promise<boolean> {
+    const authFile = await this.getAuthFile();
+
+    try {
+      const content = await this.fs.readFile(authFile);
+      const state = JSON.parse(content.toString());
+
+      if (!state.cookies || !Array.isArray(state.cookies) || state.cookies.length === 0) {
+        return false;
+      }
+
+      const now = Date.now() / 1000;
+      const platformDomain = new URL(env.PLATFORM_BASE_URL).hostname;
+
+      return state.cookies.some((c: any) => {
+        const isCorrectDomain = c.domain.includes(platformDomain) || platformDomain.includes(c.domain.replace(/^\./, ''));
+        const isNotExpired = !c.expires || c.expires <= 0 || c.expires > now;
+        return isCorrectDomain && isNotExpired;
+      });
+    } catch {
+      return false;
+    }
   }
 
   async saveCookies(cookies: any[]): Promise<void> {
@@ -47,7 +82,7 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
       })
       .join("\n");
 
-    await fs.promises.writeFile(
+    await this.fs.writeFile(
       this.cookiesFile!,
       `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
     );

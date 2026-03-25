@@ -5,11 +5,13 @@ import type { CollectionProgress } from "../model/CollectionProgress";
 import type { CollectionType } from "../model/CollectionType";
 import type { ProgressStatus } from "../model/ProgressStatus";
 
+import type { AssetWithPosition } from "../model/AssetWithPosition";
+
 export interface IProgressRepository {
   getAssetProgress({ id, type }: { id: string, type: AssetType }): AssetProgress | null;
   getCollectionProgress({ id, type }: { id: string, type: CollectionType }): CollectionProgress | null;
   getAllCollectionsProgress(type: CollectionType): CollectionProgress[];
-  getLastWatchedAsset(): (Asset & { position: number }) | null;
+  getLastWatchedAsset(): AssetWithPosition | null;
   saveAssetProgress({ id, type, position, maxPosition, completed }: { id: string, type: AssetType, position: number, maxPosition: number, completed: boolean }): void;
   markCollectionStatus({ id, type, status }: { id: string, type: CollectionType, status: ProgressStatus }): void;
   recalculateCourseProgress(id: string): void;

@@ -2,19 +2,21 @@
   "name": "@my-offline-lms/core",
   "version": "1.0.0",
   "description": "Core business logic and shared services for My Offline LMS",
-  "main": "src/index.ts",
+  "main": "src/domain/index.ts",
   "exports": {
     "./database": "./src/database/index.ts",
     "./filesystem": "./src/filesystem/index.ts",
     "./logging": "./src/logging/index.ts",
-    "./models": "./src/domain/index.ts"
+    "./models": "./src/domain/index.ts",
+    "./di": "./src/di/index.ts"
   },
   "typesVersions": {
     "*": {
       "database": ["src/database/index.ts"],
       "filesystem": ["src/filesystem/index.ts"],
       "logging": ["src/logging/index.ts"],
-      "models": ["src/domain/index.ts"]
+      "models": ["src/domain/index.ts"],
+      "di": ["src/di/index.ts"]
     }
   },
   "private": true,

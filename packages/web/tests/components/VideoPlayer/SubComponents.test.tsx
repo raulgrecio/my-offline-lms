@@ -57,6 +57,11 @@ describe("VideoPlayer Sub-components", () => {
         fireEvent.click(btn);
         expect(onToggle).toHaveBeenCalled();
     });
+
+    it("shows activate title when not visible", () => {
+      render(<SubtitleToggleButton isVisible={false} onToggle={() => {}} />);
+      expect(screen.getByLabelText("Activar subtítulos")).toBeInTheDocument();
+    });
   });
 
   describe("SettingsButton", () => {
@@ -66,6 +71,12 @@ describe("VideoPlayer Sub-components", () => {
         const btn = screen.getByLabelText("Configuración de subtítulos");
         fireEvent.click(btn);
         expect(onToggle).toHaveBeenCalled();
+    });
+    
+    it("shows open state", () => {
+      const { container } = render(<SettingsButton isOpen={true} onToggle={() => {}} />);
+      // SettingsButton uses text-brand-400 bg-white/5 when active
+      expect(container.querySelector(".text-brand-400")).toBeInTheDocument();
     });
   });
 
@@ -82,6 +93,15 @@ describe("VideoPlayer Sub-components", () => {
       
       fireEvent.click(screen.getByTestId("child"));
       expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("hides when isVisible is false", () => {
+      const { container } = render(
+        <ControlOverlay isVisible={false}>
+          <div>Child</div>
+        </ControlOverlay>
+      );
+      expect(container.querySelector(".opacity-0")).toBeInTheDocument();
     });
   });
 });

@@ -1,7 +1,7 @@
 import fs from "fs";
-import path from "path";
-
-import type { IFileSystem, FileStats } from "./IFileSystem";
+import { type MakeDirectoryOptions, type RmOptions } from "fs";
+import type { FileStats, IFileSystem } from "./IFileSystem";
+import type { IPath } from "./IPath";
 import { type ILogger, NoopLogger } from "../logging";
 
 export class NodeFileSystem implements IFileSystem {
@@ -23,9 +23,9 @@ export class NodeFileSystem implements IFileSystem {
   }
 
   async readFile(p: string): Promise<Buffer>;
-  async readFile(p: string, encoding: "utf-8"): Promise<string>;
-  async readFile(p: string, encoding?: "utf-8"): Promise<string | Buffer> {
-    if (encoding === "utf-8") {
+  async readFile(p: string, encoding: BufferEncoding): Promise<string>;
+  async readFile(p: string, encoding?: BufferEncoding): Promise<string | Buffer> {
+    if (encoding) {
       return fs.promises.readFile(p, encoding);
     }
     return fs.promises.readFile(p);
@@ -36,31 +36,15 @@ export class NodeFileSystem implements IFileSystem {
     await fs.promises.writeFile(p, content);
   }
 
-  resolve(...paths: string[]): string {
-    return path.resolve(...paths);
-  }
-
-  join(...paths: string[]): string {
-    return path.join(...paths);
-  }
-
-  isAbsolute(p: string): boolean {
-    return path.isAbsolute(p);
-  }
-
-  dirname(p: string): string {
-    return path.dirname(p);
-  }
-
   async readdir(p: string): Promise<string[]> {
     return fs.promises.readdir(p);
   }
 
-  async mkdir(p: string, options?: { recursive?: boolean }): Promise<void> {
+  async mkdir(p: string, options?: MakeDirectoryOptions): Promise<void> {
     await fs.promises.mkdir(p, options);
   }
 
-  async rm(p: string, options?: { recursive?: boolean; force?: boolean }): Promise<void> {
+  async rm(p: string, options?: RmOptions): Promise<void> {
     await fs.promises.rm(p, options);
   }
 
@@ -73,15 +57,19 @@ export class NodeFileSystem implements IFileSystem {
     };
   }
 
+  async unlink(p: string): Promise<void> {
+    await fs.promises.unlink(p);
+  }
+
+  async rename(oldPath: string, newPath: string): Promise<void> {
+    await fs.promises.rename(oldPath, newPath);
+  }
+
   createReadStream(p: string, options?: any): fs.ReadStream {
     return fs.createReadStream(p, options);
   }
 
-  createWriteStream(p: string): fs.WriteStream {
-    return fs.createWriteStream(p);
-  }
-
-  get sep(): string {
-    return path.sep;
+  createWriteStream(p: string, options?: any): fs.WriteStream {
+    return fs.createWriteStream(p, options);
   }
 }

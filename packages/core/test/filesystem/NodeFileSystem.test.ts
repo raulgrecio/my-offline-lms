@@ -22,6 +22,7 @@ vi.mock("fs", () => ({
       rm: vi.fn(),
       stat: vi.fn(),
       unlink: vi.fn(),
+      rename: vi.fn(),
     }
   }
 }));
@@ -41,18 +42,6 @@ describe("NodeFileSystem", () => {
     vi.mocked(fs.promises.writeFile).mockResolvedValue(undefined);
     await nfs.writeFile("foo", "data");
     expect(fs.promises.writeFile).toHaveBeenCalledWith("foo", "data");
-
-    vi.mocked(path.resolve).mockReturnValue("/abs");
-    expect(nfs.resolve("rel")).toBe("/abs");
-
-    vi.mocked(path.join).mockReturnValue("a/b");
-    expect(nfs.join("a", "b")).toBe("a/b");
-
-    vi.mocked(path.isAbsolute).mockReturnValue(true);
-    expect(nfs.isAbsolute("/a")).toBe(true);
-
-    vi.mocked(path.dirname).mockReturnValue("/dir");
-    expect(nfs.dirname("/a/b")).toBe("/dir");
 
     vi.mocked(fs.promises.readdir).mockResolvedValue(["a"] as any);
     expect(await nfs.readdir("/dir")).toEqual(["a"]);
@@ -74,10 +63,20 @@ describe("NodeFileSystem", () => {
     expect(fs.createReadStream).toHaveBeenCalledWith("/file", undefined);
 
     nfs.createWriteStream("/file");
-    expect(fs.createWriteStream).toHaveBeenCalledWith("/file");
-    
-    // @ts-ignore
-    path.sep = "/";
-    expect(nfs.sep).toBe("/");
+    expect(fs.createWriteStream).toHaveBeenCalledWith("/file", undefined);
+
+    // exists false branch
+    vi.mocked(fs.promises.access).mockRejectedValue(new Error("not found"));
+    expect(await nfs.exists("not-found")).toBe(false);
+
+    // unlink
+    vi.mocked(fs.promises.unlink).mockResolvedValue(undefined);
+    await nfs.unlink("foo");
+    expect(fs.promises.unlink).toHaveBeenCalledWith("foo");
+
+    // rename
+    vi.mocked(fs.promises.rename).mockResolvedValue(undefined);
+    await nfs.rename("old", "new");
+    expect(fs.promises.rename).toHaveBeenCalledWith("old", "new");
   });
 });

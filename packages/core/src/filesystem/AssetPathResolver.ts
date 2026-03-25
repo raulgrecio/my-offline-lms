@@ -1,20 +1,25 @@
 import type { AssetType } from "../domain/models/Asset";
 import { ASSET_FOLDERS } from "../domain/models/Asset";
 import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
-import type { IFileSystem } from "./IFileSystem";
 import { type ILogger, NoopLogger } from "../logging";
+import { type IFileSystem } from "./IFileSystem";
+import { type IPath } from "./IPath";
+import { type IAssetPathResolver } from "./IAssetPathResolver";
 
 interface AssetPathResolverProps {
   configPath: string;
   monorepoRoot: string;
   fs: IFileSystem;
+  path: IPath;
   logger?: ILogger;
 }
 
-export class AssetPathResolver {
+
+export class AssetPathResolver implements IAssetPathResolver {
   private configPath: string;
   private monorepoRoot: string;
   private fs: IFileSystem;
+  private path: IPath;
   private logger: ILogger;
   private config: AssetPathsJson | null = null;
   private initializationPromise: Promise<void> | null = null;
@@ -23,11 +28,13 @@ export class AssetPathResolver {
     configPath,
     monorepoRoot,
     fs,
+    path,
     logger = new NoopLogger(),
   }: AssetPathResolverProps) {
     this.configPath = configPath;
     this.monorepoRoot = monorepoRoot;
     this.fs = fs;
+    this.path = path;
     this.logger = logger.withContext("AssetPathResolver");
   }
 
@@ -48,7 +55,7 @@ export class AssetPathResolver {
   private async loadConfig() {
     try {
       if (await this.fs.exists(this.configPath)) {
-        const content = await this.fs.readFile(this.configPath, "utf-8");
+        const content = await this.fs.readFile(this.configPath, "utf8");
         this.config = JSON.parse(content);
       } else {
         // Valores por defecto si la configuración no existe
@@ -70,7 +77,7 @@ export class AssetPathResolver {
 
   private async saveConfig() {
     if (!this.config) return;
-    const dir = this.fs.dirname(this.configPath);
+    const dir = this.path.dirname(this.configPath);
     if (!(await this.fs.exists(dir))) {
       await this.fs.mkdir(dir, { recursive: true });
     }
@@ -81,8 +88,8 @@ export class AssetPathResolver {
    * Resolves a path to an absolute path, handling both relative to monorepo and absolute paths.
    */
   private getAbsolutePath(p: string): string {
-    if (this.fs.isAbsolute(p)) return p;
-    return this.fs.resolve(this.monorepoRoot, p);
+    if (this.path.isAbsolute(p)) return p;
+    return this.path.resolve(this.monorepoRoot, p);
   }
 
   /**
@@ -92,7 +99,7 @@ export class AssetPathResolver {
     await this.ensureInitialized();
     if (!this.config) return [];
 
-    const results = await Promise.all(this.config.searchPaths.map(async (sp) => {
+    const results = await Promise.all(this.config.searchPaths.map(async (sp: AssetPathsJson['searchPaths'][number]) => {
       const fullPath = this.getAbsolutePath(sp.path);
       return {
         ...sp,
@@ -123,12 +130,12 @@ export class AssetPathResolver {
     filename: string
   ): Promise<string | null> {
     const folderName = ASSET_FOLDERS[type];
-    const relativePath = this.fs.join(String(courseId), folderName, filename);
+    const relativePath = this.path.join(String(courseId), folderName, filename);
     const allPaths = await this.getAvailablePaths();
     const availablePaths = allPaths.filter((p) => p.available);
 
     for (const sp of availablePaths) {
-      const fullPath = this.fs.join(sp.fullPath, relativePath);
+      const fullPath = this.path.join(sp.fullPath, relativePath);
       if (await this.fs.exists(fullPath)) {
         return fullPath;
       }
@@ -188,7 +195,7 @@ export class AssetPathResolver {
     if (!this.config) return;
 
     // Evitar duplicados
-    if (this.config.searchPaths.some((sp) => sp.path === p)) return;
+    if (this.config.searchPaths.some((sp: any) => sp.path === p)) return;
 
     this.config.searchPaths.push({ path: p, label });
     await this.saveConfig();
@@ -201,7 +208,7 @@ export class AssetPathResolver {
     await this.ensureInitialized();
     if (!this.config) return;
     this.config.searchPaths = this.config.searchPaths.filter(
-      (sp) => sp.path !== p
+      (sp: any) => sp.path !== p
     );
     await this.saveConfig();
   }
@@ -215,16 +222,16 @@ export class AssetPathResolver {
   async listAssets(courseId: string, type: AssetType): Promise<string[]> {
     const results: string[] = [];
     const folderName = ASSET_FOLDERS[type];
-    const relativePath = this.fs.join(String(courseId), folderName);
+    const relativePath = this.path.join(String(courseId), folderName);
     const allPaths = await this.getAvailablePaths();
-    const availablePaths = allPaths.filter((p) => p.available);
+    const availablePaths = allPaths.filter((p: any) => p.available);
 
     for (const sp of availablePaths) {
-      const fullDir = this.fs.join(sp.fullPath, relativePath);
+      const fullDir = this.path.join(sp.fullPath, relativePath);
       if (await this.fs.exists(fullDir)) {
         try {
           const files = await this.fs.readdir(fullDir);
-          files.forEach((f) => results.push(this.fs.join(fullDir, f)));
+          files.forEach((f: string) => results.push(this.path.join(fullDir, f)));
         } catch (e) {
           this.logger.error(`Error listing assets in ${fullDir}`, e);
         }

@@ -1,2 +1,2 @@
-export * from "./Icon.tsx";
-export type { IconName, IconSize } from "./icons.ts";
+export * from "./Icon";
+export type { IconName, IconSize } from "./icons";

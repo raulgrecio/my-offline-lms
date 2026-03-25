@@ -1,50 +1,55 @@
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
-import { type IFileSystem } from "@my-offline-lms/core/filesystem";
-import { type AssetType, ASSET_FOLDERS } from "@my-offline-lms/core/models";
-import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { type ILogger } from "@my-offline-lms/core/logging";
+import { type IAssetPathResolver, type IFileSystem, type IPath, NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { ASSET_FOLDERS } from "@my-offline-lms/core/models";
+import { AssetType } from "@my-offline-lms/core/models";
 
 
 import { getAssetPathsConfig, getAssetsDir, getMonorepoRoot } from "@config/paths";
 import { IAssetStorage, PDFOptions } from "@features/asset-download/domain/ports/IAssetStorage";
 
+interface DiskAssetStorageProps {
+  baseDir?: string;
+  fs: IFileSystem;
+  path: IPath;
+  resolver: IAssetPathResolver;
+}
+
 export class DiskAssetStorage implements IAssetStorage {
   private assetsBaseDir: string | undefined;
-  private resolver: AssetPathResolver | undefined;
+  private resolver: IAssetPathResolver;
   private fs: IFileSystem;
+  private path: IPath;
   private baseDirArg?: string;
 
-  constructor(baseDir?: string, fsAdapter?: IFileSystem) {
-    this.fs = fsAdapter || new NodeFileSystem();
-    this.baseDirArg = baseDir;
+  constructor(props: DiskAssetStorageProps) {
+    this.fs = props.fs;
+    this.path = props.path;
+    this.resolver = props.resolver;
+    this.baseDirArg = props.baseDir;
   }
 
   private async ensureInitialized(): Promise<void> {
-    if (this.assetsBaseDir && this.resolver) return;
+    if (this.assetsBaseDir) return;
 
     this.assetsBaseDir = this.baseDirArg || (await getAssetsDir());
-    this.resolver = new AssetPathResolver({
-      configPath: await getAssetPathsConfig(),
-      monorepoRoot: await getMonorepoRoot(),
-      fs: this.fs,
-    });
     await this.resolver.ensureInitialized();
   }
 
   async ensureAssetDir(courseId: string, assetType: AssetType): Promise<string> {
     await this.ensureInitialized();
     const folderName = ASSET_FOLDERS[assetType];
-    const dir = this.fs.join(this.assetsBaseDir!, String(courseId), folderName);
-    if (!(await this.fs.exists(dir))) {
-      await this.fs.mkdir(dir, { recursive: true });
+    const fullDir = this.path.join(this.assetsBaseDir!, String(courseId), folderName);
+    if (!(await this.fs.exists(fullDir))) {
+      await this.fs.mkdir(fullDir, { recursive: true });
     }
-    return dir;
+    return fullDir;
   }
 
   async ensureTempDir(courseId: string, assetId: string): Promise<string> {
+    await this.ensureInitialized();
     const guidesDir = await this.ensureAssetDir(courseId, 'guide');
-    const tempDir = this.fs.join(guidesDir, `temp_${assetId}`);
+    const tempDir = this.path.join(guidesDir, `.temp_${assetId}`);
     if (!(await this.fs.exists(tempDir))) {
       await this.fs.mkdir(tempDir, { recursive: true });
     }
@@ -52,7 +57,7 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   async removeTempDir(tempDir: string): Promise<void> {
-    if ((await this.fs.exists(tempDir)) && this.fs.rm) {
+    if (this.fs.rm) {
       await this.fs.rm(tempDir, { recursive: true, force: true });
     }
   }
@@ -97,11 +102,14 @@ export class DiskAssetStorage implements IAssetStorage {
       throw new Error("FileSystem does not support writing streams");
     }
     const stream = this.fs.createWriteStream(outputPath);
-    doc.pipe(stream);
+    if (!stream) {
+      throw new Error("Failed to create write stream");
+    }
+    doc.pipe(stream as any);
 
     try {
       for (const file of files) {
-        const imgPath = this.fs.join(sourceDir, file);
+        const imgPath = this.path.join(sourceDir, file);
         if (options.optimize) {
           const optBuffer = await sharp(await this.fs.readFile(imgPath)).jpeg({ quality: options.quality }).toBuffer();
           const meta = await sharp(optBuffer).metadata();
@@ -120,8 +128,8 @@ export class DiskAssetStorage implements IAssetStorage {
     }
 
     return new Promise((resolve, reject) => {
-      stream.on("finish", () => resolve());
-      stream.on("error", (e: any) => reject(e));
+      (stream as any).on("finish", () => resolve());
+      (stream as any).on("error", (e: any) => reject(e));
     });
   }
 }

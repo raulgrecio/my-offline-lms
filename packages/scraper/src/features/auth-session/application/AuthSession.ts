@@ -1,36 +1,43 @@
 import readline from "readline";
-
 import { ILogger } from '@my-offline-lms/core/logging';
 
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
 
-export class AuthSession {
-  private browserProvider: BrowserProvider;
+export interface AuthSessionInput {
+  baseUrl: string;
+}
+
+export interface AuthSessionOptions {
+  browserProvider: IBrowserProvider;
+  authStorage: IAuthSessionStorage;
+  logger: ILogger;
+}
+
+export class AuthSession implements IUseCase<AuthSessionInput, void> {
+  private browserProvider: IBrowserProvider;
   private authStorage: IAuthSessionStorage;
   private logger: ILogger;
 
-  constructor(deps: {
-    browserProvider: BrowserProvider,
-    authStorage: IAuthSessionStorage,
-    logger: ILogger
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.authStorage = deps.authStorage;
-    this.logger = deps.logger.withContext("AuthSession");
+  constructor(options: AuthSessionOptions) {
+    this.browserProvider = options.browserProvider;
+    this.authStorage = options.authStorage;
+    this.logger = options.logger.withContext("AuthSession");
   }
 
-  async interactiveLogin(targetUrl: string): Promise<void> {
+  async execute(input: AuthSessionInput): Promise<void> {
+    const { baseUrl } = input;
     await this.authStorage.ensureAuthDir();
 
-    this.logger.info(`Iniciando navegador interactivo para: ${targetUrl}`);
+    this.logger.info(`Iniciando navegador interactivo para: ${baseUrl}`);
     const context = await this.browserProvider.getHeadfulContext(false);
     const page = await context.newPage();
 
-    this.logger.info(`Navegando a ${targetUrl}`);
+    this.logger.info(`Navegando a ${baseUrl}`);
     this.logger.info("Por favor, realiza el login (incluyendo 2FA) en la ventana del navegador.");
 
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     readline.emitKeypressEvents(process.stdin);
     if (process.stdin.isTTY) {
@@ -58,7 +65,7 @@ export class AuthSession {
 
     // Autoguardado silencioso cada 15 minutos
     const autoSaveInterval = setInterval(() => {
-      saveSession().catch(err => this.logger.error("Error en el autoguardado de sesión", err));
+      saveSession();
     }, 15 * 60 * 1000);
 
     await new Promise<void>((resolve) => {

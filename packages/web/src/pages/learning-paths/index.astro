@@ -14,12 +14,13 @@ import VisibilityToggle from "@components/VisibilityToggle.astro";
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = APP_ROUTES.LEARNING_PATHS.INDEX;
 
-const learningPaths = getAllLearningPaths();
+const learningPaths = await getAllLearningPaths();
 
-const lpStats = learningPaths
-  .map((lp) => {
-    const progress = getLearningPathProgress({ id: lp.id });
-    const isFavorite = getIsFavorite({ id: lp.id, type: "learning-path" });
+const lpStatsResults = await Promise.all(
+  learningPaths.map(async (lp) => {
+    const progress = await getLearningPathProgress({ id: lp.id });
+    const isFavorite = await getIsFavorite({ id: lp.id, type: "learning-path" });
+    
     return {
       ...lp,
       courseCount: progress.totalItems,
@@ -30,7 +31,9 @@ const lpStats = learningPaths
       isFavorite,
     };
   })
-  .filter((stats) => showAll || stats.courseCount > 0);
+);
+
+const lpStats = lpStatsResults.filter((stats) => showAll || stats.courseCount > 0);
 ---
 
 <Layout title="Learning Paths">

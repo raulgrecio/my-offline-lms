@@ -51,4 +51,10 @@ describe("CourseManager", () => {
       metadata: { totalPages: 50 }
     });
   });
+
+  it("should throw error if asset not found in updateAssetTotalPages", () => {
+    vi.mocked(mockRepo.getAssetById).mockReturnValue(null);
+    expect(() => manager.updateAssetTotalPages({ id: "unknown", totalPages: 50 }))
+      .toThrow("Asset with id unknown not found");
+  });
 });

@@ -1,63 +1,65 @@
-import path from "path";
 import { describe, it, expect, vi } from "vitest";
 import { UniversalFileSystem } from "@filesystem/UniversalFileSystem";
-import { IFileSystem } from "@filesystem/IFileSystem";
+import { UniversalPath } from "@filesystem/UniversalPath";
+import { type IFileSystem } from "@filesystem/IFileSystem";
+import { type IPath } from "@filesystem/IPath";
+import { NodePath } from "@filesystem/NodePath";
 
-describe("UniversalFileSystem", () => {
+describe("UniversalFileSystem & UniversalPath", () => {
   const mockLocalFs: IFileSystem = {
     exists: vi.fn(),
-    isAbsolute: vi.fn(),
     readFile: vi.fn(),
     writeFile: vi.fn(),
-    resolve: vi.fn(),
-    join: vi.fn(),
-    dirname: vi.fn(),
     readdir: vi.fn(),
     mkdir: vi.fn(),
     rm: vi.fn(),
     stat: vi.fn(),
     createReadStream: vi.fn(),
     createWriteStream: vi.fn(),
+  } as any;
+
+  const mockLocalPath: IPath = {
+    resolve: vi.fn(),
+    join: vi.fn(),
+    dirname: vi.fn(),
+    isAbsolute: vi.fn(),
+    sep: "/",
   } as any;
 
   const mockHttpFs: IFileSystem = {
     exists: vi.fn(),
-    isAbsolute: vi.fn(),
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
+  } as any;
+
+  const mockHttpPath: IPath = {
     resolve: vi.fn(),
     join: vi.fn(),
     dirname: vi.fn(),
-    readdir: vi.fn(),
-    mkdir: vi.fn(),
-    rm: vi.fn(),
-    stat: vi.fn(),
-    createReadStream: vi.fn(),
-    createWriteStream: vi.fn(),
+    isAbsolute: vi.fn(),
+    sep: "/",
   } as any;
 
-  describe("Protocol & Path Identification", () => {
+  describe("UniversalPath Protocol & Path Identification", () => {
     it("should correctly identify absolute Windows paths", () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      expect(ufs.isAbsolute("C:\\Windows")).toBe(true);
-      expect(ufs.isAbsolute("D:/Games")).toBe(true);
-      expect(ufs.isAbsolute("\\\\nas\\share")).toBe(true);
-      expect(ufs.isAbsolute("//server/share")).toBe(true); // UNC with forward slashes
-      expect(ufs.isAbsolute("C:relative")).toBe(false); // Drive relative is NOT absolute
+      const up = new UniversalPath(new NodePath());
+      expect(up.isAbsolute("C:\\Windows")).toBe(true);
+      expect(up.isAbsolute("D:/Games")).toBe(true);
+      expect(up.isAbsolute("\\\\nas\\share")).toBe(true);
+      expect(up.isAbsolute("//server/share")).toBe(true); // UNC with forward slashes
+      expect(up.isAbsolute("C:relative")).toBe(false); // Drive relative is NOT absolute
     });
 
     it("should correctly identify absolute Posix paths", () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      expect(ufs.isAbsolute("/etc/hosts")).toBe(true);
+      const up = new UniversalPath(new NodePath());
+      expect(up.isAbsolute("/etc/hosts")).toBe(true);
     });
 
     it("should identify remote URIs as absolute", () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      expect(ufs.isAbsolute("http://example.com/file")).toBe(true);
-      expect(ufs.isAbsolute("https://example.com/file")).toBe(true);
-      expect(ufs.isAbsolute("tcp://1.2.3.4/resource")).toBe(true);
-      expect(ufs.isAbsolute("s3://bucket/key")).toBe(true);
-      expect(ufs.isAbsolute("blob://account/container")).toBe(true);
+      const up = new UniversalPath(new NodePath());
+      expect(up.isAbsolute("http://example.com/file")).toBe(true);
+      expect(up.isAbsolute("https://example.com/file")).toBe(true);
+      expect(up.isAbsolute("tcp://1.2.3.4/resource")).toBe(true);
+      expect(up.isAbsolute("s3://bucket/key")).toBe(true);
+      expect(up.isAbsolute("blob://account/container")).toBe(true);
     });
   });
 
@@ -65,7 +67,7 @@ describe("UniversalFileSystem", () => {
     it("should route to HttpFileSystem for URLs", async () => {
       const ufs = new UniversalFileSystem(mockLocalFs);
       ufs.registerRemote("http", mockHttpFs);
-      
+
       await ufs.exists("http://foo.com/bar");
       expect(mockHttpFs.exists).toHaveBeenCalledWith("http://foo.com/bar");
       expect(mockLocalFs.exists).not.toHaveBeenCalled();
@@ -73,37 +75,9 @@ describe("UniversalFileSystem", () => {
 
     it("should route to LocalFileSystem for normal paths", async () => {
       const ufs = new UniversalFileSystem(mockLocalFs);
-      ufs.registerRemote("http", mockHttpFs);
-      
+
       await ufs.exists("/tmp/file");
       expect(mockLocalFs.exists).toHaveBeenCalledWith("/tmp/file");
-    });
-
-    it("should handle specialized backends (Http/Tcp/S3/Blob)", async () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      
-      // Test http/tcp when NOT registered should hit localFs
-      await ufs.exists("http://site");
-      expect(mockLocalFs.exists).toHaveBeenCalledWith("http://site");
-      await ufs.exists("tcp://site");
-      expect(mockLocalFs.exists).toHaveBeenCalledWith("tcp://site");
-      
-      // Test s3 and blob when registered
-      const mockS3Fs: IFileSystem = { exists: vi.fn() } as any;
-      const mockBlobFs: IFileSystem = { exists: vi.fn() } as any;
-      ufs.registerRemote("s3", mockS3Fs);
-      ufs.registerRemote("blob", mockBlobFs);
-      
-      await ufs.exists("s3://test");
-      expect(mockS3Fs.exists).toHaveBeenCalled();
-      await ufs.exists("blob://test");
-      expect(mockBlobFs.exists).toHaveBeenCalled();
-
-      // Test tcp registered
-      const mockTcpFs: IFileSystem = { exists: vi.fn() } as any;
-      ufs.registerRemote("tcp", mockTcpFs);
-      await ufs.exists("tcp://site");
-      expect(mockTcpFs.exists).toHaveBeenCalled();
     });
   });
 
@@ -112,23 +86,15 @@ describe("UniversalFileSystem", () => {
       const ufs = new UniversalFileSystem(mockLocalFs);
 
       // readFile
-      vi.mocked(mockLocalFs.readFile).mockResolvedValue("data");
-      expect(await ufs.readFile("/file", "utf-8")).toBe("data");
+      vi.mocked(mockLocalFs.readFile).mockResolvedValue("data" as any);
+      expect(await ufs.readFile("/file", "utf-8" as any)).toBe("data");
       expect(await ufs.readFile("/file")).toBe("data");
 
       // writeFile
       await ufs.writeFile("/file", "data");
       expect(mockLocalFs.writeFile).toHaveBeenCalledWith("/file", "data");
 
-      // resolve & join
-      vi.mocked(mockLocalFs.resolve).mockReturnValue("/abs");
-      expect(ufs.resolve("/rel")).toBe("/abs");
-      vi.mocked(mockLocalFs.join).mockReturnValue("/join");
-      expect(ufs.join("/a", "b")).toBe("/join");
-
-      // dir & readdir & mkdir
-      vi.mocked(mockLocalFs.dirname).mockReturnValue("/dir");
-      expect(ufs.dirname("/file")).toBe("/dir");
+      // readdir & mkdir
       vi.mocked(mockLocalFs.readdir).mockResolvedValue(["a"]);
       expect(await ufs.readdir("/dir")).toEqual(["a"]);
       await ufs.mkdir("/dir", { recursive: true });
@@ -137,41 +103,71 @@ describe("UniversalFileSystem", () => {
       // rm & stat
       const mockRm = vi.fn().mockResolvedValue(undefined);
       mockLocalFs.rm = mockRm;
-      await ufs.rm("/dir", { force: true });
+      await ufs.rm("/dir", { force: true } as any);
       expect(mockRm).toHaveBeenCalledWith("/dir", { force: true });
 
       vi.mocked(mockLocalFs.stat).mockResolvedValue({ size: 10 } as any);
       expect((await ufs.stat("/file")).size).toBe(10);
+
+      // Protocol fallback (supported protocol but not registered)
+      await ufs.readdir("s3://foo");
+      expect(mockLocalFs.readdir).toHaveBeenCalledWith("s3://foo");
+
+      // Unsupported protocol should throw
+      await expect(ufs.readdir("unknown://foo")).rejects.toThrow("Unsupported protocol: unknown");
+
+      // https redirects to http
+      ufs.registerRemote("http", mockHttpFs);
+      await ufs.exists("https://foo.com");
+      expect(mockHttpFs.exists).toHaveBeenCalledWith("https://foo.com");
+
+      // unlink
+      const mockUnlink = vi.fn().mockResolvedValue(undefined);
+      mockLocalFs.unlink = mockUnlink;
+      await ufs.unlink("foo");
+      expect(mockUnlink).toHaveBeenCalledWith("foo");
+
+      // rename
+      const mockRename = vi.fn().mockResolvedValue(undefined);
+      mockLocalFs.rename = mockRename;
+      await ufs.rename("foo", "bar");
+      expect(mockRename).toHaveBeenCalledWith("foo", "bar");
 
       // streams
       const mockReadStream = {};
       const mockWriteStream = {};
       mockLocalFs.createReadStream = vi.fn().mockReturnValue(mockReadStream);
       mockLocalFs.createWriteStream = vi.fn().mockReturnValue(mockWriteStream);
-      
+
       expect(ufs.createReadStream("/file")).toBe(mockReadStream);
       expect(ufs.createWriteStream("/file")).toBe(mockWriteStream);
     });
 
     it("should handle missing optional operations on backends", async () => {
-      const localNoOpt: any = { ...mockLocalFs, rm: null, createReadStream: null, createWriteStream: null };
-      const ufsNoOpt = new UniversalFileSystem(localNoOpt);
-      await expect(ufsNoOpt.rm("/foo")).resolves.toBeUndefined();
-      expect(ufsNoOpt.createReadStream("/foo")).toBeNull();
-      expect(ufsNoOpt.createWriteStream("/foo")).toBeNull();
+      const ufsNoOpt = new UniversalFileSystem({
+        exists: vi.fn(),
+        readFile: vi.fn(),
+        writeFile: vi.fn(),
+        readdir: vi.fn(),
+        mkdir: vi.fn(),
+        stat: vi.fn()
+      } as any);
+      await expect(ufsNoOpt.rm!("/foo")).resolves.toBeUndefined();
+      expect(ufsNoOpt.createReadStream!("/foo")).toBeNull();
+      expect(ufsNoOpt.createWriteStream!("/foo")).toBeNull();
     });
+  });
 
-    it("should handle empty paths in resolve/join", () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      ufs.resolve();
-      expect(mockLocalFs.resolve).toHaveBeenCalled();
-      ufs.join();
-      expect(mockLocalFs.join).toHaveBeenCalled();
-    });
+  describe("UniversalPath Resolution", () => {
+    it("should route path operations to the correct backend", () => {
+      const remotes = new Map<any, IPath>([["http", mockHttpPath]]);
+      const up = new UniversalPath(mockLocalPath, remotes);
 
-    it("should provide platform-specific path separator", () => {
-      const ufs = new UniversalFileSystem(mockLocalFs);
-      expect(ufs.sep).toBe(path.sep);
+      vi.mocked(mockHttpPath.join).mockReturnValue("http://join");
+      expect(up.join("http://a", "b")).toBe("http://join");
+
+      vi.mocked(mockLocalPath.join).mockReturnValue("/join");
+      expect(up.join("/a", "b")).toBe("/join");
     });
   });
 });

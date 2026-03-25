@@ -6,10 +6,6 @@ describe("S3FileSystem", () => {
 
   it("should implement placeholder methods", async () => {
     expect(await s3.exists("s3://bucket/test.mp4")).toBe(true);
-    expect(s3.isAbsolute("s3://bucket")).toBe(true);
-    expect(s3.sep).toBe("/");
-    expect(s3.join("s3://bucket", "folder")).toBe("s3://bucket/folder");
-    expect(s3.dirname("s3://bucket/folder/file")).toBe("s3://bucket/folder");
     
     expect((await s3.stat("s3://foo")).size).toBe(0);
     expect((await s3.stat("s3://foo")).isDirectory()).toBe(false);
@@ -20,8 +16,9 @@ describe("S3FileSystem", () => {
     await expect(s3.mkdir("s3://foo")).rejects.toThrow();
     await expect(s3.rm("s3://foo")).rejects.toThrow();
     await expect(s3.readdir("s3://foo")).rejects.toThrow();
+    await expect(s3.unlink("s3://foo")).rejects.toThrow();
+    await expect(s3.rename("s3://foo", "s3://bar")).rejects.toThrow();
 
-    expect(s3.resolve("a", "b")).toBe("a/b");
     expect(s3.createReadStream("s3://foo")).toBeNull();
     expect(s3.createWriteStream("s3://foo")).toBeNull();
   });

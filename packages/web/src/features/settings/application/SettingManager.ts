@@ -6,12 +6,12 @@ export class SettingManager {
   constructor(private repo: ISettingsRepository) { }
 
   /** @deprecated el sistema de path activo está en desuso */
-  getActiveLearningPath() {
+  getActiveLearningPath(): string | null {
     return getActiveLearningPath(this.repo);
   }
 
   /** @deprecated el sistema de path activo está en desuso */
-  setActiveLearningPath(request: SetActiveLearningPathRequest) {
+  setActiveLearningPath(request: SetActiveLearningPathRequest): void {
     return setActiveLearningPath(this.repo, request);
   }
 }

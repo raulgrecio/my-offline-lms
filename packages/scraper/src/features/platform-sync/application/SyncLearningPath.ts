@@ -1,48 +1,63 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { env } from "@config/env";
-
+import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
 import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
 import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
-import { setupInterceptor } from "@platform/browser/interceptor";
 
 import { SyncCourse } from "./SyncCourse";
 
-export class SyncLearningPath {
-  private browserProvider: BrowserProvider;
+export interface SyncLearningPathInput {
+  pathInput: string;
+}
+
+export interface SyncLearningPathConfig {
+  keepTempWorkspaces: boolean;
+}
+
+export interface SyncLearningPathOptions {
+  browserProvider: IBrowserProvider;
+  learningPathRepo: ILearningPathRepository;
+  courseRepo: ICourseRepository;
+  syncCourse: SyncCourse;
+  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  browserInterceptor: BrowserInterceptor;
+  urlProvider: IPlatformUrlProvider;
+  namingService: INamingService;
+  logger: ILogger;
+  config: SyncLearningPathConfig;
+}
+
+export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
+  private browserProvider: IBrowserProvider;
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
   private syncCourse: SyncCourse;
   private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: SyncLearningPathConfig;
 
-  constructor(deps: {
-    browserProvider: BrowserProvider,
-    learningPathRepo: ILearningPathRepository,
-    courseRepo: ICourseRepository,
-    syncCourse: SyncCourse,
-    interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
-    urlProvider: IPlatformUrlProvider,
-    namingService: INamingService,
-    logger: ILogger
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.learningPathRepo = deps.learningPathRepo;
-    this.courseRepo = deps.courseRepo;
-    this.syncCourse = deps.syncCourse;
-    this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
-    this.urlProvider = deps.urlProvider;
-    this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("SyncLearningPath");
+  constructor(options: SyncLearningPathOptions) {
+    this.browserProvider = options.browserProvider;
+    this.learningPathRepo = options.learningPathRepo;
+    this.courseRepo = options.courseRepo;
+    this.syncCourse = options.syncCourse;
+    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.browserInterceptor = options.browserInterceptor;
+    this.urlProvider = options.urlProvider;
+    this.namingService = options.namingService;
+    this.logger = options.logger.withContext("SyncLearningPath");
+    this.config = options.config;
   }
 
-  async execute(pathInput: string): Promise<void> {
+  async execute({ pathInput }: SyncLearningPathInput): Promise<void> {
     if (!pathInput) {
       this.logger.error("No se proporcionó pathInput");
       return;
@@ -61,30 +76,33 @@ export class SyncLearningPath {
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
-    // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = await setupInterceptor(page, { prefix: 'path', execTimestamp: Date.now() });
+    // (We will initialize the actual path when setup returns it)
+    const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'path', execTimestamp: Date.now() });
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
 
-    this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
+    try {
+      this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-    this.logger.info("Esperando a que el proveedor envíe el listado de courses...");
-    await page.waitForTimeout(10000);
-    await page.close();
+      this.logger.info("Esperando a que el proveedor envíe el listado de courses...");
+      await page.waitForTimeout(10000);
+      await page.close();
 
-    // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
-    await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
+      // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
+      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
 
-    // --- Isolated Execution Environment Cleanup ---
-    if (!env.KEEP_TEMP_WORKSPACES) {
-      if (isolatedDirPath) {
-        this.logger.info(`🧹 Limpiando espacio de trabajo temporal del path: ${isolatedDirPath}`);
-        await isolatedInterceptedDataRepo.deleteWorkspace();
-      }
-    } else {
-      if (isolatedDirPath) {
-        this.logger.info(`💾 Manteniendo espacio de trabajo temporal por configuración: ${isolatedDirPath}`);
+    } finally {
+      // --- Isolated Execution Environment Cleanup ---
+      if (!this.config.keepTempWorkspaces) {
+        if (isolatedDirPath) {
+          this.logger.info(`🧹 Limpiando espacio de trabajo temporal del path: ${isolatedDirPath}`);
+          await isolatedInterceptedDataRepo.deleteWorkspace();
+        }
+      } else {
+        if (isolatedDirPath) {
+          this.logger.info(`💾 Manteniendo espacio de trabajo temporal por configuración: ${isolatedDirPath}`);
+        }
       }
     }
   }

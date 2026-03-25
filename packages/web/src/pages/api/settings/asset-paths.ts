@@ -2,17 +2,21 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 
-import { AssetPathResolver, NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { CONFIG_PATH, MONOREPO_ROOT } from '@config/paths';
+import { AssetPathResolver, NodeFileSystem, NodePath } from '@my-offline-lms/core/filesystem';
+import { getAssetConfigPath, getMonorepoRoot } from '@config/paths';
+import { logger } from '@platform/logging';
 
 const fsAdapter = new NodeFileSystem();
-const resolver = new AssetPathResolver({
-  configPath: CONFIG_PATH,
-  monorepoRoot: MONOREPO_ROOT,
-  fs: fsAdapter,
-});
-
+const pathAdapter = new NodePath();
 export const GET: APIRoute = async () => {
+  const resolver = new AssetPathResolver({
+    configPath: await getAssetConfigPath(),
+    monorepoRoot: await getMonorepoRoot(),
+    fs: fsAdapter,
+    path: pathAdapter,
+    logger,
+  });
+
   try {
     const paths = await resolver.getAvailablePaths();
     return new Response(JSON.stringify(paths), {
@@ -37,6 +41,13 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
+    const resolver = new AssetPathResolver({
+      configPath: await getAssetConfigPath(),
+      monorepoRoot: await getMonorepoRoot(),
+      fs: fsAdapter,
+      path: pathAdapter,
+      logger,
+    });
     await resolver.saveNewPath(newPath, label);
 
     return new Response(JSON.stringify({ ok: true }), {
@@ -61,6 +72,13 @@ export const DELETE: APIRoute = async ({ request }) => {
       });
     }
 
+    const resolver = new AssetPathResolver({
+      configPath: await getAssetConfigPath(),
+      monorepoRoot: await getMonorepoRoot(),
+      fs: fsAdapter,
+      path: pathAdapter,
+      logger,
+    });
     await resolver.removePath(pathToRemove);
 
     return new Response(JSON.stringify({ ok: true }), {

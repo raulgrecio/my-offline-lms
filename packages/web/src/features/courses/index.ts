@@ -1,4 +1,5 @@
 import { getDb } from "@platform/db/database";
+import { createLazyService } from "@my-offline-lms/core/di";
 import { CourseManager } from "./application/CourseManager";
 import type { GetAssetByIdRequest } from "./application/use-cases/getAssetById";
 import type { GetAssetsByCourseIdRequest } from "./application/use-cases/getAssetsByCourseId";
@@ -14,21 +15,24 @@ export type {
   UpdateAssetTotalPagesRequest as UpdateAssetMetadataRequest,
 };
 
-// 2. Wiring
-const repo = new SQLiteCourseRepository(getDb());
-const manager = new CourseManager(repo);
+// 2. Wiring (Lazy)
+const getManager = createLazyService(async () => {
+  const db = await getDb();
+  const repo = new SQLiteCourseRepository(db);
+  return new CourseManager(repo);
+});
 
 // 3. Public API
-export const getAllCourses = () => manager.getAllCourses();
+export const getAllCourses = async () => (await getManager()).getAllCourses();
 
-export const getAssetById = ({ id }: GetAssetByIdRequest) =>
-  manager.getAssetById({ id });
+export const getAssetById = async ({ id }: GetAssetByIdRequest) =>
+  (await getManager()).getAssetById({ id });
 
-export const getAssetsByCourseId = ({ id }: GetAssetsByCourseIdRequest) =>
-  manager.getAssetsByCourseId({ id });
+export const getAssetsByCourseId = async ({ id }: GetAssetsByCourseIdRequest) =>
+  (await getManager()).getAssetsByCourseId({ id });
 
-export const getCourseById = ({ id }: GetCourseByIdRequest) =>
-  manager.getCourseById({ id });
+export const getCourseById = async ({ id }: GetCourseByIdRequest) =>
+  (await getManager()).getCourseById({ id });
 
-export const updateAssetTotalPages = ({ id, totalPages }: UpdateAssetTotalPagesRequest) =>
-  manager.updateAssetTotalPages({ id, totalPages });
+export const updateAssetTotalPages = async ({ id, totalPages }: UpdateAssetTotalPagesRequest) =>
+  (await getManager()).updateAssetTotalPages({ id, totalPages });

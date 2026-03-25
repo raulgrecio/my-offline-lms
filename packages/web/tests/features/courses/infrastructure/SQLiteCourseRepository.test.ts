@@ -136,6 +136,23 @@ describe("SQLiteCourseRepository", () => {
 
       expect(result).toBeNull();
     });
+
+    it("should handle asset without metadata", () => {
+      const mockGet = vi.fn().mockReturnValue({
+        id: "a1",
+        course_id: "c1",
+        type: "video",
+        url: "url1",
+        metadata: null,
+        status: "available",
+        local_path: "/path1",
+      });
+      vi.mocked(mockDb.prepare).mockReturnValue({ get: mockGet } as any);
+
+      const result = repository.getAssetById("a1");
+
+      expect(result?.metadata).toEqual({});
+    });
   });
 
   describe("updateAssetMetadata", () => {

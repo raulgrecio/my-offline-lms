@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { AssetPathResolver } from "@filesystem/AssetPathResolver";
-import { IFileSystem } from "@filesystem/IFileSystem";
+import { type IFileSystem } from "@filesystem/IFileSystem";
+import { type IPath } from "@filesystem/IPath";
 import { NoopLogger } from "@logging";
 
 describe("AssetPathResolver (Windows Support)", () => {
@@ -8,14 +9,25 @@ describe("AssetPathResolver (Windows Support)", () => {
     exists: vi.fn(),
     readFile: vi.fn(),
     writeFile: vi.fn(),
-    dirname: (p: string) => p.split("/").slice(0, -1).join("/") || "/",
     readdir: vi.fn(),
     mkdir: vi.fn(),
+    rm: vi.fn(),
+    unlink: vi.fn(),
+    rename: vi.fn(),
+    stat: vi.fn(),
+  };
+
+  const mockPath: IPath = {
+    dirname: (p: string) => p.split("/").slice(0, -1).join("/") || "/",
+    extname: (p: string) => {
+      const match = p.match(/\.[^/.]+$/);
+      return match ? match[0] : "";
+    },
     sep: "/", // Simulating Linux/Posix environment
     join: (...p: string[]) => p.join("/"),
     isAbsolute: (p: string) => p.startsWith("/"),
     resolve: (...p: string[]) => p.join("/"),
-  } as any;
+  };
 
   it("should extract correctly courseId/type/filename from a Windows path on Linux", async () => {
     // 1. Mock the initial config read so constructor works
@@ -33,6 +45,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -70,6 +84,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -101,6 +117,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -134,6 +152,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -166,6 +186,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -189,6 +211,8 @@ describe("AssetPathResolver (Windows Support)", () => {
       configPath: "/config.json",
       monorepoRoot: "/root",
       fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
     });
     await resolver.ensureInitialized();
 
@@ -206,13 +230,25 @@ describe("AssetPathResolver (Windows Support)", () => {
     vi.mocked(mockFs.mkdir).mockResolvedValue(undefined as any);
     vi.mocked(mockFs.writeFile).mockResolvedValue(undefined);
 
-    const r1 = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs });
+    const r1 = new AssetPathResolver({
+      configPath: "/config.json",
+      monorepoRoot: "/root",
+      fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
+    });
     await r1.ensureInitialized();
     expect(mockFs.mkdir).toHaveBeenCalledWith("/", { recursive: true });
 
     vi.mocked(mockFs.exists).mockResolvedValue(true);
     vi.mocked(mockFs.readFile).mockResolvedValue("NOT JSON");
-    const r2 = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs });
+    const r2 = new AssetPathResolver({
+      configPath: "/config.json",
+      monorepoRoot: "/root",
+      fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
+    });
     await r2.ensureInitialized();
 
     errorSpy.mockRestore();
@@ -227,7 +263,13 @@ describe("AssetPathResolver (Windows Support)", () => {
     vi.mocked(mockFs.exists).mockResolvedValue(true);
     vi.mocked(mockFs.readdir).mockRejectedValue(new Error("Disk error"));
 
-    const resolver = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs });
+    const resolver = new AssetPathResolver({
+      configPath: "/config.json",
+      monorepoRoot: "/root",
+      fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
+    });
     await resolver.ensureInitialized();
 
     const assets = await resolver.listAssets("123", "video");
@@ -238,7 +280,13 @@ describe("AssetPathResolver (Windows Support)", () => {
   it("should handle null config edge cases", async () => {
     vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
     vi.mocked(mockFs.exists).mockResolvedValue(true);
-    const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs });
+    const resolver = new AssetPathResolver({
+      configPath: "/c.json",
+      monorepoRoot: "/r",
+      fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
+    });
     await resolver.ensureInitialized();
 
     // Force null config to hit defensive branches
@@ -253,7 +301,13 @@ describe("AssetPathResolver (Windows Support)", () => {
   it("should handle resolveExistingPath edge cases", async () => {
     vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
     vi.mocked(mockFs.exists).mockResolvedValue(true);
-    const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs });
+    const resolver = new AssetPathResolver({
+      configPath: "/c.json",
+      monorepoRoot: "/r",
+      fs: mockFs,
+      path: mockPath,
+      logger: new NoopLogger(),
+    });
     await resolver.ensureInitialized();
 
     // Path already exists

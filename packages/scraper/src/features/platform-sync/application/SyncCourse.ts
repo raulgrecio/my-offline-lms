@@ -1,284 +1,272 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { env } from "@config/env";
-import { PLATFORM } from "@config/platform";
-
-import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
+import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
+import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
+import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
+import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
 import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
-import { setupInterceptor } from "@platform/browser/interceptor";
 
-export class SyncCourse {
-  private browserProvider: BrowserProvider;
+export interface SyncCourseInput {
+  courseInput: string;
+  offeringId?: string;
+}
+
+type SyncCourseConfig = {
+  keepTempWorkspaces: boolean;
+  selectors: {
+    guidesTab: string;
+  };
+  oracleConstants: {
+    videoTypeId: string | number;
+  };
+};
+
+export interface SyncCourseOptions {
+  browserProvider: IBrowserProvider;
+  courseRepository: ICourseRepository;
+  assetRepository: IAssetRepository;
+  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  browserInterceptor: BrowserInterceptor;
+  urlProvider: IPlatformUrlProvider;
+  namingService: INamingService;
+  logger: ILogger;
+  config: SyncCourseConfig;
+}
+
+export class SyncCourse implements IUseCase<SyncCourseInput, void> {
+  private browserProvider: IBrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
   private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: any;
 
-  constructor(deps: {
-    browserProvider: BrowserProvider,
-    courseRepository: ICourseRepository,
-    assetRepository: IAssetRepository,
-    interceptedDataRepoFactory: IInterceptedDataRepositoryFactory,
-    urlProvider: IPlatformUrlProvider,
-    namingService: INamingService,
-    logger: ILogger,
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.courseRepository = deps.courseRepository;
-    this.assetRepository = deps.assetRepository;
-    this.interceptedDataRepoFactory = deps.interceptedDataRepoFactory;
-    this.urlProvider = deps.urlProvider;
-    this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("SyncCourse");
+  constructor(options: SyncCourseOptions) {
+    this.browserProvider = options.browserProvider;
+    this.courseRepository = options.courseRepository;
+    this.assetRepository = options.assetRepository;
+    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.browserInterceptor = options.browserInterceptor;
+    this.urlProvider = options.urlProvider;
+    this.namingService = options.namingService;
+    this.logger = options.logger.withContext('SyncCourse');
+    this.config = options.config;
   }
 
-  async execute({ courseInput, offeringId }: { courseInput: string, offeringId?: string }): Promise<void> {
+  async execute(input: SyncCourseInput): Promise<void> {
+    const { courseInput, offeringId } = input;
+
     if (!courseInput) {
-      this.logger.error("No se proporcionó courseUrl");
+      this.logger.error("No se proporcionó courseUrl o IDs.");
       return;
     }
-
-    this.logger.info(`Course Path recibido: "${courseInput}"`);
 
     const { url, courseId } = this.urlProvider.resolveCourseUrl(courseInput);
 
-    if (!url || !courseId) {
-      this.logger.error(`No se pudo resolver la URL o el ID del curso: ${courseInput}`);
+    if (!courseId) {
+      this.logger.error(`No se pudo resolver el ID del curso para: ${courseInput}`);
       return;
     }
 
-    this.logger.info(`Iniciando mapeo y sincronización del curso: ${url} (ID: ${courseId})`);
+    this.logger.info(`🚀 Iniciando sincronización del curso: ${courseId} (${url})`);
 
-    const context = await this.browserProvider.getAuthenticatedContext();
-    const page = await context.newPage();
+    const browser = await this.browserProvider.getAuthenticatedContext();
+    const page = await browser.newPage();
 
-    // Create an isolated repository for this specific execution
-    // (We will initialize the actual path when setupInterceptor returns it)
-    const isolatedDirPath = await setupInterceptor(page, { prefix: "course", execTimestamp: Date.now() });
-    this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
-
+    const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'course', execTimestamp: Date.now() });
     const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
 
-    this.logger.info(`Navegando a: ${url}`);
-    await page.goto(url, { waitUntil: "load", timeout: 60000 });
-
-    this.logger.info("Click en el tab de Guides para desencadenar json...");
     try {
-      await page.waitForSelector(PLATFORM.SELECTORS.COURSE.GUIDES_TAB, { timeout: 15000 });
-      await page.click(PLATFORM.SELECTORS.COURSE.GUIDES_TAB);
-      this.logger.info("👆 Click en Guides completado. Esperando interceptaciones (7s)...");
-      await page.waitForTimeout(7000);
-    } catch (e) {
-      this.logger.warn("No se pudo hacer click en Guides o el tab no existe. Continuando...");
-    }
+      this.logger.info("Navegando al curso para esperar interceptaciones...");
+      await page.goto(url, { waitUntil: 'networkidle' });
 
-    const intercepted = await isolatedInterceptedDataRepo.getPendingForCourse(courseId);
-    const matchingPayloads: any[] = [];
-    const processedPayloadPaths: string[] = [];
-
-    // 1. Identificar todos los payloads que corresponden a este curso
-    for (const payload of intercepted) {
       try {
-        const wrapper = JSON.parse(payload.content);
-        const data = wrapper.data;
-        if (!data) continue;
-
-        const matchesSlug = data.slug && url.includes(data.slug);
-        const matchesId = data.id && url.includes(data.id.toString());
-
-        if (matchesSlug || matchesId) {
-          matchingPayloads.push(wrapper);
-          processedPayloadPaths.push(payload.filePath);
-        }
+        await page.waitForSelector(this.config.selectors.guidesTab, { timeout: 3000 });
+        await page.click(this.config.selectors.guidesTab);
+        this.logger.info("Click en pestaña de Guías.");
       } catch (e) {
-        this.logger.warn(`Error parseando payload: ${payload.filePath}`);
-      }
-    }
-
-    if (matchingPayloads.length > 0) {
-      // 2. Fusionar datos básicos del curso
-      const firstData = matchingPayloads[0].data;
-      const courseId = firstData.id.toString();
-      let courseTitle = firstData.name || firstData.title;
-
-      // Buscar el mejor título disponible en todos los payloads
-      for (const p of matchingPayloads) {
-        const t = p.data.name || p.data.title;
-        if (t && t.length > (courseTitle?.length || 0)) {
-          courseTitle = t;
-        }
+        this.logger.warn("No se pudo hacer click en Guides, procediendo igualmente.");
       }
 
-      this.logger.info(`💾 Fusionando metadatos para Curso: ${courseTitle} (${courseId})`);
+      await page.waitForTimeout(5000);
 
-      const courseSlug = firstData.slug || this.namingService.slugify(courseTitle);
-      this.courseRepository.saveCourse({
-        id: courseId,
-        slug: courseSlug,
-        title: courseTitle
-      });
+      this.logger.info("Leyendo datos interceptados...");
+      const intercepted = await isolatedInterceptedDataRepo.getPendingForCourse(courseId);
 
-      // Mapas para almacenar assets fusionados
-      const ekitsMap = new Map<string, any>();
-      const videosMap = new Map<string, any>();
-      let finalOfferingId = offeringId;
+      if (intercepted.length > 0) {
+        let courseTitle: string | null = null;
+        let courseSlug: string | null = null;
+        let finalOfferingId = offeringId || null;
 
-      // 3. Iterar por todos los payloads para fusionar assets
-      for (const wrapper of matchingPayloads) {
-        const data = wrapper.data;
+        const ekitsMap = new Map<string, any>();
+        const videosMap = new Map<string, any>();
+        const processedPayloadPaths: string[] = [];
 
-        // Extraer offeringId de la URL del payload si no lo tenemos
-        if (!finalOfferingId) {
-          const extractedId = this.namingService.extractOfferingId(wrapper.url);
-          if (extractedId) {
-            finalOfferingId = extractedId;
-            this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
+        for (const wrapper of intercepted) {
+          processedPayloadPaths.push(wrapper.filePath);
+
+          let raw: any;
+          try {
+            raw = JSON.parse(wrapper.content);
+          } catch (e) {
+            this.logger.warn(`Error parseando payload en ${wrapper.filePath}: ${e}`);
+            continue;
+          }
+
+          const data = raw.data;
+          const wrapperUrl = raw.url || "";
+          if (!data) continue;
+
+          if (data.name || data.title) {
+            const t = data.name || data.title;
+            const currentLen = courseTitle?.length || 0;
+            if (t.length > currentLen) {
+              courseTitle = t;
+            }
+          }
+          if (data.slug) courseSlug = data.slug;
+
+          if (!finalOfferingId) {
+            const extractedId = this.namingService.extractOfferingId(wrapperUrl);
+            if (extractedId) {
+              finalOfferingId = extractedId;
+              this.logger.info(`🔍 Extraído offeringId dinámico: ${finalOfferingId}`);
+            }
+          }
+
+          if (data.eKits && Array.isArray(data.eKits)) {
+            data.eKits.forEach((ekit: any) => {
+              const numericId = ekit.id?.toString();
+              const uuid = ekit.ekitId;
+
+              if (!numericId && !uuid) return;
+
+              let existing = null;
+              if (numericId && ekitsMap.has(`num_${numericId}`)) {
+                existing = ekitsMap.get(`num_${numericId}`);
+              } else if (uuid && ekitsMap.has(`uuid_${uuid}`)) {
+                existing = ekitsMap.get(`uuid_${uuid}`);
+              }
+
+              if (!existing) {
+                existing = { id: numericId, ekitId: uuid };
+                if (numericId) ekitsMap.set(`num_${numericId}`, existing);
+                if (uuid) ekitsMap.set(`uuid_${uuid}`, existing);
+              } else {
+                if (numericId && !existing.id) {
+                  existing.id = numericId;
+                  ekitsMap.set(`num_${numericId}`, existing);
+                }
+                if (uuid && !existing.ekitId) {
+                  existing.ekitId = uuid;
+                  ekitsMap.set(`uuid_${uuid}`, existing);
+                }
+              }
+
+              if (ekit.name) existing.name = ekit.name;
+              if (ekit.gcc) existing.gcc = ekit.gcc;
+              if (ekit.ekitType) existing.ekitType = ekit.ekitType;
+              if (ekit.typeId) existing.typeId = ekit.typeId;
+              if (ekit.offeringId) existing.offeringId = ekit.offeringId;
+            });
+          }
+
+          if (data.modules && Array.isArray(data.modules)) {
+            data.modules.forEach((mod: any) => {
+              if (mod.components && Array.isArray(mod.components)) {
+                mod.components.forEach((comp: any) => {
+                  const videoTypeId = this.config.oracleConstants.videoTypeId;
+                  if (String(comp.typeId) === String(videoTypeId)) {
+                    const vidId = (comp.id || comp.uuid)?.toString();
+                    if (!vidId) return;
+
+                    if (!videosMap.has(vidId)) {
+                      videosMap.set(vidId, {
+                        id: vidId,
+                        name: comp.name || comp.title,
+                        duration: comp.duration
+                      });
+                    } else {
+                      const existing = videosMap.get(vidId);
+                      const newName = comp.name || comp.title;
+                      if (!existing.name && newName) {
+                        existing.name = newName;
+                      }
+                      if (!existing.duration && comp.duration) {
+                        existing.duration = comp.duration;
+                      }
+                    }
+                  }
+                });
+              }
+            });
           }
         }
 
-        // A. Fusionar eKits (Guías)
-        if (data.eKits && Array.isArray(data.eKits)) {
-          data.eKits.forEach((ekit: any) => {
-            const numericId = ekit.id?.toString();
-            const uuid = ekit.ekitId;
+        const existingCourse = await this.courseRepository.getCourseById(courseId);
+        await this.courseRepository.saveCourse({
+          id: courseId,
+          title: courseTitle || existingCourse?.title || "Unknown Course",
+          slug: courseSlug || existingCourse?.slug || this.namingService.slugify(courseTitle || ""),
+        });
 
-            if (!numericId && !uuid) return;
-
-            // Buscar si ya existe por cualquiera de los dos IDs
-            let existing = null;
-            if (numericId && ekitsMap.has(`num_${numericId}`)) {
-              existing = ekitsMap.get(`num_${numericId}`);
-            } else if (uuid && ekitsMap.has(`uuid_${uuid}`)) {
-              existing = ekitsMap.get(`uuid_${uuid}`);
-            }
-
-            if (!existing) {
-              existing = { id: numericId, ekitId: uuid };
-              // Registrar en ambos mapas si están presentes
-              if (numericId) ekitsMap.set(`num_${numericId}`, existing);
-              if (uuid) ekitsMap.set(`uuid_${uuid}`, existing);
-            } else {
-              // Si ya existía, pero ahora tenemos el otro ID, actualizar mapas
-              if (numericId && !existing.id) {
-                existing.id = numericId;
-                ekitsMap.set(`num_${numericId}`, existing);
-              }
-              if (uuid && !existing.ekitId) {
-                existing.ekitId = uuid;
-                ekitsMap.set(`uuid_${uuid}`, existing);
-              }
-            }
-
-            // Fusionar campos (solo si el nuevo tiene valor valioso)
-            if (ekit.name) existing.name = ekit.name;
-            if (ekit.gcc) existing.gcc = ekit.gcc;
-            if (ekit.ekitType) existing.ekitType = ekit.ekitType;
-            if (ekit.typeId) existing.typeId = ekit.typeId;
-            if (ekit.offeringId) existing.offeringId = ekit.offeringId;
+        const uniqueEkits = Array.from(new Set(ekitsMap.values()));
+        uniqueEkits.forEach((ekit, index) => {
+          this.assetRepository.saveAsset({
+            id: ekit.id,
+            courseId: courseId,
+            type: 'guide',
+            url: "",
+            metadata: {
+              name: ekit.name || `Guide ${index + 1}`,
+              id: ekit.id,
+              ekitId: ekit.ekitId,
+              typeId: ekit.typeId,
+              ekitType: ekit.ekitType,
+              gcc: ekit.gcc,
+              offeringId: ekit.offeringId || finalOfferingId,
+              order_index: index + 1,
+            },
+            status: 'PENDING'
           });
+        });
+
+        Array.from(videosMap.values()).forEach((video, index) => {
+          this.assetRepository.saveAsset({
+            id: video.id,
+            courseId: courseId,
+            type: 'video',
+            url: this.urlProvider.getVideoAssetUrl({ courseUrl: url, assetId: video.id }),
+            metadata: {
+              name: video.name || `Video ${index + 1}`,
+              order_index: index + 1,
+              duration: video.duration
+            },
+            status: 'PENDING'
+          });
+        });
+
+        this.logger.info(`✅ Sincronizados ${videosMap.size} vídeos y ${uniqueEkits.length} PDFs para "${courseTitle}".`);
+
+        for (const p of processedPayloadPaths) {
+          await isolatedInterceptedDataRepo.markAsProcessed(p);
         }
 
-        // B. Fusionar Vídeos (Modules -> Components)
-        if (data.modules && Array.isArray(data.modules)) {
-          data.modules.forEach((mod: any) => {
-            if (mod.components && Array.isArray(mod.components)) {
-              mod.components.forEach((comp: any) => {
-                if (comp.typeId === PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID || comp.typeId === parseInt(PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID)) {
-                  const vidId = comp.id.toString();
-                  if (!videosMap.has(vidId)) {
-                    videosMap.set(vidId, {
-                      id: vidId,
-                      name: comp.name || comp.title,
-                      duration: comp.duration
-                    });
-                  } else {
-                    const existing = videosMap.get(vidId);
-                    if (!existing.name && (comp.name || comp.title)) existing.name = comp.name || comp.title;
-                    if (!existing.duration && comp.duration) existing.duration = comp.duration;
-                  }
-                }
-              });
-            }
-          });
-        }
+      } else {
+        this.logger.warn("No se encontraron datos interceptados válidos para este curso.");
       }
 
-      // 4. Guardar assets fusionados en la DB
-      let guideCount = 0;
-      let videoCount = 0;
-
-      // Obtener lista única de eKits (un Mapa puede tener el mismo objeto bajo 'num_' y 'uuid_')
-      const uniqueEkits = Array.from(new Set(ekitsMap.values()));
-
-      // Guardar Guías
-      uniqueEkits.forEach((ekit, index) => {
-        // El usuario prefiere el ID numérico como PK en Course_Assets.
-        // El UUID (ekitId) se guarda en metadatos para el visor.
-        const assetId = ekit.id;
-
-        this.assetRepository.saveAsset({
-          id: assetId,
-          courseId: courseId,
-          type: 'guide',
-          url: "",
-          metadata: {
-            name: ekit.name || `Guide ${index + 1}`,
-            id: ekit.id, // numeric id
-            ekitId: ekit.ekitId, // UUID (ahora explícitamente en meta)
-            typeId: ekit.typeId,
-            ekitType: ekit.ekitType,
-            gcc: ekit.gcc,
-            offeringId: ekit.offeringId || finalOfferingId,
-            order_index: index + 1,
-          },
-          status: 'PENDING'
-        });
-        guideCount++;
-      });
-
-      // Guardar Vídeos
-      Array.from(videosMap.values()).forEach((video, index) => {
-        this.assetRepository.saveAsset({
-          id: video.id,
-          courseId: courseId,
-          type: 'video',
-          url: this.urlProvider.getVideoAssetUrl({ courseUrl: url, assetId: video.id }),
-          metadata: {
-            name: video.name || `Video ${index + 1}`,
-            order_index: index + 1,
-            duration: video.duration
-          },
-          status: 'PENDING'
-        });
-        videoCount++;
-      });
-
-      this.logger.info(`✅ Sincronizados ${videoCount} vídeos y ${guideCount} PDFs para "${courseTitle}".`);
-
-      // 5. Marcar todos los archivos interceptados del curso como procesados
-      for (const p of processedPayloadPaths) {
-        await isolatedInterceptedDataRepo.markAsProcessed(p);
-      }
-
-    } else {
-      this.logger.warn("No se encontraron datos interceptados válidos para este curso.");
-    }
-
-    // --- Isolated Execution Environment Cleanup ---
-    if (!env.KEEP_TEMP_WORKSPACES) {
-      if (isolatedDirPath) {
-        this.logger.info(`🧹 Limpiando espacio de trabajo temporal del curso: ${isolatedDirPath}`);
+    } finally {
+      if (isolatedDirPath && !this.config.keepTempWorkspaces) {
         await isolatedInterceptedDataRepo.deleteWorkspace();
-      }
-    } else {
-      if (isolatedDirPath) {
-        this.logger.info(`💾 Manteniendo espacio de trabajo temporal por configuración: ${isolatedDirPath}`);
+      } else if (isolatedDirPath) {
+        this.logger.info(`[OFFLINE] Manteniendo espacio de trabajo interceptado: ${isolatedDirPath}`);
       }
     }
   }

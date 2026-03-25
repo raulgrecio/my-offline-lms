@@ -10,6 +10,7 @@ export default defineConfig({
       '@domain': path.resolve(__dirname, './src/domain'),
       '@filesystem': path.resolve(__dirname, './src/filesystem'),
       '@logging': path.resolve(__dirname, './src/logging'),
+      '@di': path.resolve(__dirname, './src/di'),
     },
     coverage: {
       provider: 'v8',

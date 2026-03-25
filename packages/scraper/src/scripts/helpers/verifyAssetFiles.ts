@@ -4,9 +4,10 @@ import path from "path";
 import { getAssetPathsConfig, getMonorepoRoot } from "@config/paths";
 
 import { AssetType, ASSET_FOLDERS } from '@my-offline-lms/core/models';
-import { PathResolver, NodeFileSystem, AssetPathResolver } from '@my-offline-lms/core/filesystem';
+import { PathResolver, NodeFileSystem, AssetPathResolver, NodePath } from '@my-offline-lms/core/filesystem';
 
 import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
+import { NoopLogger } from "@core/logging";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.
@@ -36,7 +37,9 @@ export async function verifyAssetFiles({ type, courseId, metadataStr, localPath 
   const resolver = new AssetPathResolver({
     configPath: await getAssetPathsConfig(),
     monorepoRoot: await getMonorepoRoot(),
-    fs: fsAdapter
+    fs: fsAdapter,
+    path: new NodePath(),
+    logger: new NoopLogger(),
   });
   await resolver.ensureInitialized();
 

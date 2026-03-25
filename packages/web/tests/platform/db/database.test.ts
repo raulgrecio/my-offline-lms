@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import fs from "node:fs";
 
 import { SQLiteDatabase } from '@my-offline-lms/core/database';
+import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
 import { getDb } from "@platform/db/database";
 
 vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
@@ -18,12 +18,18 @@ vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
   };
 });
 
-vi.mock("node:fs", () => ({
-  default: {
-    existsSync: vi.fn(),
-    mkdirSync: vi.fn(),
-  },
-}));
+vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    NodeFileSystem: vi.fn().mockImplementation(function () {
+      return {
+        exists: vi.fn().mockResolvedValue(true),
+        mkdir: vi.fn().mockResolvedValue(undefined),
+      };
+    }),
+  };
+});
 
 vi.mock("@platform/db/schema", () => ({
   runMigrations: vi.fn(),
@@ -32,21 +38,23 @@ vi.mock("@platform/db/schema", () => ({
 describe("Database Initialization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset singleton (not exported, so we might need to rely on the module state or hope it's not cached)
-    // Actually, getDb is a singleton, so we test it once or mock the internal state if possible.
   });
 
-  it("should initialize the database once and create directory if missing", () => {
-    vi.mocked(fs.existsSync).mockReturnValue(false);
+  it("should initialize the database once and create directory if missing", async () => {
+    const mockFs = {
+      exists: vi.fn().mockResolvedValue(false),
+      mkdir: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(NodeFileSystem).mockImplementation(function () { return mockFs as any; });
 
-    const db = getDb();
+    const db = await getDb();
 
-    expect(fs.mkdirSync).toHaveBeenCalled();
+    expect(mockFs.mkdir).toHaveBeenCalled();
     expect(SQLiteDatabase).toHaveBeenCalled();
     expect(db.initialize).toHaveBeenCalled();
 
     // Call again, should not initialize again
-    const db2 = getDb();
+    const db2 = await getDb();
     expect(SQLiteDatabase).toHaveBeenCalledTimes(1);
     expect(db2).toBe(db);
   });

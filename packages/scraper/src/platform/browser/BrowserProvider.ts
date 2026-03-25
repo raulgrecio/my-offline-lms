@@ -1,21 +1,36 @@
 import { chromium } from "playwright-extra";
 import { Browser, BrowserContext } from "playwright";
 import stealth from "puppeteer-extra-plugin-stealth";
-import fs from "fs";
 
-import { env } from "@config/env";
-import { getAuthState } from "@config/paths";
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
+import { type ILogger } from '@my-offline-lms/core/logging';
+import { IBrowserProvider } from "./IBrowserProvider";
 
 chromium.use(stealth());
 
-export class BrowserProvider {
+export interface BrowserProviderConfig {
+  chromeExecutablePath?: string;
+  authStateFile: string;
+}
+
+export class BrowserProvider implements IBrowserProvider {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
   private logger?: ILogger;
+  private fs: IFileSystem;
+  private path: IPath;
+  private config: BrowserProviderConfig;
 
-  constructor(logger?: ILogger) {
-    this.logger = logger?.withContext("BrowserProvider");
+  constructor(deps: { 
+    fs: IFileSystem, 
+    path: IPath, 
+    config: BrowserProviderConfig,
+    logger?: ILogger 
+  }) {
+    this.fs = deps.fs;
+    this.path = deps.path;
+    this.config = deps.config;
+    this.logger = deps.logger?.withContext("BrowserProvider");
   }
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
@@ -24,8 +39,8 @@ export class BrowserProvider {
       this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
       this.browser = await chromium.launch({ 
         headless,
-        executablePath: env.CHROME_EXECUTABLE_PATH || undefined,
-        channel: env.CHROME_EXECUTABLE_PATH ? undefined : "chrome",
+        executablePath: this.config.chromeExecutablePath || undefined,
+        channel: this.config.chromeExecutablePath ? undefined : "chrome",
         args: [
           "--start-maximized",
           "--disable-blink-features=AutomationControlled"
@@ -34,18 +49,22 @@ export class BrowserProvider {
     }
     
     // Always use state if it exists
-    const stateFile = await getAuthState();
-    const stats = await fs.promises.stat(stateFile).catch(() => null);
+    const stats = await this.fs.stat(this.config.authStateFile).catch(() => null);
     
     if (stats) {
-      const hoursOld = (Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60);
+      // stats.mtime might not be present in all IFileSystem implementations if not standardized, 
+      // but NodeFileSystem has it. For now we assume if it exists we check age if possible.
+      // @ts-ignore
+      const mtime = stats.mtime || new Date(); 
+      const hoursOld = (Date.now() - mtime.getTime()) / (1000 * 60 * 60);
       if (hoursOld > 24) {
         this.logger?.warn(`La sesión guardada tiene ${Math.round(hoursOld)} horas. Si falla el raseo, prueba a ejecutar 'pnpm cli login' de nuevo.`);
       }
     }
 
-    const contextOptions = stats 
-      ? { storageState: stateFile } 
+    const exists = stats !== null;
+    const contextOptions = exists 
+      ? { storageState: this.config.authStateFile } 
       : {};
 
     this.context = await this.browser.newContext(contextOptions);
@@ -54,8 +73,7 @@ export class BrowserProvider {
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
   async getAuthenticatedContext(): Promise<BrowserContext> {
-    const stateFile = await getAuthState();
-    const exists = await fs.promises.access(stateFile).then(() => true).catch(() => false);
+    const exists = await this.fs.exists(this.config.authStateFile);
     if (!exists) {
       throw new Error("No existe sesion guardada. Ejecute el login primero.");
     }

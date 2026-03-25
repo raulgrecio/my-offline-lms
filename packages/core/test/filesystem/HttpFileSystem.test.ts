@@ -12,18 +12,14 @@ describe("HttpFileSystem", () => {
     await expect(hfs.writeFile("http://foo", "data")).rejects.toThrow();
     await expect(hfs.mkdir("http://foo")).rejects.toThrow();
     await expect(hfs.readdir("http://foo")).rejects.toThrow();
+    await expect(hfs.unlink("http://foo")).rejects.toThrow();
+    await expect(hfs.rename("http://foo", "http://bar")).rejects.toThrow();
 
-    expect(hfs.resolve("http://foo", "bar")).toContain("http://foo/bar");
-    expect(hfs.join("http://foo", "bar")).toContain("http://foo/bar");
-    expect(hfs.isAbsolute("http://foo")).toBe(true);
-    expect(hfs.isAbsolute("https://foo")).toBe(true);
-    
-    expect(hfs.dirname("http://foo/bar/baz")).toBe("http://foo/bar");
     
     const stats = await hfs.stat("http://foo");
     expect(stats.size).toBe(0);
     expect(stats.isDirectory()).toBe(false);
     
-    expect(hfs.sep).toBe("/");
+    
   });
 });

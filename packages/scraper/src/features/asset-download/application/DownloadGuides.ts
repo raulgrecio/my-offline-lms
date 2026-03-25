@@ -1,46 +1,60 @@
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { env } from "@config/env";
-import { PLATFORM } from "@config/platform";
-
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
 import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
 
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
 
-export class DownloadGuides {
-  private browserProvider: BrowserProvider;
+export interface DownloadGuidesConfig {
+  keepTempImages: boolean;
+  selectors: {
+    iframe: string;
+    flipbookPages: string;
+  };
+}
+
+export interface DownloadGuidesInput {
+  courseId: string;
+}
+
+export interface DownloadGuidesOptions {
+  browserProvider: IBrowserProvider;
+  courseRepo: ICourseRepository;
+  assetRepo: IAssetRepository;
+  assetStorage: IAssetStorage;
+  namingService: INamingService;
+  urlProvider: IPlatformUrlProvider;
+  logger: ILogger;
+  config: DownloadGuidesConfig;
+}
+
+export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
+  private browserProvider: IBrowserProvider;
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
   private namingService: INamingService;
   private urlProvider: IPlatformUrlProvider;
   private logger: ILogger;
-  private keepTempImages: boolean;
+  private config: DownloadGuidesConfig;
 
-  constructor(deps: {
-    browserProvider: BrowserProvider,
-    courseRepo: ICourseRepository,
-    assetRepo: IAssetRepository,
-    assetStorage: IAssetStorage,
-    namingService: INamingService,
-    urlProvider: IPlatformUrlProvider,
-    logger: ILogger
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.courseRepo = deps.courseRepo;
-    this.assetRepo = deps.assetRepo;
-    this.assetStorage = deps.assetStorage;
-    this.namingService = deps.namingService;
-    this.urlProvider = deps.urlProvider;
-    this.logger = deps.logger.withContext("DownloadGuides");
-    this.keepTempImages = env.KEEP_TEMP_IMAGES;
+  constructor(options: DownloadGuidesOptions) {
+    this.browserProvider = options.browserProvider;
+    this.courseRepo = options.courseRepo;
+    this.assetRepo = options.assetRepo;
+    this.assetStorage = options.assetStorage;
+    this.namingService = options.namingService;
+    this.urlProvider = options.urlProvider;
+    this.logger = options.logger.withContext("DownloadGuides");
+    this.config = options.config;
   }
 
-  async executeForCourse(courseId: string): Promise<void> {
+  async execute(input: DownloadGuidesInput): Promise<void> {
+    const { courseId } = input;
     this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
 
     const pendingGuides = this.assetRepo.getPendingAssets(courseId, 'guide');
@@ -54,14 +68,21 @@ export class DownloadGuides {
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
     const context = await this.browserProvider.getAuthenticatedContext();
 
-    for (let i = 0; i < pendingGuides.length; i++) {
-      this.logger.info(`======================================================`, '');
-      this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
-      await this.downloadSingleGuide({ assetId: pendingGuides[i].id, courseId: pendingGuides[i].courseId, sharedContext: context });
-      await new Promise(r => setTimeout(r, 2000));
+    try {
+      for (let i = 0; i < pendingGuides.length; i++) {
+        this.logger.info(`======================================================`, '');
+        this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
+        await this.downloadSingleGuide({
+          assetId: pendingGuides[i].id,
+          courseId: pendingGuides[i].courseId,
+          sharedContext: context
+        });
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    } finally {
+      await this.browserProvider.close();
     }
 
-    await this.browserProvider.close();
     this.logger.info(`======================================================`, '');
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
@@ -130,25 +151,25 @@ export class DownloadGuides {
       this.logger.info(`Navegando al visor de la guía: ${viewerUrl}`);
       await page.goto(viewerUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
 
-      const iframeElement = await page.waitForSelector(PLATFORM.SELECTORS.GUIDE.IFRAME, { timeout: 30000 });
+      const iframeElement = await page.waitForSelector(this.config.selectors.iframe, { timeout: 30000 });
       const iframeSrc = await iframeElement?.getAttribute("src");
-      if (!iframeSrc) throw new Error(`No se pudo extraer el atributo src de ${PLATFORM.SELECTORS.GUIDE.IFRAME}`);
+      if (!iframeSrc) throw new Error(`No se pudo extraer el atributo src de ${this.config.selectors.iframe}`);
 
       this.logger.info("🪟 Encontrado visor base URL dentro de iframe. Redirigiendo navegador interno...");
       await page.goto(iframeSrc, { waitUntil: "load", timeout: 45000 });
       await page.waitForTimeout(5000);
 
       // Extraer recuento total de páginas desde el Flip PDF swiper DOM
-      let pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
+      let pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, this.config.selectors.flipbookPages);
 
       if (!pagesCount || pagesCount === 0) {
         // Retry
         await page.waitForTimeout(10000);
-        pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES);
+        pagesCount = await page.evaluate(DownloadGuides.extractHighestPageNumber, this.config.selectors.flipbookPages);
       }
 
       if (pagesCount === 0) {
-        throw new Error(`No se detectaron páginas en la estructura ${PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES} del Flip PDF`);
+        throw new Error(`No se detectaron páginas en la estructura ${this.config.selectors.flipbookPages} del Flip PDF`);
       }
 
       this.logger.info(`📄 Documento Flip PDF cargado con ${pagesCount} páginas.`);
@@ -202,7 +223,7 @@ export class DownloadGuides {
       this.logger.info(`Construyendo PDF...`);
       await this.assetStorage.buildPDFFromImages(tempImagesDir, outputPath);
 
-      if (!this.keepTempImages) {
+      if (!this.config.keepTempImages) {
         await this.assetStorage.removeTempDir(tempImagesDir);
       }
 

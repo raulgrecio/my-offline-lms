@@ -30,12 +30,12 @@ interface CoursePageProps {
 const { id } = Astro.params as CoursePageProps;
 if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const course = getCourseById({ id });
+const course = await getCourseById({ id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const allAssets = getAssetsByCourseId({ id });
-
-const isFavorite = getIsFavorite({ id, type: 'course' });
+const isFavorite = await getIsFavorite({ id, type: 'course' });
+const courseProgress = await getCourseProgress({ id });;
+const allAssets = await getAssetsByCourseId({ id });
 const videos = allAssets
   .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
@@ -44,23 +44,15 @@ const guides = allAssets
   .filter((a): a is GuideAsset => a.type === 'guide' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
-const courseProgress = getCourseProgress({ id });
-
-// Pre-fetch all video progress
-const videoProgressMap = new Map(
-  videos.map(video => [video.id, getAssetProgress({ assetId: video.id, type: 'video' })])
-);
-
-// Pre-fetch all guide progress
-const guideProgressMap = new Map(
-  guides.map(guide => [guide.id, getAssetProgress({ assetId: guide.id, type: 'guide' })])
-);
-
 // Find the active video
 const videoId = Astro.url.searchParams.get('v');
 const activeVideo = videoId
   ? (videos.find(v => v.id === videoId) || videos[0])
   : videos[0];
+
+const activeVideoProgress = activeVideo 
+  ? await getAssetProgress({ assetId: activeVideo.id, type: 'video' }) 
+  : null;
 
 // Generate file:// URL for local assets
 function localUrl(localPath: string): string {
@@ -142,7 +134,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
                 src={localUrl(activeVideo.localPath!)}
                 title={activeVideo.metadata?.name ?? activeVideo.id}
                 subtitleSrc={subtitleUrl(activeVideo.localPath!)}
-                initialTime={videoProgressMap.get(activeVideo.id)?.position ?? 0}
+                initialTime={activeVideoProgress?.position ?? 0}
                 initialDuration={activeVideo.metadata?.duration ?? 0}
                 progressUrl={API_ROUTES.PROGRESS.VIDEO}
               />
@@ -172,8 +164,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             </label>
           </div>
           <div class="overflow-y-auto flex-1 custom-scrollbar">
-            {videos.map((v, i) => {
-              const vp = videoProgressMap.get(v.id);
+            {videos.map(async (v, i) => {
+              const vp = await getAssetProgress({ assetId: v.id, type: 'video' });
               const isDone = vp?.completed;
               const isActive = v.id === activeVideo?.id;
               
@@ -275,13 +267,13 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
         Guías ({guides.length})
       </h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {guides.map((g, i) => (
+        {guides.map(async (g, i) => (
           <GuideCard
             assetId={g.id}
             courseId={id}
             name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
             localUrl={localUrl(g.localPath!)}
-            progress={guideProgressMap.get(g.id)}
+            progress={await getAssetProgress({ assetId: g.id, type: 'guide' })}
             totalPages={g.metadata?.totalPages}
           />
         ))}

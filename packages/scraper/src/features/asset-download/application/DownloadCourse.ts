@@ -1,35 +1,43 @@
 import { DownloadType } from '@my-offline-lms/core/models';
 import { ILogger } from '@my-offline-lms/core/logging';
 
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 
+export interface DownloadCourseInput {
+  courseInput: string;
+  type: DownloadType;
+}
 
-export class DownloadCourse {
+export interface DownloadCourseOptions {
+  courseRepo: ICourseRepository;
+  downloadGuides: DownloadGuides;
+  downloadVideos: DownloadVideos;
+  namingService: INamingService;
+  logger: ILogger;
+}
+
+export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
   private courseRepo: ICourseRepository;
   private downloadGuides: DownloadGuides;
   private downloadVideos: DownloadVideos;
   private namingService: INamingService;
   private logger: ILogger;
 
-  constructor(deps: {
-    courseRepo: ICourseRepository,
-    downloadGuides: DownloadGuides,
-    downloadVideos: DownloadVideos,
-    namingService: INamingService,
-    logger: ILogger
-  }) {
-    this.courseRepo = deps.courseRepo;
-    this.downloadGuides = deps.downloadGuides;
-    this.downloadVideos = deps.downloadVideos;
-    this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("DownloadCourse");
+  constructor(options: DownloadCourseOptions) {
+    this.courseRepo = options.courseRepo;
+    this.downloadGuides = options.downloadGuides;
+    this.downloadVideos = options.downloadVideos;
+    this.namingService = options.namingService;
+    this.logger = options.logger.withContext("DownloadCourse");
   }
 
-  async execute({ courseInput, type = 'all' }: { courseInput: string, type: DownloadType }): Promise<void> {
+  async execute(input: DownloadCourseInput): Promise<void> {
+    const { courseInput, type = 'all' } = input;
     const courseId = this.namingService.extractIdFromInput(courseInput);
 
     this.logger.info(`🚀 Iniciando descarga para curso: ${courseId}`);
@@ -47,11 +55,11 @@ export class DownloadCourse {
 
 
     if (type === 'guide' || type === 'all') {
-      await this.downloadGuides.executeForCourse(course.id);
+      await this.downloadGuides.execute({ courseId: course.id });
     }
 
     if (type === 'video' || type === 'all') {
-      await this.downloadVideos.executeForCourse(course.id);
+      await this.downloadVideos.execute({ courseId: course.id });
     }
 
     this.logger.info(`======================================================`, "");

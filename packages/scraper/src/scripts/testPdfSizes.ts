@@ -1,11 +1,13 @@
 import path from "path";
 
 import { DiskAssetStorage } from "@features/asset-download/infrastructure/DiskAssetStorage";
+import { NodeFileSystem, NodePath, AssetPathResolver } from "@my-offline-lms/core/filesystem";
+import { getAssetPathsConfig, getMonorepoRoot } from "@config/paths";
 import { logger } from "@platform/logging";
 
 async function runTests() {
   const args = process.argv.slice(2);
-  
+
   if (args.length < 1) {
     logger.info("Uso: ts-node src/scripts/testPdfSizes.ts <directorio_imagenes_crudo>");
     logger.info("Ej:  ts-node src/scripts/testPdfSizes.ts data/assets/guides/.temp_594144ed-4db7-453c-a110-0cb40f5b0f87");
@@ -25,8 +27,22 @@ async function runTests() {
 
   logger.info(`[Test] Empezando generación de prueba de PDFs desde: ${sourceDir}`);
 
-  // Use the new infrastructure storage implementation
-  const storage = new DiskAssetStorage();
+  const fs = new NodeFileSystem();
+  const pathAdapter = new NodePath();
+  const resolver = new AssetPathResolver({
+    configPath: await getAssetPathsConfig(),
+    monorepoRoot: await getMonorepoRoot(),
+    fs,
+    path: pathAdapter,
+    logger,
+  });
+
+  // Use the new infrastructure storage implementation with mandatory DI
+  const storage = new DiskAssetStorage({
+    fs,
+    path: pathAdapter,
+    resolver,
+  });
 
   for (const config of testConfigs) {
     const label = config.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');

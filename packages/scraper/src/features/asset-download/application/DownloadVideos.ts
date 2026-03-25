@@ -2,43 +2,61 @@ import { BrowserContext } from "playwright";
 
 import { ILogger } from '@my-offline-lms/core/logging';
 
-import { PLATFORM } from "@config/platform";
-
+import { IUseCase } from '@features/shared/domain/ports/IUseCase';
 import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
 import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
 import { INamingService } from "@features/asset-download/domain/ports/INamingService";
 import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
 import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { BrowserProvider } from "@platform/browser/BrowserProvider";
+import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
 
-export class DownloadVideos {
-  private browserProvider: BrowserProvider;
+export interface DownloadVideosConfig {
+  selectors: {
+    video: {
+      startBtn: string;
+      playBtn: string;
+    };
+  };
+}
+
+export interface DownloadVideosInput {
+  courseId: string;
+}
+
+export interface DownloadVideosOptions {
+  browserProvider: IBrowserProvider;
+  courseRepository: ICourseRepository;
+  assetRepository: IAssetRepository;
+  assetStorage: IAssetStorage;
+  videoDownloader: IVideoDownloader;
+  namingService: INamingService;
+  logger: ILogger;
+  config: DownloadVideosConfig;
+}
+
+export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
+  private browserProvider: IBrowserProvider;
   private courseRepo: ICourseRepository;
   private assetRepo: IAssetRepository;
   private assetStorage: IAssetStorage;
   private videoDownloader: IVideoDownloader;
   private namingService: INamingService;
   private logger: ILogger;
+  private config: DownloadVideosConfig;
 
-  constructor(deps: {
-    browserProvider: BrowserProvider,
-    courseRepository: ICourseRepository,
-    assetRepository: IAssetRepository,
-    assetStorage: IAssetStorage,
-    videoDownloader: IVideoDownloader,
-    namingService: INamingService,
-    logger: ILogger
-  }) {
-    this.browserProvider = deps.browserProvider;
-    this.courseRepo = deps.courseRepository;
-    this.assetRepo = deps.assetRepository;
-    this.assetStorage = deps.assetStorage;
-    this.videoDownloader = deps.videoDownloader;
-    this.namingService = deps.namingService;
-    this.logger = deps.logger.withContext("DownloadVideos");
+  constructor(options: DownloadVideosOptions) {
+    this.browserProvider = options.browserProvider;
+    this.courseRepo = options.courseRepository;
+    this.assetRepo = options.assetRepository;
+    this.assetStorage = options.assetStorage;
+    this.videoDownloader = options.videoDownloader;
+    this.namingService = options.namingService;
+    this.logger = options.logger.withContext("DownloadVideos");
+    this.config = options.config;
   }
 
-  async executeForCourse(courseId: string): Promise<void> {
+  async execute(input: DownloadVideosInput): Promise<void> {
+    const { courseId } = input;
     this.logger.info(`Iniciando procesamiento de vídeos para el curso: ${courseId}`);
 
     const pendingVideos = this.assetRepo.getPendingAssets(courseId, 'video');
@@ -52,14 +70,17 @@ export class DownloadVideos {
     // Unico navegador para todo el batch
     const context = await this.browserProvider.getAuthenticatedContext();
 
-    for (let i = 0; i < pendingVideos.length; i++) {
-      this.logger.info(`======================================================`, "");
-      this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
-      await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
-      await new Promise(r => setTimeout(r, 5000));
+    try {
+      for (let i = 0; i < pendingVideos.length; i++) {
+        this.logger.info(`======================================================`, "");
+        this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
+        await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
+        await new Promise(r => setTimeout(r, 5000));
+      }
+    } finally {
+      await this.browserProvider.close();
     }
 
-    await this.browserProvider.close();
     this.logger.info(`======================================================`, "");
     this.logger.info(`🎉 Finalizada la descarga de vídeos del curso ${courseId}.`);
   }
@@ -74,8 +95,6 @@ export class DownloadVideos {
     const outputPath = `${courseVideosDir}/${filename}`;
 
     // [INTEGRITY CHECK] Verificamos si existe el .mp4 y el .vtt si se esperaba
-    // yt-dlp guarda los subs incrustados y puede dejarlos sueltos. 
-    // Por Clean Architecture, validaremos que al menos el mp4 tiene un tamaño aceptable (>1MB por ejemplo, o simplemente que existe si no fuimos estrictos).
     if (await this.assetStorage.verifyVideoIntegrity(outputPath)) {
       this.logger.info(`[Integridad] El vídeo y sus componentes ya parecen existir correctamente: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...asset.metadata, filename }, outputPath);
@@ -102,12 +121,12 @@ export class DownloadVideos {
 
       const cleanUrl = this.namingService.cleanUrl(asset.url);
       const res = await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
-      
+
       // Detección de redirección a login
       const currentUrl = page.url();
-      const isLoginPage = currentUrl.includes("identity.oraclecloud.com") || 
-                          currentUrl.includes("login") || 
-                          (await page.title()).toLowerCase().includes("oracle identity cloud service");
+      const isLoginPage = currentUrl.includes("identity.oraclecloud.com") ||
+        currentUrl.includes("login") ||
+        (await page.title()).toLowerCase().includes("oracle identity cloud service");
 
       if (isLoginPage) {
         throw new Error("Página redirigida a login. La sesión ha expirado o no es válida. Ejecuta 'pnpm cli login'.");
@@ -118,7 +137,7 @@ export class DownloadVideos {
       const videoId = asset.url.split('/').pop();
       if (videoId) {
         try {
-          const startLearningBtn = page.locator(PLATFORM.SELECTORS.VIDEO.START_BTN).first();
+          const startLearningBtn = page.locator(this.config.selectors.video.startBtn).first();
           await startLearningBtn.waitFor({ state: 'visible', timeout: 5000 });
           await startLearningBtn.click({ force: true });
           await page.waitForTimeout(2000);
@@ -127,7 +146,7 @@ export class DownloadVideos {
         }
 
         try {
-          const playButton = page.locator(PLATFORM.SELECTORS.VIDEO.PLAY_BTN).first();
+          const playButton = page.locator(this.config.selectors.video.playBtn).first();
           await playButton.waitFor({ state: 'visible', timeout: 4000 });
           await playButton.click({ force: true });
         } catch (e) {
@@ -138,7 +157,7 @@ export class DownloadVideos {
       await page.waitForTimeout(15000);
 
       if (!m3u8Url) {
-          this.logger.warn(`⚠️ No se detectó stream de vídeo (.m3u8). Esto suele ocurrir por falta de login.`);
+        this.logger.warn(`⚠️ No se detectó stream de vídeo (.m3u8). Esto suele ocurrir por falta de login.`);
       }
       const targetDownloadUrl = m3u8Url || cleanUrl;
 

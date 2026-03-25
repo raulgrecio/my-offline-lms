@@ -20,5 +20,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "../core/src/**/*"]
+  "include": ["src/**/*", "tests/**/*", "../core/src/**/*"]
 }

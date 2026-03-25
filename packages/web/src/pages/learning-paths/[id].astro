@@ -22,13 +22,25 @@ interface PathPageProps {
 const { id } = Astro.params as PathPageProps;
 if (!id) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
-const pathDetails = getLearningPathDetails({ id });
+const pathDetails = await getLearningPathDetails({ id });
 if (!pathDetails) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const { path, courses } = pathDetails;
 
-const lpProgress = getLearningPathProgress({ id: path.id });
-const isFavorite = getIsFavorite({ id, type: "learning-path" });
+const lpProgress = await getLearningPathProgress({ id: path.id });
+const isFavorite = await getIsFavorite({ id, type: "learning-path" });
+
+const courseData = await Promise.all(courses.map(async (course) => {
+  const progress = await getCourseProgress({ id: course.id });
+  const isFavorite = await getIsFavorite({ id: course.id, type: "course" });
+  
+  return {
+    ...course,
+    progress,
+    isFavorite
+  };
+}));
+
 const progress = lpProgress.progress;
 const completedCount = lpProgress.completedItems;
 const status = lpProgress.status;
@@ -106,23 +118,19 @@ const status = lpProgress.status;
       Cursos del path ({courses.length})
     </h2>
     {
-      courses.length > 0 ? (
+      courseData.length > 0 ? (
         <div class="flex flex-col gap-3">
-          {courses.map((course) => {
-            const courseProgress = getCourseProgress({ id: course.id });
-            const courseIsFavorite = getIsFavorite({ id: course.id, type: "course" });
-            return (
-              <CourseCard
-                id={course.id}
-                title={course.title}
-                status={courseProgress.status}
-                totalAssets={courseProgress.totalItems}
-                progress={courseProgress.progress}
-                orderIndex={course.orderIndex}
-                isFavorite={courseIsFavorite}
-              />
-            );
-          })}
+          {courseData.map((course) => (
+            <CourseCard
+              id={course.id}
+              title={course.title}
+              status={course.progress.status}
+              totalAssets={course.progress.totalItems}
+              progress={course.progress.progress}
+              orderIndex={course.orderIndex}
+              isFavorite={course.isFavorite}
+            />
+          ))}
         </div>
       ) : (
         <p class="text-text-muted">
