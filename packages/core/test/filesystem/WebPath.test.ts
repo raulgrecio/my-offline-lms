@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WebPath } from "../../src/filesystem/WebPath";
+import { WebPath } from "@filesystem/WebPath";
 
 describe("WebPath", () => {
   const wp = new WebPath();

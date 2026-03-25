@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { UniversalPath } from "../../src/filesystem/UniversalPath";
+import { UniversalPath } from "@filesystem/UniversalPath";
 
-import { NodePath } from "../../src/filesystem/NodePath";
-import { WebPath } from "../../src/filesystem/WebPath";
+import { NodePath } from "@filesystem/NodePath";
+import { WebPath } from "@filesystem/WebPath";
 
 describe("UniversalPath", () => {
   const nodePath = new NodePath();
