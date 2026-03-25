@@ -1,8 +1,8 @@
 ---
 import "../styles/global.css";
-import ThemeToggle from "../components/ThemeToggle";
-import { Icon } from "../components/Icon";
-import { APP_ROUTES } from "../platform/router/routes";
+import ThemeToggle from "@components/ThemeToggle.astro";
+import { Icon } from "@components/Icon";
+import { APP_ROUTES } from "@platform/router/routes";
 
 interface Props {
   title: string;
@@ -15,7 +15,11 @@ const currentPath = Astro.url.pathname;
 
 const navLinks = [
   { href: APP_ROUTES.HOME, label: "Inicio", icon: "home" },
-  { href: APP_ROUTES.LEARNING_PATHS.INDEX, label: "Learning Paths", icon: "layers" },
+  {
+    href: APP_ROUTES.LEARNING_PATHS.INDEX,
+    label: "Learning Paths",
+    icon: "layers",
+  },
   { href: APP_ROUTES.COURSES.INDEX, label: "Cursos", icon: "book-open" },
   { href: APP_ROUTES.SETTINGS, label: "Ajustes", icon: "settings" },
 ] as const;
@@ -37,17 +41,18 @@ const navLinks = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (function () {
-        const saved = localStorage.getItem('theme');
-        const system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        const saved = localStorage.getItem("theme");
+        const system = window.matchMedia("(prefers-color-scheme: light)")
+          .matches
+          ? "light"
+          : "dark";
         const theme = saved || system;
 
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
   </head>
-  <body 
-    class="min-h-screen flex flex-col w-screen overflow-x-hidden"
-  >
+  <body class="min-h-screen flex flex-col w-screen overflow-x-hidden">
     <!-- ─── Top Navigation ─────────────────────────────────────────── -->
     <header
       id="main-header"
@@ -63,13 +68,9 @@ const navLinks = [
             <div
               class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm bg-brand-600"
             >
-              <span class="rotate-90 inline-block"
-                >0</span
-              >
+              <span class="rotate-90 inline-block">0</span>
             </div>
-            <span
-              class="font-semibold hidden sm:block text-text-primary"
-            >
+            <span class="font-semibold hidden sm:block text-text-primary">
               Offline LMS
             </span>
           </a>
@@ -78,13 +79,15 @@ const navLinks = [
           <nav class="hidden md:flex items-center gap-1">
             {
               navLinks.map((link) => {
-                const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+                const isActive =
+                  currentPath === link.href ||
+                  (link.href !== "/" && currentPath.startsWith(link.href));
                 return (
                   <a
                     href={link.href}
                     class={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                      isActive 
-                        ? "text-brand-400 bg-brand-600/12" 
+                      isActive
+                        ? "text-brand-400 bg-brand-600/12"
                         : "text-text-secondary hover:text-text-primary hover:bg-surface-800"
                     }`}
                   >
@@ -98,7 +101,7 @@ const navLinks = [
 
           <!-- Mobile hamburger + Toggle -->
           <div class="flex items-center gap-2 md:hidden">
-            <ThemeToggle client:load />
+            <ThemeToggle />
             <button
               id="menu-toggle"
               class="p-2 rounded-lg transition-colors hover:bg-surface-700 text-text-secondary"
@@ -115,7 +118,7 @@ const navLinks = [
 
           <!-- Desktop Actions -->
           <div class="hidden md:flex items-center gap-3">
-            <ThemeToggle client:load />
+            <ThemeToggle />
           </div>
         </div>
       </div>
@@ -128,13 +131,15 @@ const navLinks = [
         <nav class="px-4 py-3 flex flex-col gap-1">
           {
             navLinks.map((link) => {
-              const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+              const isActive =
+                currentPath === link.href ||
+                (link.href !== "/" && currentPath.startsWith(link.href));
               return (
                 <a
                   href={link.href}
                   class={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                    isActive 
-                      ? "text-brand-400 bg-brand-600/12" 
+                    isActive
+                      ? "text-brand-400 bg-brand-600/12"
                       : "text-text-secondary hover:bg-surface-700"
                   }`}
                 >
