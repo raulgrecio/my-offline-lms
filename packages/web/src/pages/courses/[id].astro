@@ -34,15 +34,26 @@ const course = await getCourseById({ id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
 const isFavorite = await getIsFavorite({ id, type: 'course' });
-const courseProgress = await getCourseProgress({ id });;
+const courseProgress = await getCourseProgress({ id });
 const allAssets = await getAssetsByCourseId({ id });
-const videos = allAssets
+const videosRaw = allAssets
   .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
 
-const guides = allAssets
+const guidesRaw = allAssets
   .filter((a): a is GuideAsset => a.type === 'guide' && a.status === 'COMPLETED' && !!a.localPath)
   .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+
+// Pre-fetch progress in parallel
+const videos = await Promise.all(videosRaw.map(async (v) => ({
+  ...v,
+  progress: await getAssetProgress({ assetId: v.id, type: 'video' })
+})));
+
+const guides = await Promise.all(guidesRaw.map(async (g) => ({
+  ...g,
+  progress: await getAssetProgress({ assetId: g.id, type: 'guide' })
+})));
 
 // Find the active video
 const videoId = Astro.url.searchParams.get('v');
@@ -50,9 +61,7 @@ const activeVideo = videoId
   ? (videos.find(v => v.id === videoId) || videos[0])
   : videos[0];
 
-const activeVideoProgress = activeVideo 
-  ? await getAssetProgress({ assetId: activeVideo.id, type: 'video' }) 
-  : null;
+const activeVideoProgress = activeVideo?.progress ?? null;
 
 // Generate file:// URL for local assets
 function localUrl(localPath: string): string {
@@ -63,7 +72,11 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
   const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
   const subtitlePath = `${base}.${env.SUBTITLE_LANGUAGE}.vtt`;
   return API_ROUTES.ASSETS.LOCAL_ASSET(subtitlePath);
-} 
+}
+
+const hasVideos = videos.length > 0;
+const hasGuides = guides.length > 0;
+const hasContent = hasVideos || hasGuides;
 ---
 
 <Layout title={course.title}>
@@ -115,7 +128,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
   <hr class="divider mb-8" />
 
   <!-- ─── Videos ──────────────────────────────────────────────────────── -->
-  {videos.length > 0 && (
+  {hasContent && hasVideos && (
     <section class="mb-10">
       <h2 class="section-title mb-5">
         <Icon name="play" size="md" className="text-brand-600" />
@@ -164,8 +177,8 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
             </label>
           </div>
           <div class="overflow-y-auto flex-1 custom-scrollbar">
-            {videos.map(async (v, i) => {
-              const vp = await getAssetProgress({ assetId: v.id, type: 'video' });
+            {videos.map((v, i) => {
+              const vp = v.progress;
               const isDone = vp?.completed;
               const isActive = v.id === activeVideo?.id;
               
@@ -260,20 +273,20 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
   )}
 
   <!-- ─── Guides ──────────────────────────────────────────────────────── -->
-  {guides.length > 0 && (
+  {hasContent && hasGuides && (
     <section class="mb-10">
       <h2 class="section-title mb-5">
         <Icon name="file-text" size="md" className="text-brand-600" />
         Guías ({guides.length})
       </h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {guides.map(async (g, i) => (
+        {guides.map((g, i) => (
           <GuideCard
             assetId={g.id}
             courseId={id}
             name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
             localUrl={localUrl(g.localPath!)}
-            progress={await getAssetProgress({ assetId: g.id, type: 'guide' })}
+            progress={g.progress}
             totalPages={g.metadata?.totalPages}
           />
         ))}
@@ -281,7 +294,7 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
     </section>
   )}
 
-  {videos.length === 0 && guides.length === 0 && (
+  {!hasContent && (
     <div class="text-center py-24 rounded-2xl bg-surface-900 border border-dashed border-border-subtle">
       <div class="flex justify-center mb-4">
         <div class="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center text-text-muted">

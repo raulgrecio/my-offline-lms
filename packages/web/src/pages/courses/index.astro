@@ -18,8 +18,10 @@ const courses = await getAllCourses();
 
 const coursesWithStatsResults = await Promise.all(
   courses.map(async (c) => {
-    const progress = await getCourseProgress({ id: c.id });
-    const isFavorite = await getIsFavorite({ id: c.id, type: "course" });
+    const [progress, isFavorite] = await Promise.all([
+      getCourseProgress({ id: c.id }),
+      getIsFavorite({ id: c.id, type: "course" })
+    ]);
     
     return {
       ...c,
@@ -32,6 +34,7 @@ const coursesWithStatsResults = await Promise.all(
 );
 
 const coursesWithStats = coursesWithStatsResults.filter((c) => showAll || c.totalAssets > 0);
+const hasContent = coursesWithStats.length > 0;
 ---
 
 <Layout title="Cursos">
@@ -50,7 +53,7 @@ const coursesWithStats = coursesWithStatsResults.filter((c) => showAll || c.tota
 
   <div id="courses-container">
     {
-      coursesWithStats.length > 0 ? (
+      hasContent ? (
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {coursesWithStats.map((c) => (
             <CourseCard

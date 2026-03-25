@@ -24,8 +24,10 @@ const { lastWatched } = await getDashboardStatus();
 
 // LP progress and stats
 const lpStats = await Promise.all(learningPaths.map(async (lp) => {
-  const progress = await getLearningPathProgress({ id: lp.id });
-  const isFavorite = await getIsFavorite({ id: lp.id, type: "learning-path" });
+  const [progress, isFavorite] = await Promise.all([
+    getLearningPathProgress({ id: lp.id }),
+    getIsFavorite({ id: lp.id, type: "learning-path" })
+  ]);
   
   return {
     ...lp,
@@ -40,8 +42,10 @@ const lpStats = await Promise.all(learningPaths.map(async (lp) => {
 
 // Latest courses stats
 const latestCourses = await Promise.all(courses.map(async (course) => {
-  const progress = await getCourseProgress({ id: course.id });
-  const isFavorite = await getIsFavorite({ id: course.id, type: "course" });
+  const [progress, isFavorite] = await Promise.all([
+    getCourseProgress({ id: course.id }),
+    getIsFavorite({ id: course.id, type: "course" })
+  ]);
   
   return {
     ...course,

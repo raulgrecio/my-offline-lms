@@ -13,6 +13,7 @@ import { Icon } from "@components/Icon";
 import FavoriteButton from "@components/FavoriteButton.astro";
 import PageHeader from "@components/PageHeader.astro";
 import ProgressBar from "@components/ProgressBar.astro";
+import EmptyState from "@components/EmptyState.astro";
 
 
 interface PathPageProps {
@@ -27,12 +28,16 @@ if (!pathDetails) return Astro.redirect(APP_ROUTES.LEARNING_PATHS.INDEX);
 
 const { path, courses } = pathDetails;
 
-const lpProgress = await getLearningPathProgress({ id: path.id });
-const isFavorite = await getIsFavorite({ id, type: "learning-path" });
+const [lpProgress, isFavorite] = await Promise.all([
+  getLearningPathProgress({ id: path.id }),
+  getIsFavorite({ id, type: "learning-path" })
+]);
 
 const courseData = await Promise.all(courses.map(async (course) => {
-  const progress = await getCourseProgress({ id: course.id });
-  const isFavorite = await getIsFavorite({ id: course.id, type: "course" });
+  const [progress, isFavorite] = await Promise.all([
+    getCourseProgress({ id: course.id }),
+    getIsFavorite({ id: course.id, type: "course" })
+  ]);
   
   return {
     ...course,
@@ -44,6 +49,8 @@ const courseData = await Promise.all(courses.map(async (course) => {
 const progress = lpProgress.progress;
 const completedCount = lpProgress.completedItems;
 const status = lpProgress.status;
+
+const hasContent = courseData.length > 0;
 ---
 
 <Layout title={path.title} description={path.description}>
@@ -118,7 +125,7 @@ const status = lpProgress.status;
       Cursos del path ({courses.length})
     </h2>
     {
-      courseData.length > 0 ? (
+      hasContent ? (
         <div class="flex flex-col gap-3">
           {courseData.map((course) => (
             <CourseCard
@@ -133,9 +140,10 @@ const status = lpProgress.status;
           ))}
         </div>
       ) : (
-        <p class="text-text-muted">
-          Sin cursos asignados a este path.
-        </p>
+        <EmptyState 
+          message="Sin cursos asignados a este path." 
+          icon="book-open"
+        />
       )
     }
   </div>
