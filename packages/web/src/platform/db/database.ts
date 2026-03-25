@@ -1,6 +1,6 @@
 import { type ILogger, ConsoleLogger } from "@my-offline-lms/core/logging";
 import { SQLiteDatabase } from "@my-offline-lms/core/database";
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
+import { NodeFileSystem, NodePath } from '@my-offline-lms/core/filesystem';
 import { getDbPath } from "@config/paths";
 import { runMigrations } from "./schema";
 
@@ -19,7 +19,8 @@ export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteD
   const fs = new NodeFileSystem();
 
   // Asegurar que el directorio de datos existe
-  const dbDir = dbPath.substring(0, dbPath.lastIndexOf('/'));
+  const pathAdapter = new NodePath();
+  const dbDir = pathAdapter.dirname(dbPath);
   if (!(await fs.exists(dbDir))) {
     effectiveLogger.info(`Creating directory: ${dbDir}`);
     await fs.mkdir(dbDir, { recursive: true });
@@ -29,6 +30,6 @@ export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteD
   db.exec("PRAGMA journal_mode=WAL;");
   db.initialize(); // Create core schema (LearningPaths, etc.)
   runMigrations(db, effectiveLogger); // Create web schema (UserProgress, etc.)
-  
+
   return db;
 });
