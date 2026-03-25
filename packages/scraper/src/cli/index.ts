@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 
 import { ConsoleLogger } from '@my-offline-lms/core/logging';
 import { DownloadType } from '@my-offline-lms/core/models';
-import { PLATFORM } from '@config/platform';
 import { IDatabase } from '@my-offline-lms/core/database';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@my-offline-lms/core/filesystem';
 
@@ -26,6 +25,8 @@ import { AuthSession } from '@features/auth-session/application/AuthSession';
 import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
 import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
 import { ValidateAuthSession } from '@features/auth-session/application/ValidateAuthSession';
+
+import { PLATFORM } from '@config/platform';
 import { BrowserProvider } from '@platform/browser/BrowserProvider';
 import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
 
@@ -134,7 +135,9 @@ ${COMMANDS_METADATA.map((m) => `  ${m.usage.padEnd(26)} ${m.description}`).join(
   `);
 }
 
-export async function runCLI(existingDb: IDatabase) {
+import { getDb } from '@platform/database/database';
+
+export async function runCLI() {
   const args = process.argv.slice(2);
   const commandInput = args[0];
 
@@ -149,124 +152,127 @@ export async function runCLI(existingDb: IDatabase) {
     return;
   }
 
-  // Core Dependencies
+  // Core Dependencies - Initialized only if command is valid
   const logger = new ConsoleLogger();
-  const nodeFs = new NodeFileSystem(logger);
-  const nodePath = new NodePath();
-  const universalFs = new UniversalFileSystem(nodeFs, logger);
-  universalFs.registerRemote('http', new HttpFileSystem());
-
-  // Database Initialization
-  const db = existingDb;
-
-  // Repository Setup
-  const courseRepo = new SQLiteCourseRepository(db);
-  const assetRepo = new SQLiteAssetRepository(db);
-  const pathRepo = new SQLiteLearningPathRepository(db);
-
-  // Platform Services
-  const browserProvider = new BrowserProvider({
-    fs: universalFs,
-    path: nodePath,
-    config: {
-      chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
-      authStateFile: await getAuthState(),
-    },
-    logger
-  });
-
-  const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(universalFs, nodePath, logger);
-  const authSessionStorage = new DiskAuthSessionStorage({
-    fs: universalFs,
-    path: nodePath,
-    getAuthDir,
-  });
-  const browserInterceptor = new BrowserInterceptor({
-    fs: universalFs,
-    path: nodePath,
-    logger,
-    getInterceptedDir
-  });
-
-  const assetPathResolver = new AssetPathResolver({
-    configPath: await getAssetPathsConfig(),
-    monorepoRoot: await getMonorepoRoot(),
-    fs: universalFs,
-    path: nodePath,
-    logger,
-  });
-  const assetStorage = new DiskAssetStorage({ fs: universalFs, path: nodePath, resolver: assetPathResolver });
-  const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
-  const urlProvider = new OraclePlatformUrlProvider();
-  const namingService = new AssetNamingService();
-  const validateAuthSession = new ValidateAuthSession({ authStorage: authSessionStorage, logger });
-
-  // Application Service Factories to avoid repetition
-  const createSyncCourse = () => new SyncCourse({
-    browserProvider,
-    courseRepository: courseRepo,
-    assetRepository: assetRepo,
-    interceptedDataRepoFactory,
-    browserInterceptor,
-    urlProvider,
-    namingService,
-    logger,
-    config: SHARED_CONFIGS.SYNC_COURSE
-  });
-
-  const createSyncPath = (syncCourse: SyncCourse) => new SyncLearningPath({
-    browserProvider,
-    learningPathRepo: pathRepo,
-    courseRepo,
-    syncCourse,
-    interceptedDataRepoFactory,
-    browserInterceptor,
-    urlProvider,
-    namingService,
-    logger,
-    config: SHARED_CONFIGS.SYNC_PATH
-  });
-
-  const createDownloadGuides = () => new DownloadGuides({
-    browserProvider,
-    courseRepo,
-    assetRepo,
-    assetStorage,
-    namingService,
-    urlProvider,
-    logger,
-    config: SHARED_CONFIGS.DOWNLOAD_GUIDES
-  });
-
-  const createDownloadVideos = () => new DownloadVideos({
-    browserProvider,
-    courseRepository: courseRepo,
-    assetRepository: assetRepo,
-    assetStorage,
-    videoDownloader,
-    namingService,
-    logger,
-    config: SHARED_CONFIGS.DOWNLOAD_VIDEOS
-  });
-
-  const createDownloadPath = (syncLearningPath: SyncLearningPath, downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadPath({
-    learningPathRepo: pathRepo,
-    syncLearningPath,
-    downloadGuides,
-    downloadVideos,
-    namingService,
-    logger,
-  });
-
-  const createDownloadCourse = (downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadCourse({
-    courseRepo,
-    downloadGuides,
-    downloadVideos,
-    namingService,
-    logger,
-  });
+  let db: IDatabase | undefined;
+  let browserProvider: BrowserProvider | undefined;
 
   try {
+    const nodeFs = new NodeFileSystem(logger);
+    const nodePath = new NodePath();
+    const universalFs = new UniversalFileSystem(nodeFs, logger);
+    universalFs.registerRemote('http', new HttpFileSystem());
+
+    // Database Initialization
+    db = await getDb({ fsAdapter: nodeFs });
+
+    // Repository Setup
+    const courseRepo = new SQLiteCourseRepository(db);
+    const assetRepo = new SQLiteAssetRepository(db);
+    const pathRepo = new SQLiteLearningPathRepository(db);
+
+    // Platform Services
+    browserProvider = new BrowserProvider({
+      fs: universalFs,
+      path: nodePath,
+      config: {
+        chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
+        authStateFile: await getAuthState(),
+      },
+      logger
+    });
+
+    const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(universalFs, nodePath, logger);
+    const authSessionStorage = new DiskAuthSessionStorage({
+      fs: universalFs,
+      path: nodePath,
+      getAuthDir,
+    });
+    const browserInterceptor = new BrowserInterceptor({
+      fs: universalFs,
+      path: nodePath,
+      logger,
+      getInterceptedDir
+    });
+
+    const assetPathResolver = new AssetPathResolver({
+      configPath: await getAssetPathsConfig(),
+      monorepoRoot: await getMonorepoRoot(),
+      fs: universalFs,
+      path: nodePath,
+      logger,
+    });
+    const assetStorage = new DiskAssetStorage({ fs: universalFs, path: nodePath, resolver: assetPathResolver });
+    const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
+    const urlProvider = new OraclePlatformUrlProvider();
+    const namingService = new AssetNamingService();
+    const validateAuthSession = new ValidateAuthSession({ authStorage: authSessionStorage, logger });
+
+    // Application Service Factories to avoid repetition
+    const createSyncCourse = () => new SyncCourse({
+      browserProvider: browserProvider!,
+      courseRepository: courseRepo,
+      assetRepository: assetRepo,
+      interceptedDataRepoFactory,
+      browserInterceptor,
+      urlProvider,
+      namingService,
+      logger,
+      config: SHARED_CONFIGS.SYNC_COURSE
+    });
+
+    const createSyncPath = (syncCourse: SyncCourse) => new SyncLearningPath({
+      browserProvider: browserProvider!,
+      learningPathRepo: pathRepo,
+      courseRepo,
+      syncCourse,
+      interceptedDataRepoFactory,
+      browserInterceptor,
+      urlProvider,
+      namingService,
+      logger,
+      config: SHARED_CONFIGS.SYNC_PATH
+    });
+
+    const createDownloadGuides = () => new DownloadGuides({
+      browserProvider: browserProvider!,
+      courseRepo,
+      assetRepo,
+      assetStorage,
+      namingService,
+      urlProvider,
+      logger,
+      config: SHARED_CONFIGS.DOWNLOAD_GUIDES
+    });
+
+    const createDownloadVideos = () => new DownloadVideos({
+      browserProvider: browserProvider!,
+      courseRepository: courseRepo,
+      assetRepository: assetRepo,
+      assetStorage,
+      videoDownloader,
+      namingService,
+      logger,
+      config: SHARED_CONFIGS.DOWNLOAD_VIDEOS
+    });
+
+    const createDownloadPath = (syncLearningPath: SyncLearningPath, downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadPath({
+      learningPathRepo: pathRepo,
+      syncLearningPath,
+      downloadGuides,
+      downloadVideos,
+      namingService,
+      logger,
+    });
+
+    const createDownloadCourse = (downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadCourse({
+      courseRepo,
+      downloadGuides,
+      downloadVideos,
+      namingService,
+      logger,
+    });
+
     // Session validation if required by command metadata
     if (metadata.requiresAuth) {
       if (!(await validateAuthSession.execute())) {
@@ -340,12 +346,16 @@ export async function runCLI(existingDb: IDatabase) {
         await downloadCourse.execute({ courseInput: id, type: type || 'all' });
         break;
       }
-      default:
-        logger.info(`Comando desconocido: ${command}`);
     }
   } catch (err: any) {
     logger.error("Error ejecutando comando:", err.message);
   } finally {
-    await browserProvider.close();
+    if (browserProvider) {
+      await browserProvider.close();
+    }
+    // Close database
+    if (db) {
+      db.close();
+    }
   }
 }
