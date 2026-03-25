@@ -1,54 +1,35 @@
 ---
-import { Icon } from "./Icon";
-import type { IconName } from "./Icon/icons";
-
 interface Props {
-  title: string;
-  subtitle?: string;
-  icon?: IconName;
   initialOpen?: boolean;
+  class?: string;
 }
 
 const {
-  title,
-  subtitle,
-  icon = "plus",
   initialOpen = false,
+  class: className,
 } = Astro.props as Props;
+
+import { Icon } from "./Icon";
 ---
 
 <section
-  class="mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all"
+  class:list={[
+    "mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all",
+    className
+  ]}
   data-collapsible
 >
   <button
+    type="button"
     class="flex items-center justify-between w-full p-5 hover:bg-surface-700 transition-colors group text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     data-collapsible-trigger
     aria-expanded={initialOpen ? "true" : "false"}
   >
-    <div class="flex items-center gap-3">
-      {
-        icon && (
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-600/10 text-brand-600 group-hover:scale-110 transition-transform">
-            <Icon name={icon} size="md" />
-          </div>
-        )
-      }
-      <div>
-        <span class="block font-bold text-text-primary leading-tight">
-          {title}
-        </span>
-        {
-          subtitle && (
-            <span class="block text-[11px] text-text-muted mt-0.5 leading-tight">
-              {subtitle}
-            </span>
-          )
-        }
-      </div>
+    <div class="flex items-center gap-4 flex-1 min-w-0">
+      <slot name="header" />
     </div>
     <div
-      class={`text-text-muted transition-transform duration-300 ${
+      class={`text-text-muted transition-transform duration-500 ml-4 shrink-0 ${
         initialOpen ? "rotate-180" : ""
       }`}
       data-collapsible-icon
@@ -58,9 +39,10 @@ const {
   </button>
 
   <div
-    class={`border-t border-border-subtle p-6 bg-surface-800/50 ${
+    class:list={[
+      "border-t border-border-subtle p-6 bg-surface-800/50",
       initialOpen ? "" : "hidden"
-    }`}
+    ]}
     data-collapsible-content
   >
     <slot />

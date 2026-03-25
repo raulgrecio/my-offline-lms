@@ -5,33 +5,28 @@ import { createTestContainer } from "../utils/test-render";
 import CollapsibleCard from "../../src/components/CollapsibleCard.astro";
 
 describe("CollapsibleCard.astro", () => {
-  it("should render title and icon", async () => {
+  it("should render header and content slots", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(CollapsibleCard, {
-      props: { title: 'Test Title', icon: 'plus' },
-      slots: { default: 'Test Content' }
+      slots: { 
+        header: '<span id="header-slot">Test Header</span>',
+        default: '<div id="content-slot">Test Content</div>' 
+      }
     });
 
-    expect(html).toContain('Test Title');
+    expect(html).toContain('id="header-slot"');
+    expect(html).toContain('Test Header');
+    expect(html).toContain('id="content-slot"');
     expect(html).toContain('Test Content');
-    // Should have data-collapsible attribute
+    // Should have generic core attributes
     expect(html).toContain('data-collapsible');
     expect(html).toContain('data-collapsible-trigger');
-  });
-
-  it("should render with subtitle", async () => {
-    const container = await createTestContainer();
-    const html = await container.renderToString(CollapsibleCard, {
-      props: { title: 'Parent', subtitle: 'Child info' }
-    });
-    expect(html).toContain('Parent');
-    expect(html).toContain('Child info');
   });
 
   it("should be initially closed by default", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(CollapsibleCard, {
-      props: { title: 'Closed' }
+      slots: { default: 'Content' }
     });
     // Check for "hidden" class on the content container
     const contentDivAttributes = html.split('data-collapsible-content')[0].split('<div').pop() || '';
@@ -43,7 +38,8 @@ describe("CollapsibleCard.astro", () => {
   it("should be initially open if prop is set", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(CollapsibleCard, {
-      props: { title: 'Open', initialOpen: true }
+      props: { initialOpen: true },
+      slots: { default: 'Content' }
     });
     // Should NOT have hidden class on the content container
     const contentDivAttributes = html.split('data-collapsible-content')[0].split('<div').pop() || '';
