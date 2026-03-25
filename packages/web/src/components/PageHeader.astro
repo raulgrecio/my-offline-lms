@@ -1,17 +1,16 @@
 ---
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
-import ProgressBadge from "./ProgressBadge.astro";
-import type { StatusType } from "./ProgressBadge.astro";
+import ProgressBadge, { type ProgressStatus } from "./ProgressBadge.astro";
 
 interface PageHeaderProps {
   title: string;
   icon: IconName;
-  status?: StatusType;
-  subtext?: string;
+  status?: ProgressStatus;
+  subtitle?: string;
 }
 
-const { title, icon, status, subtext } = Astro.props as PageHeaderProps;
+const { title, icon, status, subtitle } = Astro.props as PageHeaderProps;
 ---
 
 <div class="flex flex-col sm:flex-row items-start gap-4 mb-8">
@@ -26,7 +25,7 @@ const { title, icon, status, subtext } = Astro.props as PageHeaderProps;
     </h1>
     <div class="flex items-center gap-3 flex-wrap">
       {status && <ProgressBadge status={status} />}
-      {subtext && <span class="text-xs text-text-muted">{subtext}</span>}
+      {subtitle && <span class="text-xs text-text-muted">{subtitle}</span>}
     </div>
   </div>
   <div class="flex items-center gap-3 shrink-0 sm:self-start">

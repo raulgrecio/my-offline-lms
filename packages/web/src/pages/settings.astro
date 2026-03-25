@@ -3,7 +3,7 @@ export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import { Icon } from "../components/Icon";
-import Badge from "../components/Badge.astro";
+import AssetBadge from "../components/AssetBadge.astro";
 import PageHeader from "../components/PageHeader.astro";
 import { API_ROUTES } from "../platform/api/routes";
 
@@ -104,10 +104,10 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
         <div class="flex items-center gap-2 mb-1">
           <span class="font-bold text-sm text-text-primary js-label"></span>
           <div class="js-badge-connected hidden">
-             <Badge variant="completed" dot="static">Conectado</Badge>
+             <AssetBadge status="COMPLETED">Conectado</AssetBadge>
           </div>
           <div class="js-badge-disconnected hidden">
-             <Badge variant="failed" dot="static">No disponible</Badge>
+             <AssetBadge status="FAILED">No disponible</AssetBadge>
           </div>
         </div>
         <code class="text-xs break-all text-text-muted js-path"></code>
