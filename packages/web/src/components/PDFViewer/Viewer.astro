@@ -4,6 +4,7 @@ import SaveIndicator from "./SaveIndicator.astro";
 import ViewerHeader from "./ViewerHeader.astro";
 import ViewerMain from "./ViewerMain.astro";
 import ViewerSidebar from "./ViewerSidebar.astro";
+import ProgressSegments from "./ProgressSegments.astro";
 
 interface ViewerProps {
   assetId: string;
@@ -25,7 +26,9 @@ const { assetId, courseId, path, initialPage } = Astro.props as ViewerProps;
   data-progress-url={API_ROUTES.PROGRESS.GUIDE}
   data-metadata-url={API_ROUTES.ASSETS.METADATA()}
 >
-  <ViewerHeader path={path} />
+  <ViewerHeader path={path}>
+    <ProgressSegments slot="footer" />
+  </ViewerHeader>
 
   <div class="flex flex-1 overflow-hidden relative">
     <ViewerSidebar />
