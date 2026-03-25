@@ -84,10 +84,10 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
 
     try {
       this.logger.info("Navegando al curso para esperar interceptaciones...");
-      await page.goto(url, { waitUntil: 'networkidle' });
+      await page.goto(url, { waitUntil: 'load', timeout: 60000 });
 
       try {
-        await page.waitForSelector(this.config.selectors.guidesTab, { timeout: 3000 });
+        await page.waitForSelector(this.config.selectors.guidesTab, { timeout: 30000 });
         await page.click(this.config.selectors.guidesTab);
         this.logger.info("Click en pestaña de Guías.");
       } catch (e) {
