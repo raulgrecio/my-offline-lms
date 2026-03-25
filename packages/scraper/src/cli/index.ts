@@ -95,6 +95,36 @@ const COMMANDS_METADATA: CommandMetadata[] = [
   },
 ];
 
+const SHARED_CONFIGS = {
+  SYNC_COURSE: {
+    keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
+    selectors: {
+      guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+    },
+    oracleConstants: {
+      videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+    }
+  },
+  SYNC_PATH: {
+    keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
+  },
+  DOWNLOAD_GUIDES: {
+    keepTempImages: env.KEEP_TEMP_IMAGES,
+    selectors: {
+      iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
+      flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
+    }
+  },
+  DOWNLOAD_VIDEOS: {
+    selectors: {
+      video: {
+        startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
+        playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
+      }
+    }
+  }
+};
+
 function showHelp() {
   console.log(`
 Uso: pnpm cli <comando> [argumentos]
@@ -171,6 +201,71 @@ export async function runCLI(existingDb: IDatabase) {
   const namingService = new AssetNamingService();
   const validateAuthSession = new ValidateAuthSession({ authStorage: authSessionStorage, logger });
 
+  // Application Service Factories to avoid repetition
+  const createSyncCourse = () => new SyncCourse({
+    browserProvider,
+    courseRepository: courseRepo,
+    assetRepository: assetRepo,
+    interceptedDataRepoFactory,
+    browserInterceptor,
+    urlProvider,
+    namingService,
+    logger,
+    config: SHARED_CONFIGS.SYNC_COURSE
+  });
+
+  const createSyncPath = (syncCourse: SyncCourse) => new SyncLearningPath({
+    browserProvider,
+    learningPathRepo: pathRepo,
+    courseRepo,
+    syncCourse,
+    interceptedDataRepoFactory,
+    browserInterceptor,
+    urlProvider,
+    namingService,
+    logger,
+    config: SHARED_CONFIGS.SYNC_PATH
+  });
+
+  const createDownloadGuides = () => new DownloadGuides({
+    browserProvider,
+    courseRepo,
+    assetRepo,
+    assetStorage,
+    namingService,
+    urlProvider,
+    logger,
+    config: SHARED_CONFIGS.DOWNLOAD_GUIDES
+  });
+
+  const createDownloadVideos = () => new DownloadVideos({
+    browserProvider,
+    courseRepository: courseRepo,
+    assetRepository: assetRepo,
+    assetStorage,
+    videoDownloader,
+    namingService,
+    logger,
+    config: SHARED_CONFIGS.DOWNLOAD_VIDEOS
+  });
+
+  const createDownloadPath = (syncLearningPath: SyncLearningPath, downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadPath({
+    learningPathRepo: pathRepo,
+    syncLearningPath,
+    downloadGuides,
+    downloadVideos,
+    namingService,
+    logger,
+  });
+
+  const createDownloadCourse = (downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadCourse({
+    courseRepo,
+    downloadGuides,
+    downloadVideos,
+    namingService,
+    logger,
+  });
+
   try {
     // Session validation if required by command metadata
     if (metadata.requiresAuth) {
@@ -195,25 +290,7 @@ export async function runCLI(existingDb: IDatabase) {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
 
-        const syncCourse = new SyncCourse({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          interceptedDataRepoFactory,
-          browserInterceptor,
-          urlProvider,
-          namingService,
-          logger,
-          config: {
-            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-            selectors: {
-              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
-            },
-            oracleConstants: {
-              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
-            }
-          }
-        });
+        const syncCourse = createSyncCourse();
         await syncCourse.execute({ courseInput: target });
         break;
       }
@@ -221,39 +298,8 @@ export async function runCLI(existingDb: IDatabase) {
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
 
-        const syncCourse = new SyncCourse({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          interceptedDataRepoFactory,
-          browserInterceptor,
-          urlProvider,
-          namingService,
-          logger,
-          config: {
-            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-            selectors: {
-              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
-            },
-            oracleConstants: {
-              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
-            }
-          }
-        });
-        const syncPath = new SyncLearningPath({
-          browserProvider,
-          learningPathRepo: pathRepo,
-          courseRepo,
-          syncCourse,
-          interceptedDataRepoFactory,
-          browserInterceptor,
-          urlProvider,
-          namingService,
-          logger,
-          config: {
-            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
-          }
-        });
+        const syncCourse = createSyncCourse();
+        const syncPath = createSyncPath(syncCourse);
         await syncPath.execute({ pathInput: target });
         break;
       }
@@ -261,22 +307,7 @@ export async function runCLI(existingDb: IDatabase) {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
 
-        const guides = new DownloadGuides({
-          browserProvider,
-          courseRepo,
-          assetRepo,
-          assetStorage,
-          namingService,
-          urlProvider,
-          logger,
-          config: {
-            keepTempImages: env.KEEP_TEMP_IMAGES,
-            selectors: {
-              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
-              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
-            }
-          }
-        });
+        const guides = createDownloadGuides();
         await guides.execute({ courseId: id });
         break;
       }
@@ -284,23 +315,7 @@ export async function runCLI(existingDb: IDatabase) {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
 
-        const videos = new DownloadVideos({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          assetStorage,
-          videoDownloader,
-          namingService,
-          logger,
-          config: {
-            selectors: {
-              video: {
-                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
-                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
-              }
-            }
-          }
-        });
+        const videos = createDownloadVideos();
         await videos.execute({ courseId: id });
         break;
       }
@@ -309,80 +324,8 @@ export async function runCLI(existingDb: IDatabase) {
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
 
-        const syncCourse = new SyncCourse({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          interceptedDataRepoFactory,
-          browserInterceptor,
-          urlProvider,
-          namingService,
-          logger,
-          config: {
-            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-            selectors: {
-              guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
-            },
-            oracleConstants: {
-              videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
-            }
-          }
-        });
-        const syncPath = new SyncLearningPath({
-          browserProvider,
-          learningPathRepo: pathRepo,
-          courseRepo,
-          syncCourse,
-          interceptedDataRepoFactory,
-          browserInterceptor,
-          urlProvider,
-          namingService,
-          logger,
-          config: {
-            keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
-          }
-        });
-        const guides = new DownloadGuides({
-          browserProvider,
-          courseRepo,
-          assetRepo,
-          assetStorage,
-          namingService,
-          urlProvider,
-          logger,
-          config: {
-            keepTempImages: env.KEEP_TEMP_IMAGES,
-            selectors: {
-              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
-              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
-            }
-          }
-        });
-        const videos = new DownloadVideos({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          assetStorage,
-          videoDownloader,
-          namingService,
-          logger,
-          config: {
-            selectors: {
-              video: {
-                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
-                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
-              }
-            }
-          }
-        });
-        const downloadPath = new DownloadPath({
-          learningPathRepo: pathRepo,
-          syncLearningPath: syncPath,
-          downloadGuides: guides,
-          downloadVideos: videos,
-          namingService,
-          logger,
-        });
+        const syncPath = createSyncPath(createSyncCourse());
+        const downloadPath = createDownloadPath(syncPath, createDownloadGuides(), createDownloadVideos());
 
         await downloadPath.execute({ pathInput: id, type: type || 'all' });
         break;
@@ -392,47 +335,7 @@ export async function runCLI(existingDb: IDatabase) {
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del curso.");
 
-        const guides = new DownloadGuides({
-          browserProvider,
-          courseRepo,
-          assetRepo,
-          assetStorage,
-          namingService,
-          urlProvider,
-          logger,
-          config: {
-            keepTempImages: env.KEEP_TEMP_IMAGES,
-            selectors: {
-              iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
-              flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
-            }
-          }
-        });
-        const videos = new DownloadVideos({
-          browserProvider,
-          courseRepository: courseRepo,
-          assetRepository: assetRepo,
-          assetStorage,
-          videoDownloader,
-          namingService,
-          logger,
-          config: {
-            selectors: {
-              video: {
-                startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
-                playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
-              }
-            }
-          }
-        });
-
-        const downloadCourse = new DownloadCourse({
-          courseRepo,
-          downloadGuides: guides,
-          downloadVideos: videos,
-          namingService,
-          logger,
-        });
+        const downloadCourse = createDownloadCourse(createDownloadGuides(), createDownloadVideos());
 
         await downloadCourse.execute({ courseInput: id, type: type || 'all' });
         break;
