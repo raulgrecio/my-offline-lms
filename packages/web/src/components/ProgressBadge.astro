@@ -30,7 +30,8 @@ const config: Record<ProgressStatus, BadgeConfig> = {
 
 const { status, className = "", ...rest } = Astro.props;
 const normalized = (status?.toLowerCase() || 'not_started') as ProgressStatus;
-const cfg = config[normalized] ?? config["not_started"];
+const safeStatus = config[normalized] ? normalized : 'not_started';
+const cfg = config[safeStatus] ?? config["not_started"];
 ---
 
 <Badge
@@ -39,6 +40,8 @@ const cfg = config[normalized] ?? config["not_started"];
   pulse={rest.pulse ?? cfg.pulse}
   dot="static"
   dotClasses={cfg.dotClasses}
+  dataStatus={safeStatus}
+  ariaLabel={`Estado: ${cfg.label}`}
 >
   <slot>{cfg.label}</slot>
 </Badge>

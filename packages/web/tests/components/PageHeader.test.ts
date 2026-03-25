@@ -14,14 +14,14 @@ describe("PageHeader.astro", () => {
     expect(html).toContain('svg');
   });
 
-  it("should render with optional status and subtext", async () => {
+  it("should render with optional status and subtitle", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(PageHeader, {
       props: {
         title: 'Overview',
         icon: 'home',
-        status: 'COMPLETED',
-        subtext: 'Overview of your progress'
+        status: 'completed',
+        subtitle: 'Overview of your progress'
       }
     });
     expect(html).toContain('Completado');
