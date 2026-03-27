@@ -17,6 +17,7 @@ import {
 } from "@features/progress";
 import Layout from '@layouts/Layout.astro';
 import FavoriteButton from "@components/FavoriteButton.astro";
+import Button from "@components/Button.astro";
 import { Icon } from '@components/Icon';
 import GuideCard from "@components/GuideCard.astro";
 import PageHeader from "@components/PageHeader.astro";
@@ -96,7 +97,6 @@ const hasContent = hasVideos || hasGuides;
   </nav>
 
   <!-- Header -->
-  <!-- Header -->
   <PageHeader
     title={course.title}
     icon="book-open"
@@ -113,15 +113,16 @@ const hasContent = hasVideos || hasGuides;
         className="border border-border-subtle bg-surface-800"
       />
 
-      <button
+      <Button
         id="btn-complete"
+        variant="primary"
+        icon="check-circle"
         data-course-id={id}
-        class="btn-primary"
+        size="md"
         data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
       >
-        <Icon name="check-circle" size="sm" />
         {courseProgress?.status === 'completed' ? 'Completado' : 'Marcar completado'}
-      </button>
+      </Button>
     </div>
   </PageHeader>
 
@@ -182,7 +183,6 @@ const hasContent = hasVideos || hasGuides;
               const isDone = vp?.completed;
               const isActive = v.id === activeVideo?.id;
               
-              // Duration logic: use metadata only
               const vDuration = v.metadata?.duration || 0;
               const vPosition = vp?.position || 0;
               const vProgressPercent = vDuration > 0 ? Math.min(100, Math.round((vPosition / vDuration) * 100)) : 0;
@@ -204,10 +204,8 @@ const hasContent = hasVideos || hasGuides;
                   data-subtitle={subtitleUrl(v.localPath!)}
                   data-position={vp?.position ?? 0}
                 >
-                  {/* Progress Ring */}
                   <div class="relative shrink-0 w-9 h-9 flex items-center justify-center">
                     <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
-                      {/* Background circle */}
                       <circle
                         class="text-surface-600 stroke-current"
                         stroke-width="3"
@@ -216,7 +214,6 @@ const hasContent = hasVideos || hasGuides;
                         cx="18"
                         cy="18"
                       />
-                      {/* Progress circle */}
                       <circle
                         class:list={[
                           "transition-all duration-500 stroke-current",

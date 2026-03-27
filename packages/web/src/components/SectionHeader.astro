@@ -1,6 +1,7 @@
 ---
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon/icons";
+import Button from "./Button.astro";
 
 interface SectionHeaderProps {
   id?: string;
@@ -14,21 +15,20 @@ const { id, title, icon, href } = Astro.props as SectionHeaderProps;
 
 <div id={id} class="flex items-center justify-between mb-5">
   <h2 class="section-title">
-    <Icon
-      name={icon}
-      size="md"
-      className="text-brand-600"
-    />
+    <Icon name={icon} size="md" className="text-brand-600" />
     {title}
   </h2>
-  { href && (
-  <a href={href} class="btn-ghost text-xs group">
-    Ver más
-    <Icon
-      name="chevron-right"
-      size="xs"
-      className="transition-transform group-hover:translate-x-1"
-    />
-  </a>
-  )}
+  {
+    href && (
+      <Button
+        href={href}
+        variant="outline"
+        size="sm"
+        iconRight="chevron-right"
+        iconRightClass="transform transition-transform duration-200 group-hover:translate-x-1"
+      >
+        Ver más
+      </Button>
+    )
+  }
 </div>

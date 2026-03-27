@@ -5,6 +5,7 @@ import CourseCard from "@components/CourseCard.astro";
 import SectionHeader from "@components/SectionHeader.astro";
 import EmptyState from "@components/EmptyState.astro";
 import HomepageHero from "@components/HomepageHero.astro";
+import Button from "@components/Button.astro";
 import { Icon } from "@components/Icon";
 import {
   getAllLearningPaths,
@@ -111,10 +112,14 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
             
             {courses.length > 8 && (
               <div class="mt-6 text-center">
-                <a href={APP_ROUTES.COURSES.INDEX} class="btn btn-secondary btn-sm">
+                <Button 
+                  href={APP_ROUTES.COURSES.INDEX} 
+                  variant="secondary" 
+                  size="sm"
+                  iconRight="arrow-right"
+                >
                   Ver todos los cursos
-                  <Icon name="arrow-right" size="xs" className="ml-1" />
-                </a>
+                </Button>
               </div>
             )}
           </section>

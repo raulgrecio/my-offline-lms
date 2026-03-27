@@ -20,7 +20,10 @@
     "test:coverage:scraper": "pnpm --filter @my-offline-lms/scraper run test:coverage",
     "test:coverage:core": "pnpm --filter @my-offline-lms/core run test:coverage",
     "check:types": "pnpm --filter @my-offline-lms/core exec tsc --noEmit && pnpm --filter @my-offline-lms/scraper exec tsc --noEmit && pnpm --filter @my-offline-lms/web exec tsc --noEmit",
-    "cli": "pnpm --filter @my-offline-lms/scraper cli"
+    "cli": "pnpm --filter @my-offline-lms/scraper cli",
+    "visual:baseline": "pnpm --filter @my-offline-lms/web run visual:baseline",
+    "visual:current": "pnpm --filter @my-offline-lms/web run visual:current",
+    "visual:audit": "pnpm --filter @my-offline-lms/web run visual:audit"
   },
   "devDependencies": {
     "node-gyp": "^11.0.0"

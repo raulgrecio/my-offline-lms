@@ -1,5 +1,6 @@
 ---
-import { Icon } from "../Icon";
+import { cn } from "@lib/cn";
+import Button from "../Button.astro";
 import type { IconName } from "../Icon/icons";
 
 interface Props {
@@ -7,39 +8,36 @@ interface Props {
   title: string;
   icon: IconName;
   href?: string;
-  className?: string;
+  className?: string; // Standardized approach for components
   iconSize?: "xs" | "sm" | "md";
-  variant?: "ghost" | "zoom" | "none"; 
-  [key: string]: any; 
+  variant?: "ghost" | "zoom";
+  [key: string]: any;
 }
 
-const { 
-  id, 
-  title, 
-  icon, 
-  href, 
-  className = "", 
-  iconSize = "sm", 
+const {
+  id,
+  title,
+  icon,
+  href,
+  className = "",
+  iconSize = "sm",
   variant = "ghost",
-  ...rest 
+  ...rest
 } = Astro.props;
 
-const variants: Record<string, string> = {
-  ghost: "p-2 rounded-lg hover:bg-surface-800 text-text-secondary hover:text-text-primary transition-colors",
-  zoom: "p-1 rounded hover:bg-surface-700 text-text-secondary transition-colors disabled:opacity-30",
-  none: ""
-};
-
-const Tag = href ? "a" : "button";
-const classes = `${variants[variant]} ${className}`;
+const finalClasses = cn(
+  variant === "zoom" && "!h-auto !w-auto",
+  className
+);
 ---
 
-<Tag 
-  id={id} 
-  title={title} 
-  href={href} 
-  class={classes} 
+<Button
+  id={id}
+  title={title}
+  href={href}
+  variant="ghost"
+  icon={icon}
+  class={finalClasses}
+  square={true}
   {...rest}
->
-  <Icon name={icon} size={iconSize} />
-</Tag>
+/>

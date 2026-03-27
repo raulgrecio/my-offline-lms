@@ -1,0 +1,76 @@
+---
+import Layout from "@layouts/Layout.astro";
+import CourseCard from "@components/CourseCard.astro";
+import GuideCard from "@components/GuideCard.astro";
+import { Icon } from "@components/Icon";
+
+const mockAssetId = "test-asset";
+const mockCourseId = "test-course";
+
+const progressStates = [
+  { label: "Not Started (New)", progress: null, isDone: false },
+  { label: "Visited (Started/0%)", progress: { position: 1, maxPosition: 1, completed: false, updatedAt: new Date().toISOString() }, isDone: false },
+  { label: "In Progress (50%)", progress: { position: 5, maxPosition: 5, completed: false }, isDone: false, totalPages: 10 },
+  { label: "Completed", progress: { position: 10, maxPosition: 10, completed: true }, isDone: true, totalPages: 10 },
+];
+---
+
+<Layout title="Card Showcase">
+  <div class="max-w-5xl mx-auto py-12 px-4">
+    <header class="mb-12">
+      <h1 class="text-3xl font-bold text-text-primary mb-2">Card Components Audit</h1>
+      <p class="text-text-muted">Visual baseline for Course and Guide cards in all progress and capture states.</p>
+    </header>
+
+    <div class="space-y-12">
+      <!-- Course Cards -->
+      <section>
+        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <Icon name="book-open" size="md" className="text-brand-600" />
+          CourseCard Variations
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted">Status: Not Started</h3>
+            <CourseCard id="c1" title="Introduction to AI" status="not_started" totalAssets={10} progress={0} />
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted">Status: In Progress</h3>
+            <CourseCard id="c2" title="Advanced Database Management" status="in_progress" totalAssets={20} progress={45} />
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted">Status: Completed</h3>
+            <CourseCard id="c3" title="Cloud Computing Fundamentals" status="completed" totalAssets={15} progress={100} />
+          </div>
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted">Status: Favorite + In Progress</h3>
+            <CourseCard id="c4" title="UX Design Principles" status="in_progress" totalAssets={8} progress={75} isFavorite={true} />
+          </div>
+        </div>
+      </section>
+
+      <!-- Guide Cards -->
+      <section>
+        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <Icon name="file-text" size="md" className="text-brand-600" />
+          GuideCard Variations
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {progressStates.map(state => (
+            <div class="space-y-2">
+              <h3 class="text-[10px] font-bold uppercase text-text-muted">{state.label}</h3>
+              <GuideCard
+                assetId={mockAssetId}
+                courseId={mockCourseId}
+                name="System Architecture Guide.pdf"
+                localUrl="/mock/path.pdf"
+                progress={state.progress}
+                totalPages={state.totalPages || 0}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>

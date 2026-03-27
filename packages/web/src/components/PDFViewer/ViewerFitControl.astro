@@ -1,0 +1,40 @@
+---
+import Button from "@components/Button.astro";
+import { cn } from "@lib/cn";
+
+const baseStyles = "";
+const customClasses =
+  "z-10 h-auto w-auto flex-1 flex inline-flex justify-center items-center py-1.5";
+const finalClasses = cn(baseStyles, customClasses);
+---
+
+<div
+  class="hidden sm:flex items-center w-18 bg-surface-950 rounded-lg border border-border-subtle/30 p-0.5 relative"
+>
+  <div
+    id="fit-active-bg"
+    class="absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] bg-surface-700 rounded transition-all duration-300 shadow-sm"
+  >
+  </div>
+
+  <Button
+    id="btn-fit-width"
+    title="Ajustar al Ancho"
+    icon="fit-page"
+    iconSize="xs"
+    variant="none"
+    square={true}
+    class={finalClasses}
+  />
+
+  <Button
+    id="btn-fit-height"
+    title="Ajustar al Alto"
+    icon="fit-page"
+    iconSize="xs"
+    variant="none"
+    square={true}
+    class={finalClasses}
+    iconClass="rotate-90"
+  />
+</div>

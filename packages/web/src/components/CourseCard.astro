@@ -3,6 +3,7 @@ import { APP_ROUTES } from "@platform/router/routes";
 import ProgressBadge, { type ProgressStatus } from "./ProgressBadge.astro";
 import { Icon } from "./Icon";
 import FavoriteButton from "./FavoriteButton.astro";
+import OfflineBadge from "./OfflineBadge.astro";
 
 interface CourseCardProps {
   id: string;
@@ -56,8 +57,10 @@ const {
 
       {
         totalAssets > 0 && (
-          <span class="text-xs text-text-muted">
-            {totalAssets} assets · {progress}%
+          <span class="text-xs text-text-muted flex items-center gap-1.5">
+            <OfflineBadge />
+            <span>·</span>
+            {totalAssets} recursos · {progress}%
           </span>
         )
       }
