@@ -17,7 +17,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "visual:baseline": "tsx tests/visual/run.ts baseline",
+    "visual:current": "tsx tests/visual/run.ts current",
+    "visual:audit": "tsx tests/visual/audit/auditComponents.ts"
   },
   "dependencies": {
     "@astrojs/node": "^10.0.3",
@@ -26,10 +29,12 @@
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",
     "better-sqlite3": "^12.8.0",
+    "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
     "pdfjs-dist": "^5.5.207",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "zod": "^4.3.6"
   },
@@ -40,12 +45,17 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.35",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/ui": "^4.1.0",
     "jsdom": "^29.0.1",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   }

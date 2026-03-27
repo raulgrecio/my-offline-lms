@@ -29,6 +29,7 @@ export default defineConfig(
         "@components": path.resolve(__dirname, "./src/components"),
         "@features": path.resolve(__dirname, "./src/features"),
         "@layouts": path.resolve(__dirname, "./src/layouts"),
+        "@lib": path.resolve(__dirname, "./src/lib"),
         "@pages": path.resolve(__dirname, "./src/pages"),
         "@platform": path.resolve(__dirname, "./src/platform"),
       },
