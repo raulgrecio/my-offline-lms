@@ -15,7 +15,7 @@
       "@platform/*": ["src/platform/*"],
       "@/*": ["src/*"],
     },
-    "types": ["node"],
+    "types": ["node", "@testing-library/jest-dom", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./e2e/**/*"],

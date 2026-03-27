@@ -1,8 +1,9 @@
-import * as matchers from "@testing-library/jest-dom/matchers";
-import { expect, afterEach, vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { TextEncoder, TextDecoder } from 'util';
+import "@testing-library/jest-dom/vitest";
 
+// Polyfills for tests
 // @ts-ignore
 globalThis.TextEncoder = TextEncoder;
 // @ts-ignore
@@ -10,51 +11,34 @@ globalThis.TextDecoder = TextDecoder;
 // @ts-ignore
 globalThis.Uint8Array = Uint8Array;
 
-// @ts-ignore
-expect.extend(matchers);
+// Auto-cleanup after each test for React components
+afterEach(() => {
+  cleanup();
+});
 
-// Mock ResizeObserver
-class ResizeObserverMock {
-  observe() { }
-  unobserve() { }
-  disconnect() { }
-}
+// Browser-specific mocks (only for JSDOM environment)
 if (typeof window !== 'undefined') {
-  window.ResizeObserver = ResizeObserverMock as any;
-}
+  // Mock ResizeObserver
+  class ResizeObserverMock {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+  }
 
-if (typeof HTMLCanvasElement !== 'undefined') {
-  // Mock Canvas getContext to silence JSDOM warnings
-  HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
-    fillRect: vi.fn(),
-    clearRect: vi.fn(),
-    getImageData: vi.fn(),
-    putImageData: vi.fn(),
-    createImageData: vi.fn(),
-    setTransform: vi.fn(),
-    drawImage: vi.fn(),
-    save: vi.fn(),
-    restore: vi.fn(),
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    closePath: vi.fn(),
-    stroke: vi.fn(),
-    translate: vi.fn(),
-    scale: vi.fn(),
-    rotate: vi.fn(),
-    arc: vi.fn(),
-    fill: vi.fn(),
-    measureText: vi.fn().mockReturnValue({ width: 0 }),
-    transform: vi.fn(),
-    rect: vi.fn(),
-    clip: vi.fn(),
+  globalThis.ResizeObserver = ResizeObserverMock;
+
+  // Mock window.matchMedia
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
   });
 }
-
-// Optional: clean up components after each test
-afterEach(() => {
-  if (typeof window !== 'undefined') {
-    cleanup();
-  }
-});

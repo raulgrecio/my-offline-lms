@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import EmptyState from "../../src/components/EmptyState.astro";
+import EmptyState from "@components/EmptyState.astro";
 
 describe("EmptyState.astro", () => {
   it("should render title, message and icon", async () => {

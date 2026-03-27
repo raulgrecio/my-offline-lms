@@ -2,15 +2,15 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import CollapsibleCard from "../../src/components/CollapsibleCard.astro";
+import CollapsibleCard from "@components/CollapsibleCard.astro";
 
 describe("CollapsibleCard.astro", () => {
   it("should render header and content slots", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(CollapsibleCard, {
-      slots: { 
+      slots: {
         header: '<span id="header-slot">Test Header</span>',
-        default: '<div id="content-slot">Test Content</div>' 
+        default: '<div id="content-slot">Test Content</div>'
       }
     });
 

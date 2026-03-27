@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import GuideCard from "../../src/components/GuideCard.astro";
+import GuideCard from "@components/GuideCard.astro";
 
 describe("GuideCard.astro", () => {
   const defaultProps = {
