@@ -103,7 +103,7 @@ const hasContent = hasVideos || hasGuides;
     status={courseProgress?.status ?? 'not_started'}
     subtext={`${videos.length} vídeos · ${guides.length} guías`}
   >
-  <div slot="actions" class="flex items-center gap-4">
+    <div slot="actions" class="flex items-center gap-4">
       <FavoriteButton 
         id={id} 
         type="course" 
@@ -126,8 +126,6 @@ const hasContent = hasVideos || hasGuides;
       </Button>
     </div>
   </PageHeader>
-
-  <hr class="divider mb-8" />
 
   <!-- ─── Videos ──────────────────────────────────────────────────────── -->
   {hasContent && hasVideos && (
