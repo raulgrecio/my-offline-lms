@@ -49,4 +49,14 @@ export class HttpFileSystem implements IFileSystem {
   async rename(oldPath: string, newPath: string): Promise<void> {
     throw new Error("HttpFileSystem does not support rename");
   }
+
+  createReadStream(p: string, options?: any): ReadableStream | null {
+    this.logger.warn(`createReadStream not fully implemented for ${p}`);
+    return null;
+  }
+
+  createWriteStream(p: string, options?: any): WritableStream | null {
+    this.logger.warn(`createWriteStream not fully implemented for ${p}`);
+    return null;
+  }
 }

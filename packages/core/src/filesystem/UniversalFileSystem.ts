@@ -1,4 +1,4 @@
-import { type MakeDirectoryOptions, type RmOptions } from "fs";
+import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
 import type { FileStats, IFileSystem } from "./IFileSystem";
 import { type ILogger, NoopLogger } from "../logging";
 
@@ -95,12 +95,12 @@ export class UniversalFileSystem implements IFileSystem {
     return this.getBackend(oldPath).rename(oldPath, newPath);
   }
 
-  createReadStream(p: string, options?: any): NodeJS.ReadableStream | null {
+  createReadStream(p: string, options?: any): ReadableStream | null {
     const backend = this.getBackend(p);
     return backend.createReadStream ? backend.createReadStream(p, options) : null;
   }
 
-  createWriteStream(p: string, options?: any): NodeJS.WritableStream | null {
+  createWriteStream(p: string, options?: any): WritableStream | null {
     const backend = this.getBackend(p);
     return backend.createWriteStream ? backend.createWriteStream(p, options) : null;
   }

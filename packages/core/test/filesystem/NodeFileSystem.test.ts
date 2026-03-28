@@ -11,8 +11,8 @@ vi.mock("fs", () => ({
     mkdirSync: vi.fn(),
     rmSync: vi.fn(),
     statSync: vi.fn(),
-    createReadStream: vi.fn(),
-    createWriteStream: vi.fn(),
+    createReadStream: vi.fn().mockReturnValue({ on: vi.fn(), pipe: vi.fn(), push: vi.fn(), _read: vi.fn() } as any),
+    createWriteStream: vi.fn().mockReturnValue({ on: vi.fn(), write: vi.fn(), end: vi.fn(), _write: vi.fn() } as any),
     promises: {
       access: vi.fn(),
       readFile: vi.fn(),
@@ -27,6 +27,14 @@ vi.mock("fs", () => ({
   }
 }));
 vi.mock("path");
+vi.mock("node:stream", () => ({
+  Readable: {
+    toWeb: vi.fn().mockReturnValue({} as any),
+  },
+  Writable: {
+    toWeb: vi.fn().mockReturnValue({} as any),
+  },
+}));
 
 describe("NodeFileSystem", () => {
   const nfs = new NodeFileSystem();
@@ -59,11 +67,13 @@ describe("NodeFileSystem", () => {
     expect(stats.size).toBe(10);
     expect(stats.isDirectory()).toBe(false);
 
-    nfs.createReadStream("/file");
+    const readStream = nfs.createReadStream("/file");
     expect(fs.createReadStream).toHaveBeenCalledWith("/file", undefined);
+    expect(readStream).toBeDefined();
 
-    nfs.createWriteStream("/file");
+    const writeStream = nfs.createWriteStream("/file");
     expect(fs.createWriteStream).toHaveBeenCalledWith("/file", undefined);
+    expect(writeStream).toBeDefined();
 
     // exists false branch
     vi.mocked(fs.promises.access).mockRejectedValue(new Error("not found"));

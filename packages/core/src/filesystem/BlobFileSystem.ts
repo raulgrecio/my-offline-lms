@@ -50,12 +50,12 @@ export class BlobFileSystem implements IFileSystem {
     };
   }
 
-  createReadStream(p: string, options?: any): NodeJS.ReadableStream | null {
+  createReadStream(p: string, options?: any): ReadableStream | null {
     this.logger.warn(`createReadStream not fully implemented for ${p}`);
     return null;
   }
 
-  createWriteStream(p: string, options?: any): NodeJS.WritableStream | null {
+  createWriteStream(p: string, options?: any): WritableStream | null {
     this.logger.warn(`createWriteStream not fully implemented for ${p}`);
     return null;
   }

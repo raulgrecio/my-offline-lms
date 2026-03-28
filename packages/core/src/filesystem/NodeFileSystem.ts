@@ -1,7 +1,7 @@
-import fs from "fs";
-import { type MakeDirectoryOptions, type RmOptions } from "fs";
+import fs from "node:fs";
+import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
+import { Readable, Writable } from "node:stream";
 import type { FileStats, IFileSystem } from "./IFileSystem";
-import type { IPath } from "./IPath";
 import { type ILogger, NoopLogger } from "../logging";
 
 export class NodeFileSystem implements IFileSystem {
@@ -65,11 +65,13 @@ export class NodeFileSystem implements IFileSystem {
     await fs.promises.rename(oldPath, newPath);
   }
 
-  createReadStream(p: string, options?: any): fs.ReadStream {
-    return fs.createReadStream(p, options);
+  createReadStream(p: string, options?: any): ReadableStream | null {
+    const nodeStream = fs.createReadStream(p, options);
+    return Readable.toWeb ? (Readable.toWeb(nodeStream) as any as ReadableStream) : null;
   }
 
-  createWriteStream(p: string, options?: any): fs.WriteStream {
-    return fs.createWriteStream(p, options);
+  createWriteStream(p: string, options?: any): WritableStream | null {
+    const nodeStream = fs.createWriteStream(p, options);
+    return Writable.toWeb ? (Writable.toWeb(nodeStream) as any as WritableStream) : null;
   }
 }

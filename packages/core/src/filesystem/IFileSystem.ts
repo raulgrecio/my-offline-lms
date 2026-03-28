@@ -1,4 +1,5 @@
-import { type MakeDirectoryOptions, type RmOptions } from "fs";
+import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
+import { Readable, Writable } from "node:stream";
 
 export interface FileStats {
   size: number;
@@ -17,6 +18,6 @@ export interface IFileSystem {
   stat(p: string): Promise<FileStats>;
   unlink(p: string): Promise<void>;
   rename(oldPath: string, newPath: string): Promise<void>;
-  createReadStream?(p: string, options?: any): NodeJS.ReadableStream | null;
-  createWriteStream?(p: string, options?: any): NodeJS.WritableStream | null;
+  createReadStream(p: string, options?: any): ReadableStream | null;
+  createWriteStream(p: string, options?: any): WritableStream | null;
 }
