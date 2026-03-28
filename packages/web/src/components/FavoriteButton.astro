@@ -1,7 +1,10 @@
 ---
 import { API_ROUTES } from "@platform/api/routes";
 import type { FavoriteType } from "@features/favorites/domain/ports/IFavoritesRepository";
-import Button, { type ButtonSize } from "./Button.astro";
+import Button, {
+  type ButtonSize,
+  type ButtonHoverEffect,
+} from "./Button.astro";
 import { cn } from "@lib/cn";
 
 interface FavoriteButtonProps {
@@ -9,7 +12,7 @@ interface FavoriteButtonProps {
   type: FavoriteType;
   isFavorite?: boolean;
   size?: ButtonSize;
-  hoverEffect?: "scale" | "translate";
+  hoverEffect?: Exclude<ButtonHoverEffect, "none">;
   className?: string;
 }
 
@@ -28,6 +31,7 @@ const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
 <Button
   variant="ghost"
   size={size}
+  hoverEffect={hoverEffect}
   square
   icon="heart"
   iconClass={cn(
@@ -38,8 +42,6 @@ const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
     "favorite-toggle group/fav shadow-elevation border transition-all duration-300",
     "data-[is-favorite=true]:text-brand-500 data-[is-favorite=true]:bg-brand-600/10 data-[is-favorite=true]:border-brand-500/20 data-[is-favorite=true]:shadow-brand/20",
     "data-[is-favorite=false]:bg-surface-800 data-[is-favorite=false]:border-border-subtle data-[is-favorite=false]:text-text-muted hover:data-[is-favorite=false]:text-brand-400 hover:data-[is-favorite=false]:bg-surface-700 hover:data-[is-favorite=false]:border-brand-500/30",
-    hoverEffect === "scale" && "hover:scale-110 active:scale-95",
-    hoverEffect === "translate" && "hover:-translate-y-px active:translate-y-0",
     className
   )}
   data-id={id}

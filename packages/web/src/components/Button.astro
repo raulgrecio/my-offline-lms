@@ -7,17 +7,22 @@ import type { IconName, IconSize } from "./Icon/icons";
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "none";
 // prettier-ignore
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+// prettier-ignore
+export type ButtonType = "button" | "submit" | "reset";
+// prettier-ignore
+export type ButtonHoverEffect = "none" | "translate" | "scale";
 
 export interface Props {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  type?: "button" | "submit" | "reset";
+  type?: ButtonType;
   href?: string;
   loading?: boolean;
   disabled?: boolean;
   square?: boolean;
   block?: boolean;
   muted?: boolean;
+  hoverEffect?: ButtonHoverEffect;
   class?: string;
   icon?: IconName;
   iconRight?: IconName;
@@ -36,6 +41,7 @@ const {
   square = false,
   block = false,
   muted = false,
+  hoverEffect = "none",
   class: className = "",
   icon,
   iconRight,
@@ -49,12 +55,17 @@ const baseStyles =
   "group relative inline-flex items-center justify-center font-semibold transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 select-none outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary";
 const activeStyles = "active:translate-y-0 active:scale-[0.98]";
 
+const hoverEffects = {
+  none: "",
+  translate: "hover:-translate-y-0.5",
+  scale: "hover:scale-110",
+};
+
 // Variants
 const variants = {
-  primary:
-    "bg-brand-600 text-white hover:bg-brand-700 hover:-translate-y-0.5 shadow-sm",
+  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
   secondary:
-    "bg-text-primary text-surface-950 hover:bg-text-primary/80 hover:text-surface-950/80 hover:-translate-y-0.5 shadow-sm",
+    "bg-text-primary text-surface-950 hover:bg-text-primary/80 hover:text-surface-950/80 shadow-sm",
   ghost:
     "bg-transparent text-text-secondary hover:bg-surface-800 hover:text-brand-400",
   outline:
@@ -96,6 +107,7 @@ const mutedStyles = muted ? "!text-text-muted hover:!text-inherit" : "";
 const finalClasses = cn(
   variant !== "none" ? baseStyles + activeStyles : "",
   variants[variant],
+  hoverEffects[hoverEffect],
   sizes[size],
   widthStyle,
   mutedStyles,

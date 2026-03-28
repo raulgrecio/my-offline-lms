@@ -239,12 +239,48 @@ import FavoriteButton from "@components/FavoriteButton.astro";
             </div>
             <div class="space-y-2">
               <p class="text-[10px] text-text-muted">Block (Full Width):</p>
-              <Button block variant="primary">Submit Data</Button>
-              <Button block variant="secondary">Cancel Operation</Button>
+              <Button block variant="primary" hoverEffect="translate">
+                Submit Data
+              </Button>
+              <Button block variant="secondary" hoverEffect="translate">
+                Cancel Operation
+              </Button>
             </div>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- ─── HOVER EFFECTS ──────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          4. Hover Effects (Opt-in)
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {
+          (["none", "translate", "scale"] as const).map((h) => (
+            <div class="p-6 bg-surface-900 rounded-2xl border border-border-subtle flex flex-col items-center gap-4">
+              <Button variant="secondary" hoverEffect={h}>
+                hover="{h}"
+              </Button>
+              <span class="text-xs font-mono text-text-muted">
+                hoverEffect="{h}"
+              </span>
+            </div>
+          ))
+        }
+      </div>
+      <p class="text-sm text-text-secondary italic">
+        By default, all buttons use <code>hoverEffect="none"</code>. Use
+        <code>hoverEffect="translate"</code> for premium interactive cards or primary
+        actions.
+      </p>
     </section>
 
     <!-- ─── INTEGRATION ────────────────────────────────────────── -->
@@ -254,7 +290,7 @@ import FavoriteButton from "@components/FavoriteButton.astro";
           class="text-2xl font-bold text-text-primary flex items-center gap-3"
         >
           <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
-          4. Specialized Integration
+          5. Specialized Integration
         </h2>
       </div>
 
