@@ -2,9 +2,7 @@
 export const prerender = false;
 
 import { APP_ROUTES } from "@platform/router/routes";
-import {
-  getLearningPathDetails,
-} from "@features/learning-paths";
+import { getLearningPathDetails } from "@features/learning-paths";
 import { getCourseProgress, getLearningPathProgress } from "@features/progress";
 import { getIsFavorite } from "@features/favorites";
 import Layout from "@layouts/Layout.astro";
@@ -14,7 +12,6 @@ import FavoriteButton from "@components/FavoriteButton.astro";
 import PageHeader from "@components/PageHeader.astro";
 import ProgressBar from "@components/ProgressBar.astro";
 import EmptyState from "@components/EmptyState.astro";
-
 
 interface PathPageProps {
   id?: string;
@@ -30,21 +27,23 @@ const { path, courses } = pathDetails;
 
 const [lpProgress, isFavorite] = await Promise.all([
   getLearningPathProgress({ id: path.id }),
-  getIsFavorite({ id, type: "learning-path" })
+  getIsFavorite({ id, type: "learning-path" }),
 ]);
 
-const courseData = await Promise.all(courses.map(async (course) => {
-  const [progress, isFavorite] = await Promise.all([
-    getCourseProgress({ id: course.id }),
-    getIsFavorite({ id: course.id, type: "course" })
-  ]);
-  
-  return {
-    ...course,
-    progress,
-    isFavorite
-  };
-}));
+const courseData = await Promise.all(
+  courses.map(async (course) => {
+    const [progress, isFavorite] = await Promise.all([
+      getCourseProgress({ id: course.id }),
+      getIsFavorite({ id: course.id, type: "course" }),
+    ]);
+
+    return {
+      ...course,
+      progress,
+      isFavorite,
+    };
+  })
+);
 
 const progress = lpProgress.progress;
 const completedCount = lpProgress.completedItems;
@@ -56,9 +55,15 @@ const hasContent = courseData.length > 0;
 <Layout title={path.title} description={path.description}>
   <!-- Breadcrumb -->
   <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a href={APP_ROUTES.HOME} class="text-text-muted no-underline hover:underline">Inicio</a>
+    <a
+      href={APP_ROUTES.HOME}
+      class="text-text-muted no-underline hover:underline">Inicio</a
+    >
     <Icon name="chevron-right" size="xs" />
-    <a href={APP_ROUTES.LEARNING_PATHS.INDEX} class="text-text-muted no-underline hover:underline">Learning Paths</a>
+    <a
+      href={APP_ROUTES.LEARNING_PATHS.INDEX}
+      class="text-text-muted no-underline hover:underline">Learning Paths</a
+    >
     <Icon name="chevron-right" size="xs" />
     <span class="text-text-secondary">{path.title}</span>
   </nav>
@@ -71,33 +76,22 @@ const hasContent = courseData.length > 0;
     subtext={`${courses.length} cursos`}
   >
     <div slot="actions">
-      <FavoriteButton 
-        id={id} 
-        type="learning-path" 
-        isFavorite={isFavorite} 
-        size="lg" 
-        hoverEffect="translate" 
+      <FavoriteButton
+        id={id}
+        type="learning-path"
+        isFavorite={isFavorite}
+        size="md"
+        hoverEffect="translate"
       />
     </div>
   </PageHeader>
 
-  {
-    path.description && (
-      <div
-        class="prose mb-6"
-        set:html={path.description}
-      />
-    )
-  }
+  {path.description && <div class="prose mb-6" set:html={path.description} />}
 
   <!-- Progress summary -->
-  <div
-    class="rounded-lg p-4 bg-surface-800 border border-border-default"
-  >
+  <div class="rounded-lg p-4 bg-surface-800 border border-border-default">
     <div class="flex items-center justify-between mb-2 border-none">
-      <span
-        class="text-sm font-medium text-text-secondary"
-      >
+      <span class="text-sm font-medium text-text-secondary">
         Progreso del learning path
       </span>
       <span class="text-sm font-bold text-brand-400">
@@ -105,9 +99,7 @@ const hasContent = courseData.length > 0;
       </span>
     </div>
     <ProgressBar progress={progress} />
-    <div
-      class="text-right text-xs mt-1 text-text-muted"
-    >
+    <div class="text-right text-xs mt-1 text-text-muted">
       {progress}% completado
     </div>
   </div>
@@ -117,11 +109,7 @@ const hasContent = courseData.length > 0;
   <!-- Course list -->
   <div>
     <h2 class="section-title mb-5">
-      <Icon
-        name="book-open"
-        size="md"
-        className="text-brand-600"
-      />
+      <Icon name="book-open" size="md" className="text-brand-600" />
       Cursos del path ({courses.length})
     </h2>
     {
@@ -140,8 +128,8 @@ const hasContent = courseData.length > 0;
           ))}
         </div>
       ) : (
-        <EmptyState 
-          message="Sin cursos asignados a este path." 
+        <EmptyState
+          message="Sin cursos asignados a este path."
           icon="book-open"
         />
       )

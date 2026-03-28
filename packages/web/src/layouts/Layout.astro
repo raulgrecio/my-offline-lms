@@ -1,7 +1,9 @@
 ---
 import "../styles/global.css";
 import ThemeToggle from "@components/ThemeToggle/ThemeToggle.astro";
+import Navigation from "@components/Navigation.astro";
 import { Icon } from "@components/Icon";
+import Button from "@components/Button.astro";
 import { APP_ROUTES } from "@platform/router/routes";
 
 interface Props {
@@ -76,36 +78,20 @@ const navLinks = [
           </a>
 
           <!-- Desktop Nav -->
-          <nav class="hidden md:flex items-center gap-1">
-            {
-              navLinks.map((link) => {
-                const isActive =
-                  currentPath === link.href ||
-                  (link.href !== "/" && currentPath.startsWith(link.href));
-                return (
-                  <a
-                    href={link.href}
-                    class={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                      isActive
-                        ? "text-brand-400 bg-brand-600/12"
-                        : "text-text-secondary hover:text-text-primary hover:bg-surface-800"
-                    }`}
-                  >
-                    <Icon name={link.icon} size="sm" />
-                    {link.label}
-                  </a>
-                );
-              })
-            }
-          </nav>
+          <div class="hidden md:flex">
+            <Navigation links={navLinks} currentPath={currentPath} />
+          </div>
 
           <!-- Mobile hamburger + Toggle -->
           <div class="flex items-center gap-2 md:hidden">
             <ThemeToggle />
-            <button
+            <Button
               id="menu-toggle"
-              class="p-2 rounded-lg transition-colors hover:bg-surface-700 text-text-secondary"
-              aria-label="Abrir menú"
+              variant="ghost"
+              size="sm"
+              square
+              class="text-text-secondary"
+              aria-label="Toggle menu"
             >
               <div id="icon-menu">
                 <Icon name="menu" size="md" />
@@ -113,7 +99,7 @@ const navLinks = [
               <div id="icon-close" class="hidden">
                 <Icon name="x" size="md" />
               </div>
-            </button>
+            </Button>
           </div>
 
           <!-- Desktop Actions -->
@@ -128,28 +114,13 @@ const navLinks = [
         id="mobile-menu"
         class="hidden md:hidden border-t bg-surface-800 border-border-subtle"
       >
-        <nav class="px-4 py-3 flex flex-col gap-1">
-          {
-            navLinks.map((link) => {
-              const isActive =
-                currentPath === link.href ||
-                (link.href !== "/" && currentPath.startsWith(link.href));
-              return (
-                <a
-                  href={link.href}
-                  class={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                    isActive
-                      ? "text-brand-400 bg-brand-600/12"
-                      : "text-text-secondary hover:bg-surface-700"
-                  }`}
-                >
-                  <Icon name={link.icon} size="md" />
-                  {link.label}
-                </a>
-              );
-            })
-          }
-        </nav>
+        <div class="px-4 py-3">
+          <Navigation 
+            links={navLinks} 
+            currentPath={currentPath} 
+            orientation="vertical"
+          />
+        </div>
       </div>
     </header>
 

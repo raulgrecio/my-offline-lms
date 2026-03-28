@@ -41,9 +41,13 @@ import Button from "../Button.astro";
           <Icon name="help-box" size="sm" className="text-brand-400" />
           Atajos de Teclado
         </h3>
-        <button class="p-1 rounded-lg hover:bg-surface-800 transition-colors" data-close-help>
-          <Icon name="x" size="sm" />
-        </button>
+        <Button
+          variant="ghost" 
+          size="xs" 
+          square 
+          icon="x"
+          data-close-help
+        />
       </div>
       <div class="p-6 space-y-4 text-sm">
         <div class="grid grid-cols-2 gap-y-3">

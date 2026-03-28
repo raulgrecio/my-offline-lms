@@ -21,7 +21,8 @@ describe("FavoriteButton.astro", () => {
     const html = await container.renderToString(FavoriteButton, {
       props: { id: 'item1', type: 'course', size: 'lg' }
     });
-    expect(html).toContain('p-2.5'); // lg size maps to p-2.5
+    // Check for size-related class from Button atom (lg + square = w-14)
+    expect(html).toContain('w-14');
   });
 
   it("should support different hover effects", async () => {

@@ -52,8 +52,8 @@ const {
     </h3>
     <div class="flex items-center gap-2 flex-wrap">
       <ProgressBadge status={status} />
-      
-      <FavoriteButton id={id} type="course" isFavorite={isFavorite} />
+
+      <FavoriteButton id={id} type="course" size="xs" isFavorite={isFavorite} />
 
       {
         totalAssets > 0 && (
@@ -66,7 +66,6 @@ const {
       }
     </div>
   </div>
-
 
   <!-- Arrow -->
   <div

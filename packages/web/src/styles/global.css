@@ -43,6 +43,10 @@
   --color-status-failed: #ef4444; /* Red 500 */
   --color-status-downloading: #f59e0b; /* Amber 500 */
  
+  --color-danger: #ef4444; /* Red 500 */
+  --color-danger-hover: #dc2626; /* Red 600 */
+  --color-danger-active: #b91c1c; /* Red 700 */
+ 
    /* Shadow Presets */
    --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.5);
  
@@ -74,6 +78,10 @@
   --color-status-not-started: #64748b; /* Slate 500 */
   --color-status-failed: #dc2626; /* Red 600 */
   --color-status-downloading: #d97706; /* Amber 600 */
+
+  --color-danger: #dc2626; /* Red 600 */
+  --color-danger-hover: #b91c1c; /* Red 700 */
+  --color-danger-active: #991b1b; /* Red 800 */
 }
 
 @theme {
@@ -125,8 +133,9 @@
   --color-status-not-started: var(--color-status-not-started);
   --color-status-failed: var(--color-status-failed);
   --color-status-downloading: var(--color-status-downloading);
- 
- 
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-active: var(--color-danger-active);
    /* Subtitle colors */
    --color-subtitle-bg: var(--bg-subtitle-constant);
    --color-subtitle-text: var(--text-subtitle-constant);

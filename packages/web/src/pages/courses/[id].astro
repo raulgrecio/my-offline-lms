@@ -103,12 +103,12 @@ const hasContent = hasVideos || hasGuides;
     status={courseProgress?.status ?? 'not_started'}
     subtext={`${videos.length} vídeos · ${guides.length} guías`}
   >
-    <div slot="actions">
+  <div slot="actions" class="flex items-center gap-4">
       <FavoriteButton 
         id={id} 
         type="course" 
         isFavorite={isFavorite} 
-        size="lg" 
+        size="md" 
         hoverEffect="translate"
         className="border border-border-subtle bg-surface-800"
       />

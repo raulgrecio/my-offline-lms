@@ -3,9 +3,14 @@ import { Icon } from "./Icon";
 import { cn } from "@lib/cn";
 import type { IconName, IconSize } from "./Icon/icons";
 
-interface Props {
-  variant?: "primary" | "secondary" | "ghost" | "outline" | "danger" | "none";
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
+// prettier-ignore
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "none";
+// prettier-ignore
+export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+
+export interface Props {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   type?: "button" | "submit" | "reset";
   href?: string;
   loading?: boolean;
@@ -37,24 +42,25 @@ const {
   iconClass = "",
   iconRightClass = "",
   ...rest
-} = Astro.props;
+} = Astro.props as Props;
 
 // Base Styles
 const baseStyles =
   "group relative inline-flex items-center justify-center font-semibold transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 select-none outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary";
+const activeStyles = "active:translate-y-0 active:scale-[0.98]";
 
 // Variants
 const variants = {
   primary:
-    "bg-brand-600 text-white hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] shadow-sm",
+    "bg-brand-600 text-white hover:bg-brand-700 hover:-translate-y-0.5 shadow-sm",
   secondary:
-    "bg-surface-600 text-text-primary hover:bg-surface-500 border border-border-subtle active:scale-[0.98]",
+    "bg-text-primary text-surface-950 hover:bg-text-primary/80 hover:text-surface-950/80 hover:-translate-y-0.5 shadow-sm",
   ghost:
-    "bg-transparent text-text-secondary border border-transparent hover:bg-surface-800 hover:text-brand-400 active:bg-surface-700 active:scale-[0.98]",
+    "bg-transparent text-text-secondary hover:bg-surface-800 hover:text-brand-400",
   outline:
-    "bg-transparent text-text-secondary border border-border-subtle hover:bg-surface-800 hover:text-brand-400 hover:border-brand-500/50 active:bg-surface-700 active:scale-[0.98]",
+    "bg-transparent text-text-secondary border border-border-subtle hover:bg-surface-800 hover:text-brand-400 hover:border-brand-500/50",
   danger:
-    "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500",
+    "bg-danger/10 text-danger hover:bg-danger hover:text-white border border-danger/20 hover:border-danger shadow-sm",
   none: "",
 };
 
@@ -88,7 +94,7 @@ const allProgressClasses = loading
 const mutedStyles = muted ? "!text-text-muted hover:!text-inherit" : "";
 
 const finalClasses = cn(
-  variant !== "none" ? baseStyles : "",
+  variant !== "none" ? baseStyles + activeStyles : "",
   variants[variant],
   sizes[size],
   widthStyle,
