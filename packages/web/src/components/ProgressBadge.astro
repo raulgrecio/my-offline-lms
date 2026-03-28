@@ -8,29 +8,30 @@ interface Props extends BadgeProps {
   status: ProgressStatus;
 }
 
-
 const config: Record<ProgressStatus, BadgeConfig> = {
   completed: {
-    classes: "bg-status-completed/15 text-status-completed border-status-completed/30",
+    classes:
+      "bg-status-completed/15 text-status-completed border-status-completed/30",
     dotClasses: "bg-status-completed",
     label: "Completado",
   },
   in_progress: {
-    classes: "bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30",
+    classes:
+      "bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30",
     dotClasses: "bg-status-in-progress",
     label: "En progreso",
-    pulse: true,
   },
   not_started: {
-    classes: "bg-status-not-started/15 text-status-not-started border-status-not-started/30",
+    classes:
+      "bg-status-not-started/15 text-status-not-started border-status-not-started/30",
     dotClasses: "bg-transparent border-[1.5px] border-currentColor",
     label: "Sin iniciar",
   },
 };
 
 const { status, className = "", ...rest } = Astro.props;
-const normalized = (status?.toLowerCase() || 'not_started') as ProgressStatus;
-const safeStatus = config[normalized] ? normalized : 'not_started';
+const normalized = (status?.toLowerCase() || "not_started") as ProgressStatus;
+const safeStatus = config[normalized] ? normalized : "not_started";
 const cfg = config[safeStatus] ?? config["not_started"];
 ---
 

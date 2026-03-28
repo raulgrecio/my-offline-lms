@@ -42,15 +42,9 @@ const isVertical = orientation === "vertical";
       return (
         <Button
           href={link.href}
-          variant={isActive ? "outline" : "ghost"}
+          variant={isActive ? "secondary" : "ghost"}
           size={isVertical ? "md" : "sm"}
           block={isVertical}
-          class:list={[
-            "transition-all duration-150",
-            isActive
-              ? "text-brand-400 bg-brand-600/12! border-brand-500/20"
-              : "text-text-secondary hover:text-text-primary",
-          ]}
           icon={link.icon}
         >
           {link.label}
