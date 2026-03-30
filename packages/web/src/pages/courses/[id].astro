@@ -186,7 +186,7 @@ const videosList = videos.map((v) => ({
                 id="player-title"
                 class="text-sm font-medium mt-3 text-text-primary"
               >
-                {activeVideo?.metadata?.name ?? ""}
+                {activeVideo?.metadata?.name ? `Video: ${activeVideo?.metadata?.name}` : ""}
               </p>
             </div>
 
