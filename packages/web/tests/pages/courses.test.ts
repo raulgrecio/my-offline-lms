@@ -88,7 +88,7 @@ describe("Courses Pages", () => {
             });
 
             expect(html).toContain('Empty Course');
-            expect(html).toContain('Sin assets descargados para este curso.');
+            expect(html).toContain('No hay assets descargados para este curso.');
         });
     });
 });

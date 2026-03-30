@@ -6,25 +6,17 @@ import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
 import { env } from "@config/env";
 import { API_ROUTES } from "@platform/api/routes";
 import { APP_ROUTES } from "@platform/router/routes";
-import {
-  getCourseById,
-  getAssetsByCourseId,
-} from "@features/courses";
+import { getCourseById, getAssetsByCourseId } from "@features/courses";
 import { getIsFavorite } from "@features/favorites";
-import {
-  getCourseProgress,
-  getAssetProgress,
-} from "@features/progress";
-import Layout from '@layouts/Layout.astro';
+import { getCourseProgress, getAssetProgress } from "@features/progress";
+import Layout from "@layouts/Layout.astro";
 import FavoriteButton from "@components/FavoriteButton.astro";
 import Button from "@components/Button.astro";
-import { Icon } from '@components/Icon';
+import { Icon } from "@components/Icon";
 import GuideCard from "@components/GuideCard.astro";
 import PageHeader from "@components/PageHeader.astro";
-import VideoPlayer from '@components/VideoPlayer';
-import CircularProgress from "@components/CircularProgress.astro";
+import VideoPlaylist from "@components/VideoPlaylist.astro";
 import EmptyState from "@components/EmptyState.astro";
-
 
 interface CoursePageProps {
   id?: string;
@@ -36,35 +28,49 @@ if (!id) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 const course = await getCourseById({ id });
 if (!course) return Astro.redirect(APP_ROUTES.COURSES.INDEX);
 
-const isFavorite = await getIsFavorite({ id, type: 'course' });
+const isFavorite = await getIsFavorite({ id, type: "course" });
 const courseProgress = await getCourseProgress({ id });
 const allAssets = await getAssetsByCourseId({ id });
 const videosRaw = allAssets
-  .filter((a): a is VideoAsset => a.type === 'video' && a.status === 'COMPLETED' && !!a.localPath)
-  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+  .filter(
+    (a): a is VideoAsset =>
+      a.type === "video" && a.status === "COMPLETED" && !!a.localPath
+  )
+  .sort(
+    (a, b) =>
+      Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0)
+  );
 
 const guidesRaw = allAssets
-  .filter((a): a is GuideAsset => a.type === 'guide' && a.status === 'COMPLETED' && !!a.localPath)
-  .sort((a, b) => Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0));
+  .filter(
+    (a): a is GuideAsset =>
+      a.type === "guide" && a.status === "COMPLETED" && !!a.localPath
+  )
+  .sort(
+    (a, b) =>
+      Number(a.metadata.order_index ?? 0) - Number(b.metadata.order_index ?? 0)
+  );
 
 // Pre-fetch progress in parallel
-const videos = await Promise.all(videosRaw.map(async (v) => ({
-  ...v,
-  progress: await getAssetProgress({ assetId: v.id, type: 'video' })
-})));
+const videos = await Promise.all(
+  videosRaw.map(async (v) => ({
+    ...v,
+    progress: await getAssetProgress({ assetId: v.id, type: "video" }),
+  }))
+);
 
-const guides = await Promise.all(guidesRaw.map(async (g) => ({
-  ...g,
-  progress: await getAssetProgress({ assetId: g.id, type: 'guide' })
-})));
+const guides = await Promise.all(
+  guidesRaw.map(async (g) => ({
+    ...g,
+    progress: await getAssetProgress({ assetId: g.id, type: "guide" }),
+  }))
+);
 
 // Find the active video
-const videoId = Astro.url.searchParams.get('v');
+const videoId = Astro.url.searchParams.get("v");
 const activeVideo = videoId
-  ? (videos.find(v => v.id === videoId) || videos[0])
+  ? videos.find((v) => v.id === videoId) || videos[0]
   : videos[0];
-
-const activeVideoProgress = activeVideo?.progress ?? null;
 
 // Generate file:// URL for local assets
 function localUrl(localPath: string): string {
@@ -72,7 +78,7 @@ function localUrl(localPath: string): string {
 }
 
 function subtitleUrl(videoLocalPath: string): string | undefined {
-  const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, '');
+  const base = videoLocalPath.replace(/\.(mp4|mkv|webm)$/i, "");
   const subtitlePath = `${base}.${env.SUBTITLE_LANGUAGE}.vtt`;
   return API_ROUTES.ASSETS.LOCAL_ASSET(subtitlePath);
 }
@@ -80,196 +86,122 @@ function subtitleUrl(videoLocalPath: string): string | undefined {
 const hasVideos = videos.length > 0;
 const hasGuides = guides.length > 0;
 const hasContent = hasVideos || hasGuides;
+
+const videosList = videos.map((v) => ({
+  id: v.id,
+  title: v.metadata?.name ?? v.id,
+  src: localUrl(v.localPath!),
+  subtitleSrc: subtitleUrl(v.localPath!),
+  duration: v.metadata?.duration || 0,
+  progress: v.progress,
+}));
 ---
 
 <Layout title={course.title}>
-  <div 
-    id="course-page-context" 
+  <div
+    id="course-page-context"
     data-course-id={id}
     data-progress-url={API_ROUTES.PROGRESS.COURSE}
     data-metadata-url={API_ROUTES.ASSETS.METADATA()}
   >
-  <!-- Breadcrumb -->
-  <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a href={APP_ROUTES.HOME} class="text-text-muted no-underline hover:underline">Inicio</a>
-    <Icon name="chevron-right" size="xs" />
-    <a href={APP_ROUTES.COURSES.INDEX} class="text-text-muted no-underline hover:underline">Cursos</a>
-    <Icon name="chevron-right" size="xs" />
-    <span class="text-text-secondary">{course.title}</span>
-  </nav>
-
-  <!-- Header -->
-  <PageHeader
-    title={course.title}
-    icon="book-open"
-    status={courseProgress?.status ?? 'not_started'}
-    subtext={`${videos.length} vídeos · ${guides.length} guías`}
-  >
-    <div slot="actions" class="flex items-center gap-4">
-      <FavoriteButton 
-        id={id} 
-        type="course" 
-        isFavorite={isFavorite} 
-        size="md" 
-        hoverEffect="translate"
-        className="border border-border-subtle bg-surface-800"
-      />
-
-      <Button
-        id="btn-complete"
-        variant="primary"
-        hoverEffect="translate"
-        icon="check-circle"
-        data-course-id={id}
-        size="md"
-        data-completed={courseProgress?.status === 'completed' ? 'true' : 'false'}
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
+      <a
+        href={APP_ROUTES.HOME}
+        class="text-text-muted no-underline hover:underline">Inicio</a
       >
-        {courseProgress?.status === 'completed' ? 'Completado' : 'Marcar completado'}
-      </Button>
-    </div>
-  </PageHeader>
+      <Icon name="chevron-right" size="xs" />
+      <a
+        href={APP_ROUTES.COURSES.INDEX}
+        class="text-text-muted no-underline hover:underline">Cursos</a
+      >
+      <Icon name="chevron-right" size="xs" />
+      <span class="text-text-secondary">{course.title}</span>
+    </nav>
 
-  <!-- ─── Videos ──────────────────────────────────────────────────────── -->
-  {hasContent && hasVideos && (
-    <section class="mb-10">
-      <h2 class="section-title mb-5">
-        <Icon name="play" size="md" className="text-brand-600" />
-        Vídeos ({videos.length})
-      </h2>
+    <!-- Header -->
+    <PageHeader
+      title={course.title}
+      icon="book-open"
+      status={courseProgress?.status ?? "not_started"}
+      subtext={`${videos.length} vídeos · ${guides.length} guías`}
+    >
+      <div slot="actions" class="flex items-center gap-4">
+        <FavoriteButton
+          id={id}
+          type="course"
+          isFavorite={isFavorite}
+          size="md"
+          hoverEffect="translate"
+          className="border border-border-subtle bg-surface-800"
+        />
 
-      <div class="flex flex-col lg:flex-row gap-6">
-        <!-- Player panel -->
-        <div class="flex-1 min-w-0">
-          <div id="player-container">
-            {activeVideo && (
-              <VideoPlayer
-                client:load
-                assetId={activeVideo.id}
-                courseId={id}
-                src={localUrl(activeVideo.localPath!)}
-                title={activeVideo.metadata?.name ?? activeVideo.id}
-                subtitleSrc={subtitleUrl(activeVideo.localPath!)}
-                initialTime={activeVideoProgress?.position ?? 0}
-                initialDuration={activeVideo.metadata?.duration ?? 0}
-                progressUrl={API_ROUTES.PROGRESS.VIDEO}
-              />
-            )}
-          </div>
-          <p id="player-title" class="text-sm font-medium mt-3 text-text-primary">
-            {activeVideo?.metadata?.name ?? ''}
-          </p>
-        </div>
-
-        <!-- Video list -->
-        <div
-          class="lg:w-80 xl:w-96 flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden"
+        <Button
+          id="btn-complete"
+          variant="primary"
+          hoverEffect="translate"
+          icon="check-circle"
+          data-course-id={id}
+          size="md"
+          data-completed={courseProgress?.status === "completed"
+            ? "true"
+            : "false"}
         >
-          <div class="p-3 border-b flex items-center justify-between bg-surface-800/50 backdrop-blur-sm border-border-subtle shrink-0">
-            <div class="text-2xs font-bold uppercase tracking-widest text-text-muted">
-              Contenido del curso
-            </div>
-            <!-- Autoplay Toggle -->
-            <label class="flex items-center gap-2 cursor-pointer group">
-              <span class="text-[10px] font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight">Autoplay</span>
-              <div class="relative inline-flex items-center">
-                <input type="checkbox" id="autoplay-toggle" class="sr-only peer">
-                <div class="w-7 h-4 bg-surface-600 rounded-full peer peer-checked:bg-brand-600 transition-colors"></div>
-                <div class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-3"></div>
-              </div>
-            </label>
-          </div>
-          <div class="overflow-y-auto flex-1 custom-scrollbar">
-            {videos.map((v, i) => {
-              const vp = v.progress;
-              const isDone = vp?.completed;
-              const isActive = v.id === activeVideo?.id;
-              
-              const vDuration = v.metadata?.duration || 0;
-              const vPosition = vp?.position || 0;
-              const vProgressPercent = vDuration > 0 ? Math.min(100, Math.round((vPosition / vDuration) * 100)) : 0;
-              
-              const formatTime = (sec: number) => {
-                const m = Math.floor(sec / 60);
-                const s = Math.floor(sec % 60);
-                return `${m}:${String(s).padStart(2, '0')}`;
-              };
-
-              return (
-                <button
-                  class={`video-item w-full text-left flex items-center gap-4 p-4 transition-all hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer group ${
-                    isActive ? 'bg-surface-700/50' : 'bg-transparent'
-                  }`}
-                  data-src={localUrl(v.localPath!)}
-                  data-asset-id={v.id}
-                  data-title={v.metadata?.name ?? v.id}
-                  data-subtitle={subtitleUrl(v.localPath!)}
-                  data-position={vp?.position ?? 0}
-                >
-                  <CircularProgress
-                    progress={vProgressPercent}
-                    isDone={isDone}
-                    label={i + 1}
-                  />
-
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2 mb-0.5">
-                      <p class={`text-xs leading-tight line-clamp-1 transition-colors ${isActive ? 'text-text-primary font-bold' : 'text-text-secondary font-medium group-hover:text-text-primary'}`}>
-                        {v.metadata?.name ?? `Vídeo ${i + 1}`}
-                      </p>
-                      {vDuration > 0 && (
-                        <span class="text-[10px] font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded">
-                          {formatTime(vDuration)}
-                        </span>
-                      )}
-                    </div>
-                    {vp && !vp.completed && vp.position > 2 && (
-                      <div class="flex items-center gap-1.5">
-                         <div class="flex-1 h-1 bg-surface-900 rounded-full overflow-hidden">
-                           <div class="h-full bg-brand-600/50" style={`width: ${vProgressPercent}%`} />
-                         </div>
-                         <span class="text-[9px] font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
-                           {vProgressPercent}%
-                         </span>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          {
+            courseProgress?.status === "completed"
+              ? "Completado"
+              : "Marcar completado"
+          }
+        </Button>
       </div>
-    </section>
-  )}
+    </PageHeader>
 
-  <!-- ─── Guides ──────────────────────────────────────────────────────── -->
-  {hasContent && hasGuides && (
-    <section class="mb-10">
-      <h2 class="section-title mb-5">
-        <Icon name="file-text" size="md" className="text-brand-600" />
-        Guías ({guides.length})
-      </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {guides.map((g, i) => (
-          <GuideCard
-            assetId={g.id}
-            courseId={id}
-            name={g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`}
-            localUrl={localUrl(g.localPath!)}
-            progress={g.progress}
-            totalPages={g.metadata?.totalPages}
-          />
-        ))}
-      </div>
-    </section>
-  )}
+    <!-- ─── Videos ──────────────────────────────────────────────────────── -->
+    {
+      hasContent && hasVideos && (
+        <VideoPlaylist
+          videos={videosList}
+          activeVideoId={activeVideo?.id}
+          courseId={id}
+          progressUrl={API_ROUTES.PROGRESS.VIDEO}
+        />
+      )
+    }
 
-  {!hasContent && (
-    <EmptyState
-      icon="inbox"
-      message="No hay assets descargados para este curso."
-    />
-  )}
+    <!-- ─── Guides ──────────────────────────────────────────────────────── -->
+    {
+      hasContent && hasGuides && (
+        <section class="mb-10">
+          <h2 class="section-title mb-5">
+            <Icon name="file-text" size="md" className="text-brand-600" />
+            Guías ({guides.length})
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {guides.map((g, i) => (
+              <GuideCard
+                assetId={g.id}
+                courseId={id}
+                name={
+                  g.metadata?.name ?? g.metadata?.filename ?? `Guía ${i + 1}`
+                }
+                localUrl={localUrl(g.localPath!)}
+                progress={g.progress}
+                totalPages={g.metadata?.totalPages}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      !hasContent && (
+        <EmptyState
+          icon="inbox"
+          message="No hay assets descargados para este curso."
+        />
+      )
+    }
   </div>
 </Layout>
 
@@ -278,145 +210,80 @@ const hasContent = hasVideos || hasGuides;
   import { apiClient } from "@platform/api/client";
   import { logger } from "@platform/logging";
 
-  const context = document.getElementById('course-page-context') as HTMLElement;
+  const context = document.getElementById("course-page-context") as HTMLElement;
   const COURSE_PROGRESS_URL = context.dataset.progressUrl!;
   const METADATA_URL = context.dataset.metadataUrl!;
 
-  // ─── Video playlist switching ────────────────────────────────────────────
-  document.querySelectorAll<HTMLButtonElement>('.video-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const assetId = btn.dataset.assetId!;
-      const url = new URL(window.location.href);
-      url.searchParams.set('v', assetId);
-      window.location.href = url.toString();
-    });
-  });
-
   // ─── Mark complete button ─────────────────────────────────────────────
-  const btnComplete = document.getElementById('btn-complete') as HTMLButtonElement | null;
-  btnComplete?.addEventListener('click', async () => {
+  const btnComplete = document.getElementById(
+    "btn-complete"
+  ) as HTMLButtonElement | null;
+  btnComplete?.addEventListener("click", async () => {
     const courseId = btnComplete.dataset.courseId!;
-    const isCompleted = btnComplete.dataset.completed === 'true';
-    const newStatus = isCompleted ? 'in_progress' : 'completed';
+    const isCompleted = btnComplete.dataset.completed === "true";
+    const newStatus = isCompleted ? "in_progress" : "completed";
 
     try {
-      await apiClient.post(COURSE_PROGRESS_URL, { courseId, status: newStatus });
+      await apiClient.post(COURSE_PROGRESS_URL, {
+        courseId,
+        status: newStatus,
+      });
       window.location.reload();
     } catch (err) {
-      logger.error('Failed to update course progress:', err);
-    }
-  });
-
-  // ─── Real-time Progress Updates ──────────────────────────────────────────
-  window.addEventListener('video-progress', (e: any) => {
-    const { assetId, position, completed } = e.detail;
-    const btn = document.querySelector(`.video-item[data-asset-id="${assetId}"]`);
-    if (!btn) return;
-
-    // Update data attribute
-    btn.setAttribute('data-position', position.toString());
-
-    // Update SVG progress ring
-    const videoItem = btn as HTMLElement;
-    const durationAttr = videoItem.querySelector('span.font-mono')?.textContent || '0:00';
-    const [m, s] = durationAttr.split(':').map(Number);
-    const duration = m * 60 + s;
-
-    if (duration > 0) {
-      const progressPercent = Math.min(100, Math.round((position / duration) * 100));
-      const progressCircle = videoItem.querySelector('circle.stroke-current:last-child') as SVGCircleElement;
-      if (progressCircle) {
-        progressCircle.style.strokeDashoffset = (100 - progressPercent).toString();
-      }
-
-      // Update percentage bar
-      const bar = videoItem.querySelector('.bg-brand-600\\/50') as HTMLElement;
-      const barText = videoItem.querySelector('span.text-brand-600\\/80') as HTMLElement;
-      if (bar) bar.style.width = `${progressPercent}%`;
-      if (barText) barText.textContent = `${progressPercent}%`;
-    }
-
-    // Update icon if completed
-    if (completed) {
-      const iconContainer = videoItem.querySelector('.absolute.inset-0.flex.items-center.justify-center') as HTMLElement;
-      if (iconContainer && !iconContainer.querySelector('svg[data-icon="check"]')) {
-        iconContainer.innerHTML = '<svg class="w-3 h-3 text-brand-500" data-icon="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-      }
-    }
-  });
-
-  // ─── Autoplay Orchestration ──────────────────────────────────────────────
-  const autoplayToggle = document.getElementById('autoplay-toggle') as HTMLInputElement | null;
-  if (autoplayToggle) {
-    autoplayToggle.checked = localStorage.getItem('autoplayNext') === 'true';
-    autoplayToggle.addEventListener('change', () => {
-      localStorage.setItem('autoplayNext', autoplayToggle.checked.toString());
-    });
-  }
-
-  window.addEventListener('video-ended', (e: any) => {
-    const { assetId } = e.detail;
-    if (!autoplayToggle?.checked) return;
-
-    const currentBtn = document.querySelector(`.video-item[data-asset-id="${assetId}"]`);
-    if (!currentBtn) return;
-
-    const allBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.video-item'));
-    const currentIndex = allBtns.indexOf(currentBtn as HTMLButtonElement);
-    const nextBtn = allBtns[currentIndex + 1];
-
-    if (nextBtn) {
-      const nextAssetId = nextBtn.dataset.assetId!;
-      const url = new URL(window.location.href);
-      url.searchParams.set('v', nextAssetId);
-      window.location.href = url.toString();
+      logger.error("Failed to update course progress:", err);
     }
   });
 
   // ─── Metadata Polling ─────────────────────────────────────────────────────
-  const missingMetadataCards = document.querySelectorAll<HTMLElement>('[data-missing-metadata="true"]');
-  
+  const missingMetadataCards = document.querySelectorAll<HTMLElement>(
+    '[data-missing-metadata="true"]'
+  );
+
   if (missingMetadataCards.length > 0) {
     const refreshMetadata = async (card: HTMLElement) => {
       const assetId = card.dataset.assetId;
       try {
-        const metadata = await apiClient.get<any>(`${METADATA_URL}?assetId=${assetId}`);
+        const metadata = await apiClient.get<any>(
+          `${METADATA_URL}?assetId=${assetId}`
+        );
         if (metadata && metadata.totalPages) {
-            const statusLabel = card.querySelector('.status-label');
-            const isDone = card.dataset.isDone === 'true';
-            const currentPage = parseInt(card.dataset.currentPage || '0');
-            const totalPages = metadata.totalPages;
+          const statusLabel = card.querySelector(".status-label");
+          const isDone = card.dataset.isDone === "true";
+          const currentPage = parseInt(card.dataset.currentPage || "0");
+          const totalPages = metadata.totalPages;
 
-            if (statusLabel) {
-              if (isDone) {
-                statusLabel.textContent = 'Completado';
-              } else if (currentPage > 1) {
-                statusLabel.textContent = `Página ${currentPage} de ${totalPages}`;
-              } else {
-                statusLabel.textContent = `Ver guía de ${totalPages} páginas`;
-              }
+          if (statusLabel) {
+            if (isDone) {
+              statusLabel.textContent = "Completado";
+            } else if (currentPage > 1) {
+              statusLabel.textContent = `Página ${currentPage} de ${totalPages}`;
+            } else {
+              statusLabel.textContent = `Ver guía de ${totalPages} páginas`;
             }
-            card.dataset.missingMetadata = 'false';
-            return true;
           }
+          card.dataset.missingMetadata = "false";
+          return true;
+        }
       } catch (e) {
-        logger.error('Error polling metadata:', e);
+        logger.error("Error polling metadata:", e);
       }
       return false;
     };
 
     const pollAll = async () => {
-      const remaining = document.querySelectorAll<HTMLElement>('[data-missing-metadata="true"]');
+      const remaining = document.querySelectorAll<HTMLElement>(
+        '[data-missing-metadata="true"]'
+      );
       if (remaining.length === 0) return;
-      
+
       for (const card of remaining) {
         await refreshMetadata(card);
       }
     };
 
     // Poll on visibility change (re-focusing the course page after closing the PDF)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
         pollAll();
       }
     });
