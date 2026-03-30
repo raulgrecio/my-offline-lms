@@ -15,24 +15,25 @@ export const ScraperForm: React.FC = () => {
     setStatus({ type: 'info', message: 'Iniciando sincronización...' });
 
     try {
-      // TODO: Implement actual API call
-      // const response = await fetch('/api/scraper/sync', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ url, type, downloadVideos, downloadGuides }),
-      // });
+      const response = await fetch('/api/scraper/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, type, downloadVideos, downloadGuides }),
+      });
       
-      // Simulate long process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.error || 'Error desconocido');
       
       setStatus({ 
         type: 'success', 
-        message: '¡Sincronización iniciada con éxito! Revisa el estado abajo.' 
+        message: data.message || '¡Sincronización iniciada con éxito!' 
       });
       setUrl('');
-    } catch (err) {
+    } catch (err: any) {
       setStatus({ 
         type: 'error', 
-        message: 'Error al conectar con el servidor de scraping.' 
+        message: err.message || 'Error al conectar con el servidor de scraping.' 
       });
     } finally {
       setIsLoading(false);

@@ -1,0 +1,79 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { Icon } from "@components/Icon";
+import { icons } from "@components/Icon/icons";
+
+const iconNames = Object.keys(icons) as (keyof typeof icons)[];
+---
+
+<Layout title="Icon Showcase">
+  <div class="max-w-6xl mx-auto py-12 px-6">
+    <header class="mb-12 border-b border-border-subtle pb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-xl bg-brand-600/10 flex items-center justify-center text-brand-600 font-bold">
+               {iconNames.length}
+            </div>
+            <h1 class="text-3xl font-bold text-text-primary">LMS Icon Library</h1>
+          </div>
+          <p class="text-text-secondary text-lg">
+            Complete set of SVG icons available in the system.
+          </p>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+          <span class="text-xs font-bold text-text-muted uppercase tracking-widest leading-none">Shared Iconset</span>
+          <span class="text-xs text-text-muted opacity-60">packages/web/src/components/Icon/icons.ts</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      {iconNames.map(name => (
+        <div class="group relative bg-surface-800 border border-border-subtle rounded-3xl p-6 flex flex-col items-center justify-center hover:bg-surface-700 hover:border-brand-500/50 transition-all duration-300">
+          <div class="aspect-square w-12 flex items-center justify-center text-text-muted group-hover:text-brand-400 group-hover:scale-125 transition-all duration-300 mb-4">
+             <Icon name={name} size="lg" />
+          </div>
+          
+          <span class="text-[11px] font-mono text-text-muted group-hover:text-text-primary transition-colors text-center w-full truncate px-2">
+            {name}
+          </span>
+
+          {/* Copy on click feedback overlay maybe? Using raw button for simplicity */}
+          <button 
+            onclick={`navigator.clipboard.writeText('${name}')`}
+            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-surface-900 border border-border-subtle text-text-muted hover:text-brand-500 transition-all"
+            title="Copiar nombre"
+          >
+            <Icon name="check" size="xs" />
+          </button>
+        </div>
+      ))}
+    </div>
+
+    {/* Usage examples */}
+    <section class="mt-20 pt-10 border-t border-border-subtle">
+      <h2 class="text-xl font-bold text-text-primary mb-6">Usage Examples</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider">Astro Component</h3>
+          <div class="bg-surface-900 p-4 rounded-xl border border-border-subtle font-mono text-xs overflow-x-auto">
+            <pre class="text-brand-400">---</pre>
+            <pre class="text-text-muted">import &#123; Icon &#125; from "@components/Icon";</pre>
+            <pre class="text-brand-400">---</pre>
+            <br/>
+            <pre class="text-text-primary">&lt;Icon name="home" size="md" /&gt;</pre>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider">React Component</h3>
+          <div class="bg-surface-900 p-4 rounded-xl border border-border-subtle font-mono text-xs overflow-x-auto">
+            <pre class="text-text-muted">import &#123; Icon &#125; from '../Icon';</pre>
+            <br/>
+            <pre class="text-text-primary">return (&lt;Icon name="home" size="md" /&gt;);</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>

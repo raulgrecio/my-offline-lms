@@ -12,6 +12,11 @@ vi.mock("@my-offline-lms/core/filesystem", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),
     };
   }),
+  NodePath: vi.fn().mockImplementation(function () {
+    return {
+      dirname: vi.fn().mockReturnValue("/tmp"),
+    };
+  }),
 }));
 
 vi.mock("@my-offline-lms/core/database", () => ({
