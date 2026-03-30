@@ -30,6 +30,6 @@ describe("FavoriteButton.astro", () => {
     const html = await container.renderToString(FavoriteButton, {
       props: { id: 'item1', type: 'course', hoverEffect: 'translate' }
     });
-    expect(html).toContain('hover:-translate-y-px');
+    expect(html).toContain('hover:-translate-y-0.5');
   });
 });
