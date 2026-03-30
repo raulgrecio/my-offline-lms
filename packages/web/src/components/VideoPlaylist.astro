@@ -1,6 +1,4 @@
 ---
-import { Icon } from "@components/Icon";
-import VideoPlayer from "@components/VideoPlayer";
 import CircularProgress from "@components/CircularProgress.astro";
 
 export interface VideoPlayVideo {
@@ -18,15 +16,9 @@ export interface VideoPlayVideo {
 interface Props {
   videos: VideoPlayVideo[];
   activeVideoId?: string;
-  courseId: string;
-  progressUrl: string;
 }
 
-const { videos, activeVideoId, courseId, progressUrl } = Astro.props as Props;
-
-const activeVideo = activeVideoId
-  ? videos.find((v) => v.id === activeVideoId) || videos[0]
-  : videos[0];
+const { videos, activeVideoId } = Astro.props as Props;
 
 const formatTime = (sec: number) => {
   const m = Math.floor(sec / 60);
@@ -35,146 +27,106 @@ const formatTime = (sec: number) => {
 };
 ---
 
-<section
-  class="video-playlist-section mb-10"
-  data-course-id={courseId}
-  data-progress-url={progressUrl}
+<div
+  class="video-playlist-sidebar lg:w-80 xl:w-96 flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden"
 >
-  <h2 class="section-title mb-5">
-    <Icon name="play" size="md" className="text-brand-600" />
-    Vídeos ({videos.length})
-  </h2>
-
-  <div class="flex flex-col lg:flex-row gap-6">
-    <!-- Player panel -->
-    <div class="flex-1 min-w-0">
-      <div id="player-container">
-        {
-          activeVideo && (
-            <VideoPlayer
-              client:load
-              assetId={activeVideo.id}
-              courseId={courseId}
-              src={activeVideo.src}
-              title={activeVideo.title}
-              subtitleSrc={activeVideo.subtitleSrc}
-              initialTime={activeVideo.progress?.position ?? 0}
-              initialDuration={activeVideo.duration}
-              progressUrl={progressUrl}
-            />
-          )
-        }
-      </div>
-      <p id="player-title" class="text-sm font-medium mt-3 text-text-primary">
-        {activeVideo?.title ?? ""}
-      </p>
+  <div
+    class="p-3 border-b flex items-center justify-between bg-surface-800/50 backdrop-blur-sm border-border-subtle shrink-0"
+  >
+    <div class="text-2xs font-bold uppercase tracking-widest text-text-muted">
+      Contenido
     </div>
-
-    <!-- Video list -->
-    <div
-      class="lg:w-80 xl:w-96 flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden"
-    >
-      <div
-        class="p-3 border-b flex items-center justify-between bg-surface-800/50 backdrop-blur-sm border-border-subtle shrink-0"
+    <!-- Autoplay Toggle -->
+    <label class="flex items-center gap-2 cursor-pointer group">
+      <span
+        class="text-[10px] font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight"
+        >Autoplay</span
       >
+      <div class="relative inline-flex items-center">
+        <input type="checkbox" id="autoplay-toggle" class="sr-only peer" />
         <div
-          class="text-2xs font-bold uppercase tracking-widest text-text-muted"
+          class="w-7 h-4 bg-surface-600 rounded-full peer peer-checked:bg-brand-600 transition-colors"
         >
-          Contenido
         </div>
-        <!-- Autoplay Toggle -->
-        <label class="flex items-center gap-2 cursor-pointer group">
-          <span
-            class="text-[10px] font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight"
-            >Autoplay</span
-          >
-          <div class="relative inline-flex items-center">
-            <input type="checkbox" id="autoplay-toggle" class="sr-only peer" />
-            <div
-              class="w-7 h-4 bg-surface-600 rounded-full peer peer-checked:bg-brand-600 transition-colors"
-            >
-            </div>
-            <div
-              class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-3"
-            >
-            </div>
-          </div>
-        </label>
+        <div
+          class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-3"
+        >
+        </div>
       </div>
-      <div class="overflow-y-auto flex-1 custom-scrollbar">
-        {
-          videos.map((v, i) => {
-            const vp = v.progress;
-            const isDone = vp?.completed;
-            const isActive = v.id === activeVideo?.id;
-
-            const vDuration = v.duration || 0;
-            const vPosition = vp?.position || 0;
-            const vProgressPercent =
-              vDuration > 0
-                ? Math.min(100, Math.round((vPosition / vDuration) * 100))
-                : 0;
-
-            return (
-              <button
-                class={`video-item w-full text-left flex items-center gap-4 p-4 transition-all hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer group ${
-                  isActive ? "bg-surface-700/50" : "bg-transparent"
-                }`}
-                data-asset-id={v.id}
-                data-title={v.title}
-                data-duration={vDuration}
-              >
-                <CircularProgress
-                  progress={vProgressPercent}
-                  isDone={isDone}
-                  label={i + 1}
-                />
-
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2 mb-0.5">
-                    <p
-                      class={`text-xs leading-tight line-clamp-1 transition-colors ${
-                        isActive
-                          ? "text-text-primary font-bold"
-                          : "text-text-secondary font-medium group-hover:text-text-primary"
-                      }`}
-                    >
-                      {v.title}
-                    </p>
-                    {vDuration > 0 && (
-                      <span class="text-[10px] font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded">
-                        {formatTime(vDuration)}
-                      </span>
-                    )}
-                  </div>
-                  {vp && !vp.completed && vp.position > 2 && (
-                    <div class="flex items-center gap-1.5">
-                      <div class="flex-1 h-1 bg-surface-900 rounded-full overflow-hidden">
-                        <div
-                          class="h-full bg-brand-600/50"
-                          style={`width: ${vProgressPercent}%`}
-                        />
-                      </div>
-                      <span class="text-[9px] font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
-                        {vProgressPercent}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })
-        }
-      </div>
-    </div>
+    </label>
   </div>
-</section>
+  <div class="overflow-y-auto flex-1 custom-scrollbar">
+    {
+      videos.map((v, i) => {
+        const vp = v.progress;
+        const isDone = vp?.completed;
+        const isActive = v.id === activeVideoId;
+
+        const vDuration = v.duration || 0;
+        const vPosition = vp?.position || 0;
+        const vProgressPercent =
+          vDuration > 0
+            ? Math.min(100, Math.round((vPosition / vDuration) * 100))
+            : 0;
+
+        return (
+          <button
+            class={`video-item w-full text-left flex items-center gap-4 p-4 transition-all hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer group ${
+              isActive ? "bg-surface-700/50" : "bg-transparent"
+            }`}
+            data-asset-id={v.id}
+            data-title={v.title}
+            data-duration={vDuration}
+          >
+            <CircularProgress
+              progress={vProgressPercent}
+              isDone={isDone}
+              label={i + 1}
+            />
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2 mb-0.5">
+                <p
+                  class={`text-xs leading-tight line-clamp-1 transition-colors ${
+                    isActive
+                      ? "text-text-primary font-bold"
+                      : "text-text-secondary font-medium group-hover:text-text-primary"
+                  }`}
+                >
+                  {v.title}
+                </p>
+                {vDuration > 0 && (
+                  <span class="text-[10px] font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded">
+                    {formatTime(vDuration)}
+                  </span>
+                )}
+              </div>
+              {vp && !vp.completed && vp.position > 2 && (
+                <div class="flex items-center gap-1.5">
+                  <div class="flex-1 h-1 bg-surface-900 rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-brand-600/50"
+                      style={`width: ${vProgressPercent}%`}
+                    />
+                  </div>
+                  <span class="text-[9px] font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
+                    {vProgressPercent}%
+                  </span>
+                </div>
+              )}
+            </div>
+          </button>
+        );
+      })
+    }
+  </div>
+</div>
 
 <script>
   // ─── Video playlist logic ────────────────────────────────────────────
   const setupPlaylists = () => {
     const playlists = document.querySelectorAll<HTMLElement>(
-      ".video-playlist-section"
+      ".video-playlist-sidebar"
     );
 
     playlists.forEach((playlist) => {
