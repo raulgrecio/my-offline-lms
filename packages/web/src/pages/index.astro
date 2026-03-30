@@ -130,7 +130,17 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
         title="Tu biblioteca está vacía" 
         message="Aún no tienes cursos ni rutas de aprendizaje disponibles. Sincroniza tu cuenta para empezar."
         icon="library"
-      />
+      >
+        <Button 
+          slot="action" 
+          href={APP_ROUTES.IMPORT} 
+          variant="primary" 
+          icon="download"
+          hoverEffect="translate"
+        >
+          Empezar Sincronización
+        </Button>
+      </EmptyState>
     )
   }
 </Layout>
