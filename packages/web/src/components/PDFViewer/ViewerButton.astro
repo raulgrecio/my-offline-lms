@@ -1,0 +1,43 @@
+---
+import { cn } from "@lib/cn";
+import Button from "../Button.astro";
+import type { IconName } from "../Icon/icons";
+
+interface Props {
+  id?: string;
+  title: string;
+  icon: IconName;
+  href?: string;
+  className?: string; // Standardized approach for components
+  iconSize?: "xs" | "sm" | "md";
+  variant?: "ghost" | "zoom";
+  [key: string]: any;
+}
+
+const {
+  id,
+  title,
+  icon,
+  href,
+  className = "",
+  iconSize = "sm",
+  variant = "ghost",
+  ...rest
+} = Astro.props;
+
+const finalClasses = cn(
+  variant === "zoom" && "!h-auto !w-auto",
+  className
+);
+---
+
+<Button
+  id={id}
+  title={title}
+  href={href}
+  variant="ghost"
+  icon={icon}
+  class={finalClasses}
+  square={true}
+  {...rest}
+/>

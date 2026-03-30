@@ -1,0 +1,395 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Button from "@components/Button.astro";
+import ViewerButton from "@components/PDFViewer/ViewerButton.astro";
+import ViewerFitControl from "@components/PDFViewer/ViewerFitControl.astro";
+import FavoriteButton from "@components/FavoriteButton.astro";
+---
+
+<Layout title="Button Showcase">
+  <div class="p-8 space-y-16 max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="space-y-4">
+      <h1 class="text-4xl font-black text-text-primary tracking-tight">
+        Component Gallery: Button
+      </h1>
+      <p class="text-text-secondary text-lg max-w-2xl">
+        This page demonstrates all button variants and states as part of the
+        unified design system.
+      </p>
+    </header>
+
+    <!-- ─── VARIANTS ───────────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          1. Semantic Variants
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {
+          (["primary", "secondary", "ghost", "outline", "danger"] as const).map(
+            (v) => (
+              <div class="p-6 bg-surface-900 rounded-2xl border border-border-subtle flex flex-col items-center gap-4">
+                <Button variant={v}>
+                  {v.charAt(0).toUpperCase() + v.slice(1)} Button
+                </Button>
+                <span class="text-xs font-mono text-text-muted">
+                  variant="{v}"
+                </span>
+              </div>
+            )
+          )
+        }
+      </div>
+    </section>
+
+    <!-- ─── SIZES ──────────────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          2. Sizing Scale
+        </h2>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Row 1: Text Buttons -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle overflow-x-auto"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase mb-4">
+            Standard Text-Only
+          </h4>
+          <div class="flex items-end gap-6 min-w-max pb-2">
+            {
+              ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
+                <div class="flex flex-col items-center gap-2">
+                  <Button size={s}>Button {s}</Button>
+                  <span class="text-[10px] font-mono text-text-muted">{s}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Row 2: Square Buttons -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle overflow-x-auto"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase mb-4">
+            Square Icon-Only (Scaled Icons)
+          </h4>
+          <div class="flex items-end gap-6 min-w-max pb-2">
+            {
+              ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
+                <div class="flex flex-col items-center gap-2">
+                  <Button square size={s} icon="plus" />
+                  <span class="text-[10px] font-mono text-text-muted">
+                    sq-{s}
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <!-- Row 3: Combined -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle overflow-x-auto"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase mb-4">
+            Icon + Text Combination
+          </h4>
+          <div class="flex items-end gap-6 min-w-max pb-2">
+            {
+              ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
+                <div class="flex flex-col items-center gap-2">
+                  <Button size={s} icon="download">
+                    Save {s}
+                  </Button>
+                  <span class="text-[10px] font-mono text-text-muted">
+                    {s} with icon
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FEATURES ───────────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          3. Features & States
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Icons -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle space-y-4"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase">
+            Icons & Positioning
+          </h4>
+          <div class="flex flex-col gap-4 items-start">
+            <div class="space-y-2 w-full">
+              <p class="text-[10px] text-text-muted">
+                Dual Icons (Left & Right):
+              </p>
+              <div class="flex flex-wrap gap-2">
+                {
+                  (["primary", "secondary", "outline", "danger"] as const).map(
+                    (v) => (
+                      <Button
+                        variant={v}
+                        icon="layers"
+                        iconRight="plus"
+                        size="sm"
+                      >
+                        {v}
+                      </Button>
+                    )
+                  )
+                }
+              </div>
+            </div>
+
+            <div class="space-y-2 w-full">
+              <p class="text-[10px] text-text-muted">Square Variants:</p>
+              <div class="flex flex-wrap gap-2">
+                {
+                  (
+                    [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "outline",
+                      "danger",
+                    ] as const
+                  ).map((v) => (
+                    <Button square icon="trash" variant={v} size="md" />
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback States -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle space-y-4"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase">
+            Feedback & Disabled
+          </h4>
+          <div class="flex flex-col gap-3 items-start">
+            <div class="space-y-2 w-full">
+              <p class="text-[10px] text-text-muted">
+                Loading States (All Variants):
+              </p>
+              <div class="grid grid-cols-2 gap-2">
+                <Button loading size="sm">Primary</Button>
+                <Button variant="secondary" loading size="sm">Secondary</Button>
+                <Button variant="outline" loading size="sm">Outline</Button>
+                <Button variant="ghost" loading size="sm">Ghost</Button>
+                <Button variant="danger" loading size="sm">Danger</Button>
+              </div>
+            </div>
+            <div class="space-y-2 w-full pt-2">
+              <p class="text-[10px] text-text-muted">Disabled States:</p>
+              <div class="flex flex-wrap gap-2">
+                <Button variant="outline" disabled size="sm"
+                  >Action Unavailable</Button
+                >
+                <Button variant="ghost" disabled icon="lock" size="sm"
+                  >Restricted</Button
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layout Contrast -->
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle space-y-4"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase">
+            Layout Modes
+          </h4>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <p class="text-[10px] text-text-muted">Default (Inline):</p>
+              <div class="flex gap-2">
+                <Button size="sm">Option A</Button>
+                <Button size="sm">Option B</Button>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <p class="text-[10px] text-text-muted">Block (Full Width):</p>
+              <Button block variant="primary" hoverEffect="translate">
+                Submit Data
+              </Button>
+              <Button block variant="secondary" hoverEffect="translate">
+                Cancel Operation
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── HOVER EFFECTS ──────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          4. Hover Effects (Opt-in)
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {
+          (["none", "translate", "scale"] as const).map((h) => (
+            <div class="p-6 bg-surface-900 rounded-2xl border border-border-subtle flex flex-col items-center gap-4">
+              <Button variant="secondary" hoverEffect={h}>
+                hover="{h}"
+              </Button>
+              <span class="text-xs font-mono text-text-muted">
+                hoverEffect="{h}"
+              </span>
+            </div>
+          ))
+        }
+      </div>
+      <p class="text-sm text-text-secondary italic">
+        By default, all buttons use <code>hoverEffect="none"</code>. Use
+        <code>hoverEffect="translate"</code> for premium interactive cards or primary
+        actions.
+      </p>
+    </section>
+
+    <!-- ─── INTEGRATION ────────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          5. Specialized Integration
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- ViewerButton Section -->
+        <div
+          class="p-8 bg-surface-950 rounded-3xl border border-border-subtle space-y-6"
+        >
+          <div class="space-y-1">
+            <h3 class="text-lg font-bold text-text-primary">ViewerButton</h3>
+            <p class="text-sm text-text-muted">
+              Specialized square buttons used in the PDF Viewer UI. Support
+              "ghost" (default) and "zoom" (minimal, p-1) variants.
+            </p>
+          </div>
+
+          <div
+            class="flex flex-wrap items-center gap-6 p-4 bg-surface-800 rounded-2xl border border-border-subtle"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <ViewerButton
+                id="v1"
+                title="Ghost"
+                icon="sidebar"
+                variant="ghost"
+              />
+              <span class="text-[10px] text-text-muted">variant="ghost"</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <ViewerButton
+                id="v2"
+                title="Zoom"
+                icon="plus"
+                variant="zoom"
+                iconSize="xs"
+              />
+              <span class="text-[10px] text-text-muted">variant="zoom"</span>
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-4 border-t border-border-subtle/50">
+            <h4 class="text-xs font-bold text-text-muted uppercase">
+              Segmented Control
+            </h4>
+            <div class="flex flex-col items-start gap-2">
+              <ViewerFitControl />
+              <p class="text-[10px] text-text-muted italic">
+                Composite component using multiple ViewerButtons
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- FavoriteButton Section -->
+        <div
+          class="p-8 bg-surface-950 rounded-3xl border border-border-subtle space-y-6"
+        >
+          <div class="space-y-1">
+            <h3 class="text-lg font-bold text-text-primary">FavoriteButton</h3>
+            <p class="text-sm text-text-muted">
+              Interactive toggle for favoriting items. Uses red themes when
+              active and features built-in scale/translate effects.
+            </p>
+          </div>
+
+          <div
+            class="flex flex-wrap items-center gap-6 p-4 bg-surface-800 rounded-2xl border border-border-subtle"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <FavoriteButton
+                id="f1"
+                type="course"
+                isFavorite={false}
+                size="sm"
+              />
+              <span class="text-[10px] text-text-muted">Inactive (sm)</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <FavoriteButton
+                id="f2"
+                type="course"
+                isFavorite={true}
+                size="md"
+              />
+              <span class="text-[10px] text-text-muted">Active (md)</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <FavoriteButton
+                id="f3"
+                type="course"
+                isFavorite={true}
+                size="lg"
+                hoverEffect="translate"
+              />
+              <span class="text-[10px] text-text-muted">Large (Translate)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>

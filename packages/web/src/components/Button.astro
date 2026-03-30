@@ -1,0 +1,170 @@
+---
+import { Icon } from "./Icon";
+import { cn } from "@lib/cn";
+import type { IconName, IconSize } from "./Icon/icons";
+
+// prettier-ignore
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "none";
+// prettier-ignore
+export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+// prettier-ignore
+export type ButtonType = "button" | "submit" | "reset";
+// prettier-ignore
+export type ButtonHoverEffect = "none" | "translate" | "scale";
+
+export interface Props {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  type?: ButtonType;
+  href?: string;
+  loading?: boolean;
+  disabled?: boolean;
+  square?: boolean;
+  block?: boolean;
+  muted?: boolean;
+  hoverEffect?: ButtonHoverEffect;
+  class?: string;
+  icon?: IconName;
+  iconRight?: IconName;
+  iconClass?: string;
+  iconRightClass?: string;
+  [key: string]: any;
+}
+
+const {
+  variant = "primary",
+  size = "md",
+  type = "button",
+  href,
+  loading = false,
+  disabled = false,
+  square = false,
+  block = false,
+  muted = false,
+  hoverEffect = "none",
+  class: className = "",
+  icon,
+  iconRight,
+  iconClass = "",
+  iconRightClass = "",
+  ...rest
+} = Astro.props as Props;
+
+// Base Styles
+const baseStyles =
+  "group relative inline-flex items-center justify-center font-semibold transition-all duration-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 select-none outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary";
+const activeStyles = "active:translate-y-0 active:scale-[0.98]";
+
+const hoverEffects = {
+  none: "",
+  translate: "hover:-translate-y-0.5",
+  scale: "hover:scale-110",
+};
+
+// Variants
+const variants = {
+  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
+  secondary:
+    "bg-text-primary text-surface-950 hover:bg-text-primary/80 hover:text-surface-950/80 shadow-sm",
+  ghost:
+    "bg-transparent text-text-secondary hover:bg-surface-800 hover:text-brand-400",
+  outline:
+    "bg-transparent text-text-secondary border border-border-subtle hover:bg-surface-800 hover:text-brand-400 hover:border-brand-500/50",
+  danger:
+    "bg-danger/10 text-danger hover:bg-danger hover:text-white border border-danger/20 hover:border-danger shadow-sm",
+  none: "",
+};
+
+// Icon styles
+const iconBaseStyles = "shrink-0 transition-opacity duration-200";
+
+// Sizes (Padding and Text)
+const sizes = {
+  xs: square ? "w-7 h-7 rounded-md" : "px-2 py-1 text-2xs rounded-md gap-1",
+  sm: square ? "w-9 h-9 rounded-lg" : "px-4 py-2 text-xs rounded-lg gap-2",
+  md: square ? "w-11 h-11 rounded-xl" : "px-5 py-2.5 text-sm rounded-xl gap-2",
+  lg: square
+    ? "w-14 h-14 rounded-2xl"
+    : "px-8 py-4 text-base rounded-2xl gap-3",
+  xl: square ? "w-16 h-16 rounded-2xl" : "px-10 py-5 text-lg rounded-2xl gap-4",
+};
+
+const iconSizes: Record<string, IconSize> = {
+  xs: "xs",
+  sm: square ? "sm" : "sm",
+  md: square ? "md" : "sm",
+  lg: square ? "lg" : "md",
+  xl: square ? "xl" : "md",
+};
+
+const widthStyle = block ? "w-full" : "";
+const allProgressClasses = loading
+  ? "relative transition-none pointer-events-none !shadow-none !translate-y-0 !scale-100"
+  : "";
+
+const mutedStyles = muted ? "!text-text-muted hover:!text-inherit" : "";
+
+const finalClasses = cn(
+  variant !== "none" ? baseStyles + activeStyles : "",
+  variants[variant],
+  hoverEffects[hoverEffect],
+  sizes[size],
+  widthStyle,
+  mutedStyles,
+  allProgressClasses,
+  className
+);
+
+const Tag = href ? "a" : "button";
+const isButton = !href;
+const hasSlotContent = Astro.slots.has("default");
+---
+
+<Tag
+  class={finalClasses}
+  href={href}
+  type={isButton ? type : undefined}
+  disabled={isButton ? disabled || loading : undefined}
+  aria-busy={loading}
+  {...rest}
+>
+  {
+    loading && (
+      <div class="loading-spinner absolute inset-0 flex items-center justify-center text-current bg-inherit rounded-[inherit]">
+        <div class="animate-spin rounded-full h-5 w-5 border-3 border-current border-t-transparent shadow-sm" />
+      </div>
+    )
+  }
+
+  <span class={loading ? "invisible" : "contents"}>
+    {
+      icon && (
+        <Icon
+          name={icon}
+          size={iconSizes[size]}
+          className={cn(
+            iconBaseStyles,
+            (hasSlotContent || !!iconRight) && "-ml-1",
+            iconClass
+          )}
+        />
+      )
+    }
+
+    <slot />
+
+    {
+      iconRight && (
+        <Icon
+          name={iconRight}
+          size={iconSizes[size]}
+          className={cn(
+            iconBaseStyles,
+            (hasSlotContent || !!icon) && "-mr-1",
+            iconRightClass
+          )}
+        />
+      )
+    }
+  </span>
+</Tag>

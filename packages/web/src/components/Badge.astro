@@ -1,72 +1,77 @@
 ---
-export type BadgeVariant = keyof typeof variantClasses;
-
-interface BadgeProps {
-  variant?: BadgeVariant;
-  pulse?: boolean;
-  dot?: 'none' | 'static' | 'pulse';
-  className?: string;
-}
-
-const { 
-  variant = 'brand', 
-  pulse = false, 
-  dot = 'none',
-  className = '' 
-} = Astro.props as BadgeProps;
-
 const variantClasses = {
   'brand': 'bg-brand-600/10 text-brand-400 border-brand-600/20',
-  'completed': 'bg-status-completed/15 text-status-completed border-status-completed/30',
-  'in-progress': 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30',
-  'not-started': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
-  'failed': 'bg-status-failed/15 text-status-failed border-status-failed/30',
-  'downloading': 'bg-status-downloading/15 text-status-downloading border-status-downloading/30',
   'neutral': 'bg-surface-800 text-text-secondary border-border-subtle',
 } as const;
 
-const dotColorClasses: Partial<Record<BadgeVariant, string>> = {
-  'brand': 'bg-brand-500',
-  'completed': 'bg-status-completed',
-  'in-progress': 'bg-status-in-progress',
-  'not-started': 'bg-transparent border-[1.5px] border-currentColor',
-  'neutral': 'bg-text-muted',
-} as const;
+export type BadgeVariant = keyof typeof variantClasses;
 
-const finalDotColor = dotColorClasses[variant] || 'bg-currentColor';
+export interface BadgeProps {
+  variant?: BadgeVariant;
+  pulse?: boolean;
+  dot?: 'none' | 'static' | 'pulse';
+  dotClasses?: string;
+  className?: string;
+  ariaLabel?: string;
+  dataStatus?: string;
+}
+
+export interface BadgeConfig { 
+  classes: string; 
+  dotClasses?: string; 
+  label: string; 
+  pulse?: boolean 
+}
+
+const { 
+  variant,
+  pulse = false, 
+  dot = 'none',
+  dotClasses = '',
+  className = '',
+  ariaLabel,
+  dataStatus
+} = Astro.props as BadgeProps;
 
 const baseClasses = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-wider border transition-all duration-200";
 
+const dotColorClasses: Partial<Record<BadgeVariant, string>> = {
+  'brand': 'bg-brand-500',
+  'neutral': 'bg-text-muted',
+} as const;
+
+const finalVariantClass = variant ? (variantClasses[variant as BadgeVariant] || variantClasses['neutral']) : '';
+const finalDotClasses = dotClasses || (variant ? dotColorClasses[variant as BadgeVariant] : 'bg-currentColor');
+
 const classes = [
   baseClasses,
-  variantClasses[variant as BadgeVariant] || variantClasses['neutral'],
+  finalVariantClass,
   pulse ? 'animate-pulse' : '',
   className
 ].filter(Boolean).join(' ');
 
+const hasCustomDot = Astro.slots.has('dot');
+const showDefaultDot = !hasCustomDot && dot !== 'none';
 ---
 
-<span class={classes}>
-  {dot !== 'none' && (
-    <>
-      {variant === 'failed' && (
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" aria-hidden="true">
-          <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      )}
+<span 
+  class={classes} 
+  aria-label={ariaLabel} 
+  data-status={dataStatus}
+  role={ariaLabel ? "status" : undefined}
+>
+  {hasCustomDot && <slot name="dot" />}
 
-      {variant === 'downloading' && (
-        <span class="w-1.5 h-1.5 rounded-full border-[1.5px] border-currentColor border-r-transparent animate-spin shrink-0" aria-hidden="true"></span>
-      )}
-
-      {variant !== 'failed' && variant !== 'downloading' && (
-        <span class:list={[
-          "w-1.5 h-1.5 rounded-full shrink-0 relative",
-          finalDotColor,
-          dot === 'pulse' && "after:content-[''] after:absolute after:inset-0 after:rounded-full after:bg-currentColor after:animate-ping"
-        ]} aria-hidden="true"></span>
-      )}
-    </>
+  {showDefaultDot && (
+    <div 
+      class:list={[
+        "w-1.5 h-1.5 rounded-full shrink-0 relative",
+        finalDotClasses,
+        dot === 'pulse' && "after:content-[''] after:absolute after:inset-0 after:rounded-full after:bg-currentColor after:animate-ping"
+      ]} 
+      aria-hidden="true" 
+    />
   )}
+
   <slot />
 </span>

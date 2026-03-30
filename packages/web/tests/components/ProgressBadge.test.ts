@@ -5,23 +5,32 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import ProgressBadge from "@components/ProgressBadge.astro";
 
 describe("ProgressBadge.astro", () => {
-  it("should render all known statuses correctly", async () => {
+  it("should render all progress statuses with correct accessibility attributes", async () => {
     const container = await AstroContainer.create();
-    const statuses = ['COMPLETED', 'IN_PROGRESS', 'NOT_STARTED', 'FAILED', 'PENDING', 'DOWNLOADING', 'UNKNOWN'] as const;
+    const statuses = ['completed', 'in_progress', 'not_started'] as const;
 
     for (const status of statuses) {
       const html = await container.renderToString(ProgressBadge, { props: { status } });
-      expect(html).toContain('span');
+      
+      expect(html).toContain(`data-status="${status}"`);
+      expect(html).toContain('aria-label="Estado:');
 
-      if (status === 'COMPLETED') expect(html).toContain('Completado');
-      if (status === 'DOWNLOADING') expect(html).toContain('Descargando');
-      if (status === 'UNKNOWN') expect(html).toContain('Sin iniciar');
+      if (status === 'completed') expect(html).toContain('Completado');
+      if (status === 'in_progress') expect(html).toContain('En progreso');
+      if (status === 'not_started') expect(html).toContain('Sin iniciar');
     }
   });
 
-  it("should handle lowercase statuses", async () => {
+  it("should handle mixed case statuses", async () => {
     const container = await AstroContainer.create();
-    const html = await container.renderToString(ProgressBadge, { props: { status: 'completed' } });
+    const html = await container.renderToString(ProgressBadge, { props: { status: 'COMPLETED' as any } });
+    expect(html).toContain('data-status="completed"');
     expect(html).toContain('Completado');
+  });
+
+  it("should default to not_started for unknown status", async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(ProgressBadge, { props: { status: 'unknown' as any} });
+    expect(html).toContain('data-status="not_started"');
   });
 });

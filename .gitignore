@@ -48,3 +48,7 @@ logs/
 # Temp files
 tmp/
 temp/
+
+# Visual Regression Captures
+packages/web/debug/*
+!packages/web/debug/baseline/*

@@ -2,6 +2,7 @@
 import { APP_ROUTES } from "@platform/router/routes";
 import { Icon } from "./Icon";
 import Badge from "./Badge.astro";
+import Button from "./Button.astro";
 
 interface HomepageHeroProps {
   lastWatched?: any;
@@ -39,13 +40,16 @@ const { lastWatched, lastWatchedCourse } = Astro.props as HomepageHeroProps;
               {lastWatchedCourse.title}
             </p>
           )}
-          <a
+          <Button
             href={APP_ROUTES.COURSES.DETAIL(lastWatched.courseId)}
-            class="btn-primary px-8 py-4 text-base shadow-brand/50 hover:shadow-brand transition-all flex items-center gap-3 w-full sm:w-auto justify-center"
+            variant="primary"
+            size="lg"
+            hoverEffect="translate"
+            icon="play"
+            class="shadow-brand hover:shadow-brand-lg"
           >
-            <Icon name="play" size="sm" strokeWidth={3} />
             Continuar ahora
-          </a>
+          </Button>
         </div>
       ) : (
         <div class="max-w-2xl">
@@ -59,13 +63,16 @@ const { lastWatched, lastWatchedCourse } = Astro.props as HomepageHeroProps;
             Explora tu catálogo offline y continúa aprendiendo desde donde lo
             dejaste, sin necesidad de conexión.
           </p>
-          <a
+          <Button
             href="#cursos-section"
-            class="btn-primary px-8 py-4 text-base shadow-brand/50 hover:shadow-brand transition-all flex items-center gap-3 w-full sm:w-auto justify-center"
+            variant="primary"
+            size="lg"
+            hoverEffect="translate"
+            iconRight="arrow-right"
+            class="shadow-brand hover:shadow-brand-lg"
           >
             Explorar cursos
-            <Icon name="arrow-right" size="sm" strokeWidth={2.5} />
-          </a>
+          </Button>
         </div>
       )
     }

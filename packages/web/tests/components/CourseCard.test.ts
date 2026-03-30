@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import CourseCard from "../../src/components/CourseCard.astro";
+import CourseCard from "@components/CourseCard.astro";
 
 describe("CourseCard.astro", () => {
   it("should render title and basic info", async () => {
@@ -11,7 +11,7 @@ describe("CourseCard.astro", () => {
       props: { id: 'c1', title: 'Test Course', totalAssets: 5, progress: 20 }
     });
     expect(html).toContain('Test Course');
-    expect(html).toContain('5 assets');
+    expect(html).toContain('5 recursos');
     expect(html).toContain('20%');
     expect(html).toContain('href="/courses/c1"');
   });

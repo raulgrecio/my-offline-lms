@@ -1,85 +1,119 @@
 ---
 export const prerender = false;
 
-import Layout from "../layouts/Layout.astro";
-import { Icon } from "../components/Icon";
-import Badge from "../components/Badge.astro";
-import PageHeader from "../components/PageHeader.astro";
-import { API_ROUTES } from "../platform/api/routes";
+import {
+  AssetPathResolver,
+  NodeFileSystem,
+  NodePath,
+} from "@my-offline-lms/core/filesystem";
+
+import { getAssetConfigPath, getMonorepoRoot } from "@config/paths";
+import { API_ROUTES } from "@platform/api/routes";
+import { logger } from "@platform/logging";
+import Layout from "@layouts/Layout.astro";
+import { Icon } from "@components/Icon";
+import AssetBadge from "@components/AssetBadge.astro";
+import PageHeader from "@components/PageHeader.astro";
+import EmptyState from "@components/EmptyState.astro";
+import CollapsibleCard from "@components/CollapsibleCard.astro";
+import Button from "@components/Button.astro";
 
 const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
+
+let paths: any[] = [];
+let error = null;
+
+try {
+  const resolver = new AssetPathResolver({
+    configPath: await getAssetConfigPath(),
+    monorepoRoot: await getMonorepoRoot(),
+    fs: new NodeFileSystem(),
+    path: new NodePath(),
+    logger,
+  });
+  paths = await resolver.getAvailablePaths();
+} catch (err) {
+  logger.error("Error loading asset paths:", err);
+  error = "No se pudieron cargar las ubicaciones actuales.";
+}
+
+const hasPaths = paths.length > 0;
 ---
 
 <Layout title="Ajustes de Assets">
   <PageHeader
     title="Configuración de Assets"
     icon="settings"
-    subtitle="Gestiona las ubicaciones donde el sistema buscará vídeos y guías (PDFs)."   
+    subtitle="Gestiona las ubicaciones donde el sistema buscará vídeos y guías (PDFs)."
   />
 
-  <div class="max-w-4xl mx-auto" id="settings-view" data-api-url={assetPathsUrl}>
-    <!-- ─── Add New Path (Unified Collapsible Card) ─────────────────────────── -->
-    <section class="mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all">
-      <button 
-        id="toggle-add-form"
-        class="flex items-center justify-between w-full p-5 hover:bg-surface-700 transition-colors group"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-600/10 text-brand-600 group-hover:scale-110 transition-transform">
-            <Icon name="plus" size="md" />
-          </div>
-          <div class="text-left">
-            <span class="block font-bold text-text-primary">Añadir nueva ubicación</span>
-            <span class="block text-xs text-text-muted mt-0.5">Configura una nueva carpeta local para tu catálogo de contenidos</span>
-          </div>
+  <div
+    id="settings-view"
+    class="max-w-4xl mx-auto"
+    data-api-url={assetPathsUrl}
+  >
+    <CollapsibleCard initialOpen={false}>
+      <div slot="header" class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-600/10 text-brand-600 group-hover:scale-110 transition-all duration-300"
+        >
+          <Icon name="plus" size="md" />
         </div>
-        <div id="toggle-icon" class="text-text-muted transition-transform duration-300">
-          <Icon name="chevron-down" size="sm" />
+        <div>
+          <span class="block font-bold text-text-primary leading-tight">
+            Añadir nueva ubicación
+          </span>
+          <span class="block text-[11px] text-text-muted mt-1 leading-tight">
+            Configura una nueva carpeta local para tu catálogo de contenidos
+          </span>
         </div>
-      </button>
-
-      <div id="add-form-container" class="hidden border-t border-border-subtle p-6 bg-surface-800/50">
-        <p class="text-sm text-text-secondary mb-6 leading-relaxed">
-          El sistema escaneará estas carpetas para sincronizar la biblioteca de vídeos y guías locales. Use rutas absolutas y etiquetas descriptivas.
-        </p>
-
-        <form id="add-path-form" class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <label for="label-input" class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1">
-                Etiqueta identificativa
-              </label>
-              <input
-                type="text"
-                id="label-input"
-                placeholder="Ej: Disco Externo, NAS..."
-                class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
-                required
-              />
-            </div>
-            <div class="space-y-1.5">
-              <label for="path-input" class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1">
-                Ruta absoluta del sistema
-              </label>
-              <input
-                type="text"
-                id="path-input"
-                placeholder="Ej: /home/usuario/assets"
-                class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
-                required
-              />
-            </div>
-          </div>
-          
-          <div class="flex justify-end pt-2">
-            <button type="submit" class="btn-primary py-2 px-6">
-              <Icon name="plus" size="sm" />
-              Guardar ubicación
-            </button>
-          </div>
-        </form>
       </div>
-    </section>
+      <p class="text-sm text-text-secondary mb-6 leading-relaxed">
+        El sistema escaneará estas carpetas para sincronizar la biblioteca de
+        vídeos y guías locales. Use rutas absolutas y etiquetas descriptivas.
+      </p>
+
+      <form id="add-path-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label
+              for="label-input"
+              class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1"
+            >
+              Etiqueta identificativa
+            </label>
+            <input
+              type="text"
+              id="label-input"
+              placeholder="Ej: Disco Externo, NAS..."
+              class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
+              required
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label
+              for="path-input"
+              class="text-xs font-bold uppercase tracking-wider text-text-muted ml-1"
+            >
+              Ruta absoluta del sistema
+            </label>
+            <input
+              type="text"
+              id="path-input"
+              placeholder="Ej: /home/usuario/assets"
+              class="w-full px-4 py-2.5 rounded-lg bg-surface-700 border border-border-default outline-none focus:border-brand-500 transition-all text-sm"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <Button type="submit" variant="primary" hoverEffect="translate" icon="plus">
+            Guardar ubicación
+          </Button>
+        </div>
+      </form>
+    </CollapsibleCard>
 
     <!-- ─── Path List ────────────────────────────────────────────── -->
     <section>
@@ -90,54 +124,53 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
       </div>
 
       <div id="path-list" class="flex flex-col gap-3">
-        <div class="animate-pulse flex flex-col gap-3">
-          {[1, 2, 3].map(() => <div class="h-20 rounded-xl bg-surface-800" />)}
-        </div>
+        {
+          error ? (
+            <div class="py-12 text-center text-red-500 bg-red-500/5 rounded-2xl border border-dashed border-red-500/20">
+              <div class="flex justify-center mb-2">
+                <Icon name="alert-circle" size="lg" />
+              </div>
+              <p class="text-sm font-medium">{error}</p>
+            </div>
+          ) : hasPaths ? (
+            paths.map((p) => (
+              <div class="card p-4 flex items-center justify-between gap-4 border border-border-subtle bg-surface-800 rounded-2xl">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-sm text-text-primary">
+                      {p.label}
+                    </span>
+                    {p.available ? (
+                      <AssetBadge status="COMPLETED">Conectado</AssetBadge>
+                    ) : (
+                      <AssetBadge status="FAILED">No disponible</AssetBadge>
+                    )}
+                  </div>
+                  <code class="text-xs break-all text-text-muted">
+                    {p.path}
+                  </code>
+                </div>
+                <Button
+                  variant="ghost"
+                  square
+                  size="md"
+                  icon="trash"
+                  class="hover:text-danger-400! hover:bg-surface-600!"
+                  data-action="delete"
+                  data-path={p.path}
+                  aria-label="Eliminar"
+                />
+              </div>
+            ))
+          ) : (
+            <EmptyState message="No hay rutas configuradas." icon="inbox" />
+          )
+        }
       </div>
     </section>
   </div>
 
-  <!-- ─── Templates for Path List States ────────────────────────────── -->
-  <template id="path-card-template">
-    <div class="card p-4 flex items-center justify-between gap-4 border border-border-subtle bg-surface-800 rounded-2xl">
-      <div class="min-w-0">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="font-bold text-sm text-text-primary js-label"></span>
-          <div class="js-badge-connected hidden">
-             <Badge variant="completed" dot="static">Conectado</Badge>
-          </div>
-          <div class="js-badge-disconnected hidden">
-             <Badge variant="failed" dot="static">No disponible</Badge>
-          </div>
-        </div>
-        <code class="text-xs break-all text-text-muted js-path"></code>
-      </div>
-      <button 
-        class="btn-delete p-2 rounded-lg hover:bg-surface-600 transition-colors text-text-muted hover:text-red-400 js-delete"
-        aria-label="Eliminar"
-      >
-        <Icon name="trash" size="sm" />
-      </button>
-    </div>
-  </template>
-
-  <template id="path-empty-template">
-    <div class="py-12 text-center">
-      <div class="flex justify-center mb-3 text-text-muted opacity-20">
-        <Icon name="inbox" size="xl" />
-      </div>
-      <p class="text-sm text-text-muted">No hay rutas configuradas.</p>
-    </div>
-  </template>
-
-  <template id="path-error-template">
-    <div class="py-12 text-center text-red-500 bg-red-500/5 rounded-2xl border border-dashed border-red-500/20">
-      <div class="flex justify-center mb-2">
-        <Icon name="alert-circle" size="lg" />
-      </div>
-      <p class="text-sm font-medium">Error al cargar las rutas.</p>
-    </div>
-  </template>
+  <!-- No logic required here anymore as we use SSR init -->
 </Layout>
 
 <script>
@@ -146,83 +179,34 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
   const settingsView = document.getElementById("settings-view") as HTMLElement;
   const apiUrl = settingsView.dataset.apiUrl!;
 
-  async function loadPaths() {
-    const list = document.getElementById("path-list");
-    const cardTemplate = document.getElementById("path-card-template") as HTMLTemplateElement;
-    const emptyTemplate = document.getElementById("path-empty-template") as HTMLTemplateElement;
-    const errorTemplate = document.getElementById("path-error-template") as HTMLTemplateElement;
-
-    if (!list || !cardTemplate) return;
-
-    try {
-      const paths = await apiClient.get<any[]>(apiUrl);
-
-      if (paths.length === 0) {
-        list.innerHTML = "";
-        list.appendChild(emptyTemplate.content.cloneNode(true));
-        return;
-      }
-
-      list.innerHTML = ""; // Clear loader
-      
-      paths.forEach((p: any) => {
-        const clone = cardTemplate.content.cloneNode(true) as DocumentFragment;
-        
-        // Populate data
-        clone.querySelector(".js-label")!.textContent = p.label;
-        clone.querySelector(".js-path")!.textContent = p.path;
-        
-        const badgeConnected = clone.querySelector(".js-badge-connected")!;
-        const badgeDisconnected = clone.querySelector(".js-badge-disconnected")!;
-        
-        if (p.available) {
-          badgeConnected.classList.remove("hidden");
-        } else {
-          badgeDisconnected.classList.remove("hidden");
+  // ─── Delete Paths ────────────────────────────────────────────────────────
+  const deleteButtons = document.querySelectorAll('[data-action="delete"]');
+  deleteButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const path = (btn as HTMLElement).dataset.path;
+      if (path && confirm(`¿Seguro que quieres eliminar la ruta: ${path}?`)) {
+        try {
+          await apiClient.delete(apiUrl, { path });
+          window.location.reload();
+        } catch (err) {
+          alert(
+            `Error al eliminar: ${
+              err instanceof Error ? err.message : String(err)
+            }`
+          );
         }
-
-        const deleteBtn = clone.querySelector(".js-delete") as HTMLElement;
-        deleteBtn.dataset.path = p.path;
-
-        deleteBtn.addEventListener("click", async () => {
-          if (confirm(`¿Seguro que quieres eliminar la ruta: ${p.path}?`)) {
-            try {
-              await apiClient.delete(apiUrl, { path: p.path });
-              loadPaths();
-            } catch (err) {
-              alert(`Error al eliminar: ${err instanceof Error ? err.message : String(err)}`);
-            }
-          }
-        });
-
-        list.appendChild(clone);
-      });
-    } catch (err) {
-      list.innerHTML = "";
-      list.appendChild(errorTemplate.content.cloneNode(true));
-    }
-  }
-
-  // Initial load
-  loadPaths();
-
-  // ─── Add Path Toggle ──────────────────────────────────────────────────────
-  const toggleBtn = document.getElementById("toggle-add-form");
-  const formContainer = document.getElementById("add-form-container");
-  const toggleIcon = document.getElementById("toggle-icon");
-
-  toggleBtn?.addEventListener("click", () => {
-    const isHidden = formContainer?.classList.contains("hidden");
-    formContainer?.classList.toggle("hidden");
-    toggleIcon?.classList.toggle("rotate-180", isHidden);
+      }
+    });
   });
-  
-  // Form handling (Keeping existing logic)
+
+  // ─── Add Path Form ───────────────────────────────────────────────────────
   const form = document.getElementById("add-path-form") as HTMLFormElement;
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const pathInput = document.getElementById("path-input") as HTMLInputElement;
-    const labelInput = document.getElementById("label-input") as HTMLInputElement;
+    const labelInput = document.getElementById(
+      "label-input"
+    ) as HTMLInputElement;
 
     try {
       await apiClient.post(apiUrl, {
@@ -232,7 +216,7 @@ const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
 
       pathInput.value = "";
       labelInput.value = "";
-      loadPaths();
+      window.location.reload();
     } catch (err) {
       alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }

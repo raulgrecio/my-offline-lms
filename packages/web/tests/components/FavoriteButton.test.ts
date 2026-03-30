@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import FavoriteButton from "../../src/components/FavoriteButton.astro";
+import FavoriteButton from "@components/FavoriteButton.astro";
 
 describe("FavoriteButton.astro", () => {
   it("should render with correct data attributes", async () => {
@@ -21,7 +21,8 @@ describe("FavoriteButton.astro", () => {
     const html = await container.renderToString(FavoriteButton, {
       props: { id: 'item1', type: 'course', size: 'lg' }
     });
-    expect(html).toContain('p-2.5'); // lg size maps to p-2.5
+    // Check for size-related class from Button atom (lg + square = w-14)
+    expect(html).toContain('w-14');
   });
 
   it("should support different hover effects", async () => {
@@ -29,6 +30,6 @@ describe("FavoriteButton.astro", () => {
     const html = await container.renderToString(FavoriteButton, {
       props: { id: 'item1', type: 'course', hoverEffect: 'translate' }
     });
-    expect(html).toContain('hover:-translate-y-px');
+    expect(html).toContain('hover:-translate-y-0.5');
   });
 });

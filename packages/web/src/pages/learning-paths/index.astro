@@ -18,8 +18,10 @@ const learningPaths = await getAllLearningPaths();
 
 const lpStatsResults = await Promise.all(
   learningPaths.map(async (lp) => {
-    const progress = await getLearningPathProgress({ id: lp.id });
-    const isFavorite = await getIsFavorite({ id: lp.id, type: "learning-path" });
+    const [progress, isFavorite] = await Promise.all([
+      getLearningPathProgress({ id: lp.id }),
+      getIsFavorite({ id: lp.id, type: "learning-path" })
+    ]);
     
     return {
       ...lp,
@@ -34,6 +36,7 @@ const lpStatsResults = await Promise.all(
 );
 
 const lpStats = lpStatsResults.filter((stats) => showAll || stats.courseCount > 0);
+const hasContent = lpStats.length > 0;
 ---
 
 <Layout title="Learning Paths">
@@ -52,7 +55,7 @@ const lpStats = lpStatsResults.filter((stats) => showAll || stats.courseCount > 
   
   <div id="learning-paths-container">
     {
-      lpStats.length > 0 ? (
+      hasContent ? (
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {lpStats.map((lp) => (
             <LearningPathCard

@@ -1,30 +1,48 @@
 ---
-import type { AssetStatus } from "@core/domain/models/Asset";
 import type { ProgressStatus } from "@features/progress/domain/model/ProgressStatus";
-import Badge, { type BadgeVariant } from "./Badge.astro";
+import Badge, { type BadgeProps, type BadgeConfig } from "./Badge.astro";
 
-export type StatusType = ProgressStatus | AssetStatus;
+export type { ProgressStatus };
 
-interface ProgressBadgeProps {
-  status: StatusType
+interface Props extends BadgeProps {
+  status: ProgressStatus;
 }
 
-const { status } = Astro.props as ProgressBadgeProps;
-
-const normalized = status?.toUpperCase();
-
-const config: Record<string, { variant: Partial<BadgeVariant>; label: string; pulse?: boolean }> = {
-  COMPLETED: { variant: 'completed', label: 'Completado' },
-  IN_PROGRESS: { variant: 'in-progress', label: 'En progreso' },
-  NOT_STARTED: { variant: 'not-started', label: 'Sin iniciar' },
-  FAILED: { variant: 'failed', label: 'Error' },
-  PENDING: { variant: 'not-started', label: 'Pendiente' },
-  DOWNLOADING: { variant: 'downloading', label: 'Descargando', pulse: true },
+const config: Record<ProgressStatus, BadgeConfig> = {
+  completed: {
+    classes:
+      "bg-status-completed/15 text-status-completed border-status-completed/30",
+    dotClasses: "bg-status-completed",
+    label: "Completado",
+  },
+  in_progress: {
+    classes:
+      "bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30",
+    dotClasses: "bg-status-in-progress",
+    label: "En progreso",
+  },
+  not_started: {
+    classes:
+      "bg-status-not-started/15 text-status-not-started border-status-not-started/30",
+    dotClasses: "bg-transparent border-[1.5px] border-currentColor",
+    label: "Sin iniciar",
+  },
 };
 
-const cfg = config[normalized] ?? config['NOT_STARTED'];
+const { status, className = "", ...rest } = Astro.props;
+const normalized = (status?.toLowerCase() || "not_started") as ProgressStatus;
+const safeStatus = config[normalized] ? normalized : "not_started";
+const cfg = config[safeStatus] ?? config["not_started"];
 ---
 
-<Badge variant={cfg.variant} pulse={cfg.pulse} dot="static">
-  {cfg.label}
+<Badge
+  {...rest}
+  className={`${cfg.classes} ${className}`}
+  pulse={rest.pulse ?? cfg.pulse}
+  dot="static"
+  dotClasses={cfg.dotClasses}
+  dataStatus={safeStatus}
+  ariaLabel={`Estado: ${cfg.label}`}
+>
+  <slot>{cfg.label}</slot>
 </Badge>

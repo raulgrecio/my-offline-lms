@@ -1,5 +1,6 @@
 ---
 import { Icon } from "../Icon";
+import Button from "../Button.astro";
 ---
 
 <main 
@@ -26,9 +27,9 @@ import { Icon } from "../Icon";
     </div>
     <h3 class="text-lg font-bold text-text-primary mb-2">Error al cargar el documento</h3>
     <p data-error-message class="text-sm text-text-secondary leading-relaxed"></p>
-    <button onclick="location.reload()" class="mt-6 btn-ghost text-xs border border-border-subtle">
+    <Button onclick="location.reload()" variant="ghost" size="sm" class="mt-6 border border-border-subtle">
       Reintentar carga
-    </button>
+    </Button>
   </div>
 </template>
 
@@ -40,9 +41,13 @@ import { Icon } from "../Icon";
           <Icon name="help-box" size="sm" className="text-brand-400" />
           Atajos de Teclado
         </h3>
-        <button class="p-1 rounded-lg hover:bg-surface-800 transition-colors" data-close-help>
-          <Icon name="x" size="sm" />
-        </button>
+        <Button
+          variant="ghost" 
+          size="xs" 
+          square 
+          icon="x"
+          data-close-help
+        />
       </div>
       <div class="p-6 space-y-4 text-sm">
         <div class="grid grid-cols-2 gap-y-3">

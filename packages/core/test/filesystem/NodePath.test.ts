@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { NodePath } from "../../src/filesystem/NodePath";
+import { NodePath } from "@filesystem/NodePath";
 import path from "path";
 
 describe("NodePath", () => {

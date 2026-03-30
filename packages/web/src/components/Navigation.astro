@@ -1,0 +1,55 @@
+---
+import { Icon } from "./Icon";
+import Button from "./Button.astro";
+import type { IconName } from "./Icon/icons";
+
+interface NavLink {
+  readonly href: string;
+  readonly label: string;
+  readonly icon: IconName;
+}
+
+interface Props {
+  links: readonly NavLink[];
+  currentPath: string;
+  orientation?: "horizontal" | "vertical";
+  class?: string;
+}
+
+const {
+  links,
+  currentPath,
+  orientation = "horizontal",
+  class: className = "",
+} = Astro.props as Props;
+
+const isVertical = orientation === "vertical";
+---
+
+<nav
+  class:list={[
+    "flex items-center",
+    isVertical ? "flex-col gap-1 w-full" : "gap-1",
+    className,
+  ]}
+>
+  {
+    links.map((link) => {
+      const isActive =
+        currentPath === link.href ||
+        (link.href !== "/" && currentPath.startsWith(link.href));
+
+      return (
+        <Button
+          href={link.href}
+          variant={isActive ? "secondary" : "ghost"}
+          size={isVertical ? "md" : "sm"}
+          block={isVertical}
+          icon={link.icon}
+        >
+          {link.label}
+        </Button>
+      );
+    })
+  }
+</nav>

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Core business logic and shared services for My Offline LMS",
   "main": "src/domain/index.ts",
+  "type": "module",
   "exports": {
     "./database": "./src/database/index.ts",
     "./filesystem": "./src/filesystem/index.ts",

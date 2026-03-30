@@ -5,6 +5,7 @@ import CourseCard from "@components/CourseCard.astro";
 import SectionHeader from "@components/SectionHeader.astro";
 import EmptyState from "@components/EmptyState.astro";
 import HomepageHero from "@components/HomepageHero.astro";
+import Button from "@components/Button.astro";
 import { Icon } from "@components/Icon";
 import {
   getAllLearningPaths,
@@ -24,8 +25,10 @@ const { lastWatched } = await getDashboardStatus();
 
 // LP progress and stats
 const lpStats = await Promise.all(learningPaths.map(async (lp) => {
-  const progress = await getLearningPathProgress({ id: lp.id });
-  const isFavorite = await getIsFavorite({ id: lp.id, type: "learning-path" });
+  const [progress, isFavorite] = await Promise.all([
+    getLearningPathProgress({ id: lp.id }),
+    getIsFavorite({ id: lp.id, type: "learning-path" })
+  ]);
   
   return {
     ...lp,
@@ -40,8 +43,10 @@ const lpStats = await Promise.all(learningPaths.map(async (lp) => {
 
 // Latest courses stats
 const latestCourses = await Promise.all(courses.map(async (course) => {
-  const progress = await getCourseProgress({ id: course.id });
-  const isFavorite = await getIsFavorite({ id: course.id, type: "course" });
+  const [progress, isFavorite] = await Promise.all([
+    getCourseProgress({ id: course.id }),
+    getIsFavorite({ id: course.id, type: "course" })
+  ]);
   
   return {
     ...course,
@@ -107,10 +112,14 @@ const hasContent = courses.length > 0 || lpStats.length > 0;
             
             {courses.length > 8 && (
               <div class="mt-6 text-center">
-                <a href={APP_ROUTES.COURSES.INDEX} class="btn btn-secondary btn-sm">
+                <Button 
+                  href={APP_ROUTES.COURSES.INDEX} 
+                  variant="secondary" 
+                  size="sm"
+                  iconRight="arrow-right"
+                >
                   Ver todos los cursos
-                  <Icon name="arrow-right" size="xs" className="ml-1" />
-                </a>
+                </Button>
               </div>
             )}
           </section>

@@ -5,43 +5,50 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import Badge from "@components/Badge.astro";
 
 describe("Badge.astro", () => {
-  it("should render with all variants and dot types for coverage", async () => {
+  it("should render with accessibility attributes", async () => {
     const container = await AstroContainer.create();
+    const html = await container.renderToString(Badge, {
+      props: { 
+        ariaLabel: "Test Status",
+        dataStatus: "custom-state"
+      }
+    });
 
-    // Test variants
-    const variants = ['brand', 'completed', 'in-progress', 'not-started', 'failed', 'downloading', 'neutral'] as const;
+    expect(html).toContain('aria-label="Test Status"');
+    expect(html).toContain('data-status="custom-state"');
+    expect(html).toContain('role="status"');
+  });
+
+  it("should render all dot types correctly", async () => {
+    const container = await AstroContainer.create();
     const dots = ['none', 'static', 'pulse'] as const;
 
-    for (const variant of variants) {
-      for (const dot of dots) {
-        const html = await container.renderToString(Badge, {
-          props: { variant, dot, pulse: variant === 'downloading' },
-          slots: { default: 'Test Badge' }
-        });
+    for (const dot of dots) {
+      const html = await container.renderToString(Badge, {
+        props: { dot },
+        slots: { default: 'Content' }
+      });
 
-        expect(html).toContain('Test Badge');
-        expect(html).toContain('span');
-
-        if (variant === 'failed' && dot !== 'none') {
-          expect(html).toContain('svg');
-        }
-
-        if (variant === 'downloading' && dot !== 'none') {
-          expect(html).toContain('animate-spin');
-        }
-
-        if (dot === 'pulse' && variant !== 'failed' && variant !== 'downloading') {
+      if (dot === 'none') {
+        expect(html).not.toContain('w-1.5 h-1.5');
+      } else {
+        expect(html).toContain('w-1.5 h-1.5');
+        if (dot === 'pulse') {
           expect(html).toContain('after:animate-ping');
         }
       }
     }
   });
 
-  it("should default to neutral for unknown variants", async () => {
+  it("should prioritize custom dot slot", async () => {
     const container = await AstroContainer.create();
     const html = await container.renderToString(Badge, {
-      props: { variant: 'unknown' as any }
+      slots: { 
+        dot: '<span id="icon"></span>',
+        default: 'Content' 
+      }
     });
-    expect(html).toContain('bg-surface-800'); // Neutral color class
+    expect(html).toContain('id="icon"');
+    expect(html).not.toContain('w-1.5 h-1.5'); // Default dot is gone
   });
 });

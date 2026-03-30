@@ -1,0 +1,146 @@
+---
+import Layout from "@layouts/Layout.astro";
+import CircularProgress from "@components/CircularProgress.astro";
+import { Icon } from "@components/Icon";
+
+const sizes = ["sm", "md", "lg"] as const;
+const progressLevels = [0, 25, 50, 75, 100];
+---
+
+<Layout title="CircularProgress Showcase">
+  <div class="max-w-4xl mx-auto py-12 px-6">
+    <header class="mb-12">
+      <h1 class="text-3xl font-bold text-text-primary mb-2">
+        CircularProgress Showcase
+      </h1>
+      <p class="text-text-secondary">
+        A reusable component for circular progress indicators.
+      </p>
+    </header>
+
+    <div class="space-y-12">
+      <!-- Sizes -->
+      <section>
+        <h2
+          class="text-xl font-semibold text-text-primary mb-6 border-b border-border-subtle pb-2"
+        >
+          Sizes
+        </h2>
+        <div class="flex items-end gap-12">
+          {
+            sizes.map((size) => (
+              <div class="flex flex-col items-center gap-3">
+                <CircularProgress size={size} progress={65} label="1" />
+                <span class="text-xs font-mono text-text-muted">{size}</span>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- States -->
+      <section>
+        <h2
+          class="text-xl font-semibold text-text-primary mb-6 border-b border-border-subtle pb-2"
+        >
+          States (at md size)
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-8">
+          {
+            progressLevels.map((p) => (
+              <div class="flex flex-col items-center gap-3">
+                <CircularProgress
+                  progress={p}
+                  label={p === 100 ? "" : "3"}
+                  isDone={p === 100}
+                />
+                <span class="text-xs font-mono text-text-muted">
+                  {p}% {p === 100 ? "(isDone)" : ""}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Real-world Example (Playlist Style) -->
+      <section>
+        <h2
+          class="text-xl font-semibold text-text-primary mb-6 border-b border-border-subtle pb-2"
+        >
+          Playlist Example
+        </h2>
+        <div
+          class="bg-surface-800 border border-border-subtle rounded-xl overflow-hidden max-w-sm"
+        >
+          {
+            [
+              { title: "Introduction to the Course", p: 100, done: true },
+              { title: "Setting up the Environment", p: 45, done: false },
+              { title: "Our First Module", p: 0, done: false },
+            ].map((item, i) => (
+              <div class="flex items-center gap-4 p-4 hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer group">
+                <CircularProgress
+                  progress={item.p}
+                  isDone={item.done}
+                  label={i + 1}
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-text-primary line-clamp-1">
+                    {item.title}
+                  </p>
+                  <p class="text-xs text-text-muted">
+                    {item.done
+                      ? "Completed"
+                      : item.p > 0
+                      ? `${item.p}% In Progress`
+                      : "Not Started"}
+                  </p>
+                </div>
+                {item.done && (
+                  <Icon
+                    name="check-circle"
+                    size="xs"
+                    className="text-brand-500"
+                  />
+                )}
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Custom Colors / Classes -->
+      <section>
+        <h2
+          class="text-xl font-semibold text-text-primary mb-6 border-b border-border-subtle pb-2"
+        >
+          Custom Styling
+        </h2>
+        <div class="flex gap-8">
+          <div class="flex flex-col items-center gap-3">
+            <CircularProgress
+              progress={75}
+              color="text-status-completed"
+              label="!"
+            />
+            <span class="text-xs font-mono text-text-muted">Custom Color</span>
+          </div>
+          <div class="flex flex-col items-center gap-3">
+            <CircularProgress progress={30} className="scale-150" label="3" />
+            <span class="text-xs font-mono text-text-muted">Scaled</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="mt-16 pt-8 border-t border-border-subtle text-center">
+      <a
+        href="/"
+        class="text-brand-500 hover:text-brand-400 font-medium text-sm transition-colors"
+      >
+        ← Back to Home
+      </a>
+    </div>
+  </div>
+</Layout>

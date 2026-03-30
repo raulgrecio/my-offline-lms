@@ -1,5 +1,6 @@
 ---
-import { Icon } from "../Icon";
+import ViewerButton from "./ViewerButton.astro";
+import ViewerFitControl from "./ViewerFitControl.astro";
 
 interface ViewerHeaderProps {
   path: string;
@@ -8,119 +9,113 @@ interface ViewerHeaderProps {
 const { path } = Astro.props as ViewerHeaderProps;
 ---
 
-<header class="relative flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle shrink-0 z-20 shadow-md">
+<header
+  class="relative flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle shrink-0 z-20 shadow-md"
+>
   <!-- Left: Sidebar Toggle & Title -->
   <div class="flex items-center gap-3 flex-1 min-w-0">
-    <button 
-      id="btn-sidebar" 
+    <ViewerButton
+      id="btn-sidebar"
       title="Miniaturas"
-      class="p-2 rounded-lg hover:bg-surface-800 transition-colors text-text-secondary hover:text-text-primary"
-    >
-      <Icon name="sidebar" size="sm" />
-    </button>
+      icon="sidebar"
+      variant="ghost"
+    />
     <div class="w-px h-6 bg-border-subtle hidden sm:block"></div>
-    <button 
-      onclick="window.close()" 
-      class="p-2 rounded-lg hover:bg-surface-800 transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
+    <ViewerButton
       title="Cerrar visor"
+      icon="arrow-left"
+      onclick="window.close()"
+      variant="ghost"
+      className="cursor-pointer"
+    />
+    <h1
+      class="text-xs sm:text-sm font-semibold truncate hidden md:block"
+      id="pdf-title"
     >
-      <Icon name="arrow-left" size="sm" />
-    </button>
-    <h1 class="text-xs sm:text-sm font-semibold truncate hidden md:block" id="pdf-title">Cargando...</h1>
+      Cargando...
+    </h1>
   </div>
-  
+
   <!-- Center: Navigation & Zoom -->
-  <div class="flex items-center gap-2 sm:gap-6 bg-surface-950/50 px-4 py-1.5 rounded-xl border border-border-subtle/50 shadow-inner">
+  <div
+    class="flex items-center gap-2 sm:gap-6 bg-surface-950/50 px-4 py-1.5 rounded-xl border border-border-subtle/50 shadow-inner"
+  >
     <!-- Page Nav -->
     <div class="flex items-center gap-1.5">
-      <input 
-        type="number" 
-        id="page-input" 
-        min="1" 
+      <input
+        type="number"
+        id="page-input"
+        min="1"
         class="w-8 sm:w-10 bg-surface-800/50 border border-border-subtle/30 px-0.5 py-0.5 text-center text-xs text-text-primary focus:outline-none focus:text-brand-400 focus:border-brand-500/50 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         value="1"
       />
       <span class="text-2xs text-text-secondary">/</span>
-      <span id="total-pages" class="text-xs text-text-secondary min-w-[12px]">0</span>
+      <span id="total-pages" class="text-xs text-text-secondary min-w-[12px]"
+        >0</span
+      >
     </div>
 
     <div class="w-px h-4 bg-border-subtle/50"></div>
 
     <!-- Zoom Controls -->
     <div class="flex items-center gap-1 sm:gap-2">
-      <button id="btn-zoom-out" class="p-1 rounded hover:bg-surface-700 text-text-secondary transition-colors disabled:opacity-30" title="Alejar">
-        <Icon name="minus" size="xs" />
-      </button>
-      
+      <ViewerButton
+        id="btn-zoom-out"
+        title="Alejar"
+        icon="minus"
+        variant="zoom"
+        iconSize="xs"
+      />
+
       <div class="relative group flex items-center">
-        <input 
-          type="text" 
-          id="zoom-input" 
+        <input
+          type="text"
+          id="zoom-input"
           class="w-10 sm:w-12 bg-surface-800/50 border border-border-subtle/30 px-0.5 py-0.5 text-center text-2xs sm:text-xs text-text-secondary focus:outline-none focus:text-brand-400 focus:border-brand-500/50 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           value="100%"
         />
       </div>
 
-      <button id="btn-zoom-in" class="p-1 rounded hover:bg-surface-700 text-text-secondary transition-colors disabled:opacity-30" title="Acercar">
-        <Icon name="plus" size="xs" />
-      </button>
+      <ViewerButton
+        id="btn-zoom-in"
+        title="Acercar"
+        icon="plus"
+        variant="zoom"
+        iconSize="xs"
+      />
     </div>
 
     <div class="w-px h-4 bg-border-subtle/50 hidden sm:block"></div>
 
     <!-- Fit Controls (Segmented Switch) -->
-    <div class="hidden sm:flex items-center bg-surface-950 rounded-lg border border-border-subtle/30 p-0.5 relative">
-      <div id="fit-active-bg" class="absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] bg-surface-700 rounded transition-all duration-300 shadow-sm"></div>
-      <button 
-        id="btn-fit-width" 
-        title="Ajustar al Ancho" 
-        class="relative z-10 p-1.5 rounded text-text-primary transition-colors duration-300"
-      >
-        <Icon name="fit-page" size="xs" />
-      </button>
-      <button 
-        id="btn-fit-height" 
-        title="Ajustar al Alto" 
-        class="relative z-10 p-1.5 rounded text-text-muted transition-colors duration-300 hover:text-text-primary"
-      >
-        <Icon name="fit-page" size="xs" className="rotate-90" />
-      </button>
-    </div>
+    <ViewerFitControl />
   </div>
 
   <!-- Right: Rotate & Original -->
   <div class="flex items-center gap-1 sm:gap-3 flex-1 justify-end">
-    <button 
-      id="btn-help" 
+    <ViewerButton
+      id="btn-help"
       title="Ayuda (Atajos de teclado)"
-      class="p-2 rounded-lg hover:bg-surface-800 transition-colors text-text-secondary hover:text-text-primary"
-    >
-      <Icon name="help-box" size="sm" />
-    </button>
-    
+      icon="help-box"
+      variant="ghost"
+    />
     <div class="w-px h-6 bg-border-subtle mx-1"></div>
-
-    <button 
-      id="btn-rotate" 
+    <ViewerButton
+      id="btn-rotate"
       title="Rotar"
-      class="p-2 rounded-lg hover:bg-surface-800 transition-colors text-text-secondary hover:text-text-primary"
-    >
-      <Icon name="rotate-cw" size="sm" />
-    </button>
-    
+      icon="rotate-cw"
+      variant="ghost"
+    />
     <div class="w-px h-6 bg-border-subtle mx-1"></div>
-
-    <a
+    <ViewerButton
       id="btn-original"
+      title="Ver original"
+      icon="external-link"
       href={path}
       target="_blank"
-      title="Ver original"
-      class="p-2 rounded-lg hover:bg-surface-800 transition-colors text-text-secondary hover:text-text-primary"
-    >
-      <Icon name="external-link" size="sm" />
-    </a>
+      variant="ghost"
+    />
   </div>
 
-  <!-- Visited Segments Layer -->
-  <div id="pdf-segments-container" class="absolute bottom-0 left-0 w-full h-0.5 flex bg-surface-800/30 overflow-hidden pointer-events-none"></div>
+  <slot name="footer" />
 </header>

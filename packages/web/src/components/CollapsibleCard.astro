@@ -1,0 +1,74 @@
+---
+interface Props {
+  initialOpen?: boolean;
+  class?: string;
+}
+
+const {
+  initialOpen = false,
+  class: className,
+} = Astro.props as Props;
+
+import { Icon } from "./Icon";
+---
+
+<section
+  class:list={[
+    "mb-8 border border-border-subtle bg-surface-800 rounded-2xl overflow-hidden shadow-lg transition-all",
+    className
+  ]}
+  data-collapsible
+>
+  <button
+    type="button"
+    class="flex items-center justify-between w-full p-5 hover:bg-surface-700 transition-colors group text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+    data-collapsible-trigger
+    aria-expanded={initialOpen ? "true" : "false"}
+  >
+    <div class="flex items-center gap-4 flex-1 min-w-0">
+      <slot name="header" />
+    </div>
+    <div
+      class={`text-text-muted transition-transform duration-500 ml-4 shrink-0 ${
+        initialOpen ? "rotate-180" : ""
+      }`}
+      data-collapsible-icon
+    >
+      <Icon name="chevron-down" size="sm" />
+    </div>
+  </button>
+
+  <div
+    class:list={[
+      "border-t border-border-subtle p-6 bg-surface-800/50",
+      initialOpen ? "" : "hidden"
+    ]}
+    data-collapsible-content
+  >
+    <slot />
+  </div>
+</section>
+
+<script>
+  function initCollapsibles() {
+    document.querySelectorAll("[data-collapsible]").forEach((card) => {
+      if (card.getAttribute("data-active")) return;
+      card.setAttribute("data-active", "true");
+
+      const btn = card.querySelector("[data-collapsible-trigger]");
+      const content = card.querySelector("[data-collapsible-content]");
+      const icon = card.querySelector("[data-collapsible-icon]");
+
+      btn?.addEventListener("click", () => {
+        const isHidden = content?.classList.contains("hidden");
+        content?.classList.toggle("hidden");
+        icon?.classList.toggle("rotate-180", isHidden);
+        btn.setAttribute("aria-expanded", String(isHidden));
+      });
+    });
+  }
+
+  initCollapsibles();
+  document.addEventListener("astro:page-load", initCollapsibles);
+  document.addEventListener("astro:after-swap", initCollapsibles);
+</script>
