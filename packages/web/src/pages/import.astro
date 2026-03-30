@@ -4,6 +4,7 @@ export const prerender = false;
 import Layout from "@layouts/Layout.astro";
 import PageHeader from "@components/PageHeader.astro";
 import { ScraperForm } from "@components/scraper/ScraperForm";
+import { LogConsole } from "@components/scraper/LogConsole";
 import { Icon } from "@components/Icon";
 ---
 
@@ -32,6 +33,15 @@ import { Icon } from "@components/Icon";
 
         <ScraperForm client:load />
       </div>
+    </section>
+
+    {/* Live Terminal Log */}
+    <section class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div class="flex items-center gap-2 mb-4 px-2">
+        <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+        <h2 class="text-xs font-bold uppercase tracking-widest text-text-muted">Live Activity</h2>
+      </div>
+      <LogConsole client:load />
     </section>
 
     {/* Help Section */}

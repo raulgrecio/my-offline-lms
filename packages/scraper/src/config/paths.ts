@@ -3,11 +3,12 @@ import { PathResolver, NodeFileSystem, NodePath } from '@my-offline-lms/core/fil
 // Inicializamos el resolver
 const fs = new NodeFileSystem();
 const pathAdapter = new NodePath();
+
 const resolver = new PathResolver({
   fs,
   path: pathAdapter,
   env: process.env,
-  startDir: __dirname
+  startDir: typeof __dirname !== 'undefined' ? __dirname : undefined
 });
 
 /** Root del monorepo */

@@ -1,7 +1,7 @@
 import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core/database';
 import { IFileSystem, NodeFileSystem } from '@my-offline-lms/core/filesystem';
 
-import { getDataDir, getDbPath } from '@config/paths';
+import { getDataDir, getDbPath } from '../../config/paths';
 import { logger } from '@platform/logging';
 
 export interface InitDbOptions {
