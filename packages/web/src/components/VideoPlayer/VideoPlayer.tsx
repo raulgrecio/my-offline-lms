@@ -15,6 +15,7 @@ import SubtitleToggleButton from './SubtitleToggleButton';
 import TimeDisplay from './TimeDisplay';
 import VideoTitle from './VideoTitle';
 import VolumeControl from './VolumeControl';
+import PlaybackRateButton from './PlaybackRateButton';
 
 export interface VideoPlayerProps {
   src: string;
@@ -52,6 +53,7 @@ export default function VideoPlayer({
   const [subtitleOpacity, setSubtitleOpacity] = useState(0.6);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
   const [visitedSegments, setVisitedSegments] = useState<number[]>([]);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -112,10 +114,14 @@ export default function VideoPlayer({
       video.currentTime = initialTime;
       initialTimeSet.current = true;
     }
+    
+    // Apply current playback rate
+    video.playbackRate = playbackRate;
+
     if (video.duration) {
       setDuration(video.duration);
     }
-  }, [initialTime]);
+  }, [initialTime, playbackRate]);
 
   // Set initial position and duration
   useEffect(() => {
@@ -132,7 +138,7 @@ export default function VideoPlayer({
 
     video.addEventListener('loadedmetadata', applyInitialTime);
     return () => video.removeEventListener('loadedmetadata', applyInitialTime);
-  }, [assetId, applyInitialTime]);
+  }, [assetId, applyInitialTime, playbackRate]);
 
   // Save progress logic
   const saveProgress = useCallback(async (position: number, completed: boolean) => {
@@ -197,6 +203,13 @@ export default function VideoPlayer({
     const vol = Number(e.target.value);
     v.volume = vol;
     setVolume(vol);
+  }, []);
+  
+  const handleRateChange = useCallback((rate: number) => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.playbackRate = rate;
+    setPlaybackRate(rate);
   }, []);
 
   const toggleSubtitles = useCallback(() => {
@@ -312,6 +325,11 @@ export default function VideoPlayer({
           </div>
 
           <div className="flex items-center gap-2">
+            <PlaybackRateButton
+              playbackRate={playbackRate}
+              onRateChange={handleRateChange}
+            />
+            
             {/* Subtitles Toggle (CC) */}
             {subtitleSrc && (
               <SubtitleToggleButton

@@ -507,5 +507,32 @@ describe("VideoPlayer Component", () => {
     
     vi.useRealTimers();
   });
+
+  it("should handle playback rate changes", async () => {
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
+    
+    const rateBtn = screen.getByLabelText(/Velocidad de reproducción/);
+    expect(screen.getByText("1x")).toBeInTheDocument();
+    
+    const video = document.querySelector("video")!;
+    
+    // Click to change from 1x to 1.25x
+    await act(async () => {
+      fireEvent.click(rateBtn);
+    });
+    
+    expect(screen.getByText("1.25x")).toBeInTheDocument();
+    expect(video.playbackRate).toBe(1.25);
+    
+    // Click multiple times to cycle
+    await act(async () => { fireEvent.click(rateBtn); }); // 1.5x
+    await act(async () => { fireEvent.click(rateBtn); }); // 2x
+    await act(async () => { fireEvent.click(rateBtn); }); // back to 0.5x
+    
+    expect(screen.getByText("0.5x")).toBeInTheDocument();
+    expect(video.playbackRate).toBe(0.5);
+  });
 });
 
