@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import { logger } from '@platform/logging';
+import { logger } from '@scraper/platform/logging';
 
 // Load variables if they haven't been loaded yet by the entrypoint
 if (process.env.NODE_ENV === 'test') {

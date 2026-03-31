@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@pages/api/progress/video";
-import * as ProgressFeature from "@features/progress/index";
+import { POST } from "@web/pages/api/progress/video";
+import * as ProgressFeature from "@web/features/progress/index";
 
-vi.mock("@features/progress/index", () => ({
+vi.mock("@web/features/progress/index", () => ({
   updateVideoProgress: vi.fn(),
 }));
 

@@ -1,11 +1,11 @@
-import { type ILogger, ConsoleLogger } from "@my-offline-lms/core/logging";
-import { SQLiteDatabase } from "@my-offline-lms/core/database";
-import { NodeFileSystem, NodePath } from '@my-offline-lms/core/filesystem';
-import { getDbPath } from "@config/paths";
+import { type ILogger, ConsoleLogger } from "@core/logging";
+import { SQLiteDatabase } from "@core/database";
+import { NodeFileSystem, NodePath } from '@core/filesystem';
+import { getDbPath } from "@web/config/paths";
 import { runMigrations } from "./schema";
 
 // Singleton connection
-import { createLazyService } from "@my-offline-lms/core/di";
+import { createLazyService } from "@core/di";
 
 export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteDatabase> => {
   const isTest = process.env.NODE_ENV === 'test';

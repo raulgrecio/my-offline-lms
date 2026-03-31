@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
-import type { IconName } from '@components/Icon';
+import type { IconName } from '@web/components/Icon';
 
 export type WizardStepId = string;
 

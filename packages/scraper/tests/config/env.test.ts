@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import dotenv from 'dotenv';
 
 // Mock platform logger to avoid noisy output
-vi.mock('@platform/logging', () => ({
+vi.mock('@scraper/platform/logging', () => ({
   logger: {
     error: vi.fn(),
     info: vi.fn(),
@@ -38,7 +38,7 @@ describe('Environment Configuration', () => {
   it('should load .env.test when NODE_ENV is test', async () => {
     process.env.NODE_ENV = 'test';
 
-    await import('@config/env');
+    await import('@scraper/config/env');
 
     expect(dotenv.config).toHaveBeenCalledWith({ path: '.env.test' });
   });
@@ -46,7 +46,7 @@ describe('Environment Configuration', () => {
   it('should load default .env when NODE_ENV is not test', async () => {
     process.env.NODE_ENV = 'development';
 
-    await import('@config/env');
+    await import('@scraper/config/env');
 
     expect(dotenv.config).toHaveBeenCalledWith();
   });
@@ -59,7 +59,7 @@ describe('Environment Configuration', () => {
     process.env.PLATFORM_BASE_URL = 'not-a-url';
     process.env.NODE_ENV = 'test';
 
-    await import('@config/env');
+    await import('@scraper/config/env');
 
     expect(exitSpy).not.toHaveBeenCalled();
     exitSpy.mockRestore();
@@ -75,7 +75,7 @@ describe('Environment Configuration', () => {
     });
 
     try {
-      await import('@config/env');
+      await import('@scraper/config/env');
     } catch (e: any) {
       // Expected throw from our mock exit
       expect(e.message).toBe('process.exit(1) called');
@@ -89,7 +89,7 @@ describe('Environment Configuration', () => {
     process.env.PLATFORM_BASE_URL = 'not-a-url';
     process.env.NODE_ENV = 'test';
 
-    const { env } = await import('@config/env');
+    const { env } = await import('@scraper/config/env');
 
     expect(env).toEqual({});
   });

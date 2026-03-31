@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
 
-import { ILogger } from '@my-offline-lms/core/logging';
-import { DiskInterceptedDataRepository } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepository';
+import { type ILogger } from '@core/logging';
+
+import { DiskInterceptedDataRepository } from '@scraper/features/platform-sync/infrastructure/DiskInterceptedDataRepository';
 
 describe('DiskInterceptedDataRepository', () => {
   const mockBaseDir = '/mock/intercepted';

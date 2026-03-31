@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { logger } from "@/platform/logging";
+import { logger } from "@web/platform/logging";
 
 test.describe("Video Player and PDF Viewer", () => {
   test("should interact with Video Player and PDF Viewer across available courses", async ({ page }) => {

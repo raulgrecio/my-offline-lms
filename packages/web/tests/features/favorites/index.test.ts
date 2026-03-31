@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@platform/db/database", () => ({
+vi.mock("@web/platform/db/database", () => ({
   getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
@@ -14,7 +14,7 @@ import {
   getAllFavorites,
   getIsFavorite,
   toggleFavorite
-} from "@features/favorites/index";
+} from "@web/features/favorites/index";
 
 describe("Favorites Feature: Public API", () => {
   it("should provide access to all public methods", async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { getDashboardStatus } from "@features/progress/application/use-cases/getDashboardStatus";
+import { getDashboardStatus } from "@web/features/progress/application/use-cases/getDashboardStatus";
 
 describe("getDashboardStatus", () => {
   it("should return correct counts from repo", () => {

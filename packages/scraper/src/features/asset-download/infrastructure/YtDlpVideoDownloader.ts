@@ -1,15 +1,17 @@
 import { spawn } from "child_process";
-import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
-import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { ILogger } from '@my-offline-lms/core/logging';
+
+import { type ILogger } from '@core/logging';
+
+import { type IVideoDownloader } from "@scraper/features/asset-download/domain/ports/IVideoDownloader";
+import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
 
 export class YtDlpVideoDownloader implements IVideoDownloader {
   private logger: ILogger;
   private authSessionStorage: IAuthSessionStorage;
 
-  constructor(deps: { 
+  constructor(deps: {
     authSessionStorage: IAuthSessionStorage,
-    logger: ILogger 
+    logger: ILogger
   }) {
     this.authSessionStorage = deps.authSessionStorage;
     this.logger = deps.logger.withContext("YtDlpVideoDownloader");
@@ -46,31 +48,31 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
 
       ytDlpProcess.on("close", (code: number | null) => {
         if (code === 0) {
-            resolve();
-            return;
+          resolve();
+          return;
         }
         // Detección de errores conocidos de sesión
-        const isAuthError = stderr.includes("403") || 
-                          stderr.includes("Forbidden") || 
-                          stderr.includes("Sign in") || 
-                          stderr.includes("login") ||
-                          stderr.includes("Unauthorized");
+        const isAuthError = stderr.includes("403") ||
+          stderr.includes("Forbidden") ||
+          stderr.includes("Sign in") ||
+          stderr.includes("login") ||
+          stderr.includes("Unauthorized");
 
         if (isAuthError) {
-            reject(new Error(`yt-dlp error 403 / Login requerido. Tu sesión ha expirado o no es válida. Por favor, ejecuta 'pnpm cli login'.`));
-            return;
+          reject(new Error(`yt-dlp error 403 / Login requerido. Tu sesión ha expirado o no es válida. Por favor, ejecuta 'pnpm cli login'.`));
+          return;
         }
 
         if (retryCount >= 3) {
-            this.logger.error(`yt-dlp falló tras 3 intentos (code ${code}). Error original:\n${stderr}`);
-            reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
-            return;
+          this.logger.error(`yt-dlp falló tras 3 intentos (code ${code}). Error original:\n${stderr}`);
+          reject(new Error(`yt-dlp error ${code} después de 3 reintentos`));
+          return;
         }
 
         const delay = 5000 * (retryCount + 1);
-        this.logger.warn(`yt-dlp falló (code ${code}). Reintentando en ${delay/1000}s... (${retryCount + 1}/3)`);
+        this.logger.warn(`yt-dlp falló (code ${code}). Reintentando en ${delay / 1000}s... (${retryCount + 1}/3)`);
         setTimeout(() => {
-            this.download(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
+          this.download(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
         }, delay);
       });
       ytDlpProcess.on("error", (err: Error) => reject(err));

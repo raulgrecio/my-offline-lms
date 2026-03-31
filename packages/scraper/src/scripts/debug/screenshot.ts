@@ -1,9 +1,9 @@
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 
-import { env } from "@config/env";
-import { getAuthState } from "@config/paths";
-import { logger } from "@platform/logging";
+import { env } from "@scraper/config/env";
+import { getAuthState } from "@scraper/config/paths";
+import { logger } from "@scraper/platform/logging";
 
 chromium.use(stealth());
 

@@ -1,4 +1,4 @@
-import type { Course } from '@my-offline-lms/core/models';
+import type { Course } from '@core/domain';
 import type { ICourseRepository } from "../../domain/ports/ICourseRepository";
 
 export interface GetCourseByIdRequest {

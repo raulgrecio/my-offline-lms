@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import ViewerButton from "@components/PDFViewer/ViewerButton.astro";
+import ViewerButton from "@web/components/PDFViewer/ViewerButton.astro";
 
 describe("ViewerButton.astro", () => {
   it("should render as a button by default", async () => {

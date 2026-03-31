@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@pages/api/progress/guide";
-import * as ProgressFeature from "@features/progress/index";
+import { POST } from "@web/pages/api/progress/guide";
+import * as ProgressFeature from "@web/features/progress/index";
 
-vi.mock("@features/progress/index", () => ({
+vi.mock("@web/features/progress/index", () => ({
   updateGuideProgress: vi.fn(),
 }));
 

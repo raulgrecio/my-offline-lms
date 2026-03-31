@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { LogBroker } from '@my-offline-lms/core/logging';
+import { LogBroker } from '@core/logging';
 
 export const GET: APIRoute = async ({ request }) => {
   const stream = new ReadableStream({

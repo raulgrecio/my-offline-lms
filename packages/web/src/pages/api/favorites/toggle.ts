@@ -1,9 +1,9 @@
 export const prerender = false;
 
 import type { APIContext, APIRoute } from 'astro';
-import { toggleFavorite } from '@features/favorites';
-import type { FavoriteType } from '@features/favorites/domain/ports/IFavoritesRepository';
-import { logger } from '@platform/logging';
+import { toggleFavorite } from '@web/features/favorites';
+import type { FavoriteType } from '@web/features/favorites/domain/ports/IFavoritesRepository';
+import { logger } from '@web/platform/logging';
 
 export const POST: APIRoute = async ({ request }: APIContext): Promise<Response> => {
   try {

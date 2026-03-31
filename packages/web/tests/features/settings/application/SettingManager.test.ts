@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import type { ISettingsRepository } from "@features/settings/domain/ports/ISettingsRepository";
-import { SettingManager } from "@features/settings/application/SettingManager";
+import type { ISettingsRepository } from "@web/features/settings/domain/ports/ISettingsRepository";
+import { SettingManager } from "@web/features/settings/application/SettingManager";
 
 describe("SettingManager", () => {
   let mockRepo: ISettingsRepository;

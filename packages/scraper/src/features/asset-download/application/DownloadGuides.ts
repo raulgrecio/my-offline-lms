@@ -1,13 +1,12 @@
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
+import { type IAssetRepository } from "@scraper/features/asset-download/domain/ports/IAssetRepository";
+import { type IAssetStorage } from "@scraper/features/asset-download/domain/ports/IAssetStorage";
+import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
+import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
+import { type IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
 
 export interface DownloadGuidesConfig {
   keepTempImages: boolean;

@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import CourseCard from "@components/CourseCard.astro";
+import CourseCard from "@web/components/CourseCard.astro";
 
 describe("CourseCard.astro", () => {
   it("should render title and basic info", async () => {

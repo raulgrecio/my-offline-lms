@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 
-import { markCourseStatus } from '@features/progress';
+import { markCourseStatus } from '@web/features/progress';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

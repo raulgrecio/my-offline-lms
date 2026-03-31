@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { AuthSession } from '@features/auth-session/application/AuthSession';
+import { AuthSession } from '@scraper/features/auth-session/application/AuthSession';
 
 vi.mock('readline', () => ({
   default: {
@@ -178,7 +178,7 @@ describe('AuthSession Use Case', () => {
 
     // Simulate random key
     await (useCase as any)._triggerKeypress(' ', { name: 'space' });
-    
+
     expect(mockAuthStorage.saveCookies).not.toHaveBeenCalled();
 
     // Close

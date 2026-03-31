@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@pages/api/settings/active-path";
-import * as SettingsFeature from "@features/settings/index";
+import { POST } from "@web/pages/api/settings/active-path";
+import * as SettingsFeature from "@web/features/settings/index";
 
-vi.mock("@features/settings/index", () => ({
+vi.mock("@web/features/settings/index", () => ({
   setActiveLearningPath: vi.fn(),
 }));
 

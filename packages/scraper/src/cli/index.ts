@@ -1,34 +1,34 @@
-import { env } from '@config/env';
-import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir, getDataDir } from '@config/paths';
 import dotenv from 'dotenv';
 
-import { ConsoleLogger } from '@my-offline-lms/core/logging';
-import { DownloadType } from '@my-offline-lms/core/models';
-import { IDatabase } from '@my-offline-lms/core/database';
-import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@my-offline-lms/core/filesystem';
+import { ConsoleLogger } from '@core/logging';
+import { type DownloadType } from '@core/domain';
+import { type IDatabase } from '@core/database';
+import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
 
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';
-import { DiskAssetStorage } from '@features/asset-download/infrastructure/DiskAssetStorage';
-import { YtDlpVideoDownloader } from '@features/asset-download/infrastructure/YtDlpVideoDownloader';
-import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
-import { SQLiteCourseRepository } from '@features/platform-sync/infrastructure/CourseRepository';
-import { DiskInterceptedDataRepositoryFactory } from '@features/platform-sync/infrastructure/DiskInterceptedDataRepositoryFactory';
-import { SQLiteLearningPathRepository } from '@features/platform-sync/infrastructure/LearningPathRepository';
-import { OraclePlatformUrlProvider } from '@features/platform-sync/infrastructure/OraclePlatformUrlProvider';
+import { env } from '@scraper/config/env';
+import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir } from '@scraper/config/paths';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
+import { SQLiteAssetRepository } from '@scraper/features/asset-download/infrastructure/AssetRepository';
+import { DiskAssetStorage } from '@scraper/features/asset-download/infrastructure/DiskAssetStorage';
+import { YtDlpVideoDownloader } from '@scraper/features/asset-download/infrastructure/YtDlpVideoDownloader';
+import { DiskAuthSessionStorage } from '@scraper/features/auth-session/infrastructure/DiskAuthSessionStorage';
+import { SQLiteCourseRepository } from '@scraper/features/platform-sync/infrastructure/CourseRepository';
+import { DiskInterceptedDataRepositoryFactory } from '@scraper/features/platform-sync/infrastructure/DiskInterceptedDataRepositoryFactory';
+import { SQLiteLearningPathRepository } from '@scraper/features/platform-sync/infrastructure/LearningPathRepository';
+import { OraclePlatformUrlProvider } from '@scraper/features/platform-sync/infrastructure/OraclePlatformUrlProvider';
+import { DownloadCourse } from '@scraper/features/asset-download/application/DownloadCourse';
+import { DownloadGuides } from '@scraper/features/asset-download/application/DownloadGuides';
+import { DownloadPath } from '@scraper/features/asset-download/application/DownloadPath';
+import { DownloadVideos } from '@scraper/features/asset-download/application/DownloadVideos';
+import { AuthSession } from '@scraper/features/auth-session/application/AuthSession';
+import { SyncCourse } from '@scraper/features/platform-sync/application/SyncCourse';
+import { SyncLearningPath } from '@scraper/features/platform-sync/application/SyncLearningPath';
+import { ValidateAuthSession } from '@scraper/features/auth-session/application/ValidateAuthSession';
 
-import { DownloadCourse } from '@features/asset-download/application/DownloadCourse';
-import { DownloadGuides } from '@features/asset-download/application/DownloadGuides';
-import { DownloadPath } from '@features/asset-download/application/DownloadPath';
-import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
-import { AuthSession } from '@features/auth-session/application/AuthSession';
-import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
-import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
-import { ValidateAuthSession } from '@features/auth-session/application/ValidateAuthSession';
-
-import { PLATFORM } from '@config/platform';
-import { BrowserProvider } from '@platform/browser/BrowserProvider';
-import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
+import { PLATFORM } from '@scraper/config/platform';
+import { BrowserProvider } from '@scraper/platform/browser/BrowserProvider';
+import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
+import { getDb } from '@scraper/platform/database/database';
 
 dotenv.config();
 
@@ -134,8 +134,6 @@ Comandos disponibles:
 ${COMMANDS_METADATA.map((m) => `  ${m.usage.padEnd(26)} ${m.description}`).join('\n')}
   `);
 }
-
-import { getDb } from '@platform/database/database';
 
 export async function runCLI() {
   const args = process.argv.slice(2);

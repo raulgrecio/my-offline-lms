@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import PlayerSettings from "@components/VideoPlayer/PlayerSettings";
+import PlayerSettings from "@web/components/VideoPlayer/PlayerSettings";
 
 // Mock Icon component
-vi.mock("@components/Icon", () => ({
+vi.mock("@web/components/Icon", () => ({
   Icon: () => <span data-testid="mock-icon" />,
 }));
 

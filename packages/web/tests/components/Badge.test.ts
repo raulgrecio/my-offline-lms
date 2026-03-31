@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 // @ts-ignore
-import Badge from "@components/Badge.astro";
+import Badge from "@web/components/Badge.astro";
 
 describe("Badge.astro", () => {
   it("should render with accessibility attributes", async () => {

@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 // @ts-ignore
-import ProgressBadge from "@components/ProgressBadge.astro";
+import ProgressBadge from "@web/components/ProgressBadge.astro";
 
 describe("ProgressBadge.astro", () => {
   it("should render all progress statuses with correct accessibility attributes", async () => {

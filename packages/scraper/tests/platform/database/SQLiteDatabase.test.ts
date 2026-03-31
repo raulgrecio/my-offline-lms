@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { initDb } from '@db/schema';
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { IDatabase } from '@my-offline-lms/core/database';
+
+import { NodeFileSystem } from '@core/filesystem';
+import { type IDatabase } from '@core/database';
+
+import { initDb } from '@scraper/platform/database/schema';
 
 describe('Database Baseline', () => {
   let db: IDatabase;

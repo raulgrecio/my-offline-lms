@@ -1,6 +1,7 @@
-import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
-import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { env } from "@config/env";
+import { type IFileSystem, type IPath } from "@core/filesystem";
+
+import { env } from "@scraper/config/env";
+import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string | undefined;

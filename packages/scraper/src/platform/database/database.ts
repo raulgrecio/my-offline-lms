@@ -1,6 +1,6 @@
-import { IDatabase } from '@my-offline-lms/core/database';
-import { createLazyService } from '@my-offline-lms/core/di';
-import { initDb, InitDbOptions } from './schema';
+import { type IDatabase } from '@core/database';
+import { createLazyService } from '@core/di';
+import { initDb, type InitDbOptions } from './schema';
 
 /**
  * Singleton database connection for the scraper.

@@ -1,5 +1,5 @@
-import { type ILogger } from "@my-offline-lms/core/logging";
-import { SQLiteDatabase } from "@my-offline-lms/core/database";
+import { type ILogger } from "@core/logging";
+import { SQLiteDatabase } from "@core/database";
 
 export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   // --- Migraciones de esquema ---

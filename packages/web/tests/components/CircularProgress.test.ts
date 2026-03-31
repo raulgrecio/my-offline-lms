@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import CircularProgress from "@components/CircularProgress.astro";
+import CircularProgress from "@web/components/CircularProgress.astro";
 
 describe("CircularProgress.astro", () => {
   it("should render with default props", async () => {

@@ -3,29 +3,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 
 // Mocking features used in index.astro
-vi.mock("@features/learning-paths", () => ({
+vi.mock("@web/features/learning-paths", () => ({
   getAllLearningPaths: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@features/courses", () => ({
+vi.mock("@web/features/courses", () => ({
   getAllCourses: vi.fn().mockResolvedValue([]),
   getCourseById: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@features/progress", () => ({
+vi.mock("@web/features/progress", () => ({
   getDashboardStatus: vi.fn().mockResolvedValue({ lastWatched: null }),
   getCourseProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, progress: 0 }),
   getLearningPathProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, progress: 0 }),
 }));
 
-vi.mock("@features/favorites", () => ({
+vi.mock("@web/features/favorites", () => ({
   getIsFavorite: vi.fn().mockResolvedValue(false),
 }));
 
 // @ts-ignore
 import IndexPage from "../../src/pages/index.astro";
-import * as learningPaths from "@features/learning-paths";
-import * as courses from "@features/courses";
+import * as learningPaths from "@web/features/learning-paths";
+import * as courses from "@web/features/courses";
 
 describe("index.astro", () => {
   beforeEach(() => {

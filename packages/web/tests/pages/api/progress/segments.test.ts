@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET } from "@pages/api/progress/segments";
-import * as ProgressFeature from "@features/progress/index";
+import { GET } from "@web/pages/api/progress/segments";
+import * as ProgressFeature from "@web/features/progress/index";
 
-vi.mock("@features/progress/index", () => ({
+vi.mock("@web/features/progress/index", () => ({
   getVisitedSegments: vi.fn(),
 }));
 

@@ -1,4 +1,4 @@
-import type { AssetType } from '@my-offline-lms/core/models';
+import type { AssetType } from '@core/domain';
 
 export interface AssetProgress {
   id: string;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET, POST, DELETE } from "@pages/api/settings/asset-paths";
+import { GET, POST, DELETE } from "@web/pages/api/settings/asset-paths";
 
 const mockResolver = {
   getAvailablePaths: vi.fn(),
@@ -7,18 +7,18 @@ const mockResolver = {
   removePath: vi.fn(),
 };
 
-vi.mock("@my-offline-lms/core/filesystem", () => ({
+vi.mock("@core/filesystem", () => ({
   AssetPathResolver: vi.fn().mockImplementation(function () { return mockResolver; }),
   NodeFileSystem: vi.fn(),
   NodePath: vi.fn(),
 }));
 
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getAssetConfigPath: vi.fn().mockResolvedValue("/tmp/config"),
   getMonorepoRoot: vi.fn().mockResolvedValue("/tmp/root"),
 }));
 
-vi.mock("@platform/logging", () => ({
+vi.mock("@web/platform/logging", () => ({
   logger: { error: vi.fn() },
 }));
 

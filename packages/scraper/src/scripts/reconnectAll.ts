@@ -1,6 +1,6 @@
-import { getDb } from "@db/database";
+import { getDb } from "@scraper/platform/database/database";
 import { verifyCourseDownloads } from "./verifyDownloads";
-import { logger } from "@platform/logging";
+import { logger } from "@scraper/platform/logging";
 
 /**
  * Reconnects all courses by running verifyCourseDownloads with repair = true.

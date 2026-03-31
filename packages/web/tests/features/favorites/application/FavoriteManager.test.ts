@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { FavoriteManager } from "@features/favorites/application/FavoriteManager";
-import { type IFavoritesRepository } from "@features/favorites/domain/ports/IFavoritesRepository";
+import { FavoriteManager } from "@web/features/favorites/application/FavoriteManager";
+import { type IFavoritesRepository } from "@web/features/favorites/domain/ports/IFavoritesRepository";
 
 describe("FavoriteManager", () => {
   const mockRepo: IFavoritesRepository = {

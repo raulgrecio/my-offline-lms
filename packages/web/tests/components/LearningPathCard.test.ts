@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import LearningPathCard from "@components/LearningPathCard.astro";
+import LearningPathCard from "@web/components/LearningPathCard.astro";
 
 describe("LearningPathCard.astro", () => {
   const defaultProps = {

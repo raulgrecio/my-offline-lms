@@ -18,4 +18,11 @@ export const API_ROUTES = {
   FAVORITES: {
     TOGGLE: "/api/favorites/toggle",
   },
+  SCRAPER: {
+    AVAILABLE: "/api/scraper/available",
+    AUTH_STATUS: "/api/scraper/auth-status",
+    SYNC: "/api/scraper/sync",
+    LOGS: "/api/scraper/logs",
+    LOGIN: "/api/scraper/login",
+  },
 } as const;

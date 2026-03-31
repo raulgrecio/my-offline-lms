@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { updateAssetProgress } from "@features/progress/application/use-cases/updateAssetProgress";
-import type { IProgressRepository } from "@features/progress/domain/ports/IProgressRepository";
+import { updateAssetProgress } from "@web/features/progress/application/use-cases/updateAssetProgress";
+import type { IProgressRepository } from "@web/features/progress/domain/ports/IProgressRepository";
 
 describe("updateAssetProgress Integrity Test (PDF Guide)", () => {
   const mockRepo = (): IProgressRepository => ({

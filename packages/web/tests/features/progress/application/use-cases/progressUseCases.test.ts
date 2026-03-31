@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { getAssetProgress } from "@features/progress/application/use-cases/getAssetProgress";
-import { getCollectionProgress } from "@features/progress/application/use-cases/getCollectionProgress";
-import { markCollectionStatus } from "@features/progress/application/use-cases/markCollectionStatus";
-import type { IProgressRepository } from "@features/progress/domain/ports/IProgressRepository";
+import { getAssetProgress } from "@web/features/progress/application/use-cases/getAssetProgress";
+import { getCollectionProgress } from "@web/features/progress/application/use-cases/getCollectionProgress";
+import { markCollectionStatus } from "@web/features/progress/application/use-cases/markCollectionStatus";
+import type { IProgressRepository } from "@web/features/progress/domain/ports/IProgressRepository";
 
 describe("Progress Use Cases", () => {
   let mockRepo: IProgressRepository;

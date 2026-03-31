@@ -1,10 +1,10 @@
 import { chromium } from "playwright-extra";
-import { Browser, BrowserContext } from "playwright";
+import { type Browser, type BrowserContext } from "playwright";
 import stealth from "puppeteer-extra-plugin-stealth";
 
-import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
-import { type ILogger } from '@my-offline-lms/core/logging';
-import { IBrowserProvider } from "./IBrowserProvider";
+import type { IFileSystem, IPath } from "@core/filesystem";
+import type { ILogger } from '@core/logging';
+import type { IBrowserProvider } from "./IBrowserProvider";
 
 chromium.use(stealth());
 
@@ -21,11 +21,11 @@ export class BrowserProvider implements IBrowserProvider {
   private path: IPath;
   private config: BrowserProviderConfig;
 
-  constructor(deps: { 
-    fs: IFileSystem, 
-    path: IPath, 
+  constructor(deps: {
+    fs: IFileSystem,
+    path: IPath,
     config: BrowserProviderConfig,
-    logger?: ILogger 
+    logger?: ILogger
   }) {
     this.fs = deps.fs;
     this.path = deps.path;
@@ -37,7 +37,7 @@ export class BrowserProvider implements IBrowserProvider {
   async getHeadfulContext(headless: boolean = false): Promise<BrowserContext> {
     if (!this.browser) {
       this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
-      this.browser = await chromium.launch({ 
+      this.browser = await chromium.launch({
         headless,
         executablePath: this.config.chromeExecutablePath || undefined,
         channel: this.config.chromeExecutablePath ? undefined : "chrome",
@@ -47,15 +47,15 @@ export class BrowserProvider implements IBrowserProvider {
         ]
       });
     }
-    
+
     // Always use state if it exists
     const stats = await this.fs.stat(this.config.authStateFile).catch(() => null);
-    
+
     if (stats) {
       // stats.mtime might not be present in all IFileSystem implementations if not standardized, 
       // but NodeFileSystem has it. For now we assume if it exists we check age if possible.
       // @ts-ignore
-      const mtime = stats.mtime || new Date(); 
+      const mtime = stats.mtime || new Date();
       const hoursOld = (Date.now() - mtime.getTime()) / (1000 * 60 * 60);
       if (hoursOld > 24) {
         this.logger?.warn(`La sesión guardada tiene ${Math.round(hoursOld)} horas. Si falla el raseo, prueba a ejecutar 'pnpm cli login' de nuevo.`);
@@ -63,8 +63,8 @@ export class BrowserProvider implements IBrowserProvider {
     }
 
     const exists = stats !== null;
-    const contextOptions = exists 
-      ? { storageState: this.config.authStateFile } 
+    const contextOptions = exists
+      ? { storageState: this.config.authStateFile }
       : {};
 
     this.context = await this.browser.newContext(contextOptions);

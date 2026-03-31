@@ -1,7 +1,7 @@
 import { chromium } from "@playwright/test";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
 import { CASES } from "./auditCases";
 
 const fs = new NodeFileSystem();

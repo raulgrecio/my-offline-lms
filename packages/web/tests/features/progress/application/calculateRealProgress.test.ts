@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateRealProgress } from "@features/progress/application/calculateRealProgress";
+import { calculateRealProgress } from "@web/features/progress/application/calculateRealProgress";
 
 describe("calculateRealProgress", () => {
   it("should return not_started if totalSegments <= 0", () => {

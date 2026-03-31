@@ -1,5 +1,5 @@
-import { getDb } from "@db/database";
-import { logger } from "@platform/logging";
+import { getDb } from "@scraper/platform/database/database";
+import { logger } from "@scraper/platform/logging";
 
 async function main() {
   logger.info("Iniciando migración de metadatos: title -> name en Course_Assets...");

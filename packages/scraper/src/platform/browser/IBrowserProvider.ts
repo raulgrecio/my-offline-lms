@@ -1,4 +1,4 @@
-import { BrowserContext } from "playwright";
+import { type BrowserContext } from "playwright";
 
 export interface IBrowserProvider {
   /** Gets an existing context or creates a new headful one primarily for Login purposes */

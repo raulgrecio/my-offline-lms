@@ -1,7 +1,7 @@
-import { Page } from "playwright";
+import { type Page } from "playwright";
 
-import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
-import { type ILogger } from '@my-offline-lms/core/logging';
+import { type IFileSystem, type IPath } from "@core/filesystem";
+import { type ILogger } from '@core/logging';
 
 export class BrowserInterceptor {
   private fs: IFileSystem;

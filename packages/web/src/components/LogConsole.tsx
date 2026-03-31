@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import { Icon } from '@components/Icon';
-import { API_ROUTES } from '@/platform/api/routes';
+import { Icon } from '@web/components/Icon';
+import { API_ROUTES } from '@web/platform/api/routes';
 
 interface LogEntry {
   timestamp: string;

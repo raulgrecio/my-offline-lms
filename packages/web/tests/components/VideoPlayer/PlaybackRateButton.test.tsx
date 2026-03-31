@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import PlaybackRateButton from "@components/VideoPlayer/PlaybackRateButton";
+import PlaybackRateButton from "@web/components/VideoPlayer/PlaybackRateButton";
 
 describe("PlaybackRateButton Component", () => {
     it("should render current rate", () => {

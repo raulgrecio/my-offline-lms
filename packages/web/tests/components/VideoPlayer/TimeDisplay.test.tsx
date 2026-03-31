@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import TimeDisplay from "@components/VideoPlayer/TimeDisplay";
+import TimeDisplay from "@web/components/VideoPlayer/TimeDisplay";
 
 describe("TimeDisplay Component", () => {
   it("should format time 0 / 0 correctly", () => {

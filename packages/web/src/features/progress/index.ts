@@ -1,6 +1,6 @@
-import { type AssetType } from '@my-offline-lms/core/models';
-import { createLazyService } from "@my-offline-lms/core/di";
-import { getDb } from "@platform/db/database";
+import { type AssetType } from '@core/domain';
+import { createLazyService } from "@core/di";
+import { getDb } from "@web/platform/db/database";
 import { ProgressManager } from "./application/ProgressManager";
 import type { GetAssetProgressRequest } from "./application/use-cases/getAssetProgress";
 import type { GetCollectionProgressRequest } from "./application/use-cases/getCollectionProgress";

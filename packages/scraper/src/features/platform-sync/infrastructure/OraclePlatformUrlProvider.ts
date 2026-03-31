@@ -1,6 +1,6 @@
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { env } from "@config/env";
-import { PLATFORM } from "@config/platform";
+import type { IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { env } from "@scraper/config/env";
+import { PLATFORM } from "@scraper/config/platform";
 
 export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
   private readonly baseUrl: string;
@@ -18,7 +18,7 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
       .replace('{slug}', '[^/]+')
       .replace('{id}', '(\\d+)');
     const regex = new RegExp(pattern, 'i');
-    
+
     const match = target.match(regex);
     if (match) {
       courseId = match[1];
@@ -52,7 +52,7 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
       .replace('{slug}', '[^/]+')
       .replace('{id}', '(\\d+)');
     const regex = new RegExp(pattern, 'i');
-    
+
     const match = target.match(regex);
     if (match) {
       pathId = match[1];
@@ -77,14 +77,14 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
     return { url: finalUrl, pathId };
   }
 
-  getCourseUrl({ slug, id }: { slug: string, id: string}): string {
+  getCourseUrl({ slug, id }: { slug: string, id: string }): string {
     const path = PLATFORM.URL_PATTERNS.COURSE_PATH
       .replace('{slug}', slug || "path")
       .replace('{id}', id);
     return new URL(path, this.baseUrl).href;
   }
 
-  getGuideViewerUrl({courseId, offeringId, ekitId}: {courseId: string, offeringId: string, ekitId: string}): string {
+  getGuideViewerUrl({ courseId, offeringId, ekitId }: { courseId: string, offeringId: string, ekitId: string }): string {
     const path = PLATFORM.URL_PATTERNS.GUIDE_PATH
       .replace('{courseId}', courseId)
       .replace('{offeringId}', offeringId)
@@ -92,14 +92,14 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
     return new URL(path, this.baseUrl).href;
   }
 
-  getVideoAssetUrl({courseUrl, assetId}: {courseUrl: string, assetId: string}): string {
+  getVideoAssetUrl({ courseUrl, assetId }: { courseUrl: string, assetId: string }): string {
     const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
     return `${base}${assetId}`;
   }
 
   getGuideImageBaseUrl(iframeSrc: string): string {
     const baseImgUrl = iframeSrc.replace(
-      PLATFORM.URL_PATTERNS.GUIDE_IMAGE_BASE_REPLACEMENT, 
+      PLATFORM.URL_PATTERNS.GUIDE_IMAGE_BASE_REPLACEMENT,
       PLATFORM.URL_PATTERNS.GUIDE_IMAGE_BASE_PATH
     );
     return baseImgUrl.endsWith('/') ? baseImgUrl : `${baseImgUrl}/`;

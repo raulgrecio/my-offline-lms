@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DiskAssetStorage } from '@features/asset-download/infrastructure/DiskAssetStorage';
+import { DiskAssetStorage } from '@scraper/features/asset-download/infrastructure/DiskAssetStorage';
 
 // Restore global mocks as requested by user
-vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
+vi.mock('@core/filesystem', async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -42,8 +42,8 @@ vi.mock('sharp', () => ({
   })
 }));
 
-// Mock @config/paths
-vi.mock('@config/paths', () => ({
+// Mock @scraper/config/paths
+vi.mock('@scraper/config/paths', () => ({
   getAssetsDir: vi.fn().mockResolvedValue('/mock/assets'),
   getAssetPathsConfig: vi.fn().mockResolvedValue('/mock/config.json'),
   getMonorepoRoot: vi.fn().mockResolvedValue('/mock/root')

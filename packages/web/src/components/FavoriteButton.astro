@@ -1,11 +1,11 @@
 ---
-import { API_ROUTES } from "@platform/api/routes";
-import type { FavoriteType } from "@features/favorites/domain/ports/IFavoritesRepository";
+import { API_ROUTES } from "@web/platform/api/routes";
+import type { FavoriteType } from "@web/features/favorites/domain/ports/IFavoritesRepository";
 import Button, {
   type ButtonSize,
   type ButtonHoverEffect,
 } from "./Button.astro";
-import { cn } from "@lib/cn";
+import { cn } from "@web/lib/cn";
 
 interface FavoriteButtonProps {
   id: string;
@@ -62,8 +62,8 @@ const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
 </style>
 
 <script>
-  import { logger } from "@platform/logging";
-  import { apiClient } from "@platform/api/client";
+  import { logger } from "@web/platform/logging";
+  import { apiClient } from "@web/platform/api/client";
 
   // Handle favorites toggle using event delegation.
   // Astro bundles this script once per page.

@@ -1,16 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { initDb } from '@db/schema';
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { vi, beforeEach } from 'vitest';
+import { SQLiteDatabase } from '@core/database';
+import { NodeFileSystem } from '@core/filesystem';
 
-vi.mock('@config/paths', () => ({
+import { initDb } from '@scraper/platform/database/schema';
+
+vi.mock('@scraper/config/paths', () => ({
   getDataDir: vi.fn().mockResolvedValue('/tmp/mock-data'),
   getDbPath: vi.fn().mockResolvedValue(':memory:'),
 }));
 
-vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
+vi.mock('@core/filesystem', async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -22,7 +22,7 @@ vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
   };
 });
 
-vi.mock('@my-offline-lms/core/database', async (importOriginal) => {
+vi.mock('@core/database', async (importOriginal) => {
   const actual = await importOriginal<any>();
   class MockSQLiteDatabase extends actual.SQLiteDatabase {
     constructor(path: string, options?: any) {

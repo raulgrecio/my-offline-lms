@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import type { IDatabase } from '@my-offline-lms/core/database';
-import { SQLiteCourseRepository } from "@features/courses/infrastructure/SQLiteCourseRepository";
+import type { IDatabase } from '@core/database';
+import { SQLiteCourseRepository } from "@web/features/courses/infrastructure/SQLiteCourseRepository";
 
 describe("SQLiteCourseRepository", () => {
   let mockDb: IDatabase;

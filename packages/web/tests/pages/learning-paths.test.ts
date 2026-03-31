@@ -3,16 +3,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 
 // Mocking features
-vi.mock("@features/learning-paths", () => ({
+vi.mock("@web/features/learning-paths", () => ({
   getAllLearningPaths: vi.fn().mockResolvedValue([]),
   getLearningPathDetails: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("@features/favorites", () => ({
+vi.mock("@web/features/favorites", () => ({
   getIsFavorite: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock("@features/progress", () => ({
+vi.mock("@web/features/progress", () => ({
   getLearningPathProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, completedItems: 0, inProgressItems: 0, progress: 0 }),
   getCourseProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, progress: 0 }),
 }));
@@ -21,8 +21,8 @@ vi.mock("@features/progress", () => ({
 import LearningPathsIndexPage from "../../src/pages/learning-paths/index.astro";
 // @ts-ignore
 import LearningPathDetailPage from "../../src/pages/learning-paths/[id].astro";
-import * as coreLP from "@features/learning-paths";
-import * as coreProgress from "@features/progress";
+import * as coreLP from "@web/features/learning-paths";
+import * as coreProgress from "@web/features/progress";
 
 describe("Learning Paths Pages", () => {
     beforeEach(() => {

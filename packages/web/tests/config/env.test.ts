@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 
 describe("Environment Variables", () => {
     it("should have default SUBTITLE_LANGUAGE as 'es'", async () => {
-        const { env } = await import("@config/env");
+        const { env } = await import("@web/config/env");
         expect(env.SUBTITLE_LANGUAGE).toBe("es");
     });
 
@@ -10,7 +10,7 @@ describe("Environment Variables", () => {
         vi.resetModules();
         
         // Mocking logger
-        vi.mock("@platform/logging", () => ({
+        vi.mock("@web/platform/logging", () => ({
             logger: {
                 error: vi.fn(),
                 info: vi.fn(),
@@ -35,7 +35,7 @@ describe("Environment Variables", () => {
         });
 
         // This import will now trigger the error path
-        const { env } = await import("@config/env");
+        const { env } = await import("@web/config/env");
         expect(env).toBeDefined();
     });
 });

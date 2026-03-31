@@ -1,4 +1,4 @@
-import type { IDatabase } from '@my-offline-lms/core/database';
+import type { IDatabase } from '@core/database';
 import { type IFavoritesRepository, type FavoriteType } from "../domain/ports/IFavoritesRepository";
 
 export class SQLiteFavoritesRepository implements IFavoritesRepository {

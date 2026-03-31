@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import VolumeControl from "@components/VideoPlayer/VolumeControl";
+import VolumeControl from "@web/components/VideoPlayer/VolumeControl";
 
 // Mock Icon component
-vi.mock("@components/Icon", () => ({
+vi.mock("@web/components/Icon", () => ({
   Icon: ({ name }: { name: string }) => <span data-testid="mock-icon">{name}</span>,
 }));
 

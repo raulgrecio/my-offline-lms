@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { env } from '@config/env';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
+import { env } from '@scraper/config/env';
 
 describe('AssetNamingService', () => {
   let service: AssetNamingService;

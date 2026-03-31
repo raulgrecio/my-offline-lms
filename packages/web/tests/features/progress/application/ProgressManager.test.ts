@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { ProgressManager } from "@features/progress/application/ProgressManager";
-import type { IProgressRepository } from "@features/progress/domain/ports/IProgressRepository";
+import { ProgressManager } from "@web/features/progress/application/ProgressManager";
+import type { IProgressRepository } from "@web/features/progress/domain/ports/IProgressRepository";
 
 describe("ProgressManager", () => {
   let mockRepo: IProgressRepository;

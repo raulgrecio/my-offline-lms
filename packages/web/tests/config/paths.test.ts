@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import * as paths from "@config/paths";
+import * as paths from "@web/config/paths";
 
 describe("Paths Config", () => {
     it("should return monorepo root", async () => {

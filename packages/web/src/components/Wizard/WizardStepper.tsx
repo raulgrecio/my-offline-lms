@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Icon } from '@components/Icon';
+import { Icon } from '@web/components/Icon';
 import { useWizard } from './WizardContext';
 
 export const WizardStepper: React.FC = () => {

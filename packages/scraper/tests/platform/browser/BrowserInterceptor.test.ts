@@ -1,7 +1,7 @@
 import { Page, Request, Response } from 'playwright';
 import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 
-import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
+import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
 
 describe('BrowserInterceptor', () => {
   let mockPage: Mocked<Page>;

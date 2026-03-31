@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import { type IDatabase } from '@my-offline-lms/core/database';
-import { SQLiteLearningPathRepository } from "@features/learning-paths/infrastructure/SQLiteLearningPathRepository";
+import { type IDatabase } from '@core/database';
+import { SQLiteLearningPathRepository } from "@web/features/learning-paths/infrastructure/SQLiteLearningPathRepository";
 
 describe("SQLiteLearningPathRepository", () => {
   let mockDb: IDatabase;

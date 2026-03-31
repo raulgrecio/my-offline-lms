@@ -1,4 +1,4 @@
-import type { Course } from '@my-offline-lms/core/models';
+import type { Course } from '@core/domain';
 
 export type CourseWithOrderInPath = Course & {
   orderIndex: number;

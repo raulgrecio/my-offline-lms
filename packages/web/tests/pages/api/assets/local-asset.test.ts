@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET } from "@pages/api/assets/local-asset";
-import { AssetPathResolver, UniversalFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { GET } from "@web/pages/api/assets/local-asset";
+import { AssetPathResolver, UniversalFileSystem, NodePath } from "@core/filesystem";
 
 const { mockFs, mockPath, mockResolver } = vi.hoisted(() => ({
   mockFs: {
@@ -16,7 +16,7 @@ const { mockFs, mockPath, mockResolver } = vi.hoisted(() => ({
   }
 }));
 
-vi.mock("@my-offline-lms/core/filesystem", () => ({
+vi.mock("@core/filesystem", () => ({
   AssetPathResolver: vi.fn().mockImplementation(function () { return mockResolver; }),
   UniversalFileSystem: vi.fn().mockImplementation(function () { return mockFs; }),
   NodeFileSystem: vi.fn(),
@@ -29,12 +29,12 @@ vi.mock("@my-offline-lms/core/filesystem", () => ({
 
 
 
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getAssetConfigPath: vi.fn().mockResolvedValue("/tmp/config"),
   getMonorepoRoot: vi.fn().mockResolvedValue("/tmp/root"),
 }));
 
-vi.mock("@platform/logging", () => ({
+vi.mock("@web/platform/logging", () => ({
   logger: { error: vi.fn() },
 }));
 

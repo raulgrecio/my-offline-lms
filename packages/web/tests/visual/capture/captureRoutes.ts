@@ -1,5 +1,5 @@
 import { chromium } from "@playwright/test";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
 
 const BASE_URL = "http://localhost:4321";
 const fs = new NodeFileSystem();

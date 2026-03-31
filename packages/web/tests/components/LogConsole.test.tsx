@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { LogConsole } from "@components/LogConsole";
+import { LogConsole } from "@web/components/LogConsole";
 
 // Mock EventSource
 const mockEventSourceInstances: any[] = [];

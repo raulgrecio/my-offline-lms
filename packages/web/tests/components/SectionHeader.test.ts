@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import SectionHeader from "@components/SectionHeader.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
 
 describe("SectionHeader.astro", () => {
   it("should render title and icon", async () => {

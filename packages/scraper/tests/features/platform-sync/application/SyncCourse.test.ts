@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 
-import { PLATFORM } from '@config/platform';
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
-import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
+import { PLATFORM } from '@scraper/config/platform';
+import { IInterceptedDataRepositoryFactory } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
+import { type IPlatformUrlProvider } from '@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
+import { IInterceptedDataRepository } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepository';
 
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
+import { SyncCourse } from '@scraper/features/platform-sync/application/SyncCourse';
+import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
 
-import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
-import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
-
-vi.mock('@platform/browser/BrowserInterceptor', () => {
+vi.mock('@scraper/platform/browser/BrowserInterceptor', () => {
   return {
     BrowserInterceptor: vi.fn().mockImplementation(function () {
       return {
@@ -250,11 +249,11 @@ describe('SyncCourse Use Case', () => {
   it('should handle assets without names and use defaults', async () => {
     setupMockPage();
     mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
-      { 
-        filePath: 'p.json', 
-        content: JSON.stringify({ 
-          data: { id: '123', name: 'C', eKits: [{ id: 'num4' }], modules: [{ components: [{ id: 'v4', typeId: 1 }] }] } 
-        }) 
+      {
+        filePath: 'p.json',
+        content: JSON.stringify({
+          data: { id: '123', name: 'C', eKits: [{ id: 'num4' }], modules: [{ components: [{ id: 'v4', typeId: 1 }] }] }
+        })
       }
     ]);
     await useCase.execute({ courseInput: '123' });
@@ -267,24 +266,28 @@ describe('SyncCourse Use Case', () => {
     const SLUG = 'full-test';
 
     // payload 1: Sets everything MINIMAL (no name, no duration for v1)
-    const p1 = { filePath: 'p1.json', content: JSON.stringify({ 
-      url: 'http://p', 
-      data: { 
-        id: '123', name: 'Short', slug: SLUG,
-        eKits: [{ id: 'num1', name: 'G1', gcc: 'G', ekitType: 'T', typeId: 1, offeringId: 'O' }],
-        modules: [{ components: [{ id: 'v1', typeId: 1 }] }] 
-      } 
-    }) };
+    const p1 = {
+      filePath: 'p1.json', content: JSON.stringify({
+        url: 'http://p',
+        data: {
+          id: '123', name: 'Short', slug: SLUG,
+          eKits: [{ id: 'num1', name: 'G1', gcc: 'G', ekitType: 'T', typeId: 1, offeringId: 'O' }],
+          modules: [{ components: [{ id: 'v1', typeId: 1 }] }]
+        }
+      })
+    };
 
     // payload 2: Covers "false" branches and updates
-    const p2 = { filePath: 'p2.json', content: JSON.stringify({ 
-      url: 'http://AlreadySet?offeringId=off1', 
-      data: { 
-        id: '123', title: 'S', slug: SLUG,
-        eKits: [{ id: 'num1' }],
-        modules: [{ components: [{ id: 'v1', typeId: 1, name: 'Late Name', title: 'Title', duration: 100 }] }] 
-      } 
-    }) };
+    const p2 = {
+      filePath: 'p2.json', content: JSON.stringify({
+        url: 'http://AlreadySet?offeringId=off1',
+        data: {
+          id: '123', title: 'S', slug: SLUG,
+          eKits: [{ id: 'num1' }],
+          modules: [{ components: [{ id: 'v1', typeId: 1, name: 'Late Name', title: 'Title', duration: 100 }] }]
+        }
+      })
+    };
 
     const p3 = { filePath: 'p3.json', content: JSON.stringify({ url: 'http://p3', data: { id: '123', slug: SLUG } }) };
     const p4 = { filePath: 'p4.json', content: JSON.stringify({ data: null }) };
@@ -328,30 +331,34 @@ describe('SyncCourse Use Case', () => {
   });
 
   it('should cover fallback paths for course metadata', async () => {
-      setupMockPage();
-      // Test 1: courseTitle and existingCourse?.title are null
-      mockCourseRepo.getCourseById.mockResolvedValue(null);
-      mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
-          { filePath: 'p.json', content: JSON.stringify({ data: { id: 'C1', slug: 'S1' } }) }
-      ]);
-      await useCase.execute({ courseInput: 'C1' });
-      expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ title: 'Unknown Course' }));
-      
-      // Test 2: courseSlug and existingCourse?.slug are null
-      mockCourseRepo.getCourseById.mockResolvedValue({ id: 'C2', title: 'T2' } as any);
-      mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
-          { filePath: 'p.json', content: JSON.stringify({ data: { id: 'C2', title: 'T2' } }) }
-      ]);
-      await useCase.execute({ courseInput: 'C2' });
-      expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ slug: expect.any(String) }));
+    setupMockPage();
+    // Test 1: courseTitle and existingCourse?.title are null
+    mockCourseRepo.getCourseById.mockResolvedValue(null);
+    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
+      { filePath: 'p.json', content: JSON.stringify({ data: { id: 'C1', slug: 'S1' } }) }
+    ]);
+    await useCase.execute({ courseInput: 'C1' });
+    expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ title: 'Unknown Course' }));
+
+    // Test 2: courseSlug and existingCourse?.slug are null
+    mockCourseRepo.getCourseById.mockResolvedValue({ id: 'C2', title: 'T2' } as any);
+    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
+      { filePath: 'p.json', content: JSON.stringify({ data: { id: 'C2', title: 'T2' } }) }
+    ]);
+    await useCase.execute({ courseInput: 'C2' });
+    expect(mockCourseRepo.saveCourse).toHaveBeenCalledWith(expect.objectContaining({ slug: expect.any(String) }));
   });
 
   it('should handle components without id or uuid', async () => {
     setupMockPage();
     mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
-        { filePath: 'p.json', content: JSON.stringify({ data: { 
-            id: '123', slug: 'S', modules: [{ components: [{ typeId: 1, name: 'NO-ID' }] }] 
-        } }) }
+      {
+        filePath: 'p.json', content: JSON.stringify({
+          data: {
+            id: '123', slug: 'S', modules: [{ components: [{ typeId: 1, name: 'NO-ID' }] }]
+          }
+        })
+      }
     ]);
     await useCase.execute({ courseInput: '123' });
     // Should not throw, just skip the component

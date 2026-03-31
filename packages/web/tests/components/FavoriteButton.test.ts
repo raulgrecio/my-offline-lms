@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import FavoriteButton from "@components/FavoriteButton.astro";
+import FavoriteButton from "@web/components/FavoriteButton.astro";
 
 describe("FavoriteButton.astro", () => {
   it("should render with correct data attributes", async () => {

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-import FullscreenButton from "@components/VideoPlayer/FullscreenButton";
-import PlayOverlay from "@components/VideoPlayer/PlayOverlay";
-import VideoTitle from "@components/VideoPlayer/VideoTitle";
-import SubtitleToggleButton from "@components/VideoPlayer/SubtitleToggleButton";
-import SettingsButton from "@components/VideoPlayer/SettingsButton";
-import ControlOverlay from "@components/VideoPlayer/ControlOverlay";
+import FullscreenButton from "@web/components/VideoPlayer/FullscreenButton";
+import PlayOverlay from "@web/components/VideoPlayer/PlayOverlay";
+import VideoTitle from "@web/components/VideoPlayer/VideoTitle";
+import SubtitleToggleButton from "@web/components/VideoPlayer/SubtitleToggleButton";
+import SettingsButton from "@web/components/VideoPlayer/SettingsButton";
+import ControlOverlay from "@web/components/VideoPlayer/ControlOverlay";
 
 describe("VideoPlayer Sub-components", () => {
   describe("FullscreenButton", () => {

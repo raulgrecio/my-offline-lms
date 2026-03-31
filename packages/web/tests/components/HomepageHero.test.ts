@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import HomepageHero from "@components/HomepageHero.astro";
+import HomepageHero from "@web/components/HomepageHero.astro";
 
 describe("HomepageHero.astro", () => {
   it("should render welcome message when no last watched", async () => {

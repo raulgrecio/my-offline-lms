@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 
 // Mocking core filesystem
-vi.mock("@my-offline-lms/core/filesystem", () => {
+vi.mock("@core/filesystem", () => {
   return {
     AssetPathResolver: vi.fn().mockImplementation(function() {
       return {
@@ -18,13 +18,13 @@ vi.mock("@my-offline-lms/core/filesystem", () => {
 });
 
 // Mocking config paths
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getAssetConfigPath: vi.fn().mockResolvedValue('/tmp/assets.json'),
   getMonorepoRoot: vi.fn().mockResolvedValue('/home/rgr/source/my-offline-lms'),
 }));
 
 // Mocking logger
-vi.mock("@platform/logging", () => ({
+vi.mock("@web/platform/logging", () => ({
   logger: {
     error: vi.fn(),
     info: vi.fn(),
@@ -48,7 +48,7 @@ describe("settings.astro", () => {
 
   it("should render error message when loading fails", async () => {
     // Re-mock AssetPathResolver for this test
-    const { AssetPathResolver } = await import("@my-offline-lms/core/filesystem");
+    const { AssetPathResolver } = await import("@core/filesystem");
     (AssetPathResolver as any).mockImplementationOnce(() => ({
       getAvailablePaths: vi.fn().mockRejectedValue(new Error('Failed to load')),
     }));

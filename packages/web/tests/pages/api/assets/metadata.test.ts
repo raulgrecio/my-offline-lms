@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET, POST } from "@pages/api/assets/metadata";
-import * as CoursesFeature from "@features/courses";
+import { GET, POST } from "@web/pages/api/assets/metadata";
+import * as CoursesFeature from "@web/features/courses";
 
-vi.mock("@features/courses", () => ({
+vi.mock("@web/features/courses", () => ({
   updateAssetTotalPages: vi.fn(),
   getAssetById: vi.fn(),
 }));

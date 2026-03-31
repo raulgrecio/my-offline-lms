@@ -25,13 +25,8 @@ export default defineConfig(
     resolve: {
       alias: {
         "@core": path.resolve(__dirname, "../core/src"),
-        "@config": path.resolve(__dirname, "./src/config"),
-        "@components": path.resolve(__dirname, "./src/components"),
-        "@features": path.resolve(__dirname, "./src/features"),
-        "@layouts": path.resolve(__dirname, "./src/layouts"),
-        "@lib": path.resolve(__dirname, "./src/lib"),
-        "@pages": path.resolve(__dirname, "./src/pages"),
-        "@platform": path.resolve(__dirname, "./src/platform"),
+        "@scraper": path.resolve(__dirname, "../scraper/src"),
+        "@web": path.resolve(__dirname, "./src"),
       },
     },
   })

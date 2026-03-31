@@ -3,17 +3,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 
 // Mocking features
-vi.mock("@features/courses", () => ({
+vi.mock("@web/features/courses", () => ({
   getAllCourses: vi.fn().mockResolvedValue([]),
   getCourseById: vi.fn().mockResolvedValue(null),
   getAssetsByCourseId: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@features/favorites", () => ({
+vi.mock("@web/features/favorites", () => ({
   getIsFavorite: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock("@features/progress", () => ({
+vi.mock("@web/features/progress", () => ({
   getCourseProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, progress: 0 }),
   getAssetProgress: vi.fn().mockResolvedValue({ status: 'not_started', totalItems: 0, progress: 0 }),
 }));
@@ -22,8 +22,8 @@ vi.mock("@features/progress", () => ({
 import CoursesIndexPage from "../../src/pages/courses/index.astro";
 // @ts-ignore
 import CourseDetailPage from "../../src/pages/courses/[id].astro";
-import * as coreCourses from "@features/courses";
-import * as coreProgress from "@features/progress";
+import * as coreCourses from "@web/features/courses";
+import * as coreProgress from "@web/features/progress";
 
 describe("Courses Pages", () => {
     beforeEach(() => {

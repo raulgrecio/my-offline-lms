@@ -1,18 +1,19 @@
 import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 
-import { ILogger } from '@my-offline-lms/core/logging';
-import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
-import { IPlatformUrlProvider } from '@features/platform-sync/domain/ports/IPlatformUrlProvider';
-import { ILearningPathRepository } from '@features/platform-sync/domain/ports/ILearningPathRepository';
-import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
-import { SyncCourse } from '@features/platform-sync/application/SyncCourse';
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { IInterceptedDataRepository } from '@features/platform-sync/domain/ports/IInterceptedDataRepository';
+import { type ILogger } from '@core/logging';
 
-import { SyncLearningPath } from '@features/platform-sync/application/SyncLearningPath';
-import { BrowserInterceptor } from '@platform/browser/BrowserInterceptor';
+import { IInterceptedDataRepositoryFactory } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
+import { type IPlatformUrlProvider } from '@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider';
+import { type ILearningPathRepository } from '@scraper/features/platform-sync/domain/ports/ILearningPathRepository';
+import { type ICourseRepository } from '@scraper/features/platform-sync/domain/ports/ICourseRepository';
+import { SyncCourse } from '@scraper/features/platform-sync/application/SyncCourse';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
+import { IInterceptedDataRepository } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepository';
 
-vi.mock('@platform/browser/BrowserInterceptor', () => {
+import { SyncLearningPath } from '@scraper/features/platform-sync/application/SyncLearningPath';
+import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
+
+vi.mock('@scraper/platform/browser/BrowserInterceptor', () => {
   return {
     BrowserInterceptor: vi.fn().mockImplementation(function () {
       return {

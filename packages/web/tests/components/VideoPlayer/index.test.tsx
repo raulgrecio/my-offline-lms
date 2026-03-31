@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import VideoPlayer from "@components/VideoPlayer/index";
-import OriginalVideoPlayer from "@components/VideoPlayer/VideoPlayer";
+import VideoPlayer from "@web/components/VideoPlayer/index";
+import OriginalVideoPlayer from "@web/components/VideoPlayer/VideoPlayer";
 
 describe("VideoPlayer Index", () => {
   it("should export VideoPlayer by default", () => {

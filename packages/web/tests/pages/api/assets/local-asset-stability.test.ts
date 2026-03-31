@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { GET } from "@pages/api/assets/local-asset";
+import { GET } from "@web/pages/api/assets/local-asset";
 import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 
 // We mock ONLY the resolver to control the file path
-vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
+vi.mock("@core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -17,7 +17,7 @@ vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
   };
 });
 
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getAssetConfigPath: vi.fn().mockResolvedValue("/tmp/config"),
   getMonorepoRoot: vi.fn().mockResolvedValue("/tmp/root"),
 }));

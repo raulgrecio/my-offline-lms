@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { getActiveLearningPath } from "@features/settings/application/use-cases/getActiveLearningPath";
-import type { ISettingsRepository } from "@features/settings/domain/ports/ISettingsRepository";
+import { getActiveLearningPath } from "@web/features/settings/application/use-cases/getActiveLearningPath";
+import type { ISettingsRepository } from "@web/features/settings/domain/ports/ISettingsRepository";
 
 describe("getActiveLearningPath use case", () => {
   it("should return the result from the repository", () => {

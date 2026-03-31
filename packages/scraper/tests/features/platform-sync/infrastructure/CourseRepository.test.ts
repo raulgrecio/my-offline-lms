@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SQLiteCourseRepository } from '@features/platform-sync/infrastructure/CourseRepository';
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
+
+import { SQLiteDatabase } from '@core/database';
+
+import { SQLiteCourseRepository } from '@scraper/features/platform-sync/infrastructure/CourseRepository';
 
 describe('SQLiteCourseRepository', () => {
   let db: SQLiteDatabase;

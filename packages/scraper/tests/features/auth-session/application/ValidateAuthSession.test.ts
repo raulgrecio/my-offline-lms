@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ValidateAuthSession } from '../../../../src/features/auth-session/application/ValidateAuthSession';
-import { IAuthSessionStorage } from '../../../../src/features/auth-session/domain/ports/IAuthSessionStorage';
-import { ILogger } from '@my-offline-lms/core/logging';
+
+import { type ILogger } from '@core/logging';
+
+import { ValidateAuthSession } from '@scraper/features/auth-session/application/ValidateAuthSession';
+import { type IAuthSessionStorage } from '@scraper/features/auth-session/domain/ports/IAuthSessionStorage';
 
 describe('ValidateAuthSession', () => {
   let authStorageMock: IAuthSessionStorage;
@@ -41,7 +43,7 @@ describe('ValidateAuthSession', () => {
     const result = await useCase.execute();
     expect(result).toBe(false);
     expect(loggerMock.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Sesión expirada o no encontrada")
+      expect.stringContaining("Sesión expirada o no encontrada")
     );
   });
 });

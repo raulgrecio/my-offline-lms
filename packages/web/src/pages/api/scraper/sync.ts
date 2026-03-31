@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { ScraperService } from '@my-offline-lms/scraper';
+import { ScraperService } from '@scraper/ScraperService';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

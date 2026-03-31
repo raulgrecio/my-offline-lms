@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 
-import VideoPlayer from "@components/VideoPlayer/VideoPlayer";
-import { apiClient } from "@platform/api/client";
+import VideoPlayer from "@web/components/VideoPlayer/VideoPlayer";
+import { apiClient } from "@web/platform/api/client";
 
 // Mock apiClient
-vi.mock("@platform/api/client", () => ({
+vi.mock("@web/platform/api/client", () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),

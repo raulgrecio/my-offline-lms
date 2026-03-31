@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { setActiveLearningPath } from "@features/settings/application/use-cases/setActiveLearningPath";
-import type { ISettingsRepository } from "@features/settings/domain/ports/ISettingsRepository";
+import { setActiveLearningPath } from "@web/features/settings/application/use-cases/setActiveLearningPath";
+import type { ISettingsRepository } from "@web/features/settings/domain/ports/ISettingsRepository";
 
 describe("setActiveLearningPath use case", () => {
   it("should update the repository with the provided id", () => {

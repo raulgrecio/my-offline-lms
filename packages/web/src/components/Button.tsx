@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon, type IconName } from './Icon';
-import { cn } from '@lib/cn';
+import { cn } from '@web/lib/cn';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'none';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';

@@ -1,10 +1,10 @@
 ---
 import "../styles/global.css";
-import ThemeToggle from "@components/ThemeToggle/ThemeToggle.astro";
-import Navigation from "@components/Navigation.astro";
-import { Icon } from "@components/Icon";
-import Button from "@components/Button.astro";
-import { APP_ROUTES } from "@platform/router/routes";
+import ThemeToggle from "@web/components/ThemeToggle/ThemeToggle.astro";
+import Navigation from "@web/components/Navigation.astro";
+import { Icon } from "@web/components/Icon";
+import Button from "@web/components/Button.astro";
+import { APP_ROUTES } from "@web/platform/router/routes";
 
 interface Props {
   title: string;
@@ -116,9 +116,9 @@ const navLinks = [
         class="hidden md:hidden border-t bg-surface-800 border-border-subtle"
       >
         <div class="px-4 py-3">
-          <Navigation 
-            links={navLinks} 
-            currentPath={currentPath} 
+          <Navigation
+            links={navLinks}
+            currentPath={currentPath}
             orientation="vertical"
           />
         </div>
@@ -126,7 +126,7 @@ const navLinks = [
     </header>
 
     <!-- ─── Main Content ───────────────────────────────────────────── -->
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
       <slot />
     </main>
 

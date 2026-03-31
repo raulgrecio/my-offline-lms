@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { YtDlpVideoDownloader } from '@features/asset-download/infrastructure/YtDlpVideoDownloader';
-import { IAuthSessionStorage } from '@features/auth-session/domain/ports/IAuthSessionStorage';
-import { ILogger } from '@my-offline-lms/core/logging';
 import { spawn } from 'child_process';
 import EventEmitter from 'events';
+
+import { type ILogger } from '@core/logging';
+import { YtDlpVideoDownloader } from '@scraper/features/asset-download/infrastructure/YtDlpVideoDownloader';
+import { type IAuthSessionStorage } from '@scraper/features/auth-session/domain/ports/IAuthSessionStorage';
 
 vi.mock('child_process');
 

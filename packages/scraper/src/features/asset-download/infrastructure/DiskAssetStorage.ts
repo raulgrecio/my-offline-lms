@@ -1,12 +1,11 @@
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
-import { type IAssetPathResolver, type IFileSystem, type IPath, NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
-import { ASSET_FOLDERS } from "@my-offline-lms/core/models";
-import { AssetType } from "@my-offline-lms/core/models";
 
+import { type IAssetPathResolver, type IFileSystem, type IPath } from "@core/filesystem";
+import { ASSET_FOLDERS, type AssetType } from "@core/domain";
 
-import { getAssetPathsConfig, getAssetsDir, getMonorepoRoot } from "@config/paths";
-import { IAssetStorage, PDFOptions } from "@features/asset-download/domain/ports/IAssetStorage";
+import { getAssetsDir } from "@scraper/config/paths";
+import type { IAssetStorage, PDFOptions } from "@scraper/features/asset-download/domain/ports/IAssetStorage";
 
 interface DiskAssetStorageProps {
   baseDir?: string;

@@ -1,23 +1,23 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import LearningPathCard from "@components/LearningPathCard.astro";
-import CourseCard from "@components/CourseCard.astro";
-import SectionHeader from "@components/SectionHeader.astro";
-import EmptyState from "@components/EmptyState.astro";
-import HomepageHero from "@components/HomepageHero.astro";
-import Button from "@components/Button.astro";
-import { Icon } from "@components/Icon";
+import Layout from "@web/layouts/Layout.astro";
+import LearningPathCard from "@web/components/LearningPathCard.astro";
+import CourseCard from "@web/components/CourseCard.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
+import EmptyState from "@web/components/EmptyState.astro";
+import HomepageHero from "@web/components/HomepageHero.astro";
+import Button from "@web/components/Button.astro";
+import { Icon } from "@web/components/Icon";
 import {
   getAllLearningPaths,
-} from "@features/learning-paths";
-import { getAllCourses, getCourseById } from "@features/courses";
+} from "@web/features/learning-paths";
+import { getAllCourses, getCourseById } from "@web/features/courses";
 import {
   getDashboardStatus,
   getCourseProgress,
   getLearningPathProgress,
-} from "@features/progress";
-import { getIsFavorite } from "@features/favorites";
-import { APP_ROUTES } from "@platform/router/routes";
+} from "@web/features/progress";
+import { getIsFavorite } from "@web/features/favorites";
+import { APP_ROUTES } from "@web/platform/router/routes";
 
 const learningPaths = await getAllLearningPaths();
 const courses = (await getAllCourses()).slice(0, 8);

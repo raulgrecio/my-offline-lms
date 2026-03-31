@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { CourseManager } from "@features/courses/application/CourseManager";
-import { type ICourseRepository } from "@features/courses/domain/ports/ICourseRepository";
-import { type Course } from '@my-offline-lms/core/models';
+import { CourseManager } from "@web/features/courses/application/CourseManager";
+import { type CourseWithSyncStatus, type ICourseRepository } from "@web/features/courses/domain/ports/ICourseRepository";
+import { type Course } from '@core/domain';
 
 describe("CourseManager", () => {
   const mockRepo: ICourseRepository = {
@@ -10,6 +10,9 @@ describe("CourseManager", () => {
     getAssetsByCourseId: vi.fn(),
     getAssetById: vi.fn(),
     updateAssetMetadata: vi.fn(),
+    getCoursesWithSyncStatus: function (): CourseWithSyncStatus[] {
+      throw new Error("Function not implemented.");
+    }
   };
 
   const manager = new CourseManager(mockRepo);

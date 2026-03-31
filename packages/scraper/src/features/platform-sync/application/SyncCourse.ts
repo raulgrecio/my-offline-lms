@@ -1,13 +1,13 @@
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
-import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { BrowserInterceptor } from "@scraper/platform/browser/BrowserInterceptor";
+import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
+import { type IAssetRepository } from '@scraper/features/asset-download/domain/ports/IAssetRepository';
+import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
+import { type ICourseRepository } from '@scraper/features/platform-sync/domain/ports/ICourseRepository';
+import { type IInterceptedDataRepositoryFactory } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
+import { type IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
 
 export interface SyncCourseInput {
   courseInput: string;

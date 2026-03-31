@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import VisibilityToggle from "@components/VisibilityToggle.astro";
+import VisibilityToggle from "@web/components/VisibilityToggle.astro";
 
 describe("VisibilityToggle.astro", () => {
   it("should render show all state", async () => {

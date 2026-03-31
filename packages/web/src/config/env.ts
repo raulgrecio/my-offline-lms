@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { logger } from '@platform/logging';
+import { logger } from '@web/platform/logging';
 
 /**
  * Validated environment variables for the web package.

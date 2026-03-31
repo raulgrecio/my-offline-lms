@@ -1,4 +1,4 @@
-import { VIDEO_SEGMENT_SIZE } from '@features/progress/application/constants';
+import { VIDEO_SEGMENT_SIZE } from '@web/features/progress/application/constants';
 
 export interface ProgressVideoBarProps {
   currentTime: number;

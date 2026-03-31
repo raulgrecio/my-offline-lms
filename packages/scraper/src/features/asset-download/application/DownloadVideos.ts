@@ -1,14 +1,14 @@
-import { BrowserContext } from "playwright";
+import { type BrowserContext } from "playwright";
 
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
+import { type IAssetRepository } from "@scraper/features/asset-download/domain/ports/IAssetRepository";
+import { type IAssetStorage } from "@scraper/features/asset-download/domain/ports/IAssetStorage";
+import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
+import { type IVideoDownloader } from "@scraper/features/asset-download/domain/ports/IVideoDownloader";
+import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
+import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
 
 export interface DownloadVideosConfig {
   selectors: {

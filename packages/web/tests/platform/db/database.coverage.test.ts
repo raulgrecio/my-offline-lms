@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { SQLiteDatabase } from "@my-offline-lms/core/database";
+import { SQLiteDatabase } from "@core/database";
 
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getDbPath: vi.fn().mockResolvedValue("/tmp/test.db"),
 }));
 
-vi.mock("@my-offline-lms/core/filesystem", () => ({
+vi.mock("@core/filesystem", () => ({
   NodeFileSystem: vi.fn().mockImplementation(function () {
     return {
       exists: vi.fn().mockResolvedValue(true),
@@ -19,7 +19,7 @@ vi.mock("@my-offline-lms/core/filesystem", () => ({
   }),
 }));
 
-vi.mock("@my-offline-lms/core/database", () => ({
+vi.mock("@core/database", () => ({
   SQLiteDatabase: vi.fn().mockImplementation(function () {
     return {
       exec: vi.fn(),
@@ -54,7 +54,7 @@ describe("Database Initialization Coverage (Line 15)", () => {
 
     // Forced re-evaluation of the module
     vi.resetModules();
-    const { getDb } = await import("@platform/db/database");
+    const { getDb } = await import("@web/platform/db/database");
 
     // Trigger initialization
     const mockLogger = { debug: vi.fn(), info: vi.fn() };

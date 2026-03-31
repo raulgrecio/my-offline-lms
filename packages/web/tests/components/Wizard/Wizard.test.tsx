@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
-import { GenericWizard } from '@components/Wizard/Wizard';
-import { WizardActionButtons, type WizardStepConfig, useWizard } from '@components/Wizard';
+import { GenericWizard } from '@web/components/Wizard/Wizard';
+import { WizardActionButtons, type WizardStepConfig, useWizard } from '@web/components/Wizard';
 
 const mockSteps: WizardStepConfig[] = [
   { id: 'step1', label: 'Step 1', icon: 'book-open' },

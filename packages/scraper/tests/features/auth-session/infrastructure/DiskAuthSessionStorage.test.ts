@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DiskAuthSessionStorage } from '@features/auth-session/infrastructure/DiskAuthSessionStorage';
+import { DiskAuthSessionStorage } from '@scraper/features/auth-session/infrastructure/DiskAuthSessionStorage';
 
 vi.mock('path', async () => {
   const actual = await vi.importActual<typeof import('path')>('path');
@@ -101,7 +101,7 @@ describe('DiskAuthSessionStorage', () => {
   });
 
   describe('isValidSession', () => {
-    vi.mock('@config/env', () => ({
+    vi.mock('@scraper/config/env', () => ({
       env: { PLATFORM_BASE_URL: 'https://mylearn.myplatform.com' }
     }));
 

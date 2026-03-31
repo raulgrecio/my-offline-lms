@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
 
-import { getAssetPathsConfig, getMonorepoRoot } from "@config/paths";
+import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config/paths";
 
-import { AssetType, ASSET_FOLDERS } from '@my-offline-lms/core/models';
-import { PathResolver, NodeFileSystem, AssetPathResolver, NodePath } from '@my-offline-lms/core/filesystem';
-
-import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
+import { type AssetType, ASSET_FOLDERS } from '@core/domain';
+import { NodeFileSystem, AssetPathResolver, NodePath } from '@core/filesystem';
 import { NoopLogger } from "@core/logging";
+
+import { AssetNamingService } from "@scraper/features/asset-download/infrastructure/AssetNamingService";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.

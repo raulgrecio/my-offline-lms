@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock the core filesystem to control PathResolver behavior
-vi.mock('@my-offline-lms/core/filesystem', () => {
+vi.mock('@core/filesystem', () => {
   return {
     NodeFileSystem: vi.fn().mockImplementation(function () {
       return {};
@@ -33,7 +33,7 @@ import {
   getAssetPathsConfig,
   getDbPath,
   getAssetsDir
-} from '@config/paths';
+} from '@scraper/config/paths';
 
 describe('config/paths', () => {
   it('should return correct monorepo root', async () => {

@@ -1,9 +1,9 @@
 import path from "path";
 
-import { DiskAssetStorage } from "@features/asset-download/infrastructure/DiskAssetStorage";
-import { NodeFileSystem, NodePath, AssetPathResolver } from "@my-offline-lms/core/filesystem";
-import { getAssetPathsConfig, getMonorepoRoot } from "@config/paths";
-import { logger } from "@platform/logging";
+import { DiskAssetStorage } from "@scraper/features/asset-download/infrastructure/DiskAssetStorage";
+import { NodeFileSystem, NodePath, AssetPathResolver } from "@core/filesystem";
+import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config/paths";
+import { logger } from "@scraper/platform/logging";
 
 async function runTests() {
   const args = process.argv.slice(2);

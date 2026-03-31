@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 // @ts-ignore
-import ProgressBar from "@components/ProgressBar.astro";
+import ProgressBar from "@web/components/ProgressBar.astro";
 
 describe("ProgressBar.astro", () => {
   it("should render with correct width", async () => {

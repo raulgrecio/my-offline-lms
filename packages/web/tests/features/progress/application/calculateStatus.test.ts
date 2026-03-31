@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateStatus } from "@features/progress/application/calculateStatus";
+import { calculateStatus } from "@web/features/progress/application/calculateStatus";
 
 describe("calculateStatus", () => {
   it("should return not_started when position is 0", () => {

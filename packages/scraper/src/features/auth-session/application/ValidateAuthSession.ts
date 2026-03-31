@@ -1,6 +1,7 @@
-import { ILogger } from '@my-offline-lms/core/logging';
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
+import { type ILogger } from '@core/logging';
+
+import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
+import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
 
 export interface ValidateAuthSessionOptions {
   authStorage: IAuthSessionStorage;
@@ -18,7 +19,7 @@ export class ValidateAuthSession implements IUseCase<void, boolean> {
 
   async execute(): Promise<boolean> {
     const isValid = await this.authStorage.isValidSession();
-    
+
     if (!isValid) {
       this.logger.warn("Sesión expirada o no encontrada. Por favor, ejecuta 'pnpm cli login' de nuevo.");
     }

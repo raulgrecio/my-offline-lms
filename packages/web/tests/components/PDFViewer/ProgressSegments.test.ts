@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../../utils/test-render";
 // @ts-ignore
-import ProgressSegments from "@components/PDFViewer/ProgressSegments.astro";
+import ProgressSegments from "@web/components/PDFViewer/ProgressSegments.astro";
 
 describe("ProgressSegments.astro", () => {
   it("should render with the required container ID for JS integration", async () => {

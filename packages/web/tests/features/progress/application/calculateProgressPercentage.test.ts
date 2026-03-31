@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateProgressPercentage } from "@features/progress/application/calculateProgressPercentage";
+import { calculateProgressPercentage } from "@web/features/progress/application/calculateProgressPercentage";
 
 describe("calculateProgressPercentage", () => {
   it("should return 0 when total is 0", () => {

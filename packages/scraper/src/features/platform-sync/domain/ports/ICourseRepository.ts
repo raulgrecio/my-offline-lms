@@ -1,4 +1,4 @@
-import { Asset, Course } from '@my-offline-lms/core/models';
+import type { Asset, Course } from '@core/domain';
 
 export interface ICourseRepository {
   /** Save or update a Course */

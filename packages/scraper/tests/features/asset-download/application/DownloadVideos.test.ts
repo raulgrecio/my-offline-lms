@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { DownloadVideos } from '@features/asset-download/application/DownloadVideos';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
+import { DownloadVideos } from '@scraper/features/asset-download/application/DownloadVideos';
 
 describe('DownloadVideos Use Case', () => {
   let callCount = 0;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { type IconName } from '@components/Icon';
-import { Button } from '@components/Button';
+import { type IconName } from '@web/components/Icon';
+import { Button } from '@web/components/Button';
 import { useWizard } from './WizardContext';
 
 export interface ActionButtonProps {

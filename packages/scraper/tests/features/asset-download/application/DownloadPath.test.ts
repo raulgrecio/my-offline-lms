@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DownloadPath } from '@features/asset-download/application/DownloadPath';
-import { AssetNamingService } from '@features/asset-download/infrastructure/AssetNamingService';
-import { ILogger } from '@my-offline-lms/core/logging';
+
+import { type ILogger } from '@core/logging';
+import { DownloadPath } from '@scraper/features/asset-download/application/DownloadPath';
+import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
 
 describe('DownloadPath Use Case', () => {
   const mockLearningPathRepo = {

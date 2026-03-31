@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogConsole } from '@components/LogConsole';
+import { LogConsole } from '@web/components/LogConsole';
 
 export const LogConsoleShowcase: React.FC = () => {
   return (

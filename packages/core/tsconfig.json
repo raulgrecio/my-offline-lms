@@ -13,11 +13,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "paths": {
-      "@domain/*": ["src/domain/*"],
-      "@database/*": ["src/database/*"],
-      "@filesystem/*": ["src/filesystem/*"],
-      "@logging": ["src/logging"],
-      "@di": ["src/di"]
+      "@core/*": ["src/*"],
     }
   },
   "include": ["src/**/*", "test/**/*"]

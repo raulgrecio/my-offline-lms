@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ConsoleLogger, NoopLogger } from "@logging";
+
+import { ConsoleLogger, NoopLogger } from "@core/logging";
 
 describe("Logging Module", () => {
   describe("ConsoleLogger", () => {

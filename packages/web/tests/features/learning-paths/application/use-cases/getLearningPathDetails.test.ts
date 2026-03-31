@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { getLearningPathDetails } from "@features/learning-paths/application/use-cases/getLearningPathDetails";
+import { getLearningPathDetails } from "@web/features/learning-paths/application/use-cases/getLearningPathDetails";
 
 describe("getLearningPathDetails", () => {
   it("should fetch path and its courses", () => {

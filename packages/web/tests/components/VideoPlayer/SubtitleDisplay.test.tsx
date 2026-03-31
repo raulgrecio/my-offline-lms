@@ -1,11 +1,11 @@
 import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import SubtitleDisplay from "@components/VideoPlayer/SubtitleDisplay";
-import { apiClient } from "@platform/api/client";
+import SubtitleDisplay from "@web/components/VideoPlayer/SubtitleDisplay";
+import { apiClient } from "@web/platform/api/client";
 
 // Mock apiClient
-vi.mock("@platform/api/client", () => ({
+vi.mock("@web/platform/api/client", () => ({
   apiClient: {
     getText: vi.fn(),
   },

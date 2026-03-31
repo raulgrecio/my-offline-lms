@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SQLiteAssetRepository } from '@features/asset-download/infrastructure/AssetRepository';
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
-import { AssetStatus } from '@my-offline-lms/core/models';
+import { SQLiteAssetRepository } from '@scraper/features/asset-download/infrastructure/AssetRepository';
+import { SQLiteDatabase } from '@core/database';
+import { type AssetStatus } from '@core/domain';
 
 describe('SQLiteAssetRepository', () => {
   let db: SQLiteDatabase;
@@ -11,7 +11,7 @@ describe('SQLiteAssetRepository', () => {
     db = new SQLiteDatabase(':memory:');
     db.initialize();
     repo = new SQLiteAssetRepository(db);
-    
+
     // Insert parent course to satisfy FK
     db.prepare("INSERT INTO Courses (id, title) VALUES ('c1', 'Course 1')").run();
   });
@@ -43,7 +43,7 @@ describe('SQLiteAssetRepository', () => {
   it('should update asset completion', () => {
     repo.saveAsset({ id: 'a1', courseId: 'c1', type: 'video' as any, url: 'http://', status: 'PENDING', metadata: { name: 'V1', duration: 10 } });
     repo.updateAssetCompletion('a1', { name: 'V1', duration: 100 }, '/completed/path');
-    
+
     const asset = repo.getAssetById('a1');
     expect(asset?.status).toBe('COMPLETED');
     expect(asset?.metadata).toEqual({ name: 'V1', duration: 100 });
@@ -59,7 +59,7 @@ describe('SQLiteAssetRepository', () => {
   it('should get pending assets', () => {
     repo.saveAsset({ id: 'a1', courseId: 'c1', type: 'video' as any, url: 'u1', status: 'COMPLETED', metadata: { name: 'V1', duration: 10 } });
     repo.saveAsset({ id: 'a2', courseId: 'c1', type: 'video' as any, url: 'u2', status: 'PENDING', metadata: { name: 'V2', duration: 10 } });
-    
+
     const pending = repo.getPendingAssets('c1', 'video' as any);
     expect(pending).toHaveLength(1);
     expect(pending[0].id).toBe('a2');
@@ -84,7 +84,7 @@ describe('SQLiteAssetRepository', () => {
     expect(repo.getAssetById('a1')?.localPath).toBeNull();
   });
 
-    it('should return null if asset not found', () => {
+  it('should return null if asset not found', () => {
     expect(repo.getAssetById('unknown')).toBeNull();
   });
 

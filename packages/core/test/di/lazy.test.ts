@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createLazyService } from "@di";
+import { createLazyService } from "@core/di";
 
 describe("createLazyService", () => {
   it("should initialize the service only once on success", async () => {

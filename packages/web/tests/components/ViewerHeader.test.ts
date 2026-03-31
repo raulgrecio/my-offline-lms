@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import ViewerHeader from "@components/PDFViewer/ViewerHeader.astro";
+import ViewerHeader from "@web/components/PDFViewer/ViewerHeader.astro";
 
 describe("ViewerHeader.astro", () => {
   it("should render main navigation controls", async () => {

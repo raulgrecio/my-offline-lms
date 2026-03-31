@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import PlayPauseButton from "@components/VideoPlayer/PlayPauseButton";
+import PlayPauseButton from "@web/components/VideoPlayer/PlayPauseButton";
 
 // Mock the child component to focus on PlayPauseButton logic
-vi.mock("@components/VideoPlayer/PlayerButton", () => ({
+vi.mock("@web/components/VideoPlayer/PlayerButton", () => ({
   default: ({ title, onClick }: any) => (
     <button title={title} onClick={onClick} data-testid="mock-player-button">
       {title}

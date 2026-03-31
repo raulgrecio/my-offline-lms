@@ -24,8 +24,8 @@ const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(",") : targetIds;
 </Button>
 
 <script>
-  import { apiClient } from "@platform/api/client";
-  import { logger } from "@platform/logging";
+  import { apiClient } from "@web/platform/api/client";
+  import { logger } from "@web/platform/logging";
 
   function init() {
     const toggleLinks = document.querySelectorAll("[data-visibility-toggle]");

@@ -1,4 +1,4 @@
-import type { Asset } from '@my-offline-lms/core/models';
+import type { Asset } from '@core/domain';
 import type { ICourseRepository } from "../../domain/ports/ICourseRepository";
 
 export interface GetAssetsByCourseIdRequest {

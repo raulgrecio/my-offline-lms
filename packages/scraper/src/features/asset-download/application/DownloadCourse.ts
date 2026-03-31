@@ -1,9 +1,9 @@
-import { DownloadType } from '@my-offline-lms/core/models';
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type DownloadType } from '@core/domain';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
+import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
+import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
+import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";

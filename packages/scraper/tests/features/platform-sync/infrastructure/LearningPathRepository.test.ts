@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SQLiteLearningPathRepository } from '@features/platform-sync/infrastructure/LearningPathRepository';
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
+
+import { SQLiteDatabase } from '@core/database';
+
+import { SQLiteLearningPathRepository } from '@scraper/features/platform-sync/infrastructure/LearningPathRepository';
 
 describe('SQLiteLearningPathRepository', () => {
   let db: SQLiteDatabase;
@@ -22,9 +24,9 @@ describe('SQLiteLearningPathRepository', () => {
     // Satisfy FKs
     db.prepare("INSERT INTO LearningPaths (id, title) VALUES ('lp1', 'LP1')").run();
     db.prepare("INSERT INTO Courses (id, title) VALUES ('c1', 'C1')").run();
-    
+
     repo.addCourseToPath({ pathId: 'lp1', courseId: 'c1', orderIndex: 1 });
-    
+
     const courses = repo.getCoursesForPath('lp1');
     expect(courses).toHaveLength(1);
     expect(courses[0].id).toBe('c1');

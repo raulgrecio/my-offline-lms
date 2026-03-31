@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { AssetPathResolver } from "@filesystem/AssetPathResolver";
-import { type IFileSystem } from "@filesystem/IFileSystem";
-import { type IPath } from "@filesystem/IPath";
-import { NoopLogger } from "@logging";
+import { AssetPathResolver } from "@core/filesystem/AssetPathResolver";
+import { type IFileSystem } from "@core/filesystem/IFileSystem";
+import { type IPath } from "@core/filesystem/IPath";
+import { NoopLogger } from "@core/logging";
 
 describe("AssetPathResolver (Windows Support)", () => {
   const mockFs: IFileSystem = {
@@ -15,6 +15,12 @@ describe("AssetPathResolver (Windows Support)", () => {
     unlink: vi.fn(),
     rename: vi.fn(),
     stat: vi.fn(),
+    createReadStream: function (p: string, options?: any): ReadableStream | null {
+      throw new Error("Function not implemented.");
+    },
+    createWriteStream: function (p: string, options?: any): WritableStream | null {
+      throw new Error("Function not implemented.");
+    }
   };
 
   const mockPath: IPath = {

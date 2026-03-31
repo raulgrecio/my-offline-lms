@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { logger } from "@/platform/logging";
+import { logger } from "@web/platform/logging";
 
 test.describe("Segment Visualization", () => {
   test("should visualize visited segments in Video Player", async ({ page }) => {

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { verifyAssetFiles } from '../../../src/scripts/helpers/verifyAssetFiles';
 
 // Mock dependencies
-vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
+vi.mock('@core/filesystem', async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -48,7 +48,7 @@ vi.mock('@my-offline-lms/core/filesystem', async (importOriginal) => {
 });
 
 // Mock config/paths
-vi.mock('@config/paths', () => ({
+vi.mock('@scraper/config/paths', () => ({
   getAssetPathsConfig: vi.fn(async () => '/mock/config.json'),
   getMonorepoRoot: vi.fn(async () => '/mock/root'),
 }));

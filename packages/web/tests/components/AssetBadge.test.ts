@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 // @ts-ignore
-import AssetBadge from "@components/AssetBadge.astro";
+import AssetBadge from "@web/components/AssetBadge.astro";
 
 describe("AssetBadge.astro", () => {
   it("should render all asset statuses with correct aria and data labels", async () => {

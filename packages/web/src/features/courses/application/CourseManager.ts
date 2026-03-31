@@ -1,4 +1,5 @@
-import { type Course, type Asset } from '@my-offline-lms/core/models';
+import { type Course, type Asset } from "@core/domain";
+
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 import { getAllCourses } from "./use-cases/getAllCourses";
 import { getAssetById, type GetAssetByIdRequest } from "./use-cases/getAssetById";

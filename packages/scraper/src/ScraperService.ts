@@ -1,7 +1,11 @@
+import { ConsoleLogger } from '@core/logging';
+import { type IDatabase } from '@core/database';
+import { type DownloadType } from '@core/domain';
+import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
+
 import { env } from './config/env';
+import { PLATFORM } from './config/platform';
 import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir } from './config/paths';
-import { ConsoleLogger } from '@my-offline-lms/core/logging';
-import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@my-offline-lms/core/filesystem';
 import { AssetNamingService } from './features/asset-download/infrastructure/AssetNamingService';
 import { SQLiteAssetRepository } from './features/asset-download/infrastructure/AssetRepository';
 import { DiskAssetStorage } from './features/asset-download/infrastructure/DiskAssetStorage';
@@ -15,16 +19,13 @@ import { DownloadCourse } from './features/asset-download/application/DownloadCo
 import { DownloadGuides } from './features/asset-download/application/DownloadGuides';
 import { DownloadPath } from './features/asset-download/application/DownloadPath';
 import { DownloadVideos } from './features/asset-download/application/DownloadVideos';
-import { AuthSession } from './features/auth-session/application/AuthSession';
 import { SyncCourse } from './features/platform-sync/application/SyncCourse';
-import { SyncLearningPath } from './features/platform-sync/application/SyncLearningPath';
+import { AuthSession } from './features/auth-session/application/AuthSession';
 import { ValidateAuthSession } from './features/auth-session/application/ValidateAuthSession';
-import { PLATFORM } from './config/platform';
+import { SyncLearningPath } from './features/platform-sync/application/SyncLearningPath';
 import { BrowserProvider } from './platform/browser/BrowserProvider';
 import { BrowserInterceptor } from './platform/browser/BrowserInterceptor';
 import { getDb } from './platform/database/database';
-import { IDatabase } from '@my-offline-lms/core/database';
-import { DownloadType } from '@my-offline-lms/core/models';
 
 export interface ScraperServiceConfig {
   keepTempWorkspaces?: boolean;

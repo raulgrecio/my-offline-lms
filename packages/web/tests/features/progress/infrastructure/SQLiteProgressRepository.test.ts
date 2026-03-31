@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { SQLiteProgressRepository } from "@features/progress/infrastructure/SQLiteProgressRepository";
-import { type IDatabase } from '@my-offline-lms/core/database';
+import { SQLiteProgressRepository } from "@web/features/progress/infrastructure/SQLiteProgressRepository";
+import { type IDatabase } from '@core/database';
 
 describe("SQLiteProgressRepository", () => {
   let mockDb: IDatabase;

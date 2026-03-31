@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import VideoPlaylist from "@components/VideoPlaylist.astro";
+import VideoPlaylist from "@web/components/VideoPlaylist.astro";
 
 describe("VideoPlaylist.astro", () => {
   const mockVideos = [

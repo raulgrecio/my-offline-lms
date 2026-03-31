@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
+import { SQLiteDatabase } from '@core/database';
+import { NodeFileSystem } from '@core/filesystem';
 
 // Mocks
-vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
+vi.mock("@core/database", async (importOriginal) => {
   const actual = await importOriginal<any>();
   const mockDb = {
     exec: vi.fn(),
@@ -18,11 +18,11 @@ vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
   };
 });
 
-vi.mock("@config/paths", () => ({
+vi.mock("@web/config/paths", () => ({
   getDbPath: vi.fn(),
 }));
 
-vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
+vi.mock("@core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -45,7 +45,7 @@ vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
   };
 });
 
-vi.mock("@platform/db/schema", () => ({
+vi.mock("@web/platform/db/schema", () => ({
   runMigrations: vi.fn(),
 }));
 
@@ -57,8 +57,8 @@ describe("Database Windows Compatibility", () => {
 
   it("should correctly handle Windows paths and create directory", async () => {
     // Importamos después de resetModules
-    const { getDb } = await import("@platform/db/database");
-    const { getDbPath: mockedGetDbPath } = await import("@config/paths");
+    const { getDb } = await import("@web/platform/db/database");
+    const { getDbPath: mockedGetDbPath } = await import("@web/config/paths");
 
     // Devolvemos una ruta tipo Windows
     vi.mocked(mockedGetDbPath).mockResolvedValue("C:\\Users\\Raul\\data\\db.sqlite");
@@ -75,8 +75,8 @@ describe("Database Windows Compatibility", () => {
   });
 
   it("should correctly handle Linux paths and create directory", async () => {
-    const { getDb } = await import("@platform/db/database");
-    const { getDbPath: mockedGetDbPath } = await import("@config/paths");
+    const { getDb } = await import("@web/platform/db/database");
+    const { getDbPath: mockedGetDbPath } = await import("@web/config/paths");
 
     vi.mocked(mockedGetDbPath).mockResolvedValue("/home/raul/data/db.sqlite");
 

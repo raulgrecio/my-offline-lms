@@ -2,15 +2,15 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../../utils/test-render";
 // @ts-ignore
-import Viewer from "@components/PDFViewer/Viewer.astro";
+import Viewer from "@web/components/PDFViewer/Viewer.astro";
 // @ts-ignore
-import ViewerHeader from "@components/PDFViewer/ViewerHeader.astro";
+import ViewerHeader from "@web/components/PDFViewer/ViewerHeader.astro";
 // @ts-ignore
-import ViewerMain from "@components/PDFViewer/ViewerMain.astro";
+import ViewerMain from "@web/components/PDFViewer/ViewerMain.astro";
 // @ts-ignore
-import ViewerSidebar from "@components/PDFViewer/ViewerSidebar.astro";
+import ViewerSidebar from "@web/components/PDFViewer/ViewerSidebar.astro";
 // @ts-ignore
-import SaveIndicator from "@components/PDFViewer/SaveIndicator.astro";
+import SaveIndicator from "@web/components/PDFViewer/SaveIndicator.astro";
 
 describe("PDFViewer Astro Components", () => {
   it("should render SaveIndicator with initial hidden state", async () => {

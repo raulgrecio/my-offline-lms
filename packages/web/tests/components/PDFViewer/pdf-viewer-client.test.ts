@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as pdfjs from "pdfjs-dist";
 
-import { apiClient } from "@platform/api/client";
-import { initPdfViewer } from "@components/PDFViewer/pdf-viewer-client";
+import { apiClient } from "@web/platform/api/client";
+import { initPdfViewer } from "@web/components/PDFViewer/pdf-viewer-client";
 
 // Mock pdfjs-dist
 vi.mock("pdfjs-dist", () => ({
@@ -25,7 +25,7 @@ vi.mock("pdfjs-dist", () => ({
 }));
 
 // Mock apiClient
-vi.mock("@platform/api/client", () => ({
+vi.mock("@web/platform/api/client", () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),

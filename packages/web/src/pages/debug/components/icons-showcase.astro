@@ -1,7 +1,7 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import { Icon } from "@components/Icon";
-import { icons } from "@components/Icon/icons";
+import Layout from "@web/layouts/Layout.astro";
+import { Icon } from "@web/components/Icon";
+import { icons } from "@web/components/Icon/icons";
 
 const iconNames = Object.keys(icons) as (keyof typeof icons)[];
 ---
@@ -59,7 +59,7 @@ const iconNames = Object.keys(icons) as (keyof typeof icons)[];
           <h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider">Astro Component</h3>
           <div class="bg-surface-900 p-4 rounded-xl border border-border-subtle font-mono text-xs overflow-x-auto">
             <pre class="text-brand-400">---</pre>
-            <pre class="text-text-muted">import &#123; Icon &#125; from "@components/Icon";</pre>
+            <pre class="text-text-muted">import &#123; Icon &#125; from "@web/components/Icon";</pre>
             <pre class="text-brand-400">---</pre>
             <br/>
             <pre class="text-text-primary">&lt;Icon name="home" size="md" /&gt;</pre>

@@ -3,13 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 
 // Mocking features
-vi.mock("@features/progress", () => ({
+vi.mock("@web/features/progress", () => ({
   getAssetProgress: vi.fn().mockImplementation(() => ({ position: 5, completed: false })),
 }));
 
 // @ts-ignore
 import ViewerPage from "../../src/pages/viewer/index.astro";
-import * as coreProgress from "@features/progress";
+import * as coreProgress from "@web/features/progress";
 
 describe("Viewer Page", () => {
     beforeEach(() => {

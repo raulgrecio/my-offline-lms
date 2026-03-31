@@ -1,5 +1,5 @@
 import { fileURLToPath } from "url";
-import { NodeFileSystem, NodePath, PathResolver } from '@my-offline-lms/core/filesystem';
+import { NodeFileSystem, NodePath, PathResolver } from '@core/filesystem';
 
 const pathAdapter = new NodePath();
 const __filename = fileURLToPath(import.meta.url);

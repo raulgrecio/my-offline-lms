@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { createTestContainer } from "../utils/test-render";
 // @ts-ignore
-import CollapsibleCard from "@components/CollapsibleCard.astro";
+import CollapsibleCard from "@web/components/CollapsibleCard.astro";
 
 describe("CollapsibleCard.astro", () => {
   it("should render header and content slots", async () => {

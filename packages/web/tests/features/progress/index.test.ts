@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 // Mock the dependencies BEFORE importing the module to cover the top-level wiring
-vi.mock("@platform/db/database", () => ({
+vi.mock("@web/platform/db/database", () => ({
   getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
@@ -21,7 +21,7 @@ import {
   updateVideoProgress,
   updateGuideProgress,
   getVisitedSegments
-} from "@features/progress/index";
+} from "@web/features/progress/index";
 
 describe("Progress Feature: Public API", () => {
   it("should provide access to all public methods", async () => {
@@ -39,7 +39,7 @@ describe("Progress Feature: Public API", () => {
     expect(await getVisitedSegments({ id: "a1", type: "video" })).toEqual([]);
 
     // Call deprecated helpers
-    const { getAllCourseProgress, getLastWatchedAsset: getLastWatchedHelper } = await import("@features/progress/index");
+    const { getAllCourseProgress, getLastWatchedAsset: getLastWatchedHelper } = await import("@web/features/progress/index");
     expect(await getAllCourseProgress()).toBeDefined();
     expect(await getLastWatchedHelper()).toBeNull();
   });

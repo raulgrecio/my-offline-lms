@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import ProgressVideoBar from "@components/VideoPlayer/ProgressVideoBar";
-import { VIDEO_SEGMENT_SIZE } from "@features/progress/application/constants";
+import ProgressVideoBar from "@web/components/VideoPlayer/ProgressVideoBar";
+import { VIDEO_SEGMENT_SIZE } from "@web/features/progress/application/constants";
 
 describe("ProgressVideoBar", () => {
   const defaultProps = {

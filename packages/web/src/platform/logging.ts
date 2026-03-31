@@ -1,3 +1,3 @@
-import { ConsoleLogger } from "@my-offline-lms/core/logging";
+import { ConsoleLogger } from "@core/logging";
 
 export const logger = new ConsoleLogger("web");

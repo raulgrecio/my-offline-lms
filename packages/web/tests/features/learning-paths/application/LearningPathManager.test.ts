@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { LearningPathManager } from "@features/learning-paths/application/LearningPathManager";
-import { type ILearningPathRepository } from "@features/learning-paths/domain/ports/ILearningPathRepository";
+import { LearningPathManager } from "@web/features/learning-paths/application/LearningPathManager";
+import { type ILearningPathRepository } from "@web/features/learning-paths/domain/ports/ILearningPathRepository";
 
 describe("LearningPathManager", () => {
   const mockRepo: ILearningPathRepository = {

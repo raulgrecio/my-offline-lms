@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { NodePath } from "@filesystem/NodePath";
 import path from "path";
+import { describe, it, expect } from "vitest";
+
+import { NodePath } from "@core/filesystem/NodePath";
 
 describe("NodePath", () => {
   const nodePath = new NodePath();

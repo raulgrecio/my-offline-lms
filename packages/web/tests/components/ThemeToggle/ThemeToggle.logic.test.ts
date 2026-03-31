@@ -1,6 +1,6 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { initThemeToggle } from "@components/ThemeToggle/ThemeToggle";
+import { initThemeToggle } from "@web/components/ThemeToggle/ThemeToggle";
 
 describe("ThemeToggle Logic", () => {
   beforeEach(() => {

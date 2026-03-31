@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { SQLiteDatabase } from '@my-offline-lms/core/database';
-import { NodeFileSystem } from '@my-offline-lms/core/filesystem';
-import { getDb } from "@platform/db/database";
+import { SQLiteDatabase } from '@core/database';
+import { NodeFileSystem } from '@core/filesystem';
+import { getDb } from "@web/platform/db/database";
 
-vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
+vi.mock("@core/database", async (importOriginal) => {
   const actual = await importOriginal<any>();
   const mockDb = {
     exec: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock("@my-offline-lms/core/database", async (importOriginal) => {
   };
 });
 
-vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
+vi.mock("@core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
@@ -31,7 +31,7 @@ vi.mock("@my-offline-lms/core/filesystem", async (importOriginal) => {
   };
 });
 
-vi.mock("@platform/db/schema", () => ({
+vi.mock("@web/platform/db/schema", () => ({
   runMigrations: vi.fn(),
 }));
 

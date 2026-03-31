@@ -1,6 +1,6 @@
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
 
 const fs = new NodeFileSystem();
 const path = new NodePath();

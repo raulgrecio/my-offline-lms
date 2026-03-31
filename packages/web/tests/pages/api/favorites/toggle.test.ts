@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@pages/api/favorites/toggle";
-import * as FavoritesFeature from "@features/favorites";
+import { POST } from "@web/pages/api/favorites/toggle";
+import * as FavoritesFeature from "@web/features/favorites";
 
-vi.mock("@features/favorites", () => ({
+vi.mock("@web/features/favorites", () => ({
   toggleFavorite: vi.fn(),
 }));
 
-vi.mock("@platform/logging", () => ({
+vi.mock("@web/platform/logging", () => ({
   logger: { error: vi.fn() },
 }));
 
