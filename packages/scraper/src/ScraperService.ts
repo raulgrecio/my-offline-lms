@@ -233,12 +233,45 @@ export class ScraperService {
     }
   }
 
+  async checkAuth(): Promise<boolean> {
+    const deps = await this.init();
+    try {
+      const validator = new ValidateAuthSession({
+        authStorage: deps.authSessionStorage,
+        logger: deps.logger
+      });
+      return await validator.execute();
+    } finally {
+      await this.cleanup();
+    }
+  }
+
+  async login(): Promise<void> {
+    const deps = await this.init();
+
+    try {
+      const authSession = new AuthSession({
+        browserProvider: deps.browserProvider,
+        authStorage: deps.authSessionStorage,
+        logger: deps.logger
+      });
+
+      await authSession.execute({
+        baseUrl: env.PLATFORM_BASE_URL,
+        interactive: false
+      });
+
+    } catch (err) {
+      deps.logger.error("Error en login interactivo:", err);
+      throw err;
+    }
+  }
+
   private async cleanup() {
     if (this.browserProvider) {
       await this.browserProvider.close();
     }
-    if (this.db) {
-      this.db.close();
-    }
+    // We do NOT close this.db here because it's a shared singleton 
+    // in the web server process. Closing it would break other API routes.
   }
 }

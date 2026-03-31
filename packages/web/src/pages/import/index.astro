@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+
+import Layout from "@web/layouts/Layout.astro";
+import PageHeader from "@web/components/PageHeader.astro";
+import { Icon } from "@web/components/Icon";
+import { LogConsole } from "@web/components/LogConsole";
+
+import { ScraperWizard } from "./_ScraperWizard";
+---
+
+<Layout title="Importar Contenido">
+  <PageHeader
+    title="Centro de Importación"
+    icon="download"
+    subtitle="Gestiona tus cursos y rutas de aprendizaje. Sincroniza metadatos e inicia descargas de assets."
+  />
+
+  {/* Wizard Section */}
+  <section class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <ScraperWizard client:load />
+  </section>
+
+  {/* Live Terminal Log */}
+  <section class="animate-in fade-in slide-in-from-bottom-6 duration-1000">
+    <div class="flex items-center gap-2 mb-4 px-2">
+      <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
+      <h2 class="text-xs font-bold uppercase tracking-widest text-text-muted">
+        Live Activity / Terminal
+      </h2>
+    </div>
+    <LogConsole client:load />
+  </section>
+
+  {/* Help Section */}
+  <section
+    class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-border-subtle"
+  >
+    <div
+      class="p-8 rounded-3xl bg-surface-900 border border-border-subtle flex items-start gap-5 group hover:border-brand-500/30 transition-all"
+    >
+      <div
+        class="p-3 rounded-2xl bg-brand-600/10 text-brand-500 group-hover:scale-110 transition-transform"
+      >
+        <Icon name="clock" size="md" />
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-text-primary mb-2">
+          Control de Tiempo
+        </h3>
+        <p class="text-sm text-text-muted leading-relaxed">
+          Las sincronizaciones iniciales (metadatos) son rápidas, pero la
+          descarga de vídeos y guías puede tardar dependiendo de tu conexión.
+        </p>
+      </div>
+    </div>
+    <div
+      class="p-8 rounded-3xl bg-surface-900 border border-border-subtle flex items-start gap-5 group hover:border-green-500/30 transition-all"
+    >
+      <div
+        class="p-3 rounded-2xl bg-green-500/10 text-green-500 group-hover:scale-110 transition-transform"
+      >
+        <Icon name="check-circle" size="md" />
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-text-primary mb-2">
+          Descarga Automática
+        </h3>
+        <p class="text-sm text-text-muted leading-relaxed">
+          Una vez finalizada la descarga de un asset, el visor local se
+          actualizará automáticamente con el contenido listo para usar offline.
+        </p>
+      </div>
+    </div>
+  </section>
+</Layout>

@@ -65,11 +65,7 @@ export const LogConsole: React.FC = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50" />
           </div>
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] font-mono">Scraper_Terminal_v1.0.exe</span>
-          <div className="flex items-center gap-2 ml-4 border-l border-border-subtle pl-4">
-            <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-            <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider">{isConnected ? 'ON' : 'OFF'}</span>
-          </div>
+          <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] font-mono">Scraper_Terminal_v1.0</span>
         </div>
         <div className="flex items-center gap-3">
           <button

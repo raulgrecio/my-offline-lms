@@ -4,17 +4,31 @@ import { LogBroker } from '@core/logging';
 export const GET: APIRoute = async ({ request }) => {
   const stream = new ReadableStream({
     start(controller) {
+      // 1. Subscribe to LogBroker events
       const unsubscribe = LogBroker.subscribe((entry) => {
         try {
           controller.enqueue(`data: ${JSON.stringify(entry)}\n\n`);
         } catch (e) {
           // Stream might be closed
           unsubscribe();
+          clearInterval(heartbeat);
         }
       });
 
+      // 2. Heartbeat to keep connection alive
+      const heartbeat = setInterval(() => {
+        try {
+          controller.enqueue(': heartbeat\n\n');
+        } catch (e) {
+          clearInterval(heartbeat);
+          unsubscribe();
+        }
+      }, 15000); // 15 seconds
+
+      // 3. Cleanup on client disconnect
       request.signal.addEventListener('abort', () => {
         unsubscribe();
+        clearInterval(heartbeat);
       });
     },
   });
