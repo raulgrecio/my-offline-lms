@@ -1,0 +1,24 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { WizardShowcase } from "./WizardShowcase";
+---
+
+<Layout title="Wizard Showcase">
+  <div class="p-8 space-y-16 max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="space-y-4">
+      <h1 class="text-4xl font-black text-text-primary tracking-tight">
+        Component Showcase: Wizard
+      </h1>
+      <p class="text-text-secondary text-lg max-w-2xl">
+        A multi-step interactive wizard designed for complex workflows.
+      </p>
+    </header>
+
+    <div
+      class="relative p-12 bg-surface-900 border border-border-subtle rounded-3xl overflow-hidden min-h-[500px]"
+    >
+      <WizardShowcase client:load />
+    </div>
+  </div>
+</Layout>
