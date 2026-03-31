@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { AssetPathResolver } from "@core/filesystem/AssetPathResolver";
-import { type IFileSystem } from "@core/filesystem/IFileSystem";
-import { type IPath } from "@core/filesystem/IPath";
+
 import { NoopLogger } from "@core/logging";
+
+import { AssetPathResolver, type IFileSystem, type IPath } from "@core/filesystem";
 
 describe("AssetPathResolver (Windows Support)", () => {
   const mockFs: IFileSystem = {

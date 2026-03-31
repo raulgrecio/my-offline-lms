@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 
-import { UniversalFileSystem } from "@core/filesystem/UniversalFileSystem";
-import { UniversalPath } from "@core/filesystem/UniversalPath";
-import { type IFileSystem } from "@core/filesystem/IFileSystem";
-import { type IPath } from "@core/filesystem/IPath";
-import { NodePath } from "@core/filesystem/NodePath";
+import {
+  type IFileSystem,
+  type IPath,
+  NodePath,
+  UniversalFileSystem,
+  UniversalPath,
+} from "@core/filesystem";
 
 describe("UniversalFileSystem & UniversalPath", () => {
   const mockLocalFs: IFileSystem = {

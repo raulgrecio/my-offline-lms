@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { describe, it, expect, vi } from "vitest";
 
-import { NodeFileSystem } from "@core/filesystem/NodeFileSystem";
+import { NodeFileSystem } from "@core/filesystem";
 
 vi.mock("fs", () => ({
   default: {

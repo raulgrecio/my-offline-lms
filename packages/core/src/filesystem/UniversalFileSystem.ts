@@ -1,6 +1,7 @@
 import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
-import type { FileStats, IFileSystem } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export type FileSystemProtocol = "http" | "tcp" | "s3" | "blob";
 

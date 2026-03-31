@@ -1,6 +1,7 @@
 import { type MakeDirectoryOptions, type RmOptions } from "fs";
-import { type IFileSystem, type FileStats } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class S3FileSystem implements IFileSystem {
   private logger: ILogger;

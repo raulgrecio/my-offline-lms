@@ -1,4 +1,4 @@
-import { type IPath } from "./IPath";
+import type { IPath } from "./IPath";
 
 export class WebPath implements IPath {
   resolve(...paths: string[]): string {

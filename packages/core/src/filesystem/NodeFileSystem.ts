@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
 import { Readable, Writable } from "node:stream";
-import type { FileStats, IFileSystem } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class NodeFileSystem implements IFileSystem {
   private logger: ILogger;

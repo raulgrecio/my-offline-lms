@@ -1,7 +1,7 @@
 import path from "path";
 import { describe, it, expect } from "vitest";
 
-import { NodePath } from "@core/filesystem/NodePath";
+import { NodePath } from "@core/filesystem";
 
 describe("NodePath", () => {
   const nodePath = new NodePath();

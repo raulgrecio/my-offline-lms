@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { HttpFileSystem } from "@core/filesystem/HttpFileSystem";
+
+import { HttpFileSystem } from "@core/filesystem";
 
 describe("HttpFileSystem", () => {
   const hfs = new HttpFileSystem();

@@ -1,6 +1,7 @@
 import type { MakeDirectoryOptions } from "fs";
-import type { IFileSystem, FileStats } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class HttpFileSystem implements IFileSystem {
   private logger: ILogger;

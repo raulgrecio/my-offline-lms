@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { BlobFileSystem } from "@core/filesystem/BlobFileSystem";
+
+import { BlobFileSystem } from "@core/filesystem";
 
 describe("BlobFileSystem", () => {
   const blob = new BlobFileSystem("test-account", "test-container");
