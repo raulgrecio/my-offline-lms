@@ -1,9 +1,11 @@
 import { type DownloadType } from '@core/domain';
 import { type ILogger } from '@core/logging';
 
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
-import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ICourseRepository } from "@scraper/features/platform-sync";
+
+import { type INamingService } from "../domain/ports/INamingService";
+
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";

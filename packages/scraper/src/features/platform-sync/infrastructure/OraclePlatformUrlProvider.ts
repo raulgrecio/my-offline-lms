@@ -1,6 +1,6 @@
-import type { IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { env } from "@scraper/config/env";
-import { PLATFORM } from "@scraper/config/platform";
+import type { IPlatformUrlProvider } from "@scraper/features/platform-sync";
+import { env } from "@scraper/config";
+import { PLATFORM } from "@scraper/config";
 
 export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
   private readonly baseUrl: string;

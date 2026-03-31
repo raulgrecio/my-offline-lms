@@ -1,8 +1,8 @@
 import { type IFileSystem, type IPath } from "@core/filesystem";
 import { type ILogger } from '@core/logging';
 
-import { PLATFORM } from "@scraper/config/platform";
-import { type IInterceptedDataRepository, type InterceptedPayload } from "@scraper/features/platform-sync/domain/ports/IInterceptedDataRepository";
+import { PLATFORM } from "@scraper/config";
+import { type IInterceptedDataRepository, type InterceptedPayload } from "@scraper/features/platform-sync";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private interceptedDir: string | undefined;

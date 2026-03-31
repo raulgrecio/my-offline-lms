@@ -3,8 +3,8 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 
-import { env } from "@scraper/config/env";
-import { AssetNamingService } from "@scraper/features/asset-download/infrastructure/AssetNamingService";
+import { env } from "@scraper/config";
+import { AssetNamingService } from "@scraper/features/asset-download";
 import { logger } from "@scraper/platform/logging";
 
 chromium.use(stealth());

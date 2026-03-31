@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
 
-import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config/paths";
+import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config";
 
 import { type AssetType, ASSET_FOLDERS } from '@core/domain';
 import { NodeFileSystem, AssetPathResolver, NodePath } from '@core/filesystem';
 import { NoopLogger } from "@core/logging";
 
-import { AssetNamingService } from "@scraper/features/asset-download/infrastructure/AssetNamingService";
+import { AssetNamingService } from "@scraper/features/asset-download";
 
 /**
  * Checks if a video and its subtitles exist for a given course asset.

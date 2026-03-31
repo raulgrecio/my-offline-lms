@@ -1,6 +1,6 @@
-import { getDb } from "@scraper/platform/database/database";
-import { AssetNamingService } from "@scraper/features/asset-download/infrastructure/AssetNamingService";
-import { getAssetsDir } from "@scraper/config/paths";
+import { getDb } from "@scraper/platform/database";
+import { AssetNamingService } from "@scraper/features/asset-download";
+import { getAssetsDir } from "@scraper/config";
 import { logger as baseLogger } from "@scraper/platform/logging";
 import { NodeFileSystem, NodePath } from "@core/filesystem";
 

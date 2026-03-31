@@ -1,7 +1,7 @@
 import { type IDatabase, SQLiteDatabase } from '@core/database';
 import { type IFileSystem, NodeFileSystem } from '@core/filesystem';
 
-import { getDataDir, getDbPath } from '@scraper/config/paths';
+import { getDataDir, getDbPath } from '@scraper/config';
 import { logger } from '@scraper/platform/logging';
 
 export interface InitDbOptions {

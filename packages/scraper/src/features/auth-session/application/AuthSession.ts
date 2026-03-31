@@ -2,9 +2,10 @@ import readline from "readline";
 
 import { type ILogger } from '@core/logging';
 
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
-import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared';
+import { type IBrowserProvider } from "@scraper/platform/browser";
+
+import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
 export interface AuthSessionInput {
   baseUrl: string;

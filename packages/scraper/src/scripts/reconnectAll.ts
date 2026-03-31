@@ -1,4 +1,4 @@
-import { getDb } from "@scraper/platform/database/database";
+import { getDb } from "@scraper/platform/database";
 import { verifyCourseDownloads } from "./verifyDownloads";
 import { logger } from "@scraper/platform/logging";
 

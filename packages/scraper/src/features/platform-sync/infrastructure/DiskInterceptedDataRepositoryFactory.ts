@@ -1,10 +1,10 @@
 import { type IFileSystem, type IPath } from "@core/filesystem";
 import { type ILogger } from '@core/logging';
 
-import { getInterceptedDir } from "@scraper/config/paths";
-import { type IInterceptedDataRepository } from "@scraper/features/platform-sync/domain/ports/IInterceptedDataRepository";
-import { type IInterceptedDataRepositoryFactory } from "@scraper/features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
+import { getInterceptedDir } from "@scraper/config";
 
+import { type IInterceptedDataRepository } from "../domain/ports/IInterceptedDataRepository";
+import { type IInterceptedDataRepositoryFactory } from "../domain/ports/IInterceptedDataRepositoryFactory";
 import { DiskInterceptedDataRepository } from "./DiskInterceptedDataRepository";
 
 export class DiskInterceptedDataRepositoryFactory implements IInterceptedDataRepositoryFactory {

@@ -2,7 +2,7 @@ import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 
-import { env } from "@scraper/config/env";
+import { env } from "@scraper/config";
 import { logger } from "@scraper/platform/logging";
 
 chromium.use(stealth());

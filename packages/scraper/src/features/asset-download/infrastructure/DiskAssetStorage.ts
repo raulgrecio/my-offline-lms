@@ -4,8 +4,9 @@ import sharp from "sharp";
 import { type IAssetPathResolver, type IFileSystem, type IPath } from "@core/filesystem";
 import { ASSET_FOLDERS, type AssetType } from "@core/domain";
 
-import { getAssetsDir } from "@scraper/config/paths";
-import type { IAssetStorage, PDFOptions } from "@scraper/features/asset-download/domain/ports/IAssetStorage";
+import { getAssetsDir } from "@scraper/config";
+
+import type { IAssetStorage, PDFOptions } from "../domain/ports/IAssetStorage";
 
 interface DiskAssetStorageProps {
   baseDir?: string;

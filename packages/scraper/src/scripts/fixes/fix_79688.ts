@@ -1,5 +1,5 @@
-import { SQLiteAssetRepository } from "@scraper/features/asset-download/infrastructure/AssetRepository";
-import { getDb } from "@scraper/platform/database/database";
+import { SQLiteAssetRepository } from "@scraper/features/asset-download";
+import { getDb } from "@scraper/platform/database";
 import { logger } from "@scraper/platform/logging";
 
 async function fix79688Guide() {

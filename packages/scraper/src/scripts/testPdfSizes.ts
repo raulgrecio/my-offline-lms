@@ -1,8 +1,8 @@
 import path from "path";
 
-import { DiskAssetStorage } from "@scraper/features/asset-download/infrastructure/DiskAssetStorage";
+import { DiskAssetStorage } from "@scraper/features/asset-download";
 import { NodeFileSystem, NodePath, AssetPathResolver } from "@core/filesystem";
-import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config/paths";
+import { getAssetPathsConfig, getMonorepoRoot } from "@scraper/config";
 import { logger } from "@scraper/platform/logging";
 
 async function runTests() {

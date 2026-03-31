@@ -1,7 +1,8 @@
 import { type IFileSystem, type IPath } from "@core/filesystem";
 
-import { env } from "@scraper/config/env";
-import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
+import { env } from "@scraper/config";
+
+import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
   private authDir: string | undefined;

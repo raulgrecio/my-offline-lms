@@ -1,7 +1,7 @@
 import type { Course, LearningPath, LearningPathCourse } from '@core/domain';
 import type { IDatabase } from '@core/database';
 
-import { type ILearningPathRepository } from '@scraper/features/platform-sync/domain/ports/ILearningPathRepository';
+import { type ILearningPathRepository } from '../domain/ports/ILearningPathRepository';
 
 export class SQLiteLearningPathRepository implements ILearningPathRepository {
   constructor(private db: IDatabase) { }

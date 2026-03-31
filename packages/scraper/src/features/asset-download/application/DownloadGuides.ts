@@ -1,12 +1,13 @@
 import { type ILogger } from '@core/logging';
 
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type IAssetRepository } from "@scraper/features/asset-download/domain/ports/IAssetRepository";
-import { type IAssetStorage } from "@scraper/features/asset-download/domain/ports/IAssetStorage";
-import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
-import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
-import { type IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
-import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ICourseRepository } from "@scraper/features/platform-sync";
+import { type IPlatformUrlProvider } from "@scraper/features/platform-sync";
+import { type IBrowserProvider } from "@scraper/platform/browser";
+
+import { type IAssetRepository } from "../domain/ports/IAssetRepository";
+import { type IAssetStorage } from "../domain/ports/IAssetStorage";
+import { type INamingService } from "../domain/ports/INamingService";
 
 export interface DownloadGuidesConfig {
   keepTempImages: boolean;

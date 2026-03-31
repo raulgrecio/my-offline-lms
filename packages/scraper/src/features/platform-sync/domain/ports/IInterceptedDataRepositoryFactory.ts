@@ -1,4 +1,4 @@
-import type { IInterceptedDataRepository } from '@scraper/features/platform-sync/domain/ports/IInterceptedDataRepository';
+import type { IInterceptedDataRepository } from './IInterceptedDataRepository';
 
 export interface IInterceptedDataRepositoryFactory {
   create(baseDir?: string): IInterceptedDataRepository;

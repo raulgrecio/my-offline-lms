@@ -1,8 +1,8 @@
 import path from "path";
-import { getDb } from "@scraper/platform/database/database";
+import { getDb } from "@scraper/platform/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-import { getAssetsDir } from "@scraper/config/paths";
-import { SQLiteAssetRepository } from "@scraper/features/asset-download/infrastructure/AssetRepository";
+import { getAssetsDir } from "@scraper/config";
+import { SQLiteAssetRepository } from "@scraper/features/asset-download";
 import { logger as baseLogger } from "@scraper/platform/logging";
 import { type IDatabase } from "@core/database";
 

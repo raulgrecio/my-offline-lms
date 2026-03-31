@@ -1,11 +1,10 @@
 import { type DownloadType } from '@core/domain';
 import { type ILogger } from '@core/logging';
 
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
-import { type ILearningPathRepository } from "@scraper/features/platform-sync/domain/ports/ILearningPathRepository";
-import { SyncLearningPath } from "@scraper/features/platform-sync/application/SyncLearningPath";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ILearningPathRepository, SyncLearningPath } from "@scraper/features/platform-sync";
 
+import { type INamingService } from "../domain/ports/INamingService";
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
 

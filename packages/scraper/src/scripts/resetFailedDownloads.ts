@@ -1,4 +1,4 @@
-import { getDb } from "@scraper/platform/database/database";
+import { getDb } from "@scraper/platform/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
 import { logger as baseLogger } from "@scraper/platform/logging";
 import { type IDatabase } from "@core/database";

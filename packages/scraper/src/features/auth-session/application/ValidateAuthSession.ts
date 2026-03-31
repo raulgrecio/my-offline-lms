@@ -1,7 +1,8 @@
 import { type ILogger } from '@core/logging';
 
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
+import { type IUseCase } from '@scraper/features/shared';
+
+import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
 export interface ValidateAuthSessionOptions {
   authStorage: IAuthSessionStorage;

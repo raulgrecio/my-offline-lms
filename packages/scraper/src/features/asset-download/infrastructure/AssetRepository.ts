@@ -1,7 +1,7 @@
 import type { Asset, AssetStatus, AssetType } from '@core/domain';
 import { type IDatabase } from '@core/database';
 
-import { type IAssetRepository } from '@scraper/features/asset-download/domain/ports/IAssetRepository';
+import { type IAssetRepository } from '../domain/ports/IAssetRepository';
 
 export class SQLiteAssetRepository implements IAssetRepository {
   constructor(private db: IDatabase) { }

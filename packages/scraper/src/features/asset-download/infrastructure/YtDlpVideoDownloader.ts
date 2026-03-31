@@ -2,8 +2,9 @@ import { spawn } from "child_process";
 
 import { type ILogger } from '@core/logging';
 
-import { type IVideoDownloader } from "@scraper/features/asset-download/domain/ports/IVideoDownloader";
-import { type IAuthSessionStorage } from "@scraper/features/auth-session/domain/ports/IAuthSessionStorage";
+import { type IAuthSessionStorage } from "@scraper/features/auth-session";
+
+import { type IVideoDownloader } from "../domain/ports/IVideoDownloader";
 
 export class YtDlpVideoDownloader implements IVideoDownloader {
   private logger: ILogger;

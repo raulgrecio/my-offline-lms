@@ -1,13 +1,13 @@
 import { type ILogger } from '@core/logging';
 
-import { BrowserInterceptor } from "@scraper/platform/browser/BrowserInterceptor";
-import { type IBrowserProvider } from "@scraper/platform/browser/IBrowserProvider";
-import { type IUseCase } from '@scraper/features/shared/domain/ports/IUseCase';
-import { type INamingService } from "@scraper/features/asset-download/domain/ports/INamingService";
-import { type ICourseRepository } from "@scraper/features/platform-sync/domain/ports/ICourseRepository";
-import { type IInterceptedDataRepositoryFactory } from "@scraper/features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
-import { type ILearningPathRepository } from "@scraper/features/platform-sync/domain/ports/ILearningPathRepository";
-import { type IPlatformUrlProvider } from "@scraper/features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { BrowserInterceptor, type IBrowserProvider } from "@scraper/platform/browser";
+import { type IUseCase } from '@scraper/features/shared';
+import { type INamingService } from "@scraper/features/asset-download";
+
+import { type ICourseRepository } from '../domain/ports/ICourseRepository';
+import { type IInterceptedDataRepositoryFactory } from '../domain/ports/IInterceptedDataRepositoryFactory';
+import { type ILearningPathRepository } from '../domain/ports/ILearningPathRepository';
+import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
 
 import { SyncCourse } from "./SyncCourse";
 

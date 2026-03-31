@@ -5,30 +5,43 @@ import { type DownloadType } from '@core/domain';
 import { type IDatabase } from '@core/database';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
 
-import { env } from '@scraper/config/env';
-import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir } from '@scraper/config/paths';
-import { AssetNamingService } from '@scraper/features/asset-download/infrastructure/AssetNamingService';
-import { SQLiteAssetRepository } from '@scraper/features/asset-download/infrastructure/AssetRepository';
-import { DiskAssetStorage } from '@scraper/features/asset-download/infrastructure/DiskAssetStorage';
-import { YtDlpVideoDownloader } from '@scraper/features/asset-download/infrastructure/YtDlpVideoDownloader';
-import { DiskAuthSessionStorage } from '@scraper/features/auth-session/infrastructure/DiskAuthSessionStorage';
-import { SQLiteCourseRepository } from '@scraper/features/platform-sync/infrastructure/CourseRepository';
-import { DiskInterceptedDataRepositoryFactory } from '@scraper/features/platform-sync/infrastructure/DiskInterceptedDataRepositoryFactory';
-import { SQLiteLearningPathRepository } from '@scraper/features/platform-sync/infrastructure/LearningPathRepository';
-import { OraclePlatformUrlProvider } from '@scraper/features/platform-sync/infrastructure/OraclePlatformUrlProvider';
-import { DownloadCourse } from '@scraper/features/asset-download/application/DownloadCourse';
-import { DownloadGuides } from '@scraper/features/asset-download/application/DownloadGuides';
-import { DownloadPath } from '@scraper/features/asset-download/application/DownloadPath';
-import { DownloadVideos } from '@scraper/features/asset-download/application/DownloadVideos';
-import { AuthSession } from '@scraper/features/auth-session/application/AuthSession';
-import { SyncCourse } from '@scraper/features/platform-sync/application/SyncCourse';
-import { SyncLearningPath } from '@scraper/features/platform-sync/application/SyncLearningPath';
-import { ValidateAuthSession } from '@scraper/features/auth-session/application/ValidateAuthSession';
+import { 
+  env, 
+  PLATFORM, 
+  getAssetPathsConfig, 
+  getMonorepoRoot, 
+  getAuthState, 
+  getAuthDir, 
+  getInterceptedDir 
+} from '@scraper/config';
+import { 
+  AssetNamingService, 
+  SQLiteAssetRepository, 
+  DiskAssetStorage, 
+  YtDlpVideoDownloader, 
+  DownloadCourse, 
+  DownloadGuides, 
+  DownloadPath, 
+  DownloadVideos 
+} from '@scraper/features/asset-download';
+import { 
+  AuthSession, 
+  ValidateAuthSession, 
+  DiskAuthSessionStorage 
+} from '@scraper/features/auth-session';
+import { 
+  SyncCourse, 
+  SyncLearningPath, 
+  SQLiteCourseRepository, 
+  SQLiteLearningPathRepository, 
+  OraclePlatformUrlProvider, 
+  DiskInterceptedDataRepositoryFactory 
+} from '@scraper/features/platform-sync';
 
-import { PLATFORM } from '@scraper/config/platform';
-import { BrowserProvider } from '@scraper/platform/browser/BrowserProvider';
-import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
-import { getDb } from '@scraper/platform/database/database';
+
+
+import { BrowserProvider, BrowserInterceptor } from '@scraper/platform/browser';
+import { getDb } from '@scraper/platform/database';
 
 dotenv.config();
 
