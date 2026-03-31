@@ -1,0 +1,28 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { LogConsoleShowcase } from "./LogConsoleShowcase";
+---
+
+<Layout title="LogConsole Showcase">
+  <div class="p-8 space-y-16 max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="space-y-4">
+      <div class="flex items-center gap-3 mb-2">
+         <span class="px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-widest border border-brand-500/20">Debug Terminal</span>
+      </div>
+      <h1 class="text-5xl font-black text-text-primary tracking-tight">
+        Component Showcase: LogConsole
+      </h1>
+      <p class="text-text-secondary text-lg max-w-3xl leading-relaxed">
+        A real-time, SSE-powered terminal emulator for tracking background scraper processes, authentication flows, and system activities.
+      </p>
+    </header>
+
+    <div
+      class="relative p-12 bg-surface-900 border border-border-subtle rounded-3xl overflow-hidden min-h-[600px] shadow-2xl"
+    >
+      <div class="absolute inset-0 bg-brand-500/5 backdrop-blur-3xl opacity-20 pointer-events-none"></div>
+      <LogConsoleShowcase client:load />
+    </div>
+  </div>
+</Layout>
