@@ -186,26 +186,56 @@ describe('AuthSession Use Case', () => {
     await promise;
   });
 
-  it('should handle auto-save error', async () => {
-    vi.useFakeTimers();
-    const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
-      storageState: vi.fn().mockRejectedValue(new Error('auto-save failed')),
-      cookies: vi.fn().mockResolvedValue([])
+  it('should work in web mode (interactive: false)', async () => {
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      exposeFunction: vi.fn(),
+      evaluate: vi.fn(),
+      on: vi.fn(),
+      mainFrame: vi.fn().mockReturnThis(),
+      close: vi.fn().mockResolvedValue(undefined),
     } as any;
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+      storageState: vi.fn().mockResolvedValue({}),
+      cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
+      exposeFunction: vi.fn(),
+    } as any;
+    
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
-    const promise = useCase.execute({ baseUrl: 'http://url' });
-    await vi.waitUntil(() => (useCase as any)._triggerKeypress);
+    // Capture the 'close' callback
+    let closeCallback: any;
+    mockPage.on.mockImplementation((event: string, cb: any) => {
+      if (event === 'close') closeCallback = cb;
+    });
 
-    // Advance time by 15 minutes
-    await vi.advanceTimersByTimeAsync(15 * 60 * 1000);
+    const promise = useCase.execute({ baseUrl: 'http://web-url', interactive: false });
 
-    // The error is now caught inside saveSession and logged with "❌ Error al guardar sesión:"
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al guardar sesión'), expect.any(Error));
+    // Wait for the async call to exposeFunction
+    await vi.waitUntil(() => mockContext.exposeFunction.mock.calls.length > 0);
+    
+    // Verify mocks for web mode
+    expect(mockContext.exposeFunction).toHaveBeenCalledWith('finishAuthSession', expect.any(Function));
+    
+    // Simulate page 'load' and 'framenavigated'
+    const loadCallback: any = mockPage.on.mock.calls.find((c: any) => c[0] === 'load')?.[1];
+    const frameCallback: any = mockPage.on.mock.calls.find((c: any) => c[0] === 'framenavigated')?.[1];
+    
+    if (loadCallback) await loadCallback();
+    if (frameCallback) await frameCallback(mockPage.mainFrame());
+    expect(mockPage.evaluate).toHaveBeenCalled();
 
-    await (useCase as any)._triggerKeypress('', { name: 'escape' });
+    // Trigger the exposed function to test saveSession
+    const finishAuthFn: any = mockContext.exposeFunction.mock.calls.find((c: any) => c[0] === 'finishAuthSession')?.[1];
+    const success = await finishAuthFn();
+    expect(success).toBe(true);
+    expect(mockAuthStorage.saveCookies).toHaveBeenCalled();
+
+    // Simulate browser close to finish the use case
+    if (closeCallback) await closeCallback();
     await promise;
-    vi.useRealTimers();
+
+    expect(mockBrowserProvider.close).toHaveBeenCalled();
   });
 });

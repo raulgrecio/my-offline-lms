@@ -336,4 +336,13 @@ describe('DownloadVideos Use Case', () => {
     await useCase.downloadSingleVideo('v1', '123');
     expect(mockPage.locator).toHaveBeenCalled(); // still tries to process
   });
+
+  it('should handle empty videoId from URL gracefully', async () => {
+    const mockAsset = { id: 'v1', url: 'http://my-offline-lms/', type: 'video', metadata: { title: "V1" }, courseId: '123' };
+    mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
+    
+    // Line 139: if (videoId) { should be false
+    await useCase.downloadSingleVideo('v1', '123');
+    expect(mockContextLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Extrayendo vídeo:'));
+  });
 });

@@ -7,5 +7,7 @@ export interface ICourseRepository {
   getCourseById(id: string): Course | null;
   /** Get all assets for a given course */
   getCourseAssets(courseId: string): Asset[];
+  /** Get all courses with detailed sync information for wizard display */
+  getCoursesWithSyncStatus(): any[];
 }
 

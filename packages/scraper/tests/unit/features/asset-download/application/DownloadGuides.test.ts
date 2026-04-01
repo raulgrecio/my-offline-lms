@@ -57,6 +57,7 @@ describe('DownloadGuides Use Case', () => {
       resolveCourseUrl: vi.fn(url => ({ url, courseId: '123' })),
       resolveLearningPathUrl: vi.fn(url => ({ url, pathId: '123' })),
       getCourseUrl: vi.fn(({ slug, id }) => `url://${slug}/${id}`),
+      getLearningPathUrl: vi.fn(({ slug, id }) => `url-path://${slug}/${id}`),
       getGuideViewerUrl: vi.fn().mockReturnValue('http://mock-viewer'),
       getVideoAssetUrl: vi.fn().mockReturnValue('http://mock-video'),
       getGuideImageBaseUrl: vi.fn(src => src.replace('/mobile/index.html', '/files/mobile/')),
@@ -592,6 +593,35 @@ describe('DownloadGuides Use Case', () => {
         expect.objectContaining({ filename: expectedFilename }),
         expectedOutputPath
       );
+    });
+
+    it('should throw error if iframe source is missing', async () => {
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue(null) }), // No src
+        close: vi.fn().mockResolvedValue(undefined),
+      };
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
+      mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+      mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' });
+
+      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('❌ Error extrayendo guía:'),
+        expect.objectContaining({ message: expect.stringContaining('No se pudo extraer el atributo src') })
+      );
+    });
+
+    it('should handle page close failure in finally block with shared context', async () => {
+      const mockPage = {
+        goto: vi.fn().mockRejectedValue(new Error('fail')),
+        close: vi.fn().mockRejectedValue(new Error('close fail')),
+      };
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
+      mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' });
+
+      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1', sharedContext: mockContext });
+      expect(mockAssetRepo.updateAssetStatus).toHaveBeenCalledWith('g1', 'FAILED');
     });
   });
 });

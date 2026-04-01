@@ -76,6 +76,7 @@ describe('SyncLearningPath Use Case', () => {
     resolveLearningPathUrl: vi.fn(url => ({ url: String(url), pathId: '123' })),
     resolveCourseUrl: vi.fn(url => ({ url, courseId: '123' })),
     getCourseUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/course/${slug}/${id}`),
+    getLearningPathUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/learning-path/${slug}/${id}`),
     getVideoAssetUrl: vi.fn(),
     getGuideViewerUrl: vi.fn(),
     getGuideImageBaseUrl: vi.fn(),

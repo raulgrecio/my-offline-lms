@@ -1,21 +1,11 @@
 import type { APIRoute } from 'astro';
 
-import { getDb } from '@scraper/platform/database/database';
-
-import { GetAvailableContentToSync } from '@web/features/sync/application/GetAvailableContentToSync';
-import { SQLiteCourseRepository } from '@web/features/courses/infrastructure/SQLiteCourseRepository';
-import { SQLiteLearningPathRepository } from '@web/features/learning-paths/infrastructure/SQLiteLearningPathRepository';
+import { ScraperService } from '@scraper/ScraperService';
 
 export const GET: APIRoute = async () => {
   try {
-    const db = await getDb();
-
-    // DDD: Instantiate repositories and Use Case
-    const courseRepo = new SQLiteCourseRepository(db);
-    const pathRepo = new SQLiteLearningPathRepository(db);
-
-    const useCase = new GetAvailableContentToSync(courseRepo, pathRepo);
-    const data = await useCase.execute();
+    const scraper = await ScraperService.create();
+    const data = await scraper.getAvailableContent();
 
     return new Response(JSON.stringify(data), {
       status: 200,

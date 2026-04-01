@@ -12,4 +12,7 @@ export interface ILearningPathRepository {
 
   /** Link a course to a path with an order index */
   addCourseToPath(link: LearningPathCourse): void;
+
+  /** Get all learning paths from DB */
+  getAllLearningPaths(): LearningPath[];
 }

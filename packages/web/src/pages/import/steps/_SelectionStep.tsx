@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Icon } from '@web/components/Icon';
+import { Button } from '@web/components/Button';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
 
@@ -20,7 +21,10 @@ interface ContentItem {
 }
 
 interface SelectionStepProps {
-  availableContent: { courses: ContentItem[], paths: any[] };
+  availableContent: {
+    courses: ContentItem[],
+    paths: any[]
+  };
   selectedItem: ContentItem | null;
   setSelectedItem: (item: ContentItem | null) => void;
   newUrl: string;
@@ -29,6 +33,45 @@ interface SelectionStepProps {
   setContentType: (type: 'course' | 'path') => void;
 }
 
+const ContentItemCard: React.FC<{
+  item: ContentItem;
+  isSelected: boolean;
+  onClick: () => void;
+}> = ({ item, isSelected, onClick }) => (
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={onClick}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    aria-pressed={isSelected}
+    className={`w-full text-left p-4 rounded-xl border transition-all relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand-500 overflow-hidden group/item ${isSelected ? 'bg-brand-600/15 border-brand-500/50' : 'bg-surface-900 border-border-subtle hover:border-brand-400/50'}`}
+  >
+    <div className="font-bold text-[11px] truncate mb-2 group-hover/item:text-brand-400 transition-colors text-text-primary">
+      {item.title}
+    </div>
+    <div className="flex items-center gap-4 text-[9px] font-mono font-bold tracking-tight">
+      <div className="flex items-center gap-2">
+        <span className="text-text-muted font-medium">Videos:</span>
+        <span className="text-brand-400">{item.downloadedVideos}/{item.totalVideos}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-text-muted font-medium">Guías:</span>
+        <span className="text-brand-400">{item.downloadedGuides}/{item.totalGuides}</span>
+      </div>
+    </div>
+  </div>
+);
+
+
+const PLACEHOLDERS = {
+  course: 'https://mylearn.database.com/ou/course/...',
+  path: 'https://mylearn.database.com/ou/learning-path/...'
+};
 
 export const SelectionStep: React.FC<SelectionStepProps> = ({
   availableContent,
@@ -40,6 +83,11 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
   setContentType
 }) => {
   const { setCanProceed } = useWizard();
+
+  const pendingCourses = useMemo(() =>
+    availableContent.courses.filter(c => !c.isComplete),
+    [availableContent.courses]
+  );
 
   React.useEffect(() => {
     setCanProceed(!!newUrl || !!selectedItem);
@@ -60,7 +108,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="https://mylearn.oracle.com/ou/course/..."
+                placeholder={contentType === 'course' ? PLACEHOLDERS.course : PLACEHOLDERS.path}
                 className="w-full bg-surface-900 border border-border-subtle rounded-xl px-4 py-3.5 text-xs focus:border-brand-500 outline-none transition-all placeholder:text-text-muted/30 text-text-primary"
                 value={newUrl}
                 onChange={(e) => {
@@ -70,14 +118,16 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
               />
             </div>
             <div className="flex gap-2 p-1 bg-surface-950 rounded-xl border border-border-subtle">
-              <button
+              <Button
+                variant="none"
                 onClick={() => setContentType('course')}
                 className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all ${contentType === 'course' ? 'bg-surface-800 text-brand-400 shadow-sm' : 'text-text-muted hover:text-brand-500'}`}
-              >Curso</button>
-              <button
+              >Curso</Button>
+              <Button
+                variant="none"
                 onClick={() => setContentType('path')}
                 className={`flex-1 py-1.5 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all ${contentType === 'path' ? 'bg-surface-800 text-brand-400 shadow-sm' : 'text-text-muted hover:text-brand-500'}`}
-              >Learning Path</button>
+              >Learning Path</Button>
             </div>
           </div>
         </div>
@@ -89,35 +139,27 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
           <h3 className="text-lg font-bold mb-2 text-text-primary">Contenido Pendiente</h3>
           <p className="text-[11px] text-text-muted mb-6 leading-relaxed">Continúa con las descargas de cursos o rutas previamente detectados.</p>
 
-          <div className="flex-1 overflow-y-auto max-h-[220px] space-y-2 pr-2 custom-scrollbar">
-            {availableContent.courses.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-10 text-text-muted text-sm italic opacity-30">
-                <Icon name="inbox" size="lg" className="mb-2" />
-                No hay contenido detectado
-              </div>
-            )}
-            {availableContent.courses.filter(c => !c.isComplete).map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setSelectedItem(item);
-                  setNewUrl('');
-                }}
-                className={`w-full text-left p-4 rounded-xl border transition-all relative overflow-hidden group/item ${selectedItem?.id === item.id ? 'bg-brand-600/15 border-brand-500/50' : 'bg-surface-900 border-border-subtle hover:border-brand-400/50'}`}
-              >
-                <div className="font-bold text-[11px] truncate mb-2 group-hover/item:text-brand-400 transition-colors text-text-primary">{item.title}</div>
-                <div className="flex items-center gap-4 text-[9px] font-mono">
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted">Videos:</span>
-                    <span className="text-brand-400 font-bold">{item.downloadedVideos}/{item.totalVideos}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted">Guías:</span>
-                    <span className="text-brand-400 font-bold">{item.downloadedGuides}/{item.totalGuides}</span>
-                  </div>
+          <div className="flex-1 overflow-y-auto max-h-[220px] custom-scrollbar -mx-[10px] px-[10px]">
+            <ul className="space-y-2 list-none">
+              {pendingCourses.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-10 text-text-muted text-sm italic opacity-30">
+                  <Icon name="inbox" size="lg" className="mb-2" />
+                  No hay contenido detectado
                 </div>
-              </button>
-            ))}
+              )}
+              {pendingCourses.map(item => (
+                <li key={item.id}>
+                  <ContentItemCard
+                    item={item}
+                    isSelected={selectedItem?.id === item.id}
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setNewUrl('');
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

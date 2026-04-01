@@ -40,15 +40,25 @@ interface WizardProviderProps {
   steps: WizardStepConfig[];
   onFinish?: () => void;
   initialStepIndex?: number;
+  initialStepId?: string;
 }
 
 export const WizardProvider: React.FC<WizardProviderProps> = ({
   children,
   steps,
   onFinish,
-  initialStepIndex = 0
+  initialStepIndex = 0,
+  initialStepId
 }) => {
-  const [currentStepIndex, setCurrentStepIndex] = useState(initialStepIndex);
+  const calculatedInitialIndex = useMemo(() => {
+    if (initialStepId) {
+      const index = steps.findIndex(s => s.id === initialStepId);
+      if (index !== -1) return index;
+    }
+    return initialStepIndex;
+  }, [initialStepId, initialStepIndex, steps]);
+
+  const [currentStepIndex, setCurrentStepIndex] = useState(calculatedInitialIndex);
   const [canProceed, setCanProceed] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 

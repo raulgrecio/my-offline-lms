@@ -1,11 +1,13 @@
 /** @vitest-environment node */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
+// @ts-ignore
+import SettingsPage from "@web/pages/settings.astro";
 
 // Mocking core filesystem
 vi.mock("@core/filesystem", () => {
   return {
-    AssetPathResolver: vi.fn().mockImplementation(function() {
+    AssetPathResolver: vi.fn().mockImplementation(function () {
       return {
         getAvailablePaths: vi.fn().mockResolvedValue([
           { label: 'Test Drive', path: '/mnt/test', available: true }
@@ -32,8 +34,6 @@ vi.mock("@web/platform/logging", () => ({
   },
 }));
 
-// @ts-ignore
-import SettingsPage from "../../src/pages/settings.astro";
 
 describe("settings.astro", () => {
   it("should render current asset locations", async () => {

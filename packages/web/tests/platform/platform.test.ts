@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { apiClient } from "../../src/platform/api/client";
-import { APP_ROUTES } from "../../src/platform/router/routes";
+
+import { apiClient } from "@web/platform/api/client";
+import { APP_ROUTES } from "@web/platform/router/routes";
 
 describe("Platform Utilities", () => {
   describe("apiClient", () => {
@@ -18,19 +19,19 @@ describe("Platform Utilities", () => {
     });
 
     it("should handle text requests", async () => {
-        const mockResponse = { ok: true, text: () => Promise.resolve("hello") };
-        (fetch as any).mockResolvedValue(mockResponse);
-  
-        const result = await apiClient.getText("/test");
-        expect(result).toBe("hello");
-      });
+      const mockResponse = { ok: true, text: () => Promise.resolve("hello") };
+      (fetch as any).mockResolvedValue(mockResponse);
+
+      const result = await apiClient.getText("/test");
+      expect(result).toBe("hello");
+    });
 
     it("should throw error on failed requests with msg", async () => {
-      const mockResponse = { 
-        ok: false, 
-        statusText: "Not Found", 
+      const mockResponse = {
+        ok: false,
+        statusText: "Not Found",
         status: 404,
-        json: () => Promise.resolve({ error: "Something bad" }) 
+        json: () => Promise.resolve({ error: "Something bad" })
       };
       (fetch as any).mockResolvedValue(mockResponse);
 
@@ -38,16 +39,16 @@ describe("Platform Utilities", () => {
     });
 
     it("should throw error on failed requests without msg", async () => {
-        const mockResponse = { 
-          ok: false, 
-          statusText: "Not Found", 
-          status: 404,
-          json: () => Promise.reject("no json") 
-        };
-        (fetch as any).mockResolvedValue(mockResponse);
-  
-        await expect(apiClient.request("/test")).rejects.toThrow("API Error: Not Found (404)");
-      });
+      const mockResponse = {
+        ok: false,
+        statusText: "Not Found",
+        status: 404,
+        json: () => Promise.reject("no json")
+      };
+      (fetch as any).mockResolvedValue(mockResponse);
+
+      await expect(apiClient.request("/test")).rejects.toThrow("API Error: Not Found (404)");
+    });
 
     it("should perform POST requests", async () => {
       const mockResponse = { ok: true, json: () => Promise.resolve({ success: true }) };
@@ -61,26 +62,26 @@ describe("Platform Utilities", () => {
     });
 
     it("should perform DELETE requests", async () => {
-        const mockResponse = { ok: true, json: () => Promise.resolve({ deleted: true }) };
-        (fetch as any).mockResolvedValue(mockResponse);
-  
-        await apiClient.delete("/test", { id: "1" });
-        expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({
-          method: "DELETE",
-          body: JSON.stringify({ id: "1" }),
-        }));
-      });
+      const mockResponse = { ok: true, json: () => Promise.resolve({ deleted: true }) };
+      (fetch as any).mockResolvedValue(mockResponse);
+
+      await apiClient.delete("/test", { id: "1" });
+      expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ id: "1" }),
+      }));
+    });
 
     it("should handle POST and DELETE without body", async () => {
-        const mockResponse = { ok: true, json: () => Promise.resolve({ ok: true }) };
-        (fetch as any).mockResolvedValue(mockResponse);
-  
-        await apiClient.post("/test");
-        expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({ body: undefined }));
+      const mockResponse = { ok: true, json: () => Promise.resolve({ ok: true }) };
+      (fetch as any).mockResolvedValue(mockResponse);
 
-        await apiClient.delete("/test");
-        expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({ body: undefined }));
-      });
+      await apiClient.post("/test");
+      expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({ body: undefined }));
+
+      await apiClient.delete("/test");
+      expect(fetch).toHaveBeenCalledWith("/test", expect.objectContaining({ body: undefined }));
+    });
   });
 
   describe("APP_ROUTES", () => {

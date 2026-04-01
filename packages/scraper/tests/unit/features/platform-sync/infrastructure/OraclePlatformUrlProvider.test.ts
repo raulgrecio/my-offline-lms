@@ -90,6 +90,18 @@ describe('OraclePlatformUrlProvider', () => {
     });
   });
 
+  describe('getLearningPathUrl', () => {
+    it('should return a valid learning path URL from slug and id', () => {
+      const result = provider.getLearningPathUrl({ slug: 'lp-slug', id: '111' });
+      expect(result).toBe(new URL('ou/learning-path/lp-slug/111', env.PLATFORM_BASE_URL).href);
+    });
+
+    it('should use "path" as default slug if empty', () => {
+      const result = provider.getLearningPathUrl({ slug: '', id: '111' });
+      expect(result).toContain('/path/111');
+    });
+  });
+
   describe('getGuideViewerUrl', () => {
     it('should return a valid guide viewer URL using template', () => {
       const result = provider.getGuideViewerUrl({ courseId: 'c1', offeringId: 'o1', ekitId: 'e1' });

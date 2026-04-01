@@ -45,7 +45,10 @@ const stepsConfig: WizardStepConfig[] = [
 ];
 
 export const ScraperWizard: React.FC = () => {
-  const [availableContent, setAvailableContent] = useState<{ courses: ContentItem[], paths: any[] }>({ courses: [], paths: [] });
+  const [availableContent, setAvailableContent] = useState<AvailableContentResponse>({ 
+    courses: [], 
+    paths: []
+  });
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [newUrl, setNewUrl] = useState('');
   const [contentType, setContentType] = useState<'course' | 'path'>('course');
@@ -60,6 +63,52 @@ export const ScraperWizard: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [executionResult, setExecutionResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [taskProgress, setTaskProgress] = useState<{ step: string, status?: string } | null>(null);
+
+  // Check for active tasks on mount
+  useEffect(() => {
+    apiClient.get<any>(API_ROUTES.SCRAPER.STATUS)
+      .then(task => {
+        if (task && task.id && task.status === 'RUNNING') {
+          setTaskId(task.id);
+          setTaskProgress(task.progress ? JSON.parse(task.progress) : { step: 'Recuperando estado...' });
+          // If we have an active task, we should be in the execution step
+          // The GenericWizard currently doesn't expose a way to set the initial step via props easily 
+          // without modifying it, but we can at least ensure we are tracking it.
+          // For now, if taskId is set, we will show the ExecutionStep content.
+        }
+      })
+      .catch(err => console.error('Error checking active task:', err));
+  }, []);
+
+  // Polling for task progress
+  useEffect(() => {
+    let interval: any;
+    if (taskId && (!executionResult || !executionResult.success)) {
+      interval = setInterval(async () => {
+        try {
+          const task = await apiClient.get<any>(`${API_ROUTES.SCRAPER.STATUS}?taskId=${taskId}`);
+          if (task) {
+            setTaskProgress(task.progress ? JSON.parse(task.progress) : null);
+            if (task.status === 'COMPLETED') {
+              setExecutionResult({ success: true, message: 'Proceso finalizado con éxito.' });
+              setTaskId(null);
+            } else if (task.status === 'FAILED') {
+              setExecutionResult({ success: false, message: task.error || 'Error en la ejecución.' });
+              setTaskId(null);
+            } else if (task.status === 'CANCELLED') {
+              setExecutionResult({ success: false, message: 'Proceso cancelado.' });
+              setTaskId(null);
+            }
+          }
+        } catch (err) {
+          console.error('Error polling task status:', err);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [taskId, executionResult]);
 
   useEffect(() => {
     apiClient.get<AvailableContentResponse>(API_ROUTES.SCRAPER.AVAILABLE)
@@ -100,19 +149,33 @@ export const ScraperWizard: React.FC = () => {
     }
   };
 
+  const cancelScraping = async () => {
+    if (!taskId) return;
+    try {
+      await apiClient.post(API_ROUTES.SCRAPER.CANCEL, { taskId });
+    } catch (err: any) {
+      console.error('Failed to cancel:', err);
+    }
+  };
+
   const startScraping = async () => {
     setIsLoading(true);
     const url = selectedItem ? selectedItem.url : newUrl;
     const type = selectedItem ? selectedItem.type : contentType;
 
     try {
-      const data = await apiClient.post<SyncResponse>(API_ROUTES.SCRAPER.SYNC, {
+      const data = await apiClient.post<any>(API_ROUTES.SCRAPER.SYNC, {
         url,
         type,
         downloadVideos: downloadOptions.videos,
         downloadGuides: downloadOptions.guides
       });
-      setExecutionResult({ success: true, message: data.message });
+      if (data.taskId) {
+        setTaskId(data.taskId);
+        setExecutionResult(null); // Reset result as we are starting
+      } else {
+        setExecutionResult({ success: true, message: data.message });
+      }
     } catch (err: any) {
       setExecutionResult({ success: false, message: err.message || 'Error desconocido' });
     } finally {
@@ -121,7 +184,7 @@ export const ScraperWizard: React.FC = () => {
   };
 
   return (
-    <GenericWizard steps={stepsConfig}>
+    <GenericWizard steps={stepsConfig} initialStepId={taskId ? 'execution' : undefined}>
       <SelectionStep
         availableContent={availableContent}
         selectedItem={selectedItem}
@@ -143,12 +206,14 @@ export const ScraperWizard: React.FC = () => {
       <ExecutionStep
         downloadOptions={downloadOptions}
         setDownloadOptions={setDownloadOptions}
-        isLoading={isLoading}
+        isLoading={isLoading || !!taskId}
         executionResult={executionResult}
+        taskProgress={taskProgress}
         selectedItem={selectedItem}
         newUrl={newUrl}
         contentType={contentType}
         startScraping={startScraping}
+        cancelScraping={cancelScraping}
       />
     </GenericWizard>
   );

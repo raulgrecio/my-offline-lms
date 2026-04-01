@@ -12,21 +12,25 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const scraper = new ScraperService();
+    const scraper = await ScraperService.create();
     const downloadType = (downloadVideos && downloadGuides) ? 'all' : (downloadVideos ? 'video' : 'guide');
 
-    // For now, we run it in the background to not block the request
-    // In a real app, we would use a task queue (like BullMQ or a simple table)
+    const taskId = await scraper.createTask({
+      type: type as 'course' | 'path',
+      url,
+    });
+
+    // Run in the background
     (async () => {
       try {
         if (type === 'course') {
-          await scraper.syncCourse(url);
-          const courseId = url.split('/').pop() || ''; // Simplified extraction
-          await scraper.download(courseId, downloadType);
+          await scraper.syncCourse(url, taskId);
+          const courseId = url.split('/').pop() || '';
+          await scraper.download(courseId, downloadType, false, taskId);
         } else {
-          await scraper.syncPath(url);
+          await scraper.syncPath(url, taskId);
           const pathId = url.split('/').pop() || '';
-          await scraper.download(pathId, downloadType, true);
+          await scraper.download(pathId, downloadType, true, taskId);
         }
       } catch (err: any) {
         console.error('Async scraping error:', err);
@@ -35,7 +39,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      message: 'Sincronización iniciada en segundo plano.'
+      taskId,
+      message: 'Sincronización iniciada.'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

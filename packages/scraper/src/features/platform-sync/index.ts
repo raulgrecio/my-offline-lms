@@ -1,5 +1,6 @@
 export * from './application/SyncCourse';
 export * from './application/SyncLearningPath';
+export * from './application/GetAvailableContent';
 
 export * from './domain/ports/ICourseRepository';
 export * from './domain/ports/IInterceptedDataRepository';

@@ -9,6 +9,7 @@ interface WizardProps {
   children: React.ReactNode;
   onFinish?: () => void;
   initialStepIndex?: number;
+  initialStepId?: string;
   className?: string;
 }
 
@@ -29,10 +30,11 @@ export const GenericWizard: React.FC<WizardProps> = ({
   children,
   onFinish,
   initialStepIndex = 0,
+  initialStepId,
   className = ""
 }) => {
   return (
-    <WizardProvider steps={steps} onFinish={onFinish} initialStepIndex={initialStepIndex}>
+    <WizardProvider steps={steps} onFinish={onFinish} initialStepIndex={initialStepIndex} initialStepId={initialStepId}>
       <div className={`max-w-5xl mx-auto ${className}`}>
         <WizardStepper />
         <div className="relative mb-20">

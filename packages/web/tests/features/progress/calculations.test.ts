@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { calculateRealProgress } from "../../../src/features/progress/application/calculateRealProgress";
-import { calculateStatus } from "../../../src/features/progress/application/calculateStatus";
+import { calculateRealProgress } from "@web/features/progress/application/calculateRealProgress";
+import { calculateStatus } from "@web/features/progress/application/calculateStatus";
 
 describe("Progress Calculations", () => {
   describe("calculateRealProgress", () => {
@@ -26,14 +26,14 @@ describe("Progress Calculations", () => {
     });
 
     it("should calculate standard progress", () => {
-        const result = calculateRealProgress({
-          type: "video",
-          visitedSegments: 5,
-          totalSegments: 10,
-        });
-        expect(result.progress).toBe(0.5);
-        expect(result.status).toBe("in_progress");
+      const result = calculateRealProgress({
+        type: "video",
+        visitedSegments: 5,
+        totalSegments: 10,
       });
+      expect(result.progress).toBe(0.5);
+      expect(result.status).toBe("in_progress");
+    });
   });
 
   describe("calculateStatus", () => {
@@ -48,8 +48,8 @@ describe("Progress Calculations", () => {
     });
 
     it("should handle 90% threshold for completion", () => {
-        const status = calculateStatus(9, 10, false);
-        expect(status).toBe("completed");
+      const status = calculateStatus(9, 10, false);
+      expect(status).toBe("completed");
     });
   });
 });

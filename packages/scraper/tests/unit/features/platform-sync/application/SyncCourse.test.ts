@@ -66,6 +66,7 @@ describe('SyncCourse Use Case', () => {
     resolveCourseUrl: vi.fn(url => ({ url: String(url), courseId: '123' })),
     resolveLearningPathUrl: vi.fn(url => ({ url: String(url), pathId: '123' })),
     getCourseUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/course/${slug}/${id}`),
+    getLearningPathUrl: vi.fn(({ slug, id }) => `https://platform.com/ou/learning-path/${slug}/${id}`),
     getVideoAssetUrl: vi.fn(({ courseUrl, assetId }) => {
       const base = courseUrl.endsWith('/') ? courseUrl : `${courseUrl}/`;
       return `${base}${assetId}`;
@@ -303,14 +304,35 @@ describe('SyncCourse Use Case', () => {
     expect(mockAssetRepo.saveAsset).toHaveBeenCalled();
   });
 
-  it('should cover initial offeringId null branch', async () => {
+  it('should cover initial offeringId null branch and dynamic extraction', async () => {
     setupMockPage();
-    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
-      { filePath: 'p1.json', content: JSON.stringify({ url: 'http://p?offeringId=off1', data: { id: '123', name: 'C' } }) },
-      { filePath: 'p2.json', content: JSON.stringify({ url: 'http://p/guide/test', data: { id: '123', name: 'C' } }) }
-    ]);
+    // Test extraction from wrapperUrl
+    const payload = { 
+      filePath: 'p1.json', 
+      content: JSON.stringify({ 
+        url: 'https://platform.com/ou/course/slug/999?offeringId=999888', 
+        data: { id: '123', name: 'C' } 
+      }) 
+    };
+    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([payload]);
+    
+    // We pass a null or empty offeringId initially if possible or just trigger the logic
     await useCase.execute({ courseInput: '123' });
-    expect(mockLogger.info).toHaveBeenCalled();
+    const logInfoCalls = (mockLogger.info as any).mock.calls.map((c: any) => c[0]);
+    expect(logInfoCalls.some((c: string) => c && c.includes('Extraído offeringId dinámico: 999888'))).toBe(true);
+  });
+
+  it('should update video duration if not already set', async () => {
+    setupMockPage();
+    const p1 = { filePath: 'p1.json', content: JSON.stringify({ data: { id: '123', modules: [{ components: [{ id: 'v1', typeId: 1, name: 'V' }] }] } }) };
+    const p2 = { filePath: 'p2.json', content: JSON.stringify({ data: { id: '123', modules: [{ components: [{ id: 'v1', typeId: 1, duration: 500 }] }] } }) };
+    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([p1, p2]);
+
+    await useCase.execute({ courseInput: '123' });
+    expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'v1',
+      metadata: expect.objectContaining({ duration: 500 })
+    }));
   });
 
   it('should skip cleanup if isolatedDirPath is null', async () => {

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Icon } from '@web/components/Icon';
+import { Button } from '@web/components/Button';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
 
@@ -9,10 +10,12 @@ interface ExecutionStepProps {
   setDownloadOptions: React.Dispatch<React.SetStateAction<{ videos: boolean; guides: boolean }>>;
   isLoading: boolean;
   executionResult: { success: boolean; message: string } | null;
+  taskProgress: { step: string, status?: string } | null;
   selectedItem: any;
   newUrl: string;
   contentType: string;
   startScraping: () => Promise<void>;
+  cancelScraping: () => Promise<void>;
 }
 
 export const ExecutionStep: React.FC<ExecutionStepProps> = ({
@@ -20,10 +23,12 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
   setDownloadOptions,
   isLoading,
   executionResult,
+  taskProgress,
   selectedItem,
   newUrl,
   contentType,
-  startScraping
+  startScraping,
+  cancelScraping
 }) => {
   const { setCanProceed } = useWizard();
 
@@ -38,9 +43,10 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
           <div>
             <h4 className="text-[10px] font-black text-text-muted uppercase mb-6 tracking-[0.3em] opacity-50">Payload & Config</h4>
             <div className="grid grid-cols-1 gap-4">
-              <button
+              <Button
+                variant="none"
                 onClick={() => setDownloadOptions(p => ({ ...p, videos: !p.videos }))}
-                className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 ${downloadOptions.videos ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
+                className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 w-full ${downloadOptions.videos ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
               >
                 <div className="flex items-center gap-5">
                   <div className={`p-3 rounded-2xl ${downloadOptions.videos ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30' : 'bg-surface-800 text-text-muted'}`}>
@@ -54,11 +60,12 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${downloadOptions.videos ? 'border-brand-500 bg-brand-500/10' : 'border-border-subtle'}`}>
                   {downloadOptions.videos && <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-in zoom-in" ></div>}
                 </div>
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="none"
                 onClick={() => setDownloadOptions(p => ({ ...p, guides: !p.guides }))}
-                className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 ${downloadOptions.guides ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
+                className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 w-full ${downloadOptions.guides ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
               >
                 <div className="flex items-center gap-5">
                   <div className={`p-3 rounded-2xl ${downloadOptions.guides ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30' : 'bg-surface-800 text-text-muted'}`}>
@@ -72,7 +79,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${downloadOptions.guides ? 'border-brand-500 bg-brand-500/10' : 'border-border-subtle'}`}>
                   {downloadOptions.guides && <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-in zoom-in" ></div>}
                 </div>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -108,12 +115,29 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
               bg-[radial-gradient(circle_at_center,color-mix(in_oklab,var(--brand-900)_5%,transparent)_0%,transparent_100%)]
             "
           >
-            {isLoading ? (
-              <div className="space-y-6">
+            {isLoading || taskProgress ? (
+              <div className="space-y-6 w-full max-w-xs">
                 <div className="w-16 h-16 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin mx-auto shadow-xl shadow-brand-500/20"></div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-mono font-bold text-brand-500 tracking-widest uppercase animate-pulse">Initializing Reactor</p>
-                  <p className="text-[8px] font-mono text-text-muted opacity-50 uppercase tracking-tighter">Preparing Scraper clusters...</p>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-mono font-bold text-brand-500 tracking-widest uppercase animate-pulse">
+                      {taskProgress ? (taskProgress.status || 'Ejecutando') : 'Iniciando Reactor'}
+                    </p>
+                    <p className="text-[11px] font-bold text-text-primary uppercase tracking-tight">
+                      {taskProgress?.step || 'Preparando clusters de scraping...'}
+                    </p>
+                  </div>
+                  
+                  {!executionResult && (
+                    <Button
+                      variant="danger"
+                      size="xs"
+                      onClick={cancelScraping}
+                      className="mt-4 font-black uppercase tracking-widest px-4"
+                    >
+                      Cancelar Descarga
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : executionResult ? (
@@ -122,7 +146,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
                   <Icon name={executionResult.success ? "check" : "x"} size="lg" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-base font-black tracking-tight text-text-primary">{executionResult.success ? 'Proceso Iniciado' : 'Fallo Crítico'}</p>
+                  <p className="text-base font-black tracking-tight text-text-primary">{executionResult.success ? 'Proceso Finalizado' : 'Fallo Crítico'}</p>
                   <p className="text-xs text-text-muted px-4 leading-relaxed opacity-60">
                     {executionResult.message}
                   </p>
@@ -134,8 +158,8 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
                   <Icon name="terminal" size="lg" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.4em] opacity-30">Waiting for handshake</p>
-                  <p className="text-[8px] font-mono text-text-muted opacity-20 uppercase tracking-tighter">Idle state / Socket ready</p>
+                  <p className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.4em] opacity-30">Esperando handshake</p>
+                  <p className="text-[8px] font-mono text-text-muted opacity-20 uppercase tracking-tighter">Estado inactivo / Socket listo</p>
                 </div>
               </div>
             )}

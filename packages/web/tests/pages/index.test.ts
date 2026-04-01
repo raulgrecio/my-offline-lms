@@ -1,6 +1,10 @@
 /** @vitest-environment node */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTestContainer } from "../utils/test-render";
+// @ts-ignore
+import IndexPage from "@web/pages/index.astro";
+import * as learningPaths from "@web/features/learning-paths";
+import * as courses from "@web/features/courses";
 
 // Mocking features used in index.astro
 vi.mock("@web/features/learning-paths", () => ({
@@ -22,11 +26,6 @@ vi.mock("@web/features/favorites", () => ({
   getIsFavorite: vi.fn().mockResolvedValue(false),
 }));
 
-// @ts-ignore
-import IndexPage from "../../src/pages/index.astro";
-import * as learningPaths from "@web/features/learning-paths";
-import * as courses from "@web/features/courses";
-
 describe("index.astro", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,10 +42,10 @@ describe("index.astro", () => {
   it("should render learning paths and courses when available", async () => {
     // Setup mocks for this test
     (learningPaths.getAllLearningPaths as any).mockResolvedValue([
-      { id: 'lp1', title: 'Test Path', description: 'Test Description' }
+      { id: 'lp1-index-1', title: 'Test Path', description: 'Test Description' }
     ]);
     (courses.getAllCourses as any).mockResolvedValue([
-      { id: 'c1', title: 'Test Course' }
+      { id: 'c1-index-2', title: 'Test Course' }
     ]);
 
     const container = await createTestContainer();

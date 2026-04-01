@@ -142,6 +142,19 @@ describe('DiskAuthSessionStorage', () => {
       expect(await storage.isValidSession()).toBe(false);
     });
 
+    it('should return false if cookies array is empty', async () => {
+      const storage = new DiskAuthSessionStorage({
+        fs: mockFs,
+        path: mockPath,
+        getAuthDir: async () => mockBaseDir
+      });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: []
+      })));
+      expect(await storage.isValidSession()).toBe(false);
+    });
+
     it('should return true if at least one cookie is valid', async () => {
       const storage = new DiskAuthSessionStorage({
         fs: mockFs,

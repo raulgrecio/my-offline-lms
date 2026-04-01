@@ -1,0 +1,42 @@
+---
+import Layout from "@web/layouts/Layout.astro";
+import { ImportShowcase } from "./_ImportShowcase";
+---
+
+<Layout title="Import Wizard Showcase">
+  <div class="px-8 py-16 space-y-16 max-w-5xl mx-auto">
+    <!-- Header -->
+    <header class="space-y-4">
+      <div class="flex items-center gap-3 mb-2">
+        <span
+          class="px-3 py-1 bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-brand-500/20"
+          >Wizard Showcase</span
+        >
+      </div>
+      <h1 class="text-5xl font-black text-text-primary tracking-tighter">
+        Import Wizard Showcase
+      </h1>
+      <p class="text-text-secondary text-lg max-w-2xl leading-relaxed">
+        Preview all the steps and states of the content import process. This
+        showcase uses mocked data to demonstrate the UI transitions.
+      </p>
+    </header>
+
+    <div
+      class="relative p-12 bg-surface-900 border border-border-subtle rounded-[2.5rem] overflow-hidden min-h-[600px] shadow-2xl shadow-black/50"
+    >
+      <div
+        class="absolute inset-0 bg-linear-to-br from-brand-500/5 via-transparent to-transparent opacity-50 pointer-events-none"
+      >
+      </div>
+      <ImportShowcase client:load />
+    </div>
+
+    <footer
+      class="pt-8 border-t border-border-subtle/30 flex justify-between items-center text-text-muted text-xs font-medium"
+    >
+      <p>My Offline LMS - Scraper System</p>
+      <p>Built with React & Astro</p>
+    </footer>
+  </div>
+</Layout>

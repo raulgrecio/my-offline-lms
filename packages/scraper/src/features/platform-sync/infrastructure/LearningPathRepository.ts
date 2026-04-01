@@ -43,4 +43,8 @@ export class SQLiteLearningPathRepository implements ILearningPathRepository {
       orderIndex: link.orderIndex
     });
   }
+
+  getAllLearningPaths(): LearningPath[] {
+    return this.db.prepare('SELECT id, slug, title, description FROM LearningPaths ORDER BY title ASC').all() as LearningPath[];
+  }
 }

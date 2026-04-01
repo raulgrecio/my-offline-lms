@@ -4,7 +4,7 @@ import { ScraperService } from '@scraper/ScraperService';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const scraper = new ScraperService();
+    const scraper = await ScraperService.create();
     // We don't await the login completion because it's interactive and the browser needs to stay open
     // BUT we should avoid spawning multiple instances
     scraper.login().catch((err: any) => {

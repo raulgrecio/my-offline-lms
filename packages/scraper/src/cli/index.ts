@@ -1,47 +1,6 @@
 import dotenv from 'dotenv';
-
-import { ConsoleLogger } from '@core/logging';
 import { type DownloadType } from '@core/domain';
-import { type IDatabase } from '@core/database';
-import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
-
-import { 
-  env, 
-  PLATFORM, 
-  getAssetPathsConfig, 
-  getMonorepoRoot, 
-  getAuthState, 
-  getAuthDir, 
-  getInterceptedDir 
-} from '@scraper/config';
-import { 
-  AssetNamingService, 
-  SQLiteAssetRepository, 
-  DiskAssetStorage, 
-  YtDlpVideoDownloader, 
-  DownloadCourse, 
-  DownloadGuides, 
-  DownloadPath, 
-  DownloadVideos 
-} from '@scraper/features/asset-download';
-import { 
-  AuthSession, 
-  ValidateAuthSession, 
-  DiskAuthSessionStorage 
-} from '@scraper/features/auth-session';
-import { 
-  SyncCourse, 
-  SyncLearningPath, 
-  SQLiteCourseRepository, 
-  SQLiteLearningPathRepository, 
-  OraclePlatformUrlProvider, 
-  DiskInterceptedDataRepositoryFactory 
-} from '@scraper/features/platform-sync';
-
-
-
-import { BrowserProvider, BrowserInterceptor } from '@scraper/platform/browser';
-import { getDb } from '@scraper/platform/database';
+import { ScraperService } from '../ScraperService';
 
 dotenv.config();
 
@@ -109,36 +68,6 @@ const COMMANDS_METADATA: CommandMetadata[] = [
   },
 ];
 
-const SHARED_CONFIGS = {
-  SYNC_COURSE: {
-    keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-    selectors: {
-      guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
-    },
-    oracleConstants: {
-      videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
-    }
-  },
-  SYNC_PATH: {
-    keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES
-  },
-  DOWNLOAD_GUIDES: {
-    keepTempImages: env.KEEP_TEMP_IMAGES,
-    selectors: {
-      iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
-      flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
-    }
-  },
-  DOWNLOAD_VIDEOS: {
-    selectors: {
-      video: {
-        startBtn: PLATFORM.SELECTORS.VIDEO.START_BTN,
-        playBtn: PLATFORM.SELECTORS.VIDEO.PLAY_BTN
-      }
-    }
-  }
-};
-
 function showHelp() {
   console.log(`
 Uso: pnpm cli <comando> [argumentos]
@@ -163,130 +92,12 @@ export async function runCLI() {
     return;
   }
 
-  // Core Dependencies - Initialized only if command is valid
-  const logger = new ConsoleLogger();
-  let db: IDatabase | undefined;
-  let browserProvider: BrowserProvider | undefined;
-
   try {
-    const nodeFs = new NodeFileSystem(logger);
-    const nodePath = new NodePath();
-    const universalFs = new UniversalFileSystem(nodeFs, logger);
-    universalFs.registerRemote('http', new HttpFileSystem());
-
-    // Database Initialization
-    db = await getDb({ fsAdapter: nodeFs });
-
-    // Repository Setup
-    const courseRepo = new SQLiteCourseRepository(db);
-    const assetRepo = new SQLiteAssetRepository(db);
-    const pathRepo = new SQLiteLearningPathRepository(db);
-
-    // Platform Services
-    browserProvider = new BrowserProvider({
-      fs: universalFs,
-      path: nodePath,
-      config: {
-        chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
-        authStateFile: await getAuthState(),
-      },
-      logger
-    });
-
-    const interceptedDataRepoFactory = new DiskInterceptedDataRepositoryFactory(universalFs, nodePath, logger);
-    const authSessionStorage = new DiskAuthSessionStorage({
-      fs: universalFs,
-      path: nodePath,
-      getAuthDir,
-    });
-    const browserInterceptor = new BrowserInterceptor({
-      fs: universalFs,
-      path: nodePath,
-      logger,
-      getInterceptedDir
-    });
-
-    const assetPathResolver = new AssetPathResolver({
-      configPath: await getAssetPathsConfig(),
-      monorepoRoot: await getMonorepoRoot(),
-      fs: universalFs,
-      path: nodePath,
-      logger,
-    });
-    const assetStorage = new DiskAssetStorage({ fs: universalFs, path: nodePath, resolver: assetPathResolver });
-    const videoDownloader = new YtDlpVideoDownloader({ authSessionStorage, logger });
-    const urlProvider = new OraclePlatformUrlProvider();
-    const namingService = new AssetNamingService();
-    const validateAuthSession = new ValidateAuthSession({ authStorage: authSessionStorage, logger });
-
-    // Application Service Factories to avoid repetition
-    const createSyncCourse = () => new SyncCourse({
-      browserProvider: browserProvider!,
-      courseRepository: courseRepo,
-      assetRepository: assetRepo,
-      interceptedDataRepoFactory,
-      browserInterceptor,
-      urlProvider,
-      namingService,
-      logger,
-      config: SHARED_CONFIGS.SYNC_COURSE
-    });
-
-    const createSyncPath = (syncCourse: SyncCourse) => new SyncLearningPath({
-      browserProvider: browserProvider!,
-      learningPathRepo: pathRepo,
-      courseRepo,
-      syncCourse,
-      interceptedDataRepoFactory,
-      browserInterceptor,
-      urlProvider,
-      namingService,
-      logger,
-      config: SHARED_CONFIGS.SYNC_PATH
-    });
-
-    const createDownloadGuides = () => new DownloadGuides({
-      browserProvider: browserProvider!,
-      courseRepo,
-      assetRepo,
-      assetStorage,
-      namingService,
-      urlProvider,
-      logger,
-      config: SHARED_CONFIGS.DOWNLOAD_GUIDES
-    });
-
-    const createDownloadVideos = () => new DownloadVideos({
-      browserProvider: browserProvider!,
-      courseRepository: courseRepo,
-      assetRepository: assetRepo,
-      assetStorage,
-      videoDownloader,
-      namingService,
-      logger,
-      config: SHARED_CONFIGS.DOWNLOAD_VIDEOS
-    });
-
-    const createDownloadPath = (syncLearningPath: SyncLearningPath, downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadPath({
-      learningPathRepo: pathRepo,
-      syncLearningPath,
-      downloadGuides,
-      downloadVideos,
-      namingService,
-      logger,
-    });
-
-    const createDownloadCourse = (downloadGuides: DownloadGuides, downloadVideos: DownloadVideos) => new DownloadCourse({
-      courseRepo,
-      downloadGuides,
-      downloadVideos,
-      namingService,
-      logger,
-    });
+    const scraper = await ScraperService.create();
 
     // Session validation if required by command metadata
     if (metadata.requiresAuth) {
-      if (!(await validateAuthSession.execute())) {
+      if (!(await scraper.checkAuth())) {
         return;
       }
     }
@@ -294,79 +105,49 @@ export async function runCLI() {
     const command = metadata.command;
     switch (command) {
       case CLI_COMMANDS.LOGIN: {
-        const baseUrl = env.PLATFORM_BASE_URL;
-        const auth = new AuthSession({
-          browserProvider,
-          authStorage: authSessionStorage,
-          logger,
-        });
-        await auth.execute({ baseUrl });
+        await scraper.login();
         break;
       }
       case CLI_COMMANDS.SYNC_COURSE: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
-
-        const syncCourse = createSyncCourse();
-        await syncCourse.execute({ courseInput: target });
+        await scraper.syncCourse(target);
         break;
       }
       case CLI_COMMANDS.SYNC_PATH: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
-
-        const syncCourse = createSyncCourse();
-        const syncPath = createSyncPath(syncCourse);
-        await syncPath.execute({ pathInput: target });
+        await scraper.syncPath(target);
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_GUIDES: {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-
-        const guides = createDownloadGuides();
-        await guides.execute({ courseId: id });
+        await scraper.download(id, 'guide', false);
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_VIDEOS: {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-
-        const videos = createDownloadVideos();
-        await videos.execute({ courseId: id });
+        await scraper.download(id, 'video', false);
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_PATH: {
         const id = args[1];
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del Learning Path.");
-
-        const syncPath = createSyncPath(createSyncCourse());
-        const downloadPath = createDownloadPath(syncPath, createDownloadGuides(), createDownloadVideos());
-
-        await downloadPath.execute({ pathInput: id, type: type || 'all' });
+        await scraper.download(id, type || 'all', true);
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_COURSE: {
         const id = args[1];
         const type = args[2] as DownloadType | undefined;
         if (!id) throw new Error("Falta el ID del curso.");
-
-        const downloadCourse = createDownloadCourse(createDownloadGuides(), createDownloadVideos());
-
-        await downloadCourse.execute({ courseInput: id, type: type || 'all' });
+        await scraper.download(id, type || 'all', false);
         break;
       }
     }
   } catch (err: any) {
-    logger.error("Error ejecutando comando:", err.message);
-  } finally {
-    if (browserProvider) {
-      await browserProvider.close();
-    }
-    // Close database
-    if (db) {
-      db.close();
-    }
+    console.error("Error ejecutando comando:", err.message);
   }
 }

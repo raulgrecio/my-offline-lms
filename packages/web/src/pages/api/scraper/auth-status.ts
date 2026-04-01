@@ -4,7 +4,7 @@ import { ScraperService } from '@scraper/ScraperService';
 
 export const GET: APIRoute = async () => {
   try {
-    const scraper = new ScraperService();
+    const scraper = await ScraperService.create();
     // The ScraperService.init() method will trigger the validation check if we wrap it
     // Or we can just use the internal authSession directly.
     // Let's create a dedicated method in ScraperService for this.
