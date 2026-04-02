@@ -107,13 +107,13 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
         return result.success;
       });
 
-      page.on('load', async () => {
-        await page.evaluate(() => console.log("LMS Offline: Auth Session Active"));
+      page.on('load', () => {
+        this.logger.info("LMS Offline: Sesión de autenticación cargada.");
       });
 
-      page.on('framenavigated', async (frame: any) => {
+      page.on('framenavigated', (frame: any) => {
         if (frame === page.mainFrame()) {
-          await page.evaluate(() => console.log("LMS Offline: Auth Session Navigated"));
+          this.logger.info(`LMS Offline: Navegación detectada -> ${page.url()}`);
         }
       });
 

@@ -42,8 +42,8 @@ import {
   StartTask,
   GetAllTasks,
   DeleteTask,
-  CreateTaskInput,
-  ScraperTaskType,
+  type CreateTaskInput,
+  type ScraperTaskType,
 } from './features/task-management';
 import { ScraperOrchestrator } from './features/shared';
 import { BrowserProvider, BrowserInterceptor } from './platform/browser';
@@ -249,6 +249,10 @@ export class ScraperService {
 
   async cancelTask(id: string) {
     return this.cancelTaskUseCase.execute({ id });
+  }
+
+  async startTask(id: string) {
+    return await this.startTaskUseCase.execute({ id });
   }
 
   async deleteTask(id: string) {

@@ -3,6 +3,7 @@ import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { NodeFileSystem, NodePath } from "@core/filesystem";
 import { CASES } from "./auditCases";
+import { logger } from "../logger";
 
 const fs = new NodeFileSystem();
 const path = new NodePath();
@@ -119,15 +120,15 @@ async function main() {
   });
 
   for (const auditCase of CASES) {
-    console.log(`Auditing Component: ${auditCase.componentName}`);
+    logger.info(`Auditing Component: ${auditCase.componentName}`);
 
     for (const caseVariant of auditCase.cases) {
-      console.log(`  🔍 Caso: ${caseVariant.name}`);
+      logger.info(`  🔍 Caso: ${caseVariant.name}`);
 
       const states = auditCase.states || ["normal", "hover", "active"];
 
       for (const state of states) {
-        console.log(`    📷 Estado: ${state}`);
+        logger.info(`    📷 Estado: ${state}`);
         const targetDir = path.join(AUDIT_DIR, auditCase.componentName, caseVariant.name, state);
         await fs.mkdir(targetDir, { recursive: true });
 
@@ -152,13 +153,13 @@ async function main() {
           await fs.writeFile(path.join(targetDir, "diff.png"), PNG.sync.write(diff));
 
         } catch (err: any) {
-          console.error(`[ERROR] ${state} failed:`, err.message);
+          logger.error(`${state} failed: ${err.message}`);
         }
       }
     }
   }
   await browser.close();
-  console.log("[FINISH] Audit complete.");
+  logger.info("Audit complete.");
 }
 
-main().catch(console.error);
+main().catch((err) => logger.error("Fatal error during audit", err));

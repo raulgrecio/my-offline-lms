@@ -38,10 +38,8 @@ describe("local-asset Reproduction with Real Stream", () => {
       expect(body instanceof ReadableStream).toBe(true);
 
       const reader = body.getReader();
-      console.log('Test (Fixed): Canceling body...');
       await reader.cancel();
 
-      console.log('Test (Fixed): Waiting to ensure no crash...');
       await new Promise(resolve => setTimeout(resolve, 100));
     } finally {
       if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);

@@ -13,6 +13,8 @@ const mockRepo = (): ITaskRepository => ({
   update: vi.fn(),
   findById: vi.fn(),
   findActive: vi.fn(),
+  findAll: vi.fn(),
+  delete: vi.fn(),
 });
 
 describe('Task Management Use Cases', () => {

@@ -12,14 +12,14 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const scraper = await ScraperService.create();
-    
+
     // Background execution
     (async () => {
-        try {
-            await scraper.startTask(taskId);
-        } catch (err: any) {
-            console.error('Async task execution error:', err);
-        }
+      try {
+        await scraper.startTask(taskId);
+      } catch (err: any) {
+        console.error('Async task execution error:', err);
+      }
     })();
 
     return new Response(JSON.stringify({ success: true, message: 'Tarea iniciada' }), {

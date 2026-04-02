@@ -61,6 +61,7 @@ describe('AuthSession Use Case', () => {
   it('should perform interactive login and save session on enter', async () => {
     const mockPage = {
       goto: vi.fn().mockResolvedValue(undefined),
+      url: vi.fn().mockReturnValue('http://base-url'),
       close: vi.fn().mockResolvedValue(undefined),
     } as any;
     const mockContext = {
@@ -90,7 +91,7 @@ describe('AuthSession Use Case', () => {
 
   it('should handle Ctrl+C to exit', async () => {
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
+      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
       close: vi.fn(),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
@@ -107,7 +108,7 @@ describe('AuthSession Use Case', () => {
 
   it('should handle session save error', async () => {
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
+      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
       close: vi.fn(),
       storageState: vi.fn().mockRejectedValue(new Error('save failed')),
       cookies: vi.fn().mockResolvedValue([])
@@ -132,7 +133,7 @@ describe('AuthSession Use Case', () => {
 
   it('should work in non-TTY environment', async () => {
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
+      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
       close: vi.fn(),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
@@ -151,7 +152,7 @@ describe('AuthSession Use Case', () => {
   it('should trigger auto-save interval', async () => {
     vi.useFakeTimers();
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
+      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
       close: vi.fn(),
       storageState: vi.fn().mockResolvedValue({}),
       cookies: vi.fn().mockResolvedValue([])
@@ -173,7 +174,7 @@ describe('AuthSession Use Case', () => {
 
   it('should ignore other keypresses', async () => {
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn() }),
+      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
       close: vi.fn(),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
@@ -194,6 +195,7 @@ describe('AuthSession Use Case', () => {
   it('should work in web mode (interactive: false)', async () => {
     const mockPage = {
       goto: vi.fn().mockResolvedValue(undefined),
+      url: vi.fn().mockReturnValue('http://web-url'),
       exposeFunction: vi.fn(),
       evaluate: vi.fn(),
       on: vi.fn(),
@@ -229,7 +231,8 @@ describe('AuthSession Use Case', () => {
 
     if (loadCallback) await loadCallback();
     if (frameCallback) await frameCallback(mockPage.mainFrame());
-    expect(mockPage.evaluate).toHaveBeenCalled();
+    // No evaluation needed anymore as logging and UI are handled differently
+    expect(mockPage.evaluate).not.toHaveBeenCalled();
 
     // Trigger the exposed function to test saveSession
     const finishAuthFn: any = mockContext.exposeFunction.mock.calls.find((c: any) => c[0] === 'finishAuthSession')?.[1];
