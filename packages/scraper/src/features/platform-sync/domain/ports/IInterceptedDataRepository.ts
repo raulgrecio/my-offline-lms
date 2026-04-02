@@ -12,3 +12,5 @@ export interface IInterceptedDataRepository {
   markAsProcessed(filePath: string): Promise<void>;
   deleteWorkspace(): Promise<void>;
 }
+
+export type InterceptedRepoCreator = (baseDir?: string) => IInterceptedDataRepository;

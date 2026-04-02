@@ -4,8 +4,8 @@ import { type ILogger } from '@core/logging';
 
 import {
   type ICourseRepository,
-  type IInterceptedDataRepositoryFactory,
   type IInterceptedDataRepository,
+  type InterceptedRepoCreator,
   type ILearningPathRepository,
   type IPlatformUrlProvider,
   SyncCourse,
@@ -60,9 +60,7 @@ describe('SyncLearningPath Use Case', () => {
     deleteWorkspace: vi.fn(),
   };
 
-  const mockInterceptedDataRepoFactory: Mocked<IInterceptedDataRepositoryFactory> = {
-    create: vi.fn().mockReturnValue(mockInterceptedDataRepo)
-  };
+  const mockCreateInterceptedRepo: InterceptedRepoCreator = vi.fn().mockReturnValue(mockInterceptedDataRepo);
 
   const mockLogger: Mocked<ILogger> = {
     info: vi.fn(),
@@ -93,7 +91,7 @@ describe('SyncLearningPath Use Case', () => {
       learningPathRepo: mockLearningPathRepo,
       courseRepo: mockCourseRepo,
       syncCourse: mockSyncCourseUseCase,
-      interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
+      createInterceptedRepo: mockCreateInterceptedRepo,
       browserInterceptor: new BrowserInterceptor({} as any),
       urlProvider: mockUrlProvider,
       namingService: new AssetNamingService(),

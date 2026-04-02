@@ -7,6 +7,7 @@ import { Icon } from "@web/components/Icon";
 import { LogConsole } from "@web/components/LogConsole";
 
 import { ScraperWizard } from "./_ScraperWizard";
+import { TaskList } from "./_TaskList";
 ---
 
 <Layout title="Importar Contenido">
@@ -16,10 +17,80 @@ import { ScraperWizard } from "./_ScraperWizard";
     subtitle="Gestiona tus cursos y rutas de aprendizaje. Sincroniza metadatos e inicia descargas de assets."
   />
 
-  {/* Wizard Section */}
-  <section class="animate-in fade-in slide-in-from-bottom-4 duration-700">
-    <ScraperWizard client:load />
+  {/* Tabs and Content Section */}
+  <section class="animate-in fade-in slide-in-from-bottom-4 duration-700 mb-10">
+    <div
+      class="tabs-container bg-surface-900/50 p-2 rounded-3xl border border-border-subtle inline-flex mb-8"
+    >
+      <button
+        id="tab-tasks"
+        class="px-6 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-wider transition-all bg-brand-600 text-white shadow-lg shadow-brand-600/20"
+      >
+        Tareas Activas
+      </button>
+      <button
+        id="tab-wizard"
+        class="px-6 py-2.5 rounded-2xl text-[11px] font-bold uppercase tracking-wider text-text-muted hover:text-brand-400 transition-all"
+      >
+        Nueva Importación
+      </button>
+    </div>
+
+    <div id="view-tasks" class="space-y-6">
+      <TaskList client:load />
+    </div>
+
+    <div id="view-wizard" class="hidden">
+      <ScraperWizard client:load />
+    </div>
   </section>
+
+  <script>
+    const tabTasks = document.getElementById("tab-tasks");
+    const tabWizard = document.getElementById("tab-wizard");
+    const viewTasks = document.getElementById("view-tasks");
+    const viewWizard = document.getElementById("view-wizard");
+
+    if (tabTasks && tabWizard && viewTasks && viewWizard) {
+      tabTasks.addEventListener("click", () => {
+        tabTasks.classList.add(
+          "bg-brand-600",
+          "text-white",
+          "shadow-lg",
+          "shadow-brand-600/20",
+        );
+        tabTasks.classList.remove("text-text-muted", "hover:text-brand-400");
+        tabWizard.classList.remove(
+          "bg-brand-600",
+          "text-white",
+          "shadow-lg",
+          "shadow-brand-600/20",
+        );
+        tabWizard.classList.add("text-text-muted", "hover:text-brand-400");
+        viewTasks.classList.remove("hidden");
+        viewWizard.classList.add("hidden");
+      });
+
+      tabWizard.addEventListener("click", () => {
+        tabWizard.classList.add(
+          "bg-brand-600",
+          "text-white",
+          "shadow-lg",
+          "shadow-brand-600/20",
+        );
+        tabWizard.classList.remove("text-text-muted", "hover:text-brand-400");
+        tabTasks.classList.remove(
+          "bg-brand-600",
+          "text-white",
+          "shadow-lg",
+          "shadow-brand-600/20",
+        );
+        tabTasks.classList.add("text-text-muted", "hover:text-brand-400");
+        viewWizard.classList.remove("hidden");
+        viewTasks.classList.add("hidden");
+      });
+    }
+  </script>
 
   {/* Live Terminal Log */}
   <section class="animate-in fade-in slide-in-from-bottom-6 duration-1000">

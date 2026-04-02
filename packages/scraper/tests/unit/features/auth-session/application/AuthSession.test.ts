@@ -7,6 +7,10 @@ import { AuthSession } from '@scraper/features/auth-session';
 vi.mock('readline', () => ({
   default: {
     emitKeypressEvents: vi.fn(),
+    createInterface: vi.fn().mockReturnValue({
+      on: vi.fn(),
+      close: vi.fn(),
+    }),
   }
 }));
 
@@ -21,6 +25,7 @@ describe('AuthSession Use Case', () => {
     getCookiesFile: vi.fn().mockResolvedValue('/mock/cookies.txt'),
     saveCookies: vi.fn(),
     ensureAuthDir: vi.fn(),
+    isValidSession: vi.fn().mockResolvedValue(false),
   } as any;
 
   const mockLogger: ILogger = {
@@ -114,7 +119,7 @@ describe('AuthSession Use Case', () => {
 
     // Trigger save session (return)
     await (useCase as any)._triggerKeypress('', { name: 'return' });
-    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al guardar sesión'), expect.any(Error));
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al guardar la sesión'), expect.any(Error));
 
     // Trigger save session (enter)
     await (useCase as any)._triggerKeypress('', { name: 'enter' });
@@ -201,7 +206,7 @@ describe('AuthSession Use Case', () => {
       cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
       exposeFunction: vi.fn(),
     } as any;
-    
+
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
     // Capture the 'close' callback
@@ -214,14 +219,14 @@ describe('AuthSession Use Case', () => {
 
     // Wait for the async call to exposeFunction
     await vi.waitUntil(() => mockContext.exposeFunction.mock.calls.length > 0);
-    
+
     // Verify mocks for web mode
     expect(mockContext.exposeFunction).toHaveBeenCalledWith('finishAuthSession', expect.any(Function));
-    
+
     // Simulate page 'load' and 'framenavigated'
     const loadCallback: any = mockPage.on.mock.calls.find((c: any) => c[0] === 'load')?.[1];
     const frameCallback: any = mockPage.on.mock.calls.find((c: any) => c[0] === 'framenavigated')?.[1];
-    
+
     if (loadCallback) await loadCallback();
     if (frameCallback) await frameCallback(mockPage.mainFrame());
     expect(mockPage.evaluate).toHaveBeenCalled();

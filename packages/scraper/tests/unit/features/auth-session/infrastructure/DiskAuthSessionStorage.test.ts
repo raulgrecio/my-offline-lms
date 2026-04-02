@@ -164,8 +164,8 @@ describe('DiskAuthSessionStorage', () => {
       mockFs.exists.mockResolvedValue(true);
       mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
         cookies: [
-          { domain: '.myplatform.com', name: 'n', value: 'v', expires: (Date.now() / 1000) + 3600 },
-          { domain: 'myplatform.com', name: 'n2', value: 'v2', expires: -1 }
+          { domain: '.myplatform.com', name: 'ora_session', value: 'v', expires: (Date.now() / 1000) + 3600 },
+          { domain: 'myplatform.com', name: 'GP_AUTH_TOKEN', value: 'v2', expires: -1 }
         ]
       })));
       expect(await storage.isValidSession()).toBe(true);

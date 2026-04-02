@@ -8,7 +8,7 @@ describe("CourseCard.astro", () => {
   it("should render title and basic info", async () => {
     const container = await createTestContainer();
     const html = await container.renderToString(CourseCard, {
-      props: { id: 'c1-CourseCard-1', title: 'Test Course', totalAssets: 5, progress: 20 }
+      props: { id: 'c1', title: 'Test Course', totalAssets: 5, progress: 20 }
     });
     expect(html).toContain('Test Course');
     expect(html).toContain('5 recursos');

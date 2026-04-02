@@ -4,6 +4,7 @@ import { SQLiteDatabase } from '@core/database';
 
 import { getDb } from '@scraper/platform/database';
 
+vi.unmock('@core/database');
 vi.mock('@scraper/config/paths', () => ({
   getDataDir: vi.fn().mockResolvedValue('/tmp/mock-data'),
   getDbPath: vi.fn().mockResolvedValue(':memory:'),

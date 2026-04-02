@@ -3,8 +3,7 @@ import * as pdfjs from 'pdfjs-dist';
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { GlobalWorkerOptions } from "pdfjs-dist";
 
-import { apiClient } from '@web/platform/api/client';
-import { API_ROUTES } from '@web/platform/api/routes';
+import { apiClient, API_ROUTES } from '@web/platform/api';
 import { logger } from '@web/platform/logging';
 
 interface InitPdfViewerProps {

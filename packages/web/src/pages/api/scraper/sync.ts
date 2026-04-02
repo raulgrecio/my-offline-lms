@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro';
 import { ScraperService } from '@scraper/ScraperService';
+import type { ScraperTaskType } from '@scraper/features/task-management';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { url, type, downloadVideos, downloadGuides } = await request.json();
+    const { url, type, targetId, downloadVideos, downloadGuides } = await request.json();
 
     if (!url) {
       return new Response(JSON.stringify({ error: 'URL is required' }), {
@@ -16,22 +17,32 @@ export const POST: APIRoute = async ({ request }) => {
     const downloadType = (downloadVideos && downloadGuides) ? 'all' : (downloadVideos ? 'video' : 'guide');
 
     const taskId = await scraper.createTask({
-      type: type as 'course' | 'path',
+      type: type as ScraperTaskType,
       url,
+      targetId
     });
 
     // Run in the background
     (async () => {
       try {
-        if (type === 'course') {
-          await scraper.syncCourse(url, taskId);
-          const courseId = url.split('/').pop() || '';
-          await scraper.download(courseId, downloadType, false, taskId);
-        } else {
-          await scraper.syncPath(url, taskId);
-          const pathId = url.split('/').pop() || '';
-          await scraper.download(pathId, downloadType, true, taskId);
+        if (!targetId) {
+          // New content, sync first
+          if (type === 'course') {
+            await scraper.syncCourse({ url, taskId });
+          } else {
+            await scraper.syncPath({ url, taskId });
+          }
         }
+
+        // After potential sync, download
+        const resolvedId = targetId || url.split('/').pop() || '';
+        await scraper.download({
+          type: downloadType,
+          taskId,
+          entityId: resolvedId,
+          entityType: type === 'path' ? 'path' : 'course'
+        });
+
       } catch (err: any) {
         console.error('Async scraping error:', err);
       }

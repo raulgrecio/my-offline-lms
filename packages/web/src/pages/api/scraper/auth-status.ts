@@ -9,11 +9,13 @@ export const GET: APIRoute = async () => {
     // Or we can just use the internal authSession directly.
     // Let's create a dedicated method in ScraperService for this.
 
-    const status = await scraper.checkAuth();
+    const isAuthenticated = await scraper.validateAuth();
+    const isLoggingIn = scraper.isLoggingIn;
 
     return new Response(JSON.stringify({
-      isAuthenticated: status,
-      message: status ? 'Sesión de Oracle válida' : 'No se detectó sesión'
+      isAuthenticated,
+      isLoggingIn,
+      message: isAuthenticated ? 'Sesión de Oracle válida' : (isLoggingIn ? 'Esperando login en el navegador...' : 'No se detectó sesión')
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

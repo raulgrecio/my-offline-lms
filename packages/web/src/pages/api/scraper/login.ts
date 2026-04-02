@@ -7,7 +7,7 @@ export const POST: APIRoute = async ({ request }) => {
     const scraper = await ScraperService.create();
     // We don't await the login completion because it's interactive and the browser needs to stay open
     // BUT we should avoid spawning multiple instances
-    scraper.login().catch((err: any) => {
+    scraper.login({ interactive: false, headless: false }).catch((err: any) => {
       console.error('Interactive login error:', err);
     });
 

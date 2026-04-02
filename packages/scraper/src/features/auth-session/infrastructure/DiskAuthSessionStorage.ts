@@ -1,6 +1,6 @@
 import { type IFileSystem, type IPath } from "@core/filesystem";
 
-import { env } from "@scraper/config";
+import { env, PLATFORM } from "@scraper/config";
 
 import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
@@ -53,6 +53,8 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     const authFile = await this.getAuthFile();
 
     try {
+      if (!(await this.fs.exists(authFile))) return false;
+
       const content = await this.fs.readFile(authFile);
       const state = JSON.parse(content.toString());
 
@@ -63,10 +65,36 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
       const now = Date.now() / 1000;
       const platformDomain = new URL(env.PLATFORM_BASE_URL).hostname;
 
+      // Check localStorage for user profile (Guest vs Real)
+      const hasRealUser = state.origins?.some((o: any) => 
+        o.localStorage?.some((ls: any) => 
+          ls.name === 'userProfile' && !ls.value.includes(PLATFORM.CONSTANTS.ORACLE.GUEST_EMAIL)
+        )
+      );
+
+      // If we have a userProfile but it's a guest one, we are NOT authenticated
+      if (hasRealUser === false && state.origins?.length > 0) return false;
+
+      // Oracle specific session indicators in cookies
+      const authCookieNames = [
+        'ora_session',
+        'authToken',
+        'OAMAuthnCookie',
+        'ORA_U_SESSION',
+        'GP_PROD_SESSION',
+        'SSO_TOKEN',
+        'ORACLE_SESSION'
+      ];
+
       return state.cookies.some((c: any) => {
         const isCorrectDomain = c.domain.includes(platformDomain) || platformDomain.includes(c.domain.replace(/^\./, ''));
         const isNotExpired = !c.expires || c.expires <= 0 || c.expires > now;
-        return isCorrectDomain && isNotExpired;
+        const isAuthIndicator = authCookieNames.includes(c.name) || c.name.startsWith('GP_AUTH_');
+
+        // Extra check: if it's authToken, it shouldn't contain "Guest" in its payload (if we want to be paranoid)
+        // But the localStorage check above is already quite strong.
+        
+        return isCorrectDomain && isNotExpired && isAuthIndicator;
       });
     } catch {
       return false;

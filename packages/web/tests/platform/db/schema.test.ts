@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { NoopLogger } from '@core/logging';
-import { runMigrations } from "@web/platform/db/schema";
+import { runMigrations } from "@web/platform/db";
 
 describe("Database Schema Migrations", () => {
   it("should run all migrations", () => {

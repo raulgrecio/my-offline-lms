@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { apiClient } from "@web/platform/api/client";
-import { APP_ROUTES } from "@web/platform/router/routes";
+import { apiClient } from "@web/platform/api";
+import { APP_ROUTES } from "@web/platform/router";
 
 describe("Platform Utilities", () => {
   describe("apiClient", () => {

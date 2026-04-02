@@ -7,6 +7,7 @@ import { apiClient } from '@web/platform/api/client';
 import { SelectionStep } from './steps/_SelectionStep';
 import { AuthStep } from './steps/_AuthStep';
 import { ExecutionStep } from './steps/_ExecutionStep';
+import type { ScraperTaskType } from '@scraper/features/task-management';
 
 interface ContentItem {
   id: string;
@@ -20,7 +21,7 @@ interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: 'course' | 'path';
+  type: ScraperTaskType;
 }
 
 interface AvailableContentResponse {
@@ -30,6 +31,7 @@ interface AvailableContentResponse {
 
 interface AuthStatusResponse {
   isAuthenticated: boolean;
+  isLoggingIn: boolean;
   message: string;
 }
 
@@ -45,17 +47,18 @@ const stepsConfig: WizardStepConfig[] = [
 ];
 
 export const ScraperWizard: React.FC = () => {
-  const [availableContent, setAvailableContent] = useState<AvailableContentResponse>({ 
-    courses: [], 
+  const [availableContent, setAvailableContent] = useState<AvailableContentResponse>({
+    courses: [],
     paths: []
   });
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<'course' | 'path'>('course');
+  const [contentType, setContentType] = useState<ScraperTaskType>('course');
   const [downloadOptions, setDownloadOptions] = useState({ videos: true, guides: true });
 
-  const [authStatus, setAuthStatus] = useState<{ isAuthenticated: boolean; message: string; checked: boolean }>({
+  const [authStatus, setAuthStatus] = useState<{ isAuthenticated: boolean; isLoggingIn: boolean; message: string; checked: boolean }>({
     isAuthenticated: false,
+    isLoggingIn: false,
     message: '',
     checked: false
   });
@@ -122,6 +125,7 @@ export const ScraperWizard: React.FC = () => {
       const data = await apiClient.get<AuthStatusResponse>(API_ROUTES.SCRAPER.AUTH_STATUS);
       setAuthStatus({
         isAuthenticated: data.isAuthenticated,
+        isLoggingIn: data.isLoggingIn,
         message: data.message,
         checked: true
       });
@@ -129,6 +133,7 @@ export const ScraperWizard: React.FC = () => {
     } catch (err: any) {
       setAuthStatus({
         isAuthenticated: false,
+        isLoggingIn: false,
         message: err.message || 'Error al verificar sesión',
         checked: true
       });
@@ -162,17 +167,21 @@ export const ScraperWizard: React.FC = () => {
     setIsLoading(true);
     const url = selectedItem ? selectedItem.url : newUrl;
     const type = selectedItem ? selectedItem.type : contentType;
+    const targetId = selectedItem ? selectedItem.id : undefined;
 
     try {
       const data = await apiClient.post<any>(API_ROUTES.SCRAPER.SYNC, {
         url,
         type,
+        targetId,
         downloadVideos: downloadOptions.videos,
         downloadGuides: downloadOptions.guides
       });
       if (data.taskId) {
         setTaskId(data.taskId);
-        setExecutionResult(null); // Reset result as we are starting
+        setExecutionResult(null);
+        // We could also redirect to tasks tab here if we wanted, 
+        // but for now let's keep the wizard flow.
       } else {
         setExecutionResult({ success: true, message: data.message });
       }

@@ -6,6 +6,7 @@ import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { SelectionStep } from '@web/pages/import/steps/_SelectionStep';
 import { AuthStep } from '@web/pages/import/steps/_AuthStep';
 import { ExecutionStep } from '@web/pages/import/steps/_ExecutionStep';
+import type { ScraperTaskType } from '@scraper/features/task-management';
 
 const stepsConfig: WizardStepConfig[] = [
   { id: 'selection', label: 'Origen', icon: 'layers' },
@@ -97,13 +98,14 @@ export const ImportShowcase: React.FC = () => {
   // State for SelectionStep
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<'course' | 'path'>('course');
+  const [contentType, setContentType] = useState<ScraperTaskType>('course');
 
   // State for AuthStep
   const [authStatus, setAuthStatus] = useState({
-    isAuthenticated: scene === 'auth_success',
-    message: scene === 'auth_success' ? 'Sesión de Oracle validada correctamente.' : (scene === 'auth_error' ? 'No se detectó una sesión activa en el navegador.' : ''),
-    checked: scene !== 'auth_checking' && scene !== 'selection_empty' && scene !== 'selection_populated'
+    isAuthenticated: false,
+    isLoggingIn: false,
+    message: '',
+    checked: false
   });
 
   // State for ExecutionStep
@@ -118,31 +120,31 @@ export const ImportShowcase: React.FC = () => {
   // Sync state with scene changes
   React.useEffect(() => {
     if (scene === 'auth_success') {
-      setAuthStatus({ isAuthenticated: true, message: 'Handshake completado con éxito.', checked: true });
+      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Handshake completado con éxito.', checked: true });
       setExecutionResult(null);
       setTaskProgress(null);
     } else if (scene === 'auth_error') {
-      setAuthStatus({ isAuthenticated: false, message: 'La sesión ha expirado o no existe.', checked: true });
+      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: 'La sesión ha expirado o no existe.', checked: true });
       setExecutionResult(null);
       setTaskProgress(null);
     } else if (scene === 'auth_checking') {
-      setAuthStatus({ isAuthenticated: false, message: '', checked: false });
+      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: '', checked: false });
       setExecutionResult(null);
       setTaskProgress(null);
     } else if (scene === 'exec_running') {
-      setAuthStatus({ isAuthenticated: true, message: 'Autenticado', checked: true });
+      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
       setTaskProgress({ step: 'Descargando Video: Introducción a OCI...', status: 'Sincronizando' });
       setExecutionResult(null);
     } else if (scene === 'exec_complete') {
-      setAuthStatus({ isAuthenticated: true, message: 'Autenticado', checked: true });
+      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
       setTaskProgress(null);
       setExecutionResult({ success: true, message: 'La descarga ha finalizado y el contenido está disponible offline.' });
     } else if (scene === 'exec_ready') {
-      setAuthStatus({ isAuthenticated: true, message: 'Autenticado', checked: true });
+      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
       setTaskProgress(null);
       setExecutionResult(null);
     } else {
-      setAuthStatus({ isAuthenticated: false, message: '', checked: false });
+      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: '', checked: false });
       setExecutionResult(null);
       setTaskProgress(null);
     }

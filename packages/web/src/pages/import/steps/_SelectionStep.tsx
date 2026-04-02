@@ -4,6 +4,7 @@ import { Icon } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
+import type { ScraperTaskType } from '@scraper/features/task-management';
 
 interface ContentItem {
   id: string;
@@ -17,7 +18,7 @@ interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: 'course' | 'path';
+  type: ScraperTaskType;
 }
 
 interface SelectionStepProps {
@@ -29,8 +30,8 @@ interface SelectionStepProps {
   setSelectedItem: (item: ContentItem | null) => void;
   newUrl: string;
   setNewUrl: (url: string) => void;
-  contentType: 'course' | 'path';
-  setContentType: (type: 'course' | 'path') => void;
+  contentType: ScraperTaskType;
+  setContentType: (type: ScraperTaskType) => void;
 }
 
 const ContentItemCard: React.FC<{

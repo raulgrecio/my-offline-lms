@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+
 import { SQLiteDatabase } from "@core/database";
+
+vi.unmock("@web/platform/db/database");
 
 vi.mock("@web/config/paths", () => ({
   getDbPath: vi.fn().mockResolvedValue("/tmp/test.db"),
@@ -15,16 +18,6 @@ vi.mock("@core/filesystem", () => ({
   NodePath: vi.fn().mockImplementation(function () {
     return {
       dirname: vi.fn().mockReturnValue("/tmp"),
-    };
-  }),
-}));
-
-vi.mock("@core/database", () => ({
-  SQLiteDatabase: vi.fn().mockImplementation(function () {
-    return {
-      exec: vi.fn(),
-      initialize: vi.fn(),
-      prepare: vi.fn().mockReturnValue({ all: vi.fn().mockReturnValue([]), get: vi.fn() }),
     };
   }),
 }));

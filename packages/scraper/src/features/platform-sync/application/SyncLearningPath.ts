@@ -5,7 +5,7 @@ import { type IUseCase } from '@scraper/features/shared';
 import { type INamingService } from "@scraper/features/asset-download";
 
 import { type ICourseRepository } from '../domain/ports/ICourseRepository';
-import { type IInterceptedDataRepositoryFactory } from '../domain/ports/IInterceptedDataRepositoryFactory';
+import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
 import { type ILearningPathRepository } from '../domain/ports/ILearningPathRepository';
 import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
 
@@ -24,7 +24,7 @@ export interface SyncLearningPathOptions {
   learningPathRepo: ILearningPathRepository;
   courseRepo: ICourseRepository;
   syncCourse: SyncCourse;
-  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  createInterceptedRepo: InterceptedRepoCreator;
   browserInterceptor: BrowserInterceptor;
   urlProvider: IPlatformUrlProvider;
   namingService: INamingService;
@@ -37,7 +37,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
   private syncCourse: SyncCourse;
-  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private createInterceptedRepo: InterceptedRepoCreator;
   private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
@@ -49,7 +49,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.learningPathRepo = options.learningPathRepo;
     this.courseRepo = options.courseRepo;
     this.syncCourse = options.syncCourse;
-    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.createInterceptedRepo = options.createInterceptedRepo;
     this.browserInterceptor = options.browserInterceptor;
     this.urlProvider = options.urlProvider;
     this.namingService = options.namingService;
@@ -78,7 +78,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setup returns it)
     const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'path', execTimestamp: Date.now() });
-    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
+    const isolatedInterceptedDataRepo = this.createInterceptedRepo(isolatedDirPath);
 
     try {
       this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
@@ -107,7 +107,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     }
   }
 
-  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<IInterceptedDataRepositoryFactory['create']> }): Promise<void> {
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator> }): Promise<void> {
     const intercepted = await isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
 
     for (const payload of intercepted) {

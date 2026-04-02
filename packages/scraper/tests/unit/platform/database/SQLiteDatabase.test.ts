@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import { NodeFileSystem } from '@core/filesystem';
-import { type IDatabase } from '@core/database';
+import { type IDatabase, SQLiteDatabase } from '@core/database';
 
 import { initDb } from '@scraper/platform/database';
 
@@ -9,7 +9,11 @@ describe('Database Baseline', () => {
   let db: IDatabase;
 
   beforeAll(async () => {
-    db = await initDb({ fsAdapter: new NodeFileSystem() });
+    // Forzamos el uso de una base de datos en memoria para el test
+    db = await initDb({ 
+      database: new SQLiteDatabase(':memory:'),
+      fsAdapter: new NodeFileSystem() 
+    });
   });
 
   it('should be able to insert and retrieve a course', () => {

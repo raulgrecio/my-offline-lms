@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+
 import { SQLiteDatabase } from "@core/database";
+
+vi.unmock("@core/database");
 
 const mockDb = {
   prepare: vi.fn(),

@@ -6,7 +6,7 @@ import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
 
 interface AuthStepProps {
-  authStatus: { isAuthenticated: boolean; message: string; checked: boolean };
+  authStatus: { isAuthenticated: boolean; isLoggingIn: boolean; message: string; checked: boolean };
   isLoading: boolean;
   authLoading: boolean;
   checkAuth: () => Promise<boolean>;
@@ -20,18 +20,26 @@ export const AuthStep: React.FC<AuthStepProps> = ({
   checkAuth,
   launchLogin
 }) => {
-  const { setCanProceed, next } = useWizard();
+  const { setCanProceed } = useWizard();
 
   React.useEffect(() => {
     setCanProceed(authStatus.isAuthenticated);
   }, [authStatus.isAuthenticated, setCanProceed]);
 
   const handleValidate = async () => {
-    const success = await checkAuth();
-    if (success) {
-      next();
-    }
+    await checkAuth();
   };
+
+  // Polling automático mientras se está en proceso de login para actualizar UI
+  React.useEffect(() => {
+    let interval: any;
+    if (authStatus.isLoggingIn) {
+      interval = setInterval(() => {
+        checkAuth();
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [authStatus.isLoggingIn]);
 
   return (
     <div className="space-y-6">
@@ -78,21 +86,41 @@ export const AuthStep: React.FC<AuthStepProps> = ({
           </Button>
         )}
 
-        {!authStatus.isAuthenticated && authStatus.checked && (
-          <div className="mt-12 w-full max-w-md space-y-6">
-            <div className="flex flex-col gap-3">
+        <div className="mt-12 w-full max-w-md space-y-6 animate-in slide-in-from-bottom-4 duration-1000">
+            <Button
+              variant="outline"
+              onClick={launchLogin}
+              loading={authLoading}
+              block
+              size="md"
+              icon="external-link"
+              className="border-brand-500/30 text-brand-500 rounded-xl"
+            >
+              {authLoading ? 'Abriendo Navegador...' : 'Abrir Navegador de Autenticación'}
+            </Button>
+
+            {(authStatus.isLoggingIn || authLoading) && (
               <Button
-                variant="outline"
-                onClick={launchLogin}
-                loading={authLoading}
+                variant="primary"
+                onClick={async () => {
+                  const res = await fetch('/api/scraper/save-session', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.success) {
+                    await checkAuth();
+                  } else {
+                    alert(data.error || 'Error al guardar la sesión');
+                  }
+                }}
                 block
                 size="md"
-                icon="external-link"
-                className="border-brand-500/30 text-brand-500 rounded-xl"
+                icon="download"
+                className="bg-green-600 hover:bg-green-500 shadow-lg shadow-green-600/20"
               >
-                {authLoading ? 'Abriendo Navegador...' : 'Abrir Navegador de Autenticación'}
+                Confirmar y Finalizar Sesión
               </Button>
+            )}
 
+            {!authStatus.isAuthenticated && authStatus.checked && !authLoading && (
               <Button
                 onClick={checkAuth}
                 loading={isLoading}
@@ -103,8 +131,10 @@ export const AuthStep: React.FC<AuthStepProps> = ({
               >
                 {isLoading ? 'Verificando...' : 'Validar sesión ahora'}
               </Button>
-            </div>
+            )}
+          </div>
 
+          {!authStatus.isAuthenticated && authStatus.checked && (
             <div className="p-8 rounded-3xl bg-surface-950 border border-border-subtle animate-in slide-in-from-top-6 duration-1000">
               <div className="text-[10px] font-black text-brand-500 uppercase mb-4 tracking-[0.3em] flex items-center gap-2">
                 <Icon name="terminal" size="xs" />
@@ -118,8 +148,7 @@ export const AuthStep: React.FC<AuthStepProps> = ({
                 <Icon name="copy" size="xs" className="opacity-20 group-hover:opacity-100 transition-all" />
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       <WizardActionButtons nextLabel="Configurar Descarga" />

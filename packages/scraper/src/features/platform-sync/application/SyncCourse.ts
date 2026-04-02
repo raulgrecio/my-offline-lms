@@ -5,7 +5,7 @@ import { type IUseCase } from '@scraper/features/shared';
 import { type IAssetRepository, type INamingService } from '@scraper/features/asset-download';
 
 import { type ICourseRepository } from '../domain/ports/ICourseRepository';
-import { type IInterceptedDataRepositoryFactory } from '../domain/ports/IInterceptedDataRepositoryFactory';
+import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
 import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
 
 export interface SyncCourseInput {
@@ -27,7 +27,7 @@ export interface SyncCourseOptions {
   browserProvider: IBrowserProvider;
   courseRepository: ICourseRepository;
   assetRepository: IAssetRepository;
-  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  createInterceptedRepo: InterceptedRepoCreator;
   browserInterceptor: BrowserInterceptor;
   urlProvider: IPlatformUrlProvider;
   namingService: INamingService;
@@ -39,7 +39,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
   private browserProvider: IBrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
-  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private createInterceptedRepo: InterceptedRepoCreator;
   private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
@@ -50,7 +50,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
     this.browserProvider = options.browserProvider;
     this.courseRepository = options.courseRepository;
     this.assetRepository = options.assetRepository;
-    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.createInterceptedRepo = options.createInterceptedRepo;
     this.browserInterceptor = options.browserInterceptor;
     this.urlProvider = options.urlProvider;
     this.namingService = options.namingService;
@@ -79,7 +79,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
     const page = await browser.newPage();
 
     const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'course', execTimestamp: Date.now() });
-    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
+    const isolatedInterceptedDataRepo = this.createInterceptedRepo(isolatedDirPath);
 
     try {
       this.logger.info("Navegando al curso para esperar interceptaciones...");

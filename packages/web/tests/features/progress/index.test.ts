@@ -21,7 +21,7 @@ import {
   updateVideoProgress,
   updateGuideProgress,
   getVisitedSegments
-} from "@web/features/progress/index";
+} from "@web/features/progress";
 
 describe("Progress Feature: Public API", () => {
   it("should provide access to all public methods", async () => {
@@ -39,8 +39,8 @@ describe("Progress Feature: Public API", () => {
     expect(await getVisitedSegments({ id: "a1", type: "video" })).toEqual([]);
 
     // Call deprecated helpers
-    const { getAllCourseProgress, getLastWatchedAsset: getLastWatchedHelper } = await import("@web/features/progress/index");
+    const { getAllCourseProgress, getLastWatchedAsset } = await import("@web/features/progress");
     expect(await getAllCourseProgress()).toBeDefined();
-    expect(await getLastWatchedHelper()).toBeNull();
+    expect(await getLastWatchedAsset()).toBeNull();
   });
 });

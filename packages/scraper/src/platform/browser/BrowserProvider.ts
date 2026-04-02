@@ -46,6 +46,12 @@ export class BrowserProvider implements IBrowserProvider {
           "--disable-blink-features=AutomationControlled"
         ]
       });
+
+      this.browser.on('disconnected', () => {
+        this.logger?.info('Canal de comunicación con el navegador cerrado.');
+        this.browser = null;
+        this.context = null;
+      });
     }
 
     // Always use state if it exists

@@ -2,6 +2,50 @@ import { type ILogger } from "@core/logging";
 import { SQLiteDatabase } from "@core/database";
 
 export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
+  // 0. Crear tablas base si no existen (INDISPENSABLE antes de migraciones)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS UserProgress (
+      asset_id         TEXT,
+      asset_type       TEXT,
+      position         REAL DEFAULT 0,
+      max_position     REAL DEFAULT 0,
+      visited_segments INTEGER DEFAULT 0,
+      total_segments   INTEGER DEFAULT 0,
+      completed        INTEGER DEFAULT 0,
+      updated_at       TEXT DEFAULT (datetime('now')),
+      PRIMARY KEY (asset_id, asset_type)
+    );
+
+    CREATE TABLE IF NOT EXISTS UserCollectionProgress (
+      id                 TEXT,
+      type               TEXT, -- 'course', 'learning-path'
+      status             TEXT DEFAULT 'not_started',
+      completed_items    INTEGER DEFAULT 0,
+      in_progress_items  INTEGER DEFAULT 0,
+      total_items        INTEGER DEFAULT 0,
+      updated_at         TEXT DEFAULT (datetime('now')),
+      PRIMARY KEY (id, type)
+    );
+
+    CREATE TABLE IF NOT EXISTS UserSettings (
+      key   TEXT PRIMARY KEY,
+      value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS UserFavorites (
+      id    TEXT,
+      type  TEXT CHECK(type IN ('course', 'learning-path')),
+      PRIMARY KEY (id, type)
+    );
+ 
+    CREATE TABLE IF NOT EXISTS UserAssetSegments (
+      asset_id   TEXT,
+      asset_type TEXT,
+      segment    INTEGER,
+      PRIMARY KEY (asset_id, asset_type, segment)
+    );
+  `);
+
   // --- Migraciones de esquema ---
 
   // 1. Renombrar position_sec -> position (versión antigua)
@@ -112,8 +156,6 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
     logger.info("Added aggregation columns to UserLearningPathProgress");
   } catch (e) { }
 
-  // 5. [Eliminado] Refactorización de progreso global (course_id eliminado)
-
   // 7. Migración de favoritos: learning_path -> learning-path y actualización de CHECK constraint
   try {
     const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='UserFavorites'").get();
@@ -140,48 +182,4 @@ export function runMigrations(db: SQLiteDatabase, logger: ILogger) {
   } catch (e: any) {
     logger.error("Migration 7 failed:", e.message);
   }
-
-  // 6. Crear tablas base si no existen
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS UserProgress (
-      asset_id         TEXT,
-      asset_type       TEXT,
-      position         REAL DEFAULT 0,
-      max_position     REAL DEFAULT 0,
-      visited_segments INTEGER DEFAULT 0,
-      total_segments   INTEGER DEFAULT 0,
-      completed        INTEGER DEFAULT 0,
-      updated_at       TEXT DEFAULT (datetime('now')),
-      PRIMARY KEY (asset_id, asset_type)
-    );
-
-    CREATE TABLE IF NOT EXISTS UserCollectionProgress (
-      id                 TEXT,
-      type               TEXT, -- 'course', 'learning-path'
-      status             TEXT DEFAULT 'not_started',
-      completed_items    INTEGER DEFAULT 0,
-      in_progress_items  INTEGER DEFAULT 0,
-      total_items        INTEGER DEFAULT 0,
-      updated_at         TEXT DEFAULT (datetime('now')),
-      PRIMARY KEY (id, type)
-    );
-
-    CREATE TABLE IF NOT EXISTS UserSettings (
-      key   TEXT PRIMARY KEY,
-      value TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS UserFavorites (
-      id    TEXT,
-      type  TEXT CHECK(type IN ('course', 'learning-path')),
-      PRIMARY KEY (id, type)
-    );
- 
-    CREATE TABLE IF NOT EXISTS UserAssetSegments (
-      asset_id   TEXT,
-      asset_type TEXT,
-      segment    INTEGER,
-      PRIMARY KEY (asset_id, asset_type, segment)
-    );
-  `);
 }

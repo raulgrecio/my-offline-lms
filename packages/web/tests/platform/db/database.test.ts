@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { SQLiteDatabase } from '@core/database';
 import { NodeFileSystem } from '@core/filesystem';
-import { getDb } from "@web/platform/db/database";
+import { getDb } from "@web/platform/db";
 
 vi.mock("@core/database", async (importOriginal) => {
   const actual = await importOriginal<any>();

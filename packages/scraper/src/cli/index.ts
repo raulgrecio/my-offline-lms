@@ -97,53 +97,57 @@ export async function runCLI() {
 
     // Session validation if required by command metadata
     if (metadata.requiresAuth) {
-      if (!(await scraper.checkAuth())) {
+      const isValid = await scraper.validateAuth();
+      if (!isValid) {
+        console.error("No se ha detectado una sesión válida. Por favor, ejecuta 'pnpm cli login' primero.");
         return;
       }
     }
 
     const command = metadata.command;
+    const CLI_TASK_ID = "cli-task";
+
     switch (command) {
       case CLI_COMMANDS.LOGIN: {
-        await scraper.login();
+        await scraper.login({ interactive: true, headless: false });
         break;
       }
       case CLI_COMMANDS.SYNC_COURSE: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
-        await scraper.syncCourse(target);
+        await scraper.syncCourse({ url: target, taskId: CLI_TASK_ID });
         break;
       }
       case CLI_COMMANDS.SYNC_PATH: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
-        await scraper.syncPath(target);
+        await scraper.syncPath({ url: target, taskId: CLI_TASK_ID });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_GUIDES: {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download(id, 'guide', false);
+        await scraper.download({ type: 'guide', taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_VIDEOS: {
         const id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download(id, 'video', false);
+        await scraper.download({ type: 'video', taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_PATH: {
         const id = args[1];
-        const type = args[2] as DownloadType | undefined;
+        const type = (args[2] as DownloadType) || 'all';
         if (!id) throw new Error("Falta el ID del Learning Path.");
-        await scraper.download(id, type || 'all', true);
+        await scraper.download({ type, taskId: CLI_TASK_ID, entityId: id, entityType: 'path' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_COURSE: {
         const id = args[1];
-        const type = args[2] as DownloadType | undefined;
+        const type = (args[2] as DownloadType) || 'all';
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download(id, type || 'all', false);
+        await scraper.download({ type, taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
         break;
       }
     }

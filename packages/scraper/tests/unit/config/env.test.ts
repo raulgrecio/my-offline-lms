@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Mock platform logger to avoid noisy output
 vi.mock('@scraper/platform/logging', () => ({
@@ -12,6 +13,7 @@ vi.mock('@scraper/platform/logging', () => ({
 
 // Mock dotenv to verify it's called with the right paths
 vi.mock('dotenv', () => ({
+  config: vi.fn(),
   default: {
     config: vi.fn(),
   },
@@ -22,11 +24,14 @@ describe('Environment Configuration', () => {
   const originalPlatformBaseUrl = process.env.PLATFORM_BASE_URL;
 
   beforeEach(() => {
-    vi.resetModules();
     vi.clearAllMocks();
-    // Restore defaults for each test
-    process.env.NODE_ENV = 'test';
-    process.env.PLATFORM_BASE_URL = 'http://mock-platform.com';
+    // Clear relevant process.env to force loadScraperEnv to actually call dotenv
+    delete process.env.PLATFORM_BASE_URL;
+    delete process.env.PLATFORM_GUEST_EMAIL;
+    delete process.env.SCRAPER_LOGIN_URL;
+    delete process.env.DATA_DIR;
+
+    vi.resetModules();
   });
 
   // Restore real process.env after all tests
@@ -35,38 +40,31 @@ describe('Environment Configuration', () => {
     process.env.PLATFORM_BASE_URL = originalPlatformBaseUrl;
   });
 
-  it('should load .env.test when NODE_ENV is test', async () => {
-    process.env.NODE_ENV = 'test';
+  it('should load specified path if provided', async () => {
+    const { loadScraperEnv } = await import('@scraper/config/env');
+    const testPath = '/custom/.env.test';
 
-    await import('@scraper/config/env');
-
-    expect(dotenv.config).toHaveBeenCalledWith({ path: '.env.test' });
-  });
-
-  it('should load default .env when NODE_ENV is not test', async () => {
-    process.env.NODE_ENV = 'development';
-
-    await import('@scraper/config/env');
-
-    expect(dotenv.config).toHaveBeenCalledWith();
-  });
-
-  it('should log error but not exit in test environment even if invalid', async () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
-      return undefined as never;
-    });
-
-    process.env.PLATFORM_BASE_URL = 'not-a-url';
-    process.env.NODE_ENV = 'test';
-
-    await import('@scraper/config/env');
-
-    expect(exitSpy).not.toHaveBeenCalled();
+    // Mock exit because custom path env might be invalid
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { return undefined as never; });
+    
+    loadScraperEnv({ path: testPath });
+    expect(dotenv.config).toHaveBeenCalledWith({ path: testPath });
+    
     exitSpy.mockRestore();
   });
 
-  it('should call process.exit(1) on invalid env when NOT in test mode', async () => {
-    process.env.NODE_ENV = 'production';
+  it('should load default .env when no path is provided', async () => {
+    const { loadScraperEnv } = await import('@scraper/config/env');
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { return undefined as never; });
+
+    loadScraperEnv();
+    expect(dotenv.config).toHaveBeenCalledWith({ path: expect.stringContaining('.env') });
+    expect(dotenv.config).not.toHaveBeenCalledWith({ path: expect.stringContaining('.env.test') });
+    
+    exitSpy.mockRestore();
+  });
+
+  it('should call process.exit(1) on invalid env', async () => {
     process.env.PLATFORM_BASE_URL = 'not-a-url';
 
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
@@ -74,8 +72,9 @@ describe('Environment Configuration', () => {
       throw new Error('process.exit(1) called');
     });
 
+    const { loadScraperEnv } = await import('@scraper/config/env');
     try {
-      await import('@scraper/config/env');
+      loadScraperEnv();
     } catch (e: any) {
       // Expected throw from our mock exit
       expect(e.message).toBe('process.exit(1) called');
@@ -85,12 +84,13 @@ describe('Environment Configuration', () => {
     exitSpy.mockRestore();
   });
 
-  it('should export an empty object as env if validation fails to avoid crashes', async () => {
+  it('should export an empty object as env if validation fails to avoid crashes (when exit is mocked)', async () => {
     process.env.PLATFORM_BASE_URL = 'not-a-url';
-    process.env.NODE_ENV = 'test';
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { return undefined as never; });
 
-    const { env } = await import('@scraper/config/env');
-
+    const { loadScraperEnv } = await import('@scraper/config/env');
+    const env = loadScraperEnv();
     expect(env).toEqual({});
+    exitSpy.mockRestore();
   });
 });

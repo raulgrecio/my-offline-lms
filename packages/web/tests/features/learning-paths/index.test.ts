@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@web/platform/db/database", () => ({
+vi.mock("@web/platform/db", () => ({
   getDb: vi.fn().mockResolvedValue({
     prepare: vi.fn().mockReturnValue({
       get: vi.fn(),
@@ -15,7 +15,7 @@ import {
   getLearningPathById,
   getCoursesForPathId,
   getLearningPathDetails
-} from "@web/features/learning-paths/index";
+} from "@web/features/learning-paths";
 
 describe("Learning Paths Feature: Public API", () => {
   it("should provide access to all public methods", async () => {

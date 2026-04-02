@@ -1,21 +1,18 @@
+import { createLazyService } from "@core/di";
 import { type ILogger, ConsoleLogger } from "@core/logging";
-import { SQLiteDatabase } from "@core/database";
 import { NodeFileSystem, NodePath } from '@core/filesystem';
-import { getDbPath } from "@web/config/paths";
+import { SQLiteDatabase } from "@core/database";
+
+import { getDbPath } from "@web/config";
+
 import { runMigrations } from "./schema";
 
-// Singleton connection
-import { createLazyService } from "@core/di";
+const dbFactory = async (options?: { logger?: ILogger, path?: string }): Promise<SQLiteDatabase> => {
+  const effectiveLogger = options?.logger ?? new ConsoleLogger("DB");
 
-export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteDatabase> => {
-  const isTest = process.env.NODE_ENV === 'test';
-  const effectiveLogger = logger ?? new ConsoleLogger("DB");
+  const verbose = (sql: any) => effectiveLogger.debug?.(String(sql));
 
-  const verbose = !isTest
-    ? (sql: any) => effectiveLogger.debug?.(String(sql))
-    : undefined
-
-  const dbPath = await getDbPath();
+  const dbPath = options?.path ?? (await getDbPath());
   const fs = new NodeFileSystem();
 
   // Asegurar que el directorio de datos existe
@@ -32,4 +29,9 @@ export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteD
   runMigrations(db, effectiveLogger); // Create web schema (UserProgress, etc.)
 
   return db;
+};
+
+// Public entry point: A singleton database service
+export const getDb = createLazyService(async (logger?: ILogger): Promise<SQLiteDatabase> => {
+  return await dbFactory({ logger });
 });

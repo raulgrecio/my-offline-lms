@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.unmock("@web/platform/db/database");
+vi.unmock("@core/database");
+
 import { SQLiteDatabase } from '@core/database';
 import { NodeFileSystem } from '@core/filesystem';
 
@@ -57,11 +60,12 @@ describe("Database Windows Compatibility", () => {
 
   it("should correctly handle Windows paths and create directory", async () => {
     // Importamos después de resetModules
-    const { getDb } = await import("@web/platform/db/database");
-    const { getDbPath: mockedGetDbPath } = await import("@web/config/paths");
+    const { getDb } = await import("@web/platform/db");
+    const { getDbPath: mockedGetDbPath } = await import("@web/config");
 
     // Devolvemos una ruta tipo Windows
-    vi.mocked(mockedGetDbPath).mockResolvedValue("C:\\Users\\Raul\\data\\db.sqlite");
+    const winPath = "C:\\Users\\Raul\\data\\db.sqlite";
+    vi.mocked(mockedGetDbPath).mockResolvedValue(winPath);
 
     const db = await getDb();
 
@@ -71,14 +75,15 @@ describe("Database Windows Compatibility", () => {
     const fsInstance = vi.mocked(NodeFileSystem).mock.results[0].value;
 
     expect(fsInstance.mkdir).toHaveBeenCalledWith("C:\\Users\\Raul\\data", { recursive: true });
-    expect(SQLiteDatabase).toHaveBeenCalledWith("C:\\Users\\Raul\\data\\db.sqlite", expect.any(Object));
+    expect(SQLiteDatabase).toHaveBeenCalledWith(winPath, expect.any(Object));
   });
 
   it("should correctly handle Linux paths and create directory", async () => {
-    const { getDb } = await import("@web/platform/db/database");
-    const { getDbPath: mockedGetDbPath } = await import("@web/config/paths");
+    const { getDb } = await import("@web/platform/db");
+    const { getDbPath: mockedGetDbPath } = await import("@web/config");
 
-    vi.mocked(mockedGetDbPath).mockResolvedValue("/home/raul/data/db.sqlite");
+    const linPath = "/home/raul/data/db.sqlite";
+    vi.mocked(mockedGetDbPath).mockResolvedValue(linPath);
 
     const db = await getDb();
 

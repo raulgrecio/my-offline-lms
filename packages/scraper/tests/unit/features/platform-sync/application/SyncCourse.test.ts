@@ -6,7 +6,7 @@ import { PLATFORM } from '@scraper/config/platform';
 import { AssetNamingService } from '@scraper/features/asset-download';
 import {
   type IInterceptedDataRepository,
-  type IInterceptedDataRepositoryFactory,
+  type InterceptedRepoCreator,
   type IPlatformUrlProvider
 } from '@scraper/features/platform-sync';
 
@@ -50,9 +50,7 @@ describe('SyncCourse Use Case', () => {
     deleteWorkspace: vi.fn(),
   };
 
-  const mockInterceptedDataRepoFactory: Mocked<IInterceptedDataRepositoryFactory> = {
-    create: vi.fn().mockReturnValue(mockInterceptedDataRepo)
-  };
+  const mockCreateInterceptedRepo: InterceptedRepoCreator = vi.fn().mockReturnValue(mockInterceptedDataRepo);
 
   const mockLogger: Mocked<ILogger> = {
     info: vi.fn(),
@@ -87,7 +85,7 @@ describe('SyncCourse Use Case', () => {
       browserProvider: mockBrowserProvider,
       courseRepository: mockCourseRepo,
       assetRepository: mockAssetRepo,
-      interceptedDataRepoFactory: mockInterceptedDataRepoFactory,
+      createInterceptedRepo: mockCreateInterceptedRepo,
       browserInterceptor: new BrowserInterceptor({} as any),
       urlProvider: mockUrlProvider,
       namingService: new AssetNamingService(),

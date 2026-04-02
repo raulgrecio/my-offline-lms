@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { API_ROUTES } from "@web/platform/api/routes";
-import { APP_ROUTES } from "@web/platform/router/routes";
+import { API_ROUTES } from "@web/platform/api";
+import { APP_ROUTES } from "@web/platform/router";
 
 describe("Route Constants", () => {
   describe("API_ROUTES", () => {

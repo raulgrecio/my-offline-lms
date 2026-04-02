@@ -1,9 +1,9 @@
 import type { IDatabase } from '@core/database/IDatabase';
-import { ScraperTask, type ScraperTaskStatus } from '../../domain/models/ScraperTask';
-import type { ITaskRepository } from '../../domain/ports/ITaskRepository';
+import { ScraperTask, type ScraperTaskStatus } from '../domain/models/ScraperTask';
+import type { ITaskRepository } from '../domain/ports/ITaskRepository';
 
 export class SQLiteTaskRepository implements ITaskRepository {
-  constructor(private readonly db: IDatabase) {}
+  constructor(private readonly db: IDatabase) { }
 
   async save(task: ScraperTask): Promise<void> {
     this.db.prepare(
@@ -59,6 +59,17 @@ export class SQLiteTaskRepository implements ITaskRepository {
     ).get('RUNNING') as any;
     if (!row) return null;
     return this.mapToEntity(row);
+  }
+
+  async findAll(): Promise<ScraperTask[]> {
+    const rows = this.db.prepare(
+      'SELECT * FROM Scraper_Tasks ORDER BY createdAt DESC'
+    ).all() as any[];
+    return rows.map(row => this.mapToEntity(row));
+  }
+
+  async delete(id: string): Promise<void> {
+    this.db.prepare('DELETE FROM Scraper_Tasks WHERE id = ?').run(id);
   }
 
   private mapToEntity(row: any): ScraperTask {

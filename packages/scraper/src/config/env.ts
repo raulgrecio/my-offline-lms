@@ -9,6 +9,7 @@ const envSchema = z.object({
   PLATFORM_BASE_URL: z.url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
   LOGIN_SUCCESS_SELECTOR: z.string().default("body"),
+  PLATFORM_GUEST_EMAIL: z.email(),
 
   // PDF download configurations
   KEEP_TEMP_IMAGES: z.coerce.boolean().default(false),
@@ -21,6 +22,7 @@ const envSchema = z.object({
 
   // DATA_DIR for shared database and assets
   DATA_DIR: z.string().optional(),
+  SCRAPER_LOGIN_URL: z.url(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -38,19 +40,21 @@ export function loadScraperEnv(options?: { path?: string }) {
 
   const nodePath = new NodePath();
   let envPath = options?.path;
-  
+
   if (!envPath) {
+    const fileName = '.env';
+
     try {
       // Cross-platform ESM/CJS path resolution
-      const currentFile = typeof import.meta.url !== 'undefined' 
-        ? fileURLToPath(import.meta.url) 
+      const currentFile = typeof import.meta.url !== 'undefined'
+        ? fileURLToPath(import.meta.url)
         : (typeof __filename !== 'undefined' ? __filename : '');
-      
+
       const baseDir = nodePath.dirname(currentFile);
-      envPath = nodePath.join(baseDir, '../../.env');
+      envPath = nodePath.join(baseDir, '../../', fileName);
     } catch (e) {
       // Fallback to current working directory as last resort
-      envPath = nodePath.join(process.cwd(), '.env');
+      envPath = nodePath.join(process.cwd(), fileName);
     }
   }
 
@@ -59,10 +63,9 @@ export function loadScraperEnv(options?: { path?: string }) {
   const parsed = envSchema.safeParse(process.env);
 
   if (!parsed.success) {
-    logger.error("❌ Invalid environment variables. Verifique su archivo .env:", z.treeifyError(parsed.error));
-    if (process.env.NODE_ENV !== 'test') {
-      process.exit(1);
-    }
+    const errorMsg = z.treeifyError(parsed.error);
+    logger.error("❌ Invalid environment variables. Verifique su archivo .env:", errorMsg);
+    process.exit(1);
   }
 
   env = parsed.success ? parsed.data : {} as Env;

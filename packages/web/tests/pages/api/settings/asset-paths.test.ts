@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import { GET, POST, DELETE } from "@web/pages/api/settings/asset-paths";
 
 const mockResolver = {

@@ -1,56 +1,53 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
-import { type IDatabase } from '@core/database';
+import { SQLiteDatabase } from '@core/database';
+import { ConsoleLogger } from "@core/logging";
+
+import { runMigrations } from "@web/platform/db";
 import { SQLiteSettingsRepository } from "@web/features/settings/infrastructure/SQLiteSettingsRepository";
 
 describe("SQLiteSettingsRepository", () => {
-  let mockDb: IDatabase;
+  let db: SQLiteDatabase;
   let repository: SQLiteSettingsRepository;
 
   beforeEach(() => {
-    mockDb = {
-      prepare: vi.fn(),
-    } as unknown as IDatabase;
-    repository = new SQLiteSettingsRepository(mockDb);
+    // Inyectamos base de datos real en memoria para validar el SQL real
+    db = new SQLiteDatabase(':memory:');
+    db.initialize();
+    runMigrations(db, new ConsoleLogger());
+
+    repository = new SQLiteSettingsRepository(db);
   });
 
   describe("getActiveLearningPath", () => {
     it("should return the active learning path id from the database", () => {
-      const mockGet = vi.fn().mockReturnValue({ value: "path-123" });
-      vi.mocked(mockDb.prepare).mockReturnValue({ get: mockGet } as any);
+      // Inserción real en la tabla
+      db.prepare("INSERT INTO UserSettings (key, value) VALUES ('active_path_id', 'path-123')").run();
 
       const result = repository.getActiveLearningPath();
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("SELECT value FROM UserSettings WHERE key = 'active_path_id'")
-      );
       expect(result).toBe("path-123");
     });
 
     it("should return null if no active path is set", () => {
-      const mockGet = vi.fn().mockReturnValue(null);
-      vi.mocked(mockDb.prepare).mockReturnValue({ get: mockGet } as any);
-
       const result = repository.getActiveLearningPath();
-
       expect(result).toBeNull();
     });
   });
 
   describe("setActiveLearningPath", () => {
     it("should upsert the active path id in the database", () => {
-      const mockRun = vi.fn();
-      vi.mocked(mockDb.prepare).mockReturnValue({ run: mockRun } as any);
-
+      // Caso 1: Insertar nuevo
       repository.setActiveLearningPath("new-path-id");
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("INSERT INTO UserSettings")
-      );
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-      );
-      expect(mockRun).toHaveBeenCalledWith("new-path-id");
+      let check = db.prepare("SELECT value FROM UserSettings WHERE key = 'active_path_id'").get() as any;
+      expect(check.value).toBe("new-path-id");
+
+      // Caso 2: Actualizar existente (Upsert)
+      repository.setActiveLearningPath("updated-path-id");
+
+      check = db.prepare("SELECT value FROM UserSettings WHERE key = 'active_path_id'").get() as any;
+      expect(check.value).toBe("updated-path-id");
     });
   });
 });

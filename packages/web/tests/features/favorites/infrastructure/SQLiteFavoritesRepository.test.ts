@@ -1,30 +1,31 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
-import { type IDatabase } from '@core/database';
+import { SQLiteDatabase } from '@core/database';
+import { ConsoleLogger } from "@core/logging";
+import { runMigrations } from "@web/platform/db/schema";
 import { SQLiteFavoritesRepository } from "@web/features/favorites/infrastructure/SQLiteFavoritesRepository";
 
 describe("SQLiteFavoritesRepository", () => {
-  let mockDb: IDatabase;
+  let db: SQLiteDatabase;
   let repository: SQLiteFavoritesRepository;
 
   beforeEach(() => {
-    mockDb = {
-      prepare: vi.fn(),
-    } as unknown as IDatabase;
-    repository = new SQLiteFavoritesRepository(mockDb);
+    // Inyectamos base de datos real en memoria para validar el SQL real
+    db = new SQLiteDatabase(':memory:');
+    db.initialize();
+    runMigrations(db, new ConsoleLogger());
+    
+    repository = new SQLiteFavoritesRepository(db);
   });
 
   describe("getAll", () => {
     it("should return all favorites from the database", () => {
-      const mockAll = vi.fn().mockReturnValue([
-        { id: "c1", type: "course" },
-        { id: "l1", type: "learning-path" },
-      ]);
-      vi.mocked(mockDb.prepare).mockReturnValue({ all: mockAll } as any);
+      // Setup real state
+      db.prepare("INSERT INTO UserFavorites (id, type) VALUES ('c1', 'course')").run();
+      db.prepare("INSERT INTO UserFavorites (id, type) VALUES ('l1', 'learning-path')").run();
 
       const result = repository.getAll();
 
-      expect(mockDb.prepare).toHaveBeenCalledWith("SELECT id, type FROM UserFavorites");
       expect(result).toEqual([
         { id: "c1", type: "course" },
         { id: "l1", type: "learning-path" },
@@ -34,22 +35,14 @@ describe("SQLiteFavoritesRepository", () => {
 
   describe("getIsFavorite", () => {
     it("should return true if the item is in favorites", () => {
-      const mockGet = vi.fn().mockReturnValue({ 1: 1 });
-      vi.mocked(mockDb.prepare).mockReturnValue({ get: mockGet } as any);
+      db.prepare("INSERT INTO UserFavorites (id, type) VALUES ('c1', 'course')").run();
 
       const result = repository.getIsFavorite({ id: "c1", type: "course" });
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        "SELECT 1 FROM UserFavorites WHERE id = ? AND type = ?"
-      );
-      expect(mockGet).toHaveBeenCalledWith("c1", "course");
       expect(result).toBe(true);
     });
 
     it("should return false if the item is not in favorites", () => {
-      const mockGet = vi.fn().mockReturnValue(null);
-      vi.mocked(mockDb.prepare).mockReturnValue({ get: mockGet } as any);
-
       const result = repository.getIsFavorite({ id: "c1", type: "course" });
 
       expect(result).toBe(false);
@@ -58,37 +51,20 @@ describe("SQLiteFavoritesRepository", () => {
 
   describe("toggleFavorite", () => {
     it("should remove from favorites if it already exists", () => {
-      const mockGet = vi.fn().mockReturnValue({ 1: 1 });
-      const mockRun = vi.fn();
-      vi.mocked(mockDb.prepare).mockImplementation((sql: string) => {
-        if (sql.includes("SELECT")) return { get: mockGet } as any;
-        if (sql.includes("DELETE")) return { run: mockRun } as any;
-        return {} as any;
-      });
+      db.prepare("INSERT INTO UserFavorites (id, type) VALUES ('c1', 'course')").run();
 
       repository.toggleFavorite({ id: "c1", type: "course" });
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("DELETE FROM UserFavorites")
-      );
-      expect(mockRun).toHaveBeenCalledWith("c1", "course");
+      const check = db.prepare("SELECT 1 FROM UserFavorites WHERE id = 'c1'").get();
+      expect(check).toBeUndefined();
     });
 
     it("should add to favorites if it does not exist", () => {
-      const mockGet = vi.fn().mockReturnValue(null);
-      const mockRun = vi.fn();
-      vi.mocked(mockDb.prepare).mockImplementation((sql: string) => {
-        if (sql.includes("SELECT")) return { get: mockGet } as any;
-        if (sql.includes("INSERT")) return { run: mockRun } as any;
-        return {} as any;
-      });
-
       repository.toggleFavorite({ id: "c1", type: "course" });
 
-      expect(mockDb.prepare).toHaveBeenCalledWith(
-        expect.stringContaining("INSERT INTO UserFavorites")
-      );
-      expect(mockRun).toHaveBeenCalledWith("c1", "course");
+      const check = db.prepare("SELECT id, type FROM UserFavorites WHERE id = 'c1'").get() as any;
+      expect(check).toBeDefined();
+      expect(check.type).toBe('course');
     });
   });
 });

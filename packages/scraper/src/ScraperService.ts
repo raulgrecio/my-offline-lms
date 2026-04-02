@@ -5,7 +5,7 @@ import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPat
 
 import { env } from './config/env';
 import { PLATFORM } from './config/platform';
-import { getAssetPathsConfig, getMonorepoRoot, getAuthState, getAuthDir, getInterceptedDir } from './config/paths';
+import { getAssetPathsConfig, getAuthState, getAuthDir, getInterceptedDir, getMonorepoRoot } from './config/paths';
 import {
   AssetNamingService,
   SQLiteAssetRepository,
@@ -23,7 +23,8 @@ import {
 } from './features/auth-session';
 import {
   SQLiteCourseRepository,
-  DiskInterceptedDataRepositoryFactory,
+  DiskInterceptedDataRepository,
+  type InterceptedRepoCreator,
   SQLiteLearningPathRepository,
   OraclePlatformUrlProvider,
   SyncCourse,
@@ -31,7 +32,6 @@ import {
   GetAvailableContent
 } from './features/platform-sync';
 import {
-  ScraperTask,
   SQLiteTaskRepository,
   type ITaskRepository,
   CreateTask,
@@ -40,16 +40,14 @@ import {
   GetTaskById,
   CancelTask,
   StartTask,
+  GetAllTasks,
+  DeleteTask,
   CreateTaskInput,
-  UpdateTaskInput
+  ScraperTaskType,
 } from './features/task-management';
 import { ScraperOrchestrator } from './features/shared';
 import { BrowserProvider, BrowserInterceptor } from './platform/browser';
 import { getDb } from './platform/database';
-
-export interface ScraperServiceConfig {
-  keepTempWorkspaces?: boolean;
-}
 
 export interface ScraperDependencies {
   db: IDatabase;
@@ -60,26 +58,31 @@ export interface ScraperDependencies {
   pathRepo: SQLiteLearningPathRepository;
   browserProvider: BrowserProvider;
   namingService: AssetNamingService;
-  authSessionStorage: DiskAuthSessionStorage;
-  interceptedDataRepoFactory: DiskInterceptedDataRepositoryFactory;
-  browserInterceptor: BrowserInterceptor;
   assetPathResolver: AssetPathResolver;
+  authSessionStorage: DiskAuthSessionStorage;
+  createInterceptedRepo: InterceptedRepoCreator;
   urlProvider: OraclePlatformUrlProvider;
   universalFs: UniversalFileSystem;
   nodePath: NodePath;
 }
 
 export class ScraperService {
-  private readonly createTaskUseCase: CreateTask;
-  private readonly updateTaskUseCase: UpdateTask;
-  private readonly getActiveTaskUseCase: GetActiveTask;
-  private readonly getTaskByIdUseCase: GetTaskById;
-  private readonly cancelTaskUseCase: CancelTask;
-  private readonly validateAuthUseCase: ValidateAuthSession;
-  private readonly loginUseCase: AuthSession;
-  private readonly startTaskUseCase: StartTask;
-  private readonly getAvailableContentUseCase: GetAvailableContent;
-  private readonly orchestrator: ScraperOrchestrator;
+  private static instance: ScraperService;
+
+  private orchestrator: ScraperOrchestrator;
+  private createTaskUseCase: CreateTask;
+  private updateTaskUseCase: UpdateTask;
+  private getActiveTaskUseCase: GetActiveTask;
+  private getTaskByIdUseCase: GetTaskById;
+  private cancelTaskUseCase: CancelTask;
+  private validateAuthUseCase: ValidateAuthSession;
+  private loginUseCase: AuthSession;
+  private getAvailableContentUseCase: GetAvailableContent;
+  private startTaskUseCase: StartTask;
+  private getAllTasksUseCase: GetAllTasks;
+  private deleteTaskUseCase: DeleteTask;
+
+  public isLoggingIn = false;
 
   private constructor(private readonly deps: ScraperDependencies) {
     this.createTaskUseCase = new CreateTask(deps.taskRepo);
@@ -87,6 +90,9 @@ export class ScraperService {
     this.getActiveTaskUseCase = new GetActiveTask(deps.taskRepo);
     this.getTaskByIdUseCase = new GetTaskById(deps.taskRepo);
     this.cancelTaskUseCase = new CancelTask(deps.taskRepo);
+    this.startTaskUseCase = new StartTask(deps.taskRepo);
+    this.getAllTasksUseCase = new GetAllTasks(deps.taskRepo);
+    this.deleteTaskUseCase = new DeleteTask(deps.taskRepo);
 
     this.validateAuthUseCase = new ValidateAuthSession({
       authStorage: deps.authSessionStorage,
@@ -98,8 +104,6 @@ export class ScraperService {
       authStorage: deps.authSessionStorage,
       logger: deps.logger
     });
-
-    this.startTaskUseCase = new StartTask(deps.taskRepo);
 
     this.orchestrator = new ScraperOrchestrator({
       validator: this.validateAuthUseCase,
@@ -119,6 +123,8 @@ export class ScraperService {
   }
 
   static async create(): Promise<ScraperService> {
+    if (ScraperService.instance) return ScraperService.instance;
+
     const { loadScraperEnv } = await import('./config/env');
     loadScraperEnv();
 
@@ -131,69 +137,157 @@ export class ScraperService {
     const db = await getDb({ fsAdapter: nodeFs });
     const taskRepo = new SQLiteTaskRepository(db);
 
+    const configPath = await getAssetPathsConfig();
+    const monorepoRoot = await getMonorepoRoot();
+    const assetPathResolver = new AssetPathResolver({
+      configPath,
+      monorepoRoot,
+      fs: universalFs,
+      path: nodePath,
+      logger
+    });
+
+    const authStateFile = await getAuthState();
+
     const browserProvider = new BrowserProvider({
       fs: universalFs,
       path: nodePath,
       config: {
         chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
-        authStateFile: await getAuthState(),
+        authStateFile,
       },
       logger
     });
 
+    const courseRepo = new SQLiteCourseRepository(db);
+    const assetRepo = new SQLiteAssetRepository(db);
+    const pathRepo = new SQLiteLearningPathRepository(db);
+
     const authSessionStorage = new DiskAuthSessionStorage({
       fs: universalFs,
       path: nodePath,
-      getAuthDir,
+      getAuthDir
     });
 
-    const assetPathResolver = new AssetPathResolver({
-      configPath: await getAssetPathsConfig(),
-      monorepoRoot: await getMonorepoRoot(),
+    const createInterceptedRepo: InterceptedRepoCreator = (baseDir?: string) => new DiskInterceptedDataRepository({
       fs: universalFs,
       path: nodePath,
-      logger: logger,
+      getInterceptedDir,
+      baseDir,
+      logger
     });
 
-    const deps: ScraperDependencies = {
+    ScraperService.instance = new ScraperService({
       db,
       logger,
       taskRepo,
-      courseRepo: new SQLiteCourseRepository(db),
-      assetRepo: new SQLiteAssetRepository(db),
-      pathRepo: new SQLiteLearningPathRepository(db),
+      courseRepo,
+      assetRepo,
+      pathRepo,
       browserProvider,
       namingService: new AssetNamingService(),
-      authSessionStorage,
-      interceptedDataRepoFactory: new DiskInterceptedDataRepositoryFactory(universalFs, nodePath, logger),
-      browserInterceptor: new BrowserInterceptor({
-        fs: universalFs,
-        path: nodePath,
-        logger,
-        getInterceptedDir
-      }),
       assetPathResolver,
+      authSessionStorage,
+      createInterceptedRepo,
       urlProvider: new OraclePlatformUrlProvider(),
       universalFs,
       nodePath
-    };
+    });
 
-    return new ScraperService(deps);
+    return ScraperService.instance;
   }
 
-  async syncCourse(url: string, taskId?: string) {
+  async validateAuth() {
+    return await this.validateAuthUseCase.execute();
+  }
+
+  async login({ interactive = false, headless = false, baseUrl }: { 
+    interactive?: boolean, 
+    headless?: boolean, 
+    baseUrl?: string 
+  } = {}) {
+    this.isLoggingIn = true;
+    try {
+      await this.loginUseCase.execute({ interactive, headless, baseUrl });
+    } finally {
+      if (interactive) {
+        this.isLoggingIn = false;
+      }
+    }
+  }
+
+  async saveActiveSession() {
+    this.deps.logger.info("Guardando sesión activa...");
+    try {
+      const result = await this.loginUseCase.saveActiveSession();
+      if (result.success) {
+        this.isLoggingIn = false;
+        return { success: true };
+      }
+      return result;
+    } catch (e: any) {
+      this.deps.logger.error(`Error al guardar la sesión: ${e.message}`);
+      return { success: false, error: e.message };
+    }
+  }
+
+  async getTasks() {
+    return await this.getAllTasksUseCase.execute();
+  }
+
+  async getActiveTask() {
+    return await this.getActiveTaskUseCase.execute();
+  }
+
+  async getTaskById(id: string) {
+    return await this.getTaskByIdUseCase.execute({ id });
+  }
+
+  async createTask(input: CreateTaskInput) {
+    return await this.createTaskUseCase.execute(input);
+  }
+
+  async cancelTask(id: string) {
+    return this.cancelTaskUseCase.execute({ id });
+  }
+
+  async deleteTask(id: string) {
+    return this.deleteTaskUseCase.execute({ id });
+  }
+
+  async getAvailableContent() {
+    return await this.getAvailableContentUseCase.execute();
+  }
+
+  async syncCourse({ url, taskId }: { url: string; taskId: string }) {
+    const browserInterceptor = new BrowserInterceptor({
+      fs: this.deps.universalFs,
+      path: this.deps.nodePath,
+      logger: this.deps.logger,
+      getInterceptedDir
+    });
+
     const syncCourse = new SyncCourse({
-      ...this.deps,
+      browserProvider: this.deps.browserProvider,
       courseRepository: this.deps.courseRepo,
       assetRepository: this.deps.assetRepo,
+      createInterceptedRepo: this.deps.createInterceptedRepo,
+      browserInterceptor,
+      urlProvider: this.deps.urlProvider,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger,
       config: {
-        keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-        selectors: { guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB },
-        oracleConstants: { videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID }
+        keepTempWorkspaces: false,
+        selectors: {
+          guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+        },
+        oracleConstants: {
+          videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+        }
       }
     });
 
-    await this.orchestrator!.run(
+    await this.orchestrator.run(
       { taskId, mainStep: 'Sincronizando metadatos del curso...', onCleanup: () => this.cleanup() },
       async () => {
         await syncCourse.execute({ courseInput: url });
@@ -201,50 +295,84 @@ export class ScraperService {
     );
   }
 
-  async syncPath(url: string, taskId?: string) {
+  async syncPath({ url, taskId }: { url: string; taskId: string }) {
+    const browserInterceptor = new BrowserInterceptor({
+      fs: this.deps.universalFs,
+      path: this.deps.nodePath,
+      logger: this.deps.logger,
+      getInterceptedDir
+    });
+
     const syncCourse = new SyncCourse({
-      ...this.deps,
+      browserProvider: this.deps.browserProvider,
       courseRepository: this.deps.courseRepo,
       assetRepository: this.deps.assetRepo,
+      createInterceptedRepo: this.deps.createInterceptedRepo,
+      browserInterceptor,
+      urlProvider: this.deps.urlProvider,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger,
       config: {
-        keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-        selectors: { guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB },
-        oracleConstants: { videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID }
+        keepTempWorkspaces: false,
+        selectors: {
+          guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB
+        },
+        oracleConstants: {
+          videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID
+        }
       }
     });
 
     const syncPath = new SyncLearningPath({
-      ...this.deps,
+      browserProvider: this.deps.browserProvider,
       learningPathRepo: this.deps.pathRepo,
       courseRepo: this.deps.courseRepo,
       syncCourse,
-      config: { keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES }
+      createInterceptedRepo: this.deps.createInterceptedRepo,
+      browserInterceptor,
+      urlProvider: this.deps.urlProvider,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger,
+      config: {
+        keepTempWorkspaces: false
+      }
     });
 
-    await this.orchestrator!.run(
-      { taskId, mainStep: 'Sincronizando ruta de aprendizaje...', onCleanup: () => this.cleanup() },
+    await this.orchestrator.run(
+      { taskId, mainStep: 'Sincronizando metadatos de la ruta...', onCleanup: () => this.cleanup() },
       async () => {
         await syncPath.execute({ pathInput: url });
       }
     );
   }
 
-  async download(id: string, type: DownloadType = 'all', isPath: boolean = false, taskId?: string) {
-    const assetStorage = new DiskAssetStorage({
-      fs: this.deps.universalFs,
-      path: this.deps.nodePath,
-      resolver: this.deps.assetPathResolver
-    });
+  async download({ type, taskId, entityId, entityType }: {
+    type: DownloadType;
+    taskId: string;
+    entityId: string;
+    entityType: ScraperTaskType
+  }) {
     const videoDownloader = new YtDlpVideoDownloader({
       authSessionStorage: this.deps.authSessionStorage,
       logger: this.deps.logger
     });
 
+    const assetStorage = new DiskAssetStorage({
+      fs: this.deps.universalFs,
+      path: this.deps.nodePath,
+      resolver: this.deps.assetPathResolver
+    });
+
     const downloadGuides = new DownloadGuides({
-      ...this.deps,
+      browserProvider: this.deps.browserProvider,
+      courseRepo: this.deps.courseRepo,
+      assetRepo: this.deps.assetRepo,
       assetStorage,
+      namingService: this.deps.namingService,
+      urlProvider: this.deps.urlProvider,
+      logger: this.deps.logger,
       config: {
-        keepTempImages: env.KEEP_TEMP_IMAGES,
+        keepTempImages: false,
         selectors: {
           iframe: PLATFORM.SELECTORS.GUIDE.IFRAME,
           flipbookPages: PLATFORM.SELECTORS.GUIDE.FLIPBOOK_PAGES
@@ -253,11 +381,13 @@ export class ScraperService {
     });
 
     const downloadVideos = new DownloadVideos({
-      ...this.deps,
+      browserProvider: this.deps.browserProvider,
       courseRepository: this.deps.courseRepo,
       assetRepository: this.deps.assetRepo,
       assetStorage,
       videoDownloader,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger,
       config: {
         selectors: {
           video: {
@@ -268,105 +398,36 @@ export class ScraperService {
       }
     });
 
-    await this.orchestrator!.run(
-      {
-        taskId,
-        mainStep: isPath ? 'Iniciando descarga de ruta...' : 'Iniciando descarga del curso...',
-        successMessage: 'Descarga finalizada',
-        onCleanup: () => this.cleanup()
-      },
+    const downloadCourse = new DownloadCourse({
+      courseRepo: this.deps.courseRepo,
+      downloadGuides,
+      downloadVideos,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger
+    });
+
+    const downloadPath = new DownloadPath({
+      learningPathRepo: this.deps.pathRepo,
+      syncLearningPath: {} as any, // Not used for download only
+      downloadGuides,
+      downloadVideos,
+      namingService: this.deps.namingService,
+      logger: this.deps.logger
+    });
+
+    await this.orchestrator.run(
+      { taskId, mainStep: 'Descargando recursos...', onCleanup: () => this.cleanup() },
       async () => {
-        if (isPath) {
-          const syncCourse = new SyncCourse({
-            ...this.deps,
-            courseRepository: this.deps.courseRepo,
-            assetRepository: this.deps.assetRepo,
-            config: {
-              keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES,
-              selectors: { guidesTab: PLATFORM.SELECTORS.COURSE.GUIDES_TAB },
-              oracleConstants: { videoTypeId: PLATFORM.CONSTANTS.ORACLE.VIDEO_TYPE_ID }
-            }
-          });
-          const syncPath = new SyncLearningPath({
-            ...this.deps,
-            learningPathRepo: this.deps.pathRepo,
-            courseRepo: this.deps.courseRepo,
-            syncCourse,
-            config: { keepTempWorkspaces: env.KEEP_TEMP_WORKSPACES }
-          });
-          const downloader = new DownloadPath({
-            learningPathRepo: this.deps.pathRepo,
-            syncLearningPath: syncPath,
-            downloadGuides,
-            downloadVideos,
-            namingService: this.deps.namingService,
-            logger: this.deps.logger,
-          });
-
-          if (taskId) await this.updateTask(taskId, { progress: { step: 'Descargando contenidos de la ruta...' } });
-          await downloader.execute({ pathInput: id, type });
+        if (entityType === 'path') {
+          await downloadPath.execute({ pathInput: entityId, type });
         } else {
-          const downloader = new DownloadCourse({
-            courseRepo: this.deps.courseRepo,
-            downloadGuides,
-            downloadVideos,
-            namingService: this.deps.namingService,
-            logger: this.deps.logger,
-          });
-
-          if (taskId) await this.updateTask(taskId, { progress: { step: 'Descargando contenidos del curso...' } });
-          await downloader.execute({ courseInput: id, type });
+          await downloadCourse.execute({ courseInput: entityId, type });
         }
       }
     );
   }
 
-  async createTask(data: CreateTaskInput): Promise<string> {
-    return this.createTaskUseCase.execute(data);
-  }
-
-  async updateTask(id: string, data: Omit<UpdateTaskInput, "id">) {
-    await this.updateTaskUseCase.execute({ id, ...data });
-  }
-
-  async getActiveTask() {
-    return this.getActiveTaskUseCase.execute();
-  }
-
-  async getTaskById(id: string) {
-    return this.getTaskByIdUseCase.execute({ id });
-  }
-
-  async cancelTask(id: string) {
-    await this.cancelTaskUseCase.execute({ id });
-  }
-
-  async getAvailableContent() {
-    return this.getAvailableContentUseCase.execute();
-  }
-
-  async checkAuth(): Promise<boolean> {
-    try {
-      return await this.validateAuthUseCase.execute();
-    } finally {
-      await this.cleanup();
-    }
-  }
-
-  async login(): Promise<void> {
-    try {
-      await this.loginUseCase.execute({
-        baseUrl: env.PLATFORM_BASE_URL,
-        interactive: false
-      });
-
-    } catch (err) {
-      this.deps.logger.error("Error en login interactivo:", err);
-      throw err;
-    }
-  }
-
-  private async cleanup() {
+  async cleanup() {
     await this.deps.browserProvider.close();
   }
 }

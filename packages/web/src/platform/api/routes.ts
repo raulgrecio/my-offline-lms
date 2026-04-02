@@ -26,5 +26,8 @@ export const API_ROUTES = {
     LOGIN: "/api/scraper/login",
     STATUS: "/api/scraper/status",
     CANCEL: "/api/scraper/cancel",
+    LIST: "/api/scraper/list",
+    DELETE: "/api/scraper/delete",
+    START: "/api/scraper/start",
   },
 } as const;

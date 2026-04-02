@@ -1,13 +1,8 @@
 import type { IPlatformUrlProvider } from "@scraper/features/platform-sync";
-import { env } from "@scraper/config";
 import { PLATFORM } from "@scraper/config";
 
 export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
-  private readonly baseUrl: string;
-
-  constructor() {
-    this.baseUrl = env.PLATFORM_BASE_URL;
-  }
+  // Ahora usamos PLATFORM.BASE_URL en lugar de env directo para leer la configuración.
 
   resolveCourseUrl(target: string): { url: string, courseId: string } {
     let courseId: string | undefined;
@@ -35,9 +30,9 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
 
     const url = this.getCourseUrl({ slug, id: courseId });
 
-    return { 
-      url: url.endsWith('/') ? url : `${url}/`, 
-      courseId 
+    return {
+      url: url.endsWith('/') ? url : `${url}/`,
+      courseId
     };
   }
 
@@ -67,9 +62,9 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
 
     const url = this.getLearningPathUrl({ slug, id: pathId });
 
-    return { 
-      url: url.endsWith('/') ? url : `${url}/`, 
-      pathId 
+    return {
+      url: url.endsWith('/') ? url : `${url}/`,
+      pathId
     };
   }
 
@@ -77,14 +72,14 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
     const path = PLATFORM.URL_PATTERNS.COURSE_PATH
       .replace('{slug}', slug || "path")
       .replace('{id}', id);
-    return new URL(path, this.baseUrl).href;
+    return new URL(path, PLATFORM.BASE_URL).href;
   }
 
   getLearningPathUrl({ slug, id }: { slug?: string, id: string }): string {
     const path = PLATFORM.URL_PATTERNS.LEARNING_PATH
       .replace('{slug}', slug || "path")
       .replace('{id}', id);
-    return new URL(path, this.baseUrl).href;
+    return new URL(path, PLATFORM.BASE_URL).href;
   }
 
   getGuideViewerUrl({ courseId, offeringId, ekitId }: { courseId: string, offeringId: string, ekitId: string }): string {
@@ -92,7 +87,7 @@ export class OraclePlatformUrlProvider implements IPlatformUrlProvider {
       .replace('{courseId}', courseId)
       .replace('{offeringId}', offeringId)
       .replace('{ekitId}', ekitId);
-    return new URL(path, this.baseUrl).href;
+    return new URL(path, PLATFORM.BASE_URL).href;
   }
 
   getVideoAssetUrl({ courseUrl, assetId }: { courseUrl: string, assetId: string }): string {

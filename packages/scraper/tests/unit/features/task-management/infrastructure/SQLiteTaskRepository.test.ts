@@ -1,12 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 
-import { type IDatabase } from '@core/database';
+import { type IDatabase, SQLiteDatabase } from '@core/database';
 import { NodeFileSystem } from '@core/filesystem';
 import { ConsoleLogger } from '@core/logging';
 
 import { getDb } from '@scraper/platform/database';
-import { ScraperTask } from '@scraper/features/task-management/domain/models/ScraperTask';
-import { SQLiteTaskRepository } from '@scraper/features/task-management/infrastructure/persistence/SQLiteTaskRepository';
+import { ScraperTask, SQLiteTaskRepository } from '@scraper/features/task-management';
 
 describe('SQLiteTaskRepository', () => {
   let db: IDatabase;
@@ -14,11 +13,17 @@ describe('SQLiteTaskRepository', () => {
 
   beforeAll(async () => {
     const logger = new ConsoleLogger();
-    db = await getDb({ fsAdapter: new NodeFileSystem(logger) });
+
+    // Usamos una base de datos en memoria para los tests unitarios
+    const memoryDb = new SQLiteDatabase(':memory:');
+
+    db = await getDb({
+      database: memoryDb,
+      fsAdapter: new NodeFileSystem(logger)
+    });
     repository = new SQLiteTaskRepository(db);
 
-    // Ensure table exists and is empty
-    db.prepare('DELETE FROM Scraper_Tasks').run();
+    // Schema is initialized by initDb(options) via initialize()
   });
 
   it('should save and find a task by id', async () => {
@@ -87,7 +92,7 @@ describe('SQLiteTaskRepository', () => {
 
   it('should update task with error', async () => {
     const taskId = 'task-err-1';
-    const task = ScraperTask.create({ id: taskId, type: 'course', url: 'http://url', targetId: 'id1' });
+    const task = ScraperTask.create({ id: taskId, type: 'course', url: 'http://url', targetId: 'id2-sqlitetaskrepositorytest' });
     await repository.save(task);
 
     await repository.update(taskId, { status: 'FAILED', error: 'Test Error' });
