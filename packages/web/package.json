@@ -11,6 +11,8 @@
     "type-check": "NODE_OPTIONS='--max-old-space-size=8192' astro check",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:unit": "vitest run tests/unit --passWithNoTests",
+    "test:integration": "vitest run tests/integration --passWithNoTests",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",

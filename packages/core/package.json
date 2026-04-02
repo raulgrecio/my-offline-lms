@@ -34,8 +34,8 @@
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
-    "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
+    "test:unit": "vitest run test/unit --passWithNoTests",
+    "test:integration": "vitest run test/integration --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {

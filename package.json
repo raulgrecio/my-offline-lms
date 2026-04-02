@@ -12,6 +12,8 @@
     "dev:scraper": "pnpm --filter @my-offline-lms/scraper dev",
     "test": "pnpm recursive test",
     "test:run": "pnpm --filter @my-offline-lms/core test:run && pnpm --filter @my-offline-lms/scraper test:run && pnpm --filter @my-offline-lms/web test:run",
+    "test:unit": "pnpm --filter @my-offline-lms/core test:unit && pnpm --filter @my-offline-lms/scraper test:unit && pnpm --filter @my-offline-lms/web test:unit",
+    "test:integration": "pnpm --filter @my-offline-lms/core test:integration && pnpm --filter @my-offline-lms/scraper test:integration && pnpm --filter @my-offline-lms/web test:integration",
     "test:core": "pnpm --filter @my-offline-lms/core test",
     "test:scraper": "pnpm --filter @my-offline-lms/scraper test",
     "test:web": "pnpm --filter @my-offline-lms/web test",
