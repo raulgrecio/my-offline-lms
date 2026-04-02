@@ -1,15 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { GET } from "@web/pages/api/assets/local-asset";
 import fs from "node:fs";
-import path from "node:path";
-import { Readable } from "node:stream";
 
 // We mock ONLY the resolver to control the file path
 vi.mock("@core/filesystem", async (importOriginal) => {
   const actual = await importOriginal<any>();
   return {
     ...actual,
-    AssetPathResolver: vi.fn().mockImplementation(function() {
+    AssetPathResolver: vi.fn().mockImplementation(function () {
       return {
         resolveExistingPath: vi.fn().mockResolvedValue("/tmp/repro-real.txt"),
       };
@@ -30,7 +28,7 @@ describe("local-asset Reproduction with Real Stream", () => {
     try {
       const url = new URL("http://localhost/api/assets/local-asset?path=repro-real.txt");
       const request = { headers: { get: () => null } } as any;
-      
+
       const response = await GET({ url, request } as any);
       expect(response.status).toBe(200);
 
@@ -42,7 +40,7 @@ describe("local-asset Reproduction with Real Stream", () => {
       const reader = body.getReader();
       console.log('Test (Fixed): Canceling body...');
       await reader.cancel();
-      
+
       console.log('Test (Fixed): Waiting to ensure no crash...');
       await new Promise(resolve => setTimeout(resolve, 100));
     } finally {

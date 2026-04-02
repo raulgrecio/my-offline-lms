@@ -12,6 +12,6 @@
     "types": ["node", "@testing-library/jest-dom", "vitest/globals"],
     "skipLibCheck": true
   },
-  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./e2e/**/*"],
+  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./tests/e2e/**/*", "./tests/visual/**/*"],
   "exclude": ["node_modules", "dist"]
 }

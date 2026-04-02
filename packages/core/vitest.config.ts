@@ -8,7 +8,7 @@ export default defineConfig({
     alias: {
       '@core': path.resolve(__dirname, './src'),
     },
-    setupFiles: [path.resolve(__dirname, './src/tests/setup.ts')],
+    setupFiles: [path.resolve(__dirname, './test/setup.ts')],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

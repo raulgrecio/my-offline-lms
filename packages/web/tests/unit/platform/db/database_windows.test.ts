@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.unmock("@web/platform/db/database");
-vi.unmock("@core/database");
+// Eliminamos unmock peligrosos que podrían saltarse la protección global de vitest.setup.ts
 
 import { SQLiteDatabase } from '@core/database';
 import { NodeFileSystem } from '@core/filesystem';
