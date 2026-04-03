@@ -15,7 +15,7 @@ export interface DownloadPathInput {
 
 export interface DownloadPathOptions {
   learningPathRepo: ILearningPathRepository;
-  syncLearningPath: SyncLearningPath;
+  syncLearningPath?: SyncLearningPath;
   downloadGuides: DownloadGuides;
   downloadVideos: DownloadVideos;
   namingService: INamingService;
@@ -24,7 +24,7 @@ export interface DownloadPathOptions {
 
 export class DownloadPath implements IUseCase<DownloadPathInput, void> {
   private learningPathRepo: ILearningPathRepository;
-  private syncLearningPath: SyncLearningPath;
+  private syncLearningPath?: SyncLearningPath;
   private downloadGuides: DownloadGuides;
   private downloadVideos: DownloadVideos;
   private namingService: INamingService;

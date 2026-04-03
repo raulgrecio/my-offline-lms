@@ -21,9 +21,7 @@ import { loadScraperEnv } from '../src/config/env';
 vi.spyOn(process, 'exit').mockImplementation(() => { return undefined as never; });
 
 // Set up mandatory environment variables for tests (as fallback)
-process.env.PLATFORM_GUEST_EMAIL = 'guest@example.com';
 process.env.PLATFORM_BASE_URL = 'https://platform.com/';
-process.env.SCRAPER_LOGIN_URL = 'https://platform.com/login';
 process.env.DATA_DIR = './test-data';
 
 // Load the environment so the 'env' object is populated, 

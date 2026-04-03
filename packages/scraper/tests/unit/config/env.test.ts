@@ -27,8 +27,6 @@ describe('Environment Configuration', () => {
     vi.clearAllMocks();
     // Clear relevant process.env to force loadScraperEnv to actually call dotenv
     delete process.env.PLATFORM_BASE_URL;
-    delete process.env.PLATFORM_GUEST_EMAIL;
-    delete process.env.SCRAPER_LOGIN_URL;
     delete process.env.DATA_DIR;
 
     vi.resetModules();
@@ -46,10 +44,10 @@ describe('Environment Configuration', () => {
 
     // Mock exit because custom path env might be invalid
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => { return undefined as never; });
-    
+
     loadScraperEnv({ path: testPath });
     expect(dotenv.config).toHaveBeenCalledWith({ path: testPath });
-    
+
     exitSpy.mockRestore();
   });
 
@@ -60,7 +58,7 @@ describe('Environment Configuration', () => {
     loadScraperEnv();
     expect(dotenv.config).toHaveBeenCalledWith({ path: expect.stringContaining('.env') });
     expect(dotenv.config).not.toHaveBeenCalledWith({ path: expect.stringContaining('.env.test') });
-    
+
     exitSpy.mockRestore();
   });
 

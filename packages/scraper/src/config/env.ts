@@ -9,7 +9,6 @@ const envSchema = z.object({
   PLATFORM_BASE_URL: z.url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
   LOGIN_SUCCESS_SELECTOR: z.string().default("body"),
-  PLATFORM_GUEST_EMAIL: z.email(),
 
   // PDF download configurations
   KEEP_TEMP_IMAGES: z.coerce.boolean().default(false),
@@ -22,7 +21,6 @@ const envSchema = z.object({
 
   // DATA_DIR for shared database and assets
   DATA_DIR: z.string().optional(),
-  SCRAPER_LOGIN_URL: z.url(),
 });
 
 export type Env = z.infer<typeof envSchema>;

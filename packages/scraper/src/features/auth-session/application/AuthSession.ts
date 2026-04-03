@@ -1,9 +1,11 @@
 import readline from "readline";
+
 import { type ILogger } from '@core/logging';
 import { type IUseCase } from '@scraper/features/shared';
-import { type IBrowserProvider } from "@scraper/platform/browser";
-import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 import { PLATFORM } from "@scraper/config";
+import { type IBrowserProvider } from "@scraper/platform/browser";
+
+import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
 export interface AuthSessionInput {
   baseUrl?: string;
@@ -31,7 +33,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
 
   async execute(input: AuthSessionInput = {}): Promise<void> {
     const {
-      baseUrl = PLATFORM.URL_PATTERNS.LOGIN_URL,
+      baseUrl = PLATFORM.BASE_URL,
       interactive = true,
       headless = !interactive
     } = input;
@@ -71,14 +73,16 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
         output: process.stdout,
       });
 
+      readline.emitKeypressEvents(process.stdin);
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
+      }
+
       return new Promise((resolve) => {
         const handleInput = async (input: string) => {
           if (input === "") {
             this.logger.info("💾 Guardando sesión...");
             await this.saveActiveSession();
-            clearInterval(autoSaveInterval);
-            rl.close();
-            resolve();
           }
         };
 
@@ -90,6 +94,8 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
           if (key && (key.name === 'escape' || (key.ctrl && key.name === 'c'))) {
             this.logger.info("Saliendo y cerrando navegador...");
             clearInterval(autoSaveInterval);
+            if (process.stdin.isTTY) process.stdin.setRawMode(false);
+            process.stdin.removeListener('keypress', handleKeypress);
             await this.browserProvider.close();
             rl.close();
             resolve();

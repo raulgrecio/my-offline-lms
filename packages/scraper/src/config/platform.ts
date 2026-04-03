@@ -19,7 +19,6 @@ export const PLATFORM = {
   },
   get URL_PATTERNS() {
     return {
-      LOGIN_URL: env.SCRAPER_LOGIN_URL,
       COURSE_PATH: "ou/course/{slug}/{id}",
       LEARNING_PATH: "ou/learning-path/{slug}/{id}",
       GUIDE_PATH: "ekit/{courseId}/{offeringId}/{ekitId}/course",
@@ -44,7 +43,6 @@ export const PLATFORM = {
     return {
       ORACLE: {
         VIDEO_TYPE_ID: "1",
-        GUEST_EMAIL: env.PLATFORM_GUEST_EMAIL
       }
     };
   }

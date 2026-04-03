@@ -431,7 +431,6 @@ export class ScraperService {
 
     const downloadPath = new DownloadPath({
       learningPathRepo: this.deps.pathRepo,
-      syncLearningPath: {} as any, // Not used for download only
       downloadGuides,
       downloadVideos,
       namingService: this.deps.namingService,
