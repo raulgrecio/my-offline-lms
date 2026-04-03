@@ -49,6 +49,25 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     }
   }
 
+  async getSessionExpiry(): Promise<number | null> {
+    const authFile = await this.getAuthFile();
+    try {
+      if (!(await this.fs.exists(authFile))) return null;
+      const content = await this.fs.readFile(authFile);
+      const state = JSON.parse(content.toString());
+      if (!state.cookies || !Array.isArray(state.cookies)) return null;
+
+      const authCookieNames = ['ora_session', 'authToken', 'OAMAuthnCookie', 'ORA_U_SESSION', 'GP_PROD_SESSION', 'SSO_TOKEN', 'ORACLE_SESSION'];
+      const expiries = state.cookies
+        .filter((c: any) => (authCookieNames.includes(c.name) || c.name.startsWith('GP_AUTH_')) && c.expires > 0)
+        .map((c: any) => c.expires);
+
+      return expiries.length > 0 ? Math.min(...expiries) : null;
+    } catch {
+      return null;
+    }
+  }
+
   async isValidSession(): Promise<boolean> {
     const authFile = await this.getAuthFile();
 

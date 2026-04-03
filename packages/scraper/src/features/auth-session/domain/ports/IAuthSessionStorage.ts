@@ -4,4 +4,5 @@ export interface IAuthSessionStorage {
   saveCookies(cookies: any[]): Promise<void>;
   ensureAuthDir(): Promise<void>;
   isValidSession(): Promise<boolean>;
+  getSessionExpiry(): Promise<number | null>;
 }
