@@ -15,7 +15,7 @@ export interface BrowserProviderConfig {
 
 export class BrowserProvider implements IBrowserProvider {
   private browser: Browser | null = null;
-  private context: BrowserContext | null = null;
+  private contexts: Set<BrowserContext> = new Set();
   private logger?: ILogger;
   private fs: IFileSystem;
   private path: IPath;
@@ -50,7 +50,7 @@ export class BrowserProvider implements IBrowserProvider {
       this.browser.on('disconnected', () => {
         this.logger?.info('Canal de comunicación con el navegador cerrado.');
         this.browser = null;
-        this.context = null;
+        this.contexts.clear();
       });
     }
 
@@ -73,8 +73,9 @@ export class BrowserProvider implements IBrowserProvider {
       ? { storageState: this.config.authStateFile }
       : {};
 
-    this.context = await this.browser.newContext(contextOptions);
-    return this.context;
+    const context = await this.browser.newContext(contextOptions);
+    this.contexts.add(context);
+    return context;
   }
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
@@ -86,10 +87,28 @@ export class BrowserProvider implements IBrowserProvider {
     return this.getHeadfulContext(true); // force headless for background ops
   }
 
+  async closeContext(context: BrowserContext): Promise<void> {
+    if (this.contexts.has(context)) {
+      this.contexts.delete(context);
+      // We don't strictly await here to avoid deadlocks if the browser is already closing/closed
+      await context.close().catch(() => { });
+    }
+
+    // Auto-close browser if no more contexts are alive
+    if (this.contexts.size === 0 && this.browser) {
+      const b = this.browser;
+      this.browser = null;
+      await b.close().catch(() => { });
+    }
+  }
+
   async close(): Promise<void> {
-    if (this.context) await this.context.close();
+    for (const ctx of this.contexts) {
+      await ctx.close().catch(() => { });
+    }
+    this.contexts.clear();
+
     if (this.browser) await this.browser.close();
-    this.context = null;
     this.browser = null;
   }
 }

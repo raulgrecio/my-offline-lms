@@ -7,6 +7,9 @@ export interface IBrowserProvider {
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
   getAuthenticatedContext(): Promise<BrowserContext>;
 
-  /** Closes the browser and context */
+  /** Closes a specific browser context */
+  closeContext(context: BrowserContext): Promise<void>;
+
+  /** Closes the browser and all associated contexts */
   close(): Promise<void>;
 }

@@ -68,11 +68,6 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
       this.logger.info("👉 PRESIONA 'ESC' o 'Ctrl+C' PARA SALIR Y CERRAR EL NAVEGADOR");
       this.logger.info("========================================================");
 
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
-
       readline.emitKeypressEvents(process.stdin);
       if (process.stdin.isTTY) {
         process.stdin.setRawMode(true);
@@ -96,14 +91,12 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
             clearInterval(autoSaveInterval);
             if (process.stdin.isTTY) process.stdin.setRawMode(false);
             process.stdin.removeListener('keypress', handleKeypress);
-            await this.browserProvider.close();
-            rl.close();
+            await this.browserProvider.closeContext(context);
             resolve();
           }
         };
 
         process.stdin.on('keypress', handleKeypress);
-        rl.on('line', handleInput);
       });
     } else {
       this.logger.info("Navegador abierto. Completa el login en la ventana y pulsa 'Confirmar y Guardar' en la web.");
@@ -126,7 +119,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
       return new Promise((resolve) => {
         page.on('close', async () => {
           clearInterval(autoSaveInterval);
-          await this.browserProvider.close();
+          await this.browserProvider.closeContext(context);
           resolve();
         });
       });

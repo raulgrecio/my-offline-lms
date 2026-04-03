@@ -17,6 +17,7 @@ vi.mock('readline', () => ({
 describe('AuthSession Use Case', () => {
   const mockBrowserProvider = {
     getHeadfulContext: vi.fn(),
+    closeContext: vi.fn(),
     close: vi.fn(),
   } as any;
 
@@ -88,7 +89,7 @@ describe('AuthSession Use Case', () => {
     await promise;
 
     expect(mockPage.goto).toHaveBeenCalledWith('http://base-url', expect.anything());
-    expect(mockBrowserProvider.close).toHaveBeenCalled();
+    expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
 
   it('should handle Ctrl+C to exit', async () => {
@@ -246,6 +247,6 @@ describe('AuthSession Use Case', () => {
     if (closeCallback) await closeCallback();
     await promise;
 
-    expect(mockBrowserProvider.close).toHaveBeenCalled();
+    expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
 });
