@@ -26,6 +26,7 @@ describe('AuthSession Use Case', () => {
     saveCookies: vi.fn(),
     ensureAuthDir: vi.fn(),
     isValidSession: vi.fn().mockResolvedValue(false),
+    getSessionExpiry: vi.fn().mockResolvedValue(null),
   } as any;
 
   const mockLogger: ILogger = {
@@ -49,6 +50,7 @@ describe('AuthSession Use Case', () => {
     // Mock stdin
     (process.stdin as any).isTTY = true;
     process.stdin.setRawMode = vi.fn().mockReturnThis();
+    process.stdin.removeListener = vi.fn().mockReturnThis();
     process.stdin.on = vi.fn().mockImplementation((event, cb) => {
       if (event === 'keypress') {
         // We'll trigger this manually in the test

@@ -16,6 +16,7 @@ describe('ValidateAuthSession', () => {
       getCookiesFile: vi.fn(),
       ensureAuthDir: vi.fn(),
       saveCookies: vi.fn(),
+      getSessionExpiry: vi.fn(),
     };
     loggerMock = {
       warn: vi.fn(),
