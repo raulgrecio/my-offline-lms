@@ -22,6 +22,8 @@ export const getDataDir = async () => pathAdapter.join(await getScraperRoot(), "
 export const getAuthDir = async () => pathAdapter.join(await getDataDir(), ".auth");
 export const getAuthState = async () => pathAdapter.join(await getAuthDir(), "state.json");
 export const getInterceptedDir = async () => pathAdapter.join(await getDataDir(), "intercepted");
+export const getLogsDir = async () => pathAdapter.join(await getDataDir(), "logs");
+export const getLogsFile = async () => pathAdapter.join(await getLogsDir(), "scraper.log");
 
 /** Configuración de rutas de assets compartida */
 export const getAssetPathsConfig = async () => await resolver.getAssetConfigPath();

@@ -45,7 +45,46 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
     const isSessionValidForLoading = await this.authStorage.isValidSession();
     const context = await this.browserProvider.getHeadfulContext(headless);
     this.activeContext = context;
+
+    // --- MONITOR DE SESIÓN (Basado en Logs Nativos de Oracle) ---
     const page = await context.newPage();
+
+    page.on('console', msg => {
+      const text = msg.text();
+
+      // Detección de Sala (Login/Logout Oficial de Oracle)
+      if (text.includes('joinedRoom')) {
+        if (text.includes('"roomId":"guest"')) {
+          this.logger.info("🔥 [SISTEMA] Estado detectado: Invitado (Sesión Cerrada).");
+        } else if (text.includes('"roomId":"')) {
+          const match = text.match(/"roomId":"([^"]+)"/);
+          const userId = match ? match[1] : 'desconocido';
+          this.logger.info(`🔥 [SISTEMA] ¡LOGIN DETECTADO! Usuario: ${userId}`);
+          this.logger.info("👉 Ya puedes pulsar 'ENTER' en esta terminal para guardar la sesión.");
+        }
+      }
+
+      // Redirigir logs generales al sistema de logging persistente
+      if (msg.type() === 'error') {
+        this.logger.info(`[Browser-Error] ${text}`);
+      } else {
+        this.logger.debug?.(`[Browser-${msg.type()}] ${text}`);
+      }
+    });
+
+    page.on('frameattached', frame => {
+      this.logger.debug?.(`[Navigation] Nuevo Frame detectado: ${frame.url() || 'cargando...'}`);
+    });
+
+    // Intercepción de red para Cookies de Servidor
+    context.on('response', (response: any) => {
+      const setCookie = response.headers()['set-cookie'];
+      if (setCookie) {
+        this.logger.debug?.(`[Network] Cookie detectada en: ${response.url().substring(0, 50)}...`);
+      }
+    });
+
+    this.logger.info("📡 Monitoreo de sesión nativo activado (Basado en logs de Oracle).");
 
     if (isSessionValidForLoading) {
       this.logger.info("👉 Se ha cargado una sesión previa detectada como válida.");
@@ -63,7 +102,6 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
     if (interactive) {
       this.logger.info("========================================================");
       this.logger.info("👉 INICIA SESIÓN EN EL NAVEGADOR");
-      this.logger.info("👉 ASEGÚRATE DE ESTAR EN LA PÁGINA DE CURSO");
       this.logger.info("👉 PRESIONA 'ENTER' PARA GUARDAR LA SESIÓN");
       this.logger.info("👉 PRESIONA 'ESC' o 'Ctrl+C' PARA SALIR Y CERRAR EL NAVEGADOR");
       this.logger.info("========================================================");
@@ -112,7 +150,12 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
 
       page.on('framenavigated', (frame: any) => {
         if (frame === page.mainFrame()) {
-          this.logger.info(`LMS Offline: Navegación detectada -> ${page.url()}`);
+          const url = page.url();
+          this.logger.info(`[Navigation] URL: ${url}`);
+          // Detectar si volvemos al login inesperadamente
+          if (url.includes('/login') || url.includes('/idp/') || url.includes('error=unauthorized')) {
+            this.logger.warn(`[Navigation] Posible pérdida de sesión detectada por URL.`);
+          }
         }
       });
 

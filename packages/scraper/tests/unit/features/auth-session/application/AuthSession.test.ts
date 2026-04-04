@@ -66,12 +66,15 @@ describe('AuthSession Use Case', () => {
       goto: vi.fn().mockResolvedValue(undefined),
       url: vi.fn().mockReturnValue('http://base-url'),
       close: vi.fn().mockResolvedValue(undefined),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
     } as any;
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn().mockResolvedValue(undefined),
       storageState: vi.fn().mockResolvedValue({}),
-      cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }])
+      cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -93,9 +96,16 @@ describe('AuthSession Use Case', () => {
   });
 
   it('should handle Ctrl+C to exit', async () => {
+    const mockPage = {
+      goto: vi.fn(),
+      url: vi.fn().mockReturnValue('http://url'),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
+    };
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
+      newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn(),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -110,11 +120,18 @@ describe('AuthSession Use Case', () => {
   });
 
   it('should handle session save error', async () => {
+    const mockPage = {
+      goto: vi.fn(),
+      url: vi.fn().mockReturnValue('http://url'),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
+    };
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
+      newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn(),
       storageState: vi.fn().mockRejectedValue(new Error('save failed')),
-      cookies: vi.fn().mockResolvedValue([])
+      cookies: vi.fn().mockResolvedValue([]),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -135,9 +152,16 @@ describe('AuthSession Use Case', () => {
   });
 
   it('should work in non-TTY environment', async () => {
+    const mockPage = {
+      goto: vi.fn(),
+      url: vi.fn().mockReturnValue('http://url'),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
+    };
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
+      newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn(),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -154,11 +178,18 @@ describe('AuthSession Use Case', () => {
 
   it('should trigger auto-save interval', async () => {
     vi.useFakeTimers();
+    const mockPage = {
+      goto: vi.fn(),
+      url: vi.fn().mockReturnValue('http://url'),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
+    };
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
+      newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn(),
       storageState: vi.fn().mockResolvedValue({}),
-      cookies: vi.fn().mockResolvedValue([])
+      cookies: vi.fn().mockResolvedValue([]),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -176,9 +207,16 @@ describe('AuthSession Use Case', () => {
   });
 
   it('should ignore other keypresses', async () => {
+    const mockPage = {
+      goto: vi.fn(),
+      url: vi.fn().mockReturnValue('http://url'),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
+    };
     const mockContext = {
-      newPage: vi.fn().mockResolvedValue({ goto: vi.fn(), url: vi.fn().mockReturnValue('http://url') }),
+      newPage: vi.fn().mockResolvedValue(mockPage),
       close: vi.fn(),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
@@ -204,12 +242,14 @@ describe('AuthSession Use Case', () => {
       on: vi.fn(),
       mainFrame: vi.fn().mockReturnThis(),
       close: vi.fn().mockResolvedValue(undefined),
+      addInitScript: vi.fn().mockResolvedValue(undefined),
     } as any;
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
       storageState: vi.fn().mockResolvedValue({}),
       cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
-      exposeFunction: vi.fn(),
+      exposeFunction: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockResolvedValue(undefined),
     } as any;
 
     mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);

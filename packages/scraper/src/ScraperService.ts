@@ -1,11 +1,11 @@
-import { ConsoleLogger } from '@core/logging';
+import { ConsoleLogger, FileLogger, CompositeLogger, type ILogger } from '@core/logging';
 import { type IDatabase } from '@core/database';
 import { type DownloadType } from '@core/domain';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
 
 import { env } from './config/env';
 import { PLATFORM } from './config/platform';
-import { getAssetPathsConfig, getAuthState, getAuthDir, getInterceptedDir, getMonorepoRoot } from './config/paths';
+import { getAssetPathsConfig, getAuthState, getAuthDir, getInterceptedDir, getMonorepoRoot, getLogsFile } from './config/paths';
 import {
   AssetNamingService,
   SQLiteAssetRepository,
@@ -51,7 +51,7 @@ import { getDb } from './platform/database';
 
 export interface ScraperDependencies {
   db: IDatabase;
-  logger: ConsoleLogger;
+  logger: ILogger;
   taskRepo: ITaskRepository;
   courseRepo: SQLiteCourseRepository;
   assetRepo: SQLiteAssetRepository;
@@ -141,7 +141,10 @@ export class ScraperService {
     const { loadScraperEnv } = await import('./config/env');
     loadScraperEnv();
 
-    const logger = new ConsoleLogger();
+    const consoleLogger = new ConsoleLogger();
+    const logFile = await getLogsFile();
+    const fileLogger = new FileLogger(logFile);
+    const logger = new CompositeLogger([consoleLogger, fileLogger]);
     const nodeFs = new NodeFileSystem(logger);
     const nodePath = new NodePath();
     const universalFs = new UniversalFileSystem(nodeFs, logger);
