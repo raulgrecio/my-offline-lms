@@ -27,6 +27,10 @@ export class S3FileSystem implements IFileSystem {
     throw new Error(`[S3FileSystem] writeFile not implemented for ${p}`);
   }
 
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error(`[S3FileSystem] appendFile not implemented for ${p}`);
+  }
+
   async readdir(p: string): Promise<string[]> {
     throw new Error(`[S3FileSystem] readdir not implemented for ${p}`);
   }

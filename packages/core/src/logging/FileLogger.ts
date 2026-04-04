@@ -1,20 +1,16 @@
-import * as fs from "fs";
-import * as path from "path";
 import type { ILogger } from "./ILogger";
+import type { IFileSystem, IPath } from "../filesystem";
 
 /**
  * An implementation of ILogger that persists logs to a file.
  */
 export class FileLogger implements ILogger {
-  private readonly logPath: string;
-
-  constructor(logPath: string, private readonly defaultContext?: string) {
-    this.logPath = logPath;
-    const dir = path.dirname(this.logPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-  }
+  constructor(
+    private readonly logPath: string,
+    private readonly fs: IFileSystem,
+    private readonly path: IPath,
+    private readonly defaultContext?: string
+  ) {}
 
   info(message: string, context?: string): void {
     this.append("INFO", message, context);
@@ -39,7 +35,7 @@ export class FileLogger implements ILogger {
   }
 
   withContext(context: string): FileLogger {
-    return new FileLogger(this.logPath, context);
+    return new FileLogger(this.logPath, this.fs, this.path, context);
   }
 
   private append(level: string, message: string, context?: string): void {
@@ -48,11 +44,18 @@ export class FileLogger implements ILogger {
     const contextPart = ctx ? ` [${ctx}]` : "";
     const logLine = `[${timestamp}] ${level}${contextPart}: ${message}\n`;
 
-    try {
-      fs.appendFileSync(this.logPath, logLine);
-    } catch (e) {
-      // Fallback to console if file write fails to avoid silent failures
+    // Fire and forget to match ILogger synchronous interface
+    this.ensureDirAndAppend(logLine).catch((e) => {
+      // Fallback to console if write fails to avoid silent failures
       console.error(`[FileLogger] Failed to write to ${this.logPath}`, e);
+    });
+  }
+
+  private async ensureDirAndAppend(logLine: string): Promise<void> {
+    const dir = this.path.dirname(this.logPath);
+    if (!(await this.fs.exists(dir))) {
+      await this.fs.mkdir(dir, { recursive: true });
     }
+    await this.fs.appendFile(this.logPath, logLine);
   }
 }

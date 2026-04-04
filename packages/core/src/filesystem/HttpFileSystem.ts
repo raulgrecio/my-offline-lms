@@ -27,6 +27,10 @@ export class HttpFileSystem implements IFileSystem {
     throw new Error("HttpFileSystem does not support writeFile");
   }
 
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error("HttpFileSystem does not support appendFile");
+  }
+
   async readdir(p: string): Promise<string[]> {
     throw new Error("HttpFileSystem does not support readdir");
   }

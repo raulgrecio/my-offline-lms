@@ -24,6 +24,7 @@ vi.mock("fs", () => ({
       stat: vi.fn(),
       unlink: vi.fn(),
       rename: vi.fn(),
+      appendFile: vi.fn(),
     }
   }
 }));
@@ -89,5 +90,10 @@ describe("NodeFileSystem", () => {
     vi.mocked(fs.promises.rename).mockResolvedValue(undefined);
     await nfs.rename("old", "new");
     expect(fs.promises.rename).toHaveBeenCalledWith("old", "new");
+
+    // appendFile
+    vi.mocked(fs.promises.appendFile).mockResolvedValue(undefined);
+    await nfs.appendFile("foo", "append data");
+    expect(fs.promises.appendFile).toHaveBeenCalledWith("foo", "append data");
   });
 });

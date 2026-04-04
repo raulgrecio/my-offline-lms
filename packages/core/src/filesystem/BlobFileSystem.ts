@@ -31,6 +31,10 @@ export class BlobFileSystem implements IFileSystem {
     throw new Error(`[BlobFileSystem] writeFile not implemented for ${p}`);
   }
 
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error(`[BlobFileSystem] appendFile not implemented for ${p}`);
+  }
+
   async readdir(p: string): Promise<string[]> {
     throw new Error(`[BlobFileSystem] readdir not implemented for ${p}`);
   }

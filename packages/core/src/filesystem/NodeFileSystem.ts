@@ -37,6 +37,11 @@ export class NodeFileSystem implements IFileSystem {
     await fs.promises.writeFile(p, content);
   }
 
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    this.logger.debug?.(`appendFile to ${p}`);
+    await fs.promises.appendFile(p, content);
+  }
+
   async readdir(p: string): Promise<string[]> {
     return fs.promises.readdir(p);
   }

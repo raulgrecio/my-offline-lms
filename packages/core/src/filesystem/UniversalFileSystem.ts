@@ -69,6 +69,10 @@ export class UniversalFileSystem implements IFileSystem {
     return this.getBackend(p).writeFile(p, content);
   }
 
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    return this.getBackend(p).appendFile(p, content);
+  }
+
   async readdir(p: string): Promise<string[]> {
     return this.getBackend(p).readdir(p);
   }

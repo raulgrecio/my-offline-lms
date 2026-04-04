@@ -13,6 +13,7 @@ describe("UniversalFileSystem & UniversalPath", () => {
     exists: vi.fn(),
     readFile: vi.fn(),
     writeFile: vi.fn(),
+    appendFile: vi.fn(),
     readdir: vi.fn(),
     mkdir: vi.fn(),
     rm: vi.fn(),
@@ -96,6 +97,10 @@ describe("UniversalFileSystem & UniversalPath", () => {
       // writeFile
       await ufs.writeFile("/file", "data");
       expect(mockLocalFs.writeFile).toHaveBeenCalledWith("/file", "data");
+
+      // appendFile
+      await ufs.appendFile("/file", "appended");
+      expect(mockLocalFs.appendFile).toHaveBeenCalledWith("/file", "appended");
 
       // readdir & mkdir
       vi.mocked(mockLocalFs.readdir).mockResolvedValue(["a"]);

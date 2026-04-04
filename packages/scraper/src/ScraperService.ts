@@ -142,11 +142,19 @@ export class ScraperService {
     loadScraperEnv();
 
     const consoleLogger = new ConsoleLogger();
-    const logFile = await getLogsFile();
-    const fileLogger = new FileLogger(logFile);
-    const logger = new CompositeLogger([consoleLogger, fileLogger]);
-    const nodeFs = new NodeFileSystem(logger);
     const nodePath = new NodePath();
+    const logFile = await getLogsFile();
+
+    // To avoid circular dependency during bootstrap:
+    // 1. Create a basic FS for the FileLogger to use (logging only to console to start)
+    const bootstrapFs = new NodeFileSystem(consoleLogger);
+    const fileLogger = new FileLogger(logFile, bootstrapFs, nodePath);
+
+    // 2. Create the final composite logger
+    const logger = new CompositeLogger([consoleLogger, fileLogger]);
+
+    // 3. Create the final FS and other dependencies using the full logger
+    const nodeFs = new NodeFileSystem(logger);
     const universalFs = new UniversalFileSystem(nodeFs, logger);
     universalFs.registerRemote('http', new HttpFileSystem());
 
