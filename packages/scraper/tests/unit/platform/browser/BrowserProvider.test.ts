@@ -38,7 +38,10 @@ describe('BrowserProvider (Multi-session Support)', () => {
   };
 
   const mockBrowser = {
-    newContext: vi.fn().mockResolvedValue(mockContext),
+    newContext: vi.fn().mockImplementation(() => Promise.resolve({
+      newPage: vi.fn().mockResolvedValue(mockPage),
+      close: vi.fn().mockResolvedValue(undefined),
+    })),
     on: vi.fn(),
     close: vi.fn().mockResolvedValue(undefined),
   };
