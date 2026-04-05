@@ -1,4 +1,4 @@
-import { ConsoleLogger, FileLogger, CompositeLogger, type ILogger } from '@core/logging';
+import { ConsoleLogger, FileLogger, EventLogger, LogBroker, LogConnector, type ILogger } from '@core/logging';
 import { type IDatabase } from '@core/database';
 import { type DownloadType } from '@core/domain';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
@@ -141,21 +141,20 @@ export class ScraperService {
     const { loadScraperEnv } = await import('./config/env');
     loadScraperEnv();
 
-    const consoleLogger = new ConsoleLogger();
+    const eventLogger = new EventLogger();
     const nodePath = new NodePath();
     const logFile = await getLogsFile();
 
-    // To avoid circular dependency during bootstrap:
-    // 1. Create a basic FS for the FileLogger to use (logging only to console to start)
-    const bootstrapFs = new NodeFileSystem(consoleLogger);
-    const fileLogger = new FileLogger(logFile, bootstrapFs, nodePath);
+    // 1. Setup LogBroker subscribers
+    LogConnector.connect(new ConsoleLogger(), LogBroker);
 
-    // 2. Create the final composite logger
-    const logger = new CompositeLogger([consoleLogger, fileLogger]);
+    // File output (using a base FS that doesn't log to avoid loops)
+    const baseFs = new NodeFileSystem();
+    LogConnector.connect(new FileLogger(logFile, baseFs, nodePath), LogBroker);
 
-    // 3. Create the final FS and other dependencies using the full logger
-    const nodeFs = new NodeFileSystem(logger);
-    const universalFs = new UniversalFileSystem(nodeFs, logger);
+    // 2. Create the final FS and other dependencies using the event logger
+    const nodeFs = new NodeFileSystem(eventLogger);
+    const universalFs = new UniversalFileSystem(nodeFs, eventLogger);
     universalFs.registerRemote('http', new HttpFileSystem());
 
     const db = await getDb({ fsAdapter: nodeFs });
@@ -168,7 +167,7 @@ export class ScraperService {
       monorepoRoot,
       fs: universalFs,
       path: nodePath,
-      logger
+      logger: eventLogger
     });
 
     const authStateFile = await getAuthState();
@@ -180,7 +179,7 @@ export class ScraperService {
         chromeExecutablePath: env.CHROME_EXECUTABLE_PATH,
         authStateFile,
       },
-      logger
+      logger: eventLogger
     });
 
     const courseRepo = new SQLiteCourseRepository(db);
@@ -198,12 +197,12 @@ export class ScraperService {
       path: nodePath,
       getInterceptedDir,
       baseDir,
-      logger
+      logger: eventLogger
     });
 
     ScraperService.instance = new ScraperService({
       db,
-      logger,
+      logger: eventLogger,
       taskRepo,
       courseRepo,
       assetRepo,
@@ -231,10 +230,10 @@ export class ScraperService {
     return await this.deps.authSessionStorage.getSessionExpiry();
   }
 
-  async login({ interactive = false, headless = false, baseUrl }: { 
-    interactive?: boolean, 
-    headless?: boolean, 
-    baseUrl?: string 
+  async login({ interactive = false, headless = false, baseUrl }: {
+    interactive?: boolean,
+    headless?: boolean,
+    baseUrl?: string
   } = {}) {
     this.isLoggingIn = true;
     try {

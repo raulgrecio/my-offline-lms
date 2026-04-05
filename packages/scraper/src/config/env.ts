@@ -21,6 +21,9 @@ const envSchema = z.object({
 
   // DATA_DIR for shared database and assets
   DATA_DIR: z.string().optional(),
+
+  // Debugging
+  DEBUG: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof envSchema>;

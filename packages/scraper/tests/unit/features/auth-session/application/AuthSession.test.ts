@@ -66,6 +66,7 @@ describe('AuthSession Use Case', () => {
       goto: vi.fn().mockResolvedValue(undefined),
       url: vi.fn().mockReturnValue('http://base-url'),
       close: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     } as any;
     const mockContext = {
@@ -99,6 +100,7 @@ describe('AuthSession Use Case', () => {
     const mockPage = {
       goto: vi.fn(),
       url: vi.fn().mockReturnValue('http://url'),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     };
     const mockContext = {
@@ -123,6 +125,7 @@ describe('AuthSession Use Case', () => {
     const mockPage = {
       goto: vi.fn(),
       url: vi.fn().mockReturnValue('http://url'),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     };
     const mockContext = {
@@ -155,6 +158,7 @@ describe('AuthSession Use Case', () => {
     const mockPage = {
       goto: vi.fn(),
       url: vi.fn().mockReturnValue('http://url'),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     };
     const mockContext = {
@@ -181,6 +185,7 @@ describe('AuthSession Use Case', () => {
     const mockPage = {
       goto: vi.fn(),
       url: vi.fn().mockReturnValue('http://url'),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     };
     const mockContext = {
@@ -210,6 +215,7 @@ describe('AuthSession Use Case', () => {
     const mockPage = {
       goto: vi.fn(),
       url: vi.fn().mockReturnValue('http://url'),
+      on: vi.fn().mockReturnValue(undefined),
       addInitScript: vi.fn().mockResolvedValue(undefined),
     };
     const mockContext = {

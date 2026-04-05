@@ -12,36 +12,35 @@ export class FileLogger implements ILogger {
     private readonly defaultContext?: string
   ) {}
 
-  info(message: string, context?: string): void {
-    this.append("INFO", message, context);
+  info(message: string): void {
+    this.append("INFO", message);
   }
 
-  warn(message: string, context?: string): void {
-    this.append("WARN", message, context);
+  warn(message: string): void {
+    this.append("WARN", message);
   }
 
-  error(message: string, error?: unknown, context?: string): void {
+  error(message: string, error?: unknown): void {
     let errorMsg = message;
     if (error instanceof Error) {
       errorMsg += ` - ${error.stack}`;
     } else if (error) {
       errorMsg += ` - ${JSON.stringify(error)}`;
     }
-    this.append("ERROR", errorMsg, context);
+    this.append("ERROR", errorMsg);
   }
 
-  debug(message: string, context?: string): void {
-    this.append("DEBUG", message, context);
+  debug(message: string): void {
+    this.append("DEBUG", message);
   }
 
   withContext(context: string): FileLogger {
     return new FileLogger(this.logPath, this.fs, this.path, context);
   }
 
-  private append(level: string, message: string, context?: string): void {
+  private append(level: string, message: string): void {
     const timestamp = new Date().toISOString();
-    const ctx = context ?? this.defaultContext;
-    const contextPart = ctx ? ` [${ctx}]` : "";
+    const contextPart = this.defaultContext ? ` [${this.defaultContext}]` : "";
     const logLine = `[${timestamp}] ${level}${contextPart}: ${message}\n`;
 
     // Fire and forget to match ILogger synchronous interface

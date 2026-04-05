@@ -1,9 +1,12 @@
+import type { LogLevel } from "./ILogger";
+
 export interface LogEntry {
   id: string;
   timestamp: string;
-  level: 'info' | 'warn' | 'error' | 'debug';
+  level: LogLevel;
   message: string;
   context?: string;
+  error?: unknown;
 }
 
 type LogSubscriber = (entry: LogEntry) => void;
@@ -20,24 +23,32 @@ class LogBrokerImpl {
     return () => this.subscribers.delete(callback);
   }
 
-  handleLog(level: LogEntry['level'], message: string, context?: string) {
+  emit(level: LogLevel, message: string, error?: unknown, context?: string) {
     const entry: LogEntry = {
       id: Math.random().toString(36).substring(7),
       timestamp: new Date().toISOString(),
       level,
       message,
-      context
+      context,
+      error
     };
 
-    this.history.push(entry);
-    if (this.history.length > this.MAX_HISTORY) {
-      this.history.shift();
+    // Only store in history if it's not a debug message (keeps Web UI clean)
+    if (level !== 'debug') {
+      this.history.push(entry);
+      if (this.history.length > this.MAX_HISTORY) {
+        this.history.shift();
+      }
     }
 
-    this.subscribers.forEach(sub => sub(entry));
+    this.subscribers.forEach(callback => callback(entry));
   }
 
+  /**
+   * Internal method for testing purposes to reset the broker state.
+   */
   clear() {
+    this.subscribers.clear();
     this.history = [];
   }
 }
