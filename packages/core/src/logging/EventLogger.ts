@@ -1,4 +1,4 @@
-import { LogBroker, type LogEntry } from "./LogBroker";
+import { LogBroker } from "./LogBroker";
 import type { ILogger, LogLevel } from "./ILogger";
 
 /**

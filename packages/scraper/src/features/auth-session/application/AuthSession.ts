@@ -112,16 +112,14 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
       }
 
       return new Promise((resolve) => {
-        const handleInput = async (input: string) => {
-          if (input === "") {
-            this.logger.info("💾 Guardando sesión...");
-            await this.saveActiveSession();
-          }
+        const handleInput = async () => {
+          this.logger.info("💾 Guardando sesión...");
+          await this.saveActiveSession();
         };
 
         const handleKeypress = async (_: any, key: any) => {
           if (key && (key.name === 'return' || key.name === 'enter')) {
-            await handleInput("");
+            await handleInput();
             return;
           }
           if (key && (key.name === 'escape' || (key.ctrl && key.name === 'c'))) {

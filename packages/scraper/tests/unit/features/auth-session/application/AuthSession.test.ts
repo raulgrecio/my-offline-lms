@@ -295,4 +295,248 @@ describe('AuthSession Use Case', () => {
 
     expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
+
+  describe('Oracle Session Monitoring & Edge Cases', () => {
+    it('should monitor console logs for joinedRoom events', async () => {
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
+        newPage: vi.fn(),
+        url: vi.fn().mockReturnValue('http://platform.com'),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+      const contextEvents: Record<string, any> = {};
+      mockContext.on.mockImplementation((event: string, cb: any) => {
+        contextEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => pageEvents['console']);
+
+      // 1. Guest detected
+      pageEvents['console']({ text: () => '... joinedRoom ... "roomId":"guest" ...', type: () => 'info' });
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Invitado (Sesión Cerrada)'));
+
+      // 2. User login detected
+      pageEvents['console']({ text: () => '... joinedRoom ... "roomId":"user123" ...', type: () => 'info' });
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('LOGIN DETECTADO! Usuario: user123'));
+
+      // 3. Browser error log
+      pageEvents['console']({ text: () => 'Something went wrong', type: () => 'error' });
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('[Browser-Error] Something went wrong'));
+
+      // Terminate by simulating page close
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should monitor network responses for set-cookie headers', async () => {
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
+        newPage: vi.fn(),
+        url: vi.fn().mockReturnValue('http://platform.com'),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+      const contextEvents: Record<string, any> = {};
+      mockContext.on.mockImplementation((event: string, cb: any) => {
+        contextEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => contextEvents['response']);
+
+      // Simulate a response with a cookie
+      contextEvents['response']({
+        url: () => 'http://platform/api',
+        headers: () => ({ 'set-cookie': 'session=xyz' })
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Cookie detectada'));
+
+      // Simulate a response WITHOUT a cookie
+      contextEvents['response']({
+        url: () => 'http://platform/api',
+        headers: () => ({})
+      });
+      // Should not call debug again for cookie
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+
+      // Terminate
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should warn when navigating to unauthorized or login URLs', async () => {
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
+        url: vi.fn().mockReturnValue('http://platform/login'),
+        mainFrame: vi.fn().mockReturnThis()
+      } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => pageEvents['framenavigated']);
+
+      // Simulate navigation to login
+      await pageEvents['framenavigated'](mockPage.mainFrame());
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('pérdida de sesión detectada'));
+
+      // Terminate
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should log when a valid previous session is loaded', async () => {
+      mockAuthStorage.isValidSession.mockResolvedValue(true);
+      const mockPage = { goto: vi.fn().mockResolvedValue(undefined), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), close: vi.fn().mockResolvedValue(undefined) } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => (mockLogger.info as any).mock.calls.some((c: any) => c[0].includes('sesión previa detectada')));
+
+      // Terminate
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should return error if saveActiveSession is called without context', async () => {
+      // Reset usecase to ensure no activeContext
+      const standaloneUseCase = new AuthSession({
+        browserProvider: mockBrowserProvider,
+        authStorage: mockAuthStorage,
+        logger: mockLogger,
+      });
+      const result = await standaloneUseCase.saveActiveSession();
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("No hay sesión activa para guardar.");
+    });
+
+    it('should handle frameattached event for debugging', async () => {
+      const mockPage = { goto: vi.fn(), on: vi.fn() } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => pageEvents['frameattached']);
+
+      pageEvents['frameattached']({ url: () => 'http://iframe' });
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Nuevo Frame detectado: http://iframe'));
+
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should handle joinedRoom with unknown user ID', async () => {
+      const mockPage = { goto: vi.fn(), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), close: vi.fn().mockResolvedValue(undefined) } as any;
+      const mockContext = {
+        newPage: vi.fn().mockResolvedValue(mockPage),
+        on: vi.fn(),
+        exposeFunction: vi.fn().mockResolvedValue(undefined),
+        close: vi.fn().mockResolvedValue(undefined)
+      } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => {
+        pageEvents[event] = cb;
+      });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => pageEvents['console']);
+
+      // joinedRoom with missing roomId (malformed but triggers logic)
+      pageEvents['console']({ text: () => 'joinedRoom "roomId":""', type: () => 'info' });
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Usuario: desconocido'));
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+
+    it('should cover edge cases in monitoring (empty frame url, subframe navigation)', async () => {
+      const mockPage = { goto: vi.fn(), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), mainFrame: vi.fn(), close: vi.fn() } as any;
+      mockPage.mainFrame.mockReturnValue('MAIN');
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), on: vi.fn(), exposeFunction: vi.fn().mockResolvedValue(undefined), close: vi.fn() } as any;
+      mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
+
+      const pageEvents: Record<string, any> = {};
+      mockPage.on.mockImplementation((event: string, cb: any) => { pageEvents[event] = cb; });
+      const contextEvents: Record<string, any> = {};
+      mockContext.on.mockImplementation((event: string, cb: any) => { contextEvents[event] = cb; });
+
+      const promise = useCase.execute({ interactive: false });
+      await vi.waitUntil(() => pageEvents['frameattached']);
+
+      // 1. Frame without URL (covers 'cargando...')
+      pageEvents['frameattached']({ url: () => '' });
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('cargando...'));
+
+      // 2. Navigation in a SUB-frame (should be ignored due to mainFrame check)
+      pageEvents['framenavigated']('SUBFRAME');
+      expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('[Navigation] URL:'));
+
+      // 3. Log with joinedRoom but NO roomId string (covers skipping inner if)
+      pageEvents['console']({ text: () => 'joinedRoom but nothing else', type: () => 'info' });
+
+      if (pageEvents['close']) await pageEvents['close']();
+      await promise;
+    });
+  });
 });
+
+

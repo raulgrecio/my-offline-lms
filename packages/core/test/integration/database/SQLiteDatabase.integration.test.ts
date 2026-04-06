@@ -40,4 +40,11 @@ describe("SQLiteDatabase (Integration)", () => {
 
     db.close();
   });
+
+  it("should provide access to the native better-sqlite3 instance", () => {
+    const db = new SQLiteDatabase(":memory:");
+    expect(db.nativeDb).toBeDefined();
+    expect(typeof db.nativeDb.transaction).toBe("function");
+    db.close();
+  });
 });

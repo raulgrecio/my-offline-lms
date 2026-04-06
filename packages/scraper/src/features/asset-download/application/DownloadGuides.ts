@@ -70,7 +70,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
 
     try {
       for (let i = 0; i < pendingGuides.length; i++) {
-        this.logger.info(`======================================================`, '');
+        this.logger.info(`======================================================`);
         this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await this.downloadSingleGuide({
           assetId: pendingGuides[i].id,
@@ -83,7 +83,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       await this.browserProvider.close();
     }
 
-    this.logger.info(`======================================================`, '');
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
 
@@ -131,12 +131,11 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     }
 
     let context = sharedContext;
-    if (!context) {
-      context = await this.browserProvider.getAuthenticatedContext();
-    }
-
     let page = null;
     try {
+      if (!context) {
+        context = await this.browserProvider.getAuthenticatedContext();
+      }
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       page = await context.newPage();
       const tempImagesDir = await this.assetStorage.ensureTempDir(courseId, assetId);

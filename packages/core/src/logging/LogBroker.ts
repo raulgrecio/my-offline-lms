@@ -1,56 +1,62 @@
 import type { LogLevel } from "./ILogger";
+import { LogEventBus, type LogSubscriber } from "./LogEventBus";
+import { LogHistory } from "./LogHistory";
+import { LogRouter, type RouteOptions } from "./LogRouter";
+import type { ILogger } from "./ILogger";
 
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  context?: string;
-  error?: unknown;
-}
+/**
+ * Standardized logging facade for the overall application.
+ * Manages the transition from simple method calls to a robust Event-Driven system.
+ */
+class LogBrokerFacade {
+  private readonly bus = new LogEventBus();
+  private readonly history = new LogHistory(this.bus);
+  private readonly router = new LogRouter(this.bus);
 
-type LogSubscriber = (entry: LogEntry) => void;
-
-class LogBrokerImpl {
-  private subscribers: Set<LogSubscriber> = new Set();
-  private history: LogEntry[] = [];
-  private readonly MAX_HISTORY = 200;
-
-  subscribe(callback: LogSubscriber): () => void {
-    this.subscribers.add(callback);
-    // Send history to new subscriber
-    this.history.forEach(entry => callback(entry));
-    return () => this.subscribers.delete(callback);
-  }
-
+  /**
+   * Main entry point to emit standardized LogEvents from the application.
+   */
   emit(level: LogLevel, message: string, error?: unknown, context?: string) {
-    const entry: LogEntry = {
-      id: Math.random().toString(36).substring(7),
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      context,
-      error
-    };
-
-    // Only store in history if it's not a debug message (keeps Web UI clean)
-    if (level !== 'debug') {
-      this.history.push(entry);
-      if (this.history.length > this.MAX_HISTORY) {
-        this.history.shift();
+    // Construct the fully fledged event implementing the IEvent contract
+    this.bus.emit({
+      type: "LOG_EMITTED",
+      payload: {
+        level,
+        message,
+        error
+      },
+      metadata: {
+        id: Math.random().toString(36).substring(7),
+        timestamp: new Date().toISOString(),
+        context
       }
-    }
-
-    this.subscribers.forEach(callback => callback(entry));
+    });
   }
 
   /**
-   * Internal method for testing purposes to reset the broker state.
+   * Forwards subscriptions to the core EventBus using LogEvents.
    */
+  subscribe(callback: LogSubscriber): () => void {
+    const unsub = this.bus.subscribe(callback);
+    // Send history to new subscriber using the recorded events
+    this.history.getEntries().forEach(event => callback(event));
+    return unsub;
+  }
+
+  /**
+   * Forwards transport registration to the Router.
+   */
+  addTransport(logger: ILogger, options: RouteOptions = {}) {
+    this.router.addTransport(logger, options);
+  }
+
   clear() {
-    this.subscribers.clear();
-    this.history = [];
+    this.history.clear();
+  }
+
+  getHistory() {
+    return this.history.getEntries();
   }
 }
 
-export const LogBroker = new LogBrokerImpl();
+export const LogBroker = new LogBrokerFacade();

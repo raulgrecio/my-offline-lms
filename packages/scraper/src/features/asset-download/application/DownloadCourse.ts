@@ -51,9 +51,9 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
       return;
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`📦 Procesando Curso [${course.id}]: ${course.title}`);
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
 
 
     if (type === 'guide' || type === 'all') {
@@ -64,8 +64,8 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
       await this.downloadVideos.execute({ courseId: course.id });
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 ¡Descarga del curso ${courseId} COMPLETADA!`);
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
   }
 }

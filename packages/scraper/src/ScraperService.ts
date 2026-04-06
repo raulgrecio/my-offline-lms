@@ -1,4 +1,4 @@
-import { ConsoleLogger, FileLogger, EventLogger, LogBroker, LogConnector, type ILogger } from '@core/logging';
+import { ConsoleLogger, FileLogger, EventLogger, LogBroker, type ILogger } from '@core/logging';
 import { type IDatabase } from '@core/database';
 import { type DownloadType } from '@core/domain';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
@@ -146,11 +146,12 @@ export class ScraperService {
     const logFile = await getLogsFile();
 
     // 1. Setup LogBroker subscribers
-    LogConnector.connect(new ConsoleLogger(), LogBroker);
+    LogBroker.addTransport(new ConsoleLogger(), { minLevel: 'info' });
 
     // File output (using a base FS that doesn't log to avoid loops)
     const baseFs = new NodeFileSystem();
-    LogConnector.connect(new FileLogger(logFile, baseFs, nodePath), LogBroker);
+    LogBroker.addTransport(new FileLogger(logFile, baseFs, nodePath), { minLevel: 'debug' });
+
 
     // 2. Create the final FS and other dependencies using the event logger
     const nodeFs = new NodeFileSystem(eventLogger);
@@ -264,6 +265,14 @@ export class ScraperService {
     return await this.getAllTasksUseCase.execute();
   }
 
+  resolveCourseId(url: string): string {
+    return this.deps.urlProvider.resolveCourseUrl(url).courseId;
+  }
+
+  resolvePathId(url: string): string {
+    return this.deps.urlProvider.resolveLearningPathUrl(url).pathId;
+  }
+
   async getActiveTask() {
     return await this.getActiveTaskUseCase.execute();
   }
@@ -274,6 +283,14 @@ export class ScraperService {
 
   async createTask(input: CreateTaskInput) {
     return await this.createTaskUseCase.execute(input);
+  }
+
+  private async ensureTaskExists(input: CreateTaskInput) {
+    const task = await this.deps.taskRepo.findById(input.id);
+    if (!task) {
+      this.deps.logger.info(`Tarea "${input.id}" no encontrada en el repositorio. Registrándola ahora...`);
+      await this.createTask(input);
+    }
   }
 
   async cancelTask(id: string) {
@@ -319,6 +336,9 @@ export class ScraperService {
         }
       }
     });
+
+    const { courseId } = this.deps.urlProvider.resolveCourseUrl(url);
+    await this.ensureTaskExists({ id: taskId, type: 'course', url, targetId: courseId });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Sincronizando metadatos del curso...', onCleanup: () => this.cleanup() },
@@ -370,6 +390,9 @@ export class ScraperService {
         keepTempWorkspaces: false
       }
     });
+
+    const { pathId } = this.deps.urlProvider.resolveLearningPathUrl(url);
+    await this.ensureTaskExists({ id: taskId, type: 'path', url, targetId: pathId });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Sincronizando metadatos de la ruta...', onCleanup: () => this.cleanup() },
@@ -446,6 +469,12 @@ export class ScraperService {
       namingService: this.deps.namingService,
       logger: this.deps.logger
     });
+
+    const entityUrl = entityType === 'path'
+      ? this.deps.urlProvider.getLearningPathUrl({ id: entityId })
+      : this.deps.urlProvider.getCourseUrl({ id: entityId });
+
+    await this.ensureTaskExists({ id: taskId, type: entityType, url: entityUrl, targetId: entityId });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Descargando recursos...', onCleanup: () => this.cleanup() },

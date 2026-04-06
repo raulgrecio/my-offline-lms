@@ -93,4 +93,12 @@ describe('SQLiteAssetRepository', () => {
     const retrieved = repo.getAssetById('null_meta');
     expect(retrieved?.metadata).toEqual({});
   });
+
+  it('should handle NULL metadata in getPendingAssets', () => {
+    // Manually insert row with NULL metadata to force the branch
+    db.prepare("INSERT INTO Course_Assets (id, course_id, type, url, metadata, status) VALUES ('null_pending', 'c1', 'video', 'u', NULL, 'PENDING')").run();
+    const pending = repo.getPendingAssets('c1', 'video' as any);
+    const target = pending.find(p => p.id === 'null_pending');
+    expect(target?.metadata).toEqual({});
+  });
 });

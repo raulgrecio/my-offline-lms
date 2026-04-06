@@ -34,30 +34,60 @@ describe("Logging Module", () => {
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("WARN [ctx]: message"));
     });
 
+    it("should create child loggers with withContext", () => {
+      const logger = new ConsoleLogger("parent");
+      const child = logger.withContext("child");
+      child.info("hello");
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("INFO [child]: hello"));
+    });
+
     it("should log errors and error objects", () => {
       const logger = new ConsoleLogger("test");
       const err = new Error("boom");
       logger.error("fail", err);
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("ERROR [test]: fail"));
       expect(errorSpy).toHaveBeenCalledWith(err);
+
+      // Branch coverage: error without error object
+      logger.error("minor fail");
+      expect(errorSpy).toHaveBeenCalledTimes(3);
     });
 
     it("should log debug messages when DEBUG is true", () => {
       const logger = new ConsoleLogger();
-      
+
       // Mock process.env
       const originalWindow = globalThis.window;
       const originalProcess = globalThis.process;
       delete (globalThis as any).window;
-      (globalThis as any).process = { env: { DEBUG: "true" } };
 
+      // Case 1: DEBUG=true
+      (globalThis as any).process = { env: { DEBUG: "true" } };
       logger.debug?.("debug message");
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: debug message"));
+
+      // Case 2: NODE_ENV=development
+      (globalThis as any).process = { env: { NODE_ENV: "development", DEBUG: "false" } };
+      logger.debug?.("dev message");
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: dev message"));
+
+      // Browser simulation
+      delete (globalThis as any).process;
+      (globalThis as any).window = { DEBUG: "true" };
+      logger.debug?.("browser debug");
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: browser debug"));
+
+      // Default hidden case
+      delete (globalThis as any).window;
+      logger.debug?.("hidden");
+      expect(debugSpy).toHaveBeenCalledTimes(3);
 
       // Cleanup
       globalThis.window = originalWindow;
       globalThis.process = originalProcess;
     });
+
+
   });
 
   describe("NoopLogger", () => {
@@ -65,6 +95,10 @@ describe("Logging Module", () => {
       const logSpy = vi.spyOn(console, "log");
       const logger = new NoopLogger();
       logger.info("msg");
+      logger.warn("warn");
+      logger.error("err", new Error());
+      logger.debug?.("debug");
+      expect(logger.withContext("ctx")).toBe(logger);
       expect(logSpy).not.toHaveBeenCalled();
     });
   });

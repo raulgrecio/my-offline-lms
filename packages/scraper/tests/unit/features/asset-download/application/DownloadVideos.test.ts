@@ -343,6 +343,6 @@ describe('DownloadVideos Use Case', () => {
     
     // Line 139: if (videoId) { should be false
     await useCase.downloadSingleVideo('v1', '123');
-    expect(mockContextLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Extrayendo vídeo:'));
+    expect(mockPage.locator).not.toHaveBeenCalled();
   });
 });

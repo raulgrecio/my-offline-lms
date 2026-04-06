@@ -124,4 +124,86 @@ describe('BrowserProvider (Multi-session Support)', () => {
     await provider.getHeadfulContext();
     expect(chromium.launch).toHaveBeenCalledTimes(2);
   });
+
+  describe('Session Contexts (Headless/State)', () => {
+    it('should warn if session state is older than 24 hours', async () => {
+      const oldDate = new Date();
+      oldDate.setHours(oldDate.getHours() - 25);
+      
+      vi.mocked(mockFs.stat).mockResolvedValue({ mtime: oldDate } as any);
+      
+      const providerWithLogger = new BrowserProvider({
+        fs: mockFs,
+        path: mockPath,
+        config,
+        logger: mockLogger
+      });
+
+      await providerWithLogger.getHeadfulContext();
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('La sesión guardada tiene 25 horas'));
+    });
+
+    it('should use executablePath if provided in config', async () => {
+      const customConfig = { ...config, chromeExecutablePath: '/usr/bin/google-chrome' };
+      const providerWithCustomChrome = new BrowserProvider({ fs: mockFs, path: mockPath, config: customConfig });
+      
+      await providerWithCustomChrome.getHeadfulContext();
+      expect(chromium.launch).toHaveBeenCalledWith(expect.objectContaining({
+        executablePath: '/usr/bin/google-chrome',
+        channel: undefined
+      }));
+    });
+
+    it('should round hours in warning message', async () => {
+        const oldDate = new Date();
+        oldDate.setMinutes(oldDate.getMinutes() - 150); // 2.5 hours -> round to 3? No, only > 24
+        oldDate.setHours(oldDate.getHours() - 27.5); // 27.5 + 2.5 = 30.0 exactas
+        
+        vi.mocked(mockFs.stat).mockResolvedValue({ mtime: oldDate } as any);
+        const p = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+        await p.getHeadfulContext();
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('30 horas'));
+    });
+
+    it('should use default date if mtime is missing in stats', async () => {
+      vi.mocked(mockFs.stat).mockResolvedValue({} as any); // No mtime
+      await provider.getHeadfulContext();
+      // Should not throw, coverage of the || new Date()
+    });
+
+    it('should throw error in getAuthenticatedContext if session does not exist', async () => {
+      vi.mocked(mockFs.exists).mockResolvedValue(false);
+      await expect(provider.getAuthenticatedContext()).rejects.toThrow("No existe sesion guardada");
+    });
+
+    it('should return a headless context in getAuthenticatedContext if session exists', async () => {
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      vi.mocked(mockFs.stat).mockResolvedValue({ mtime: new Date() } as any);
+      
+      const ctx = await provider.getAuthenticatedContext();
+      expect(ctx).toBeDefined();
+      expect(chromium.launch).toHaveBeenCalledWith(expect.objectContaining({ headless: true }));
+    });
+  });
+
+  describe('Closing edge cases', () => {
+    it('should handle closing a non-tracked context gracefully', async () => {
+       const externalCtx = { close: vi.fn() } as any;
+       await provider.closeContext(externalCtx);
+       expect(externalCtx.close).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors during context or browser closing and log them', async () => {
+      const providerWithLogger = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+      const ctx = await providerWithLogger.getHeadfulContext();
+      
+      vi.mocked(ctx.close!).mockRejectedValue(new Error('fail context'));
+      vi.mocked(mockBrowser.close).mockRejectedValue(new Error('fail browser'));
+
+      await providerWithLogger.closeContext(ctx);
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al cerrar el contexto: fail context'));
+    });
+
+  });
 });
+

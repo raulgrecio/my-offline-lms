@@ -1,13 +1,14 @@
 import type { APIRoute } from 'astro';
+
 import { ScraperService } from '@scraper/ScraperService';
 import type { ScraperTaskType } from '@scraper/features/task-management';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { url, type, targetId, downloadVideos, downloadGuides } = await request.json();
+    const { url, type, targetId, taskId, downloadVideos, downloadGuides } = await request.json();
 
-    if (!url) {
-      return new Response(JSON.stringify({ error: 'URL is required' }), {
+    if (!url || !taskId) {
+      return new Response(JSON.stringify({ error: 'URL and Task ID are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -16,7 +17,8 @@ export const POST: APIRoute = async ({ request }) => {
     const scraper = await ScraperService.create();
     const downloadType = (downloadVideos && downloadGuides) ? 'all' : (downloadVideos ? 'video' : 'guide');
 
-    const taskId = await scraper.createTask({
+    await scraper.createTask({
+      id: taskId,
       type: type as ScraperTaskType,
       url,
       targetId

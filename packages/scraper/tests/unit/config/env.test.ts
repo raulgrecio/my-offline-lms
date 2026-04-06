@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import dotenv from 'dotenv';
-import path from 'path';
 
 // Mock platform logger to avoid noisy output
 vi.mock('@scraper/platform/logging', () => ({
@@ -90,5 +89,26 @@ describe('Environment Configuration', () => {
     const env = loadScraperEnv();
     expect(env).toEqual({});
     exitSpy.mockRestore();
+  });
+
+  it('should return valid env object and use defaults on happy path', async () => {
+    process.env.PLATFORM_BASE_URL = 'https://example.com';
+    const { loadScraperEnv } = await import('@scraper/config/env');
+
+    const env = loadScraperEnv();
+    expect(env.PLATFORM_BASE_URL).toBe('https://example.com');
+    expect(env.IMAGE_QUALITY).toBe(80); // Default from Zod
+  });
+
+  it('should cache the env object after first load', async () => {
+    process.env.PLATFORM_BASE_URL = 'https://cached.com';
+    const { loadScraperEnv } = await import('@scraper/config/env');
+
+    const env1 = loadScraperEnv();
+    process.env.PLATFORM_BASE_URL = 'https://changed.com'; // Change it in process.env
+    const env2 = loadScraperEnv();
+
+    expect(env2.PLATFORM_BASE_URL).toBe('https://cached.com'); // Still old value
+    expect(env1).toBe(env2);
   });
 });

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { ScraperTask } from '@scraper/features/task-management/domain/models/ScraperTask';
+import { ScraperTask } from '@scraper/features/task-management';
+import { generateId } from '@core/domain';
 
 describe('ScraperTask', () => {
-  it('should create a new task with default values', () => {
-    const id = 'task-1';
+  it('should create a new task with provided values', () => {
+    const id = generateId();
     const type = 'course';
     const url = 'https://example.com/course';
     const targetId = 'course-1';
@@ -21,16 +22,20 @@ describe('ScraperTask', () => {
     expect(task.updatedAt).toBeInstanceOf(Date);
   });
 
-  it('should transition to RUNNING state when started', () => {
-    const task = ScraperTask.create({ 
-      type: 'course', 
-      url: 'https://example.com/course' 
+  describe('start', () => {
+    it('should transition to RUNNING state when started', () => {
+      const id = generateId();
+      const task = ScraperTask.create({
+        id,
+        type: 'course',
+        url: 'https://example.com/course'
+      });
+
+      task.start();
+
+      expect(task.status).toBe('RUNNING');
+      expect(task.progress?.step).toBe('Iniciando proceso...');
+      expect(task.updatedAt).toBeInstanceOf(Date);
     });
-
-    task.start();
-
-    expect(task.status).toBe('RUNNING');
-    expect(task.progress?.step).toBe('Iniciando proceso...');
-    expect(task.updatedAt).toBeInstanceOf(Date);
   });
 });

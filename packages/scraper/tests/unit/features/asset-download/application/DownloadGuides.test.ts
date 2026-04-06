@@ -612,6 +612,75 @@ describe('DownloadGuides Use Case', () => {
       );
     });
 
+    it('should use _ag suffix for ekitType 2', async () => {
+      const asset = {
+        id: 'g2', type: 'guide', courseId: 'c1',
+        metadata: { ekitId: 'e2', offeringId: 'off2', gcc: 'D123', ekitType: '2' }
+      };
+      mockAssetRepo.getAssetById.mockReturnValue(asset);
+      mockAssetStorage.assetExists.mockResolvedValue(true);
+      await useCase.downloadSingleGuide({ assetId: 'g2', courseId: 'c1' });
+      expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+        'g2', expect.objectContaining({ filename: 'D123_ag.pdf' }), expect.anything()
+      );
+    });
+
+    it('should continue to download if meta.filename exists but file is NOT found', async () => {
+      const asset = {
+        id: 'g1', type: 'guide', courseId: 'c1',
+        metadata: { ekitId: 'e1', offeringId: 'off1', filename: 'missing.pdf' }
+      };
+      mockAssetRepo.getAssetById.mockReturnValue(asset);
+      mockAssetStorage.findExistingAsset.mockResolvedValue(null); // File not found
+      mockAssetStorage.assetExists.mockResolvedValue(false);
+      
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://src') }),
+        evaluate: vi.fn().mockResolvedValue(0), // Fail later but passes the branch 126
+        close: vi.fn(),
+      };
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
+      mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' });
+      expect(mockBrowserProvider.getAuthenticatedContext).toHaveBeenCalled(); // Tried to download
+    });
+
+    it('should use no suffix for unknown ekitType', async () => {
+      const asset = {
+        id: 'g3', type: 'guide', courseId: 'c1',
+        metadata: { ekitId: 'e3', offeringId: 'off3', gcc: 'D789', ekitType: '3' }
+      };
+      mockAssetRepo.getAssetById.mockReturnValue(asset);
+      mockAssetStorage.assetExists.mockResolvedValue(true);
+      await useCase.downloadSingleGuide({ assetId: 'g3', courseId: 'c1' });
+      expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+        'g3', expect.objectContaining({ filename: 'D789.pdf' }), expect.anything()
+      );
+    });
+
+    it('should handle sharedContext being falsy in finally', async () => {
+      const asset = { id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } };
+      mockAssetRepo.getAssetById.mockReturnValue(asset);
+      mockBrowserProvider.getAuthenticatedContext.mockRejectedValue(new Error('no context'));
+      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' }); // sharedContext is undefined
+      expect(mockBrowserProvider.close).toHaveBeenCalled();
+    });
+
+    it('should handle null ekitType gracefully', async () => {
+      const asset = {
+        id: 'g4', type: 'guide', courseId: 'c1',
+        metadata: { ekitId: 'e4', offeringId: 'off4', gcc: 'D999', ekitType: null }
+      };
+      mockAssetRepo.getAssetById.mockReturnValue(asset);
+      mockAssetStorage.assetExists.mockResolvedValue(true);
+      await useCase.downloadSingleGuide({ assetId: 'g4', courseId: 'c1' });
+      expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
+        'g4', expect.objectContaining({ filename: 'D999.pdf' }), expect.anything()
+      );
+    });
+
     it('should handle page close failure in finally block with shared context', async () => {
       const mockPage = {
         goto: vi.fn().mockRejectedValue(new Error('fail')),

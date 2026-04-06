@@ -117,4 +117,45 @@ describe('BrowserInterceptor', () => {
     // But should not write file
     expect(mockFs.writeFile).not.toHaveBeenCalled();
   });
+
+  it('should use prefix and timestamp for target directory if options provided', async () => {
+    const timestamp = 123456789;
+    const targetDir = await interceptor.setup(mockPage, { prefix: 'test', execTimestamp: timestamp });
+    expect(targetDir).toBe(`/mock/intercepted/test_${timestamp}`);
+  });
+
+  it('should sanitize URLs with strange characters for filenames', async () => {
+    await interceptor.setup(mockPage);
+    const responseHandler = mockPage.on.mock.calls[0][1] as any;
+
+    mockResponse.url.mockReturnValue('https://example.com/api/v1/user.details?id=123');
+    mockResponse.headers.mockReturnValue({ 'content-type': 'application/json' });
+    mockResponse.json.mockResolvedValue({});
+
+    await responseHandler(mockResponse);
+
+    const filename = vi.mocked(mockFs.writeFile).mock.calls[0][0];
+    expect(filename).toContain('api_v1_user_details'); // Sanitized
+  });
+
+  it('should handle extreme URLs for sanitizing (triple slashes, trailing slashes, root only)', async () => {
+    await interceptor.setup(mockPage);
+    const responseHandler = mockPage.on.mock.calls[0][1] as any;
+
+    // Root only
+    mockResponse.url.mockReturnValue('https://example.com/');
+    mockResponse.headers.mockReturnValue({ 'content-type': 'application/json' });
+    mockResponse.json.mockResolvedValue({});
+    await responseHandler(mockResponse);
+    let filename = vi.mocked(mockFs.writeFile).mock.calls[0][0];
+    expect(filename).not.toContain('__'); // No double underscores
+    expect(filename).not.toMatch(/_$/); // No trailing underscore
+
+    // Triple slashes
+    mockResponse.url.mockReturnValue('https://example.com///api///');
+    await responseHandler(mockResponse);
+    filename = vi.mocked(mockFs.writeFile).mock.calls[1][0];
+    expect(filename).toContain('_api.json'); // Clean
+  });
 });
+

@@ -1,10 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
+
+import { generateId } from '@core/domain';
+
 import { CreateTask } from '@scraper/features/task-management/application/CreateTask';
 import { UpdateTask } from '@scraper/features/task-management/application/UpdateTask';
 import { GetActiveTask } from '@scraper/features/task-management/application/GetActiveTask';
 import { CancelTask } from '@scraper/features/task-management/application/CancelTask';
 import { GetTaskById } from '@scraper/features/task-management/application/GetTaskById';
 import { StartTask } from '@scraper/features/task-management/application/StartTask';
+import { DeleteTask } from '@scraper/features/task-management/application/DeleteTask';
+import { GetAllTasks } from '@scraper/features/task-management/application/GetAllTasks';
 import { ScraperTask } from '@scraper/features/task-management/domain/models/ScraperTask';
 import type { ITaskRepository } from '@scraper/features/task-management/domain/ports/ITaskRepository';
 
@@ -22,14 +27,15 @@ describe('Task Management Use Cases', () => {
     it('should save a new task into the repository', async () => {
       const repo = mockRepo();
       const useCase = new CreateTask(repo);
-      const input = { type: 'course' as any, url: 'https://test.com', targetId: '123' };
+      const id = generateId();
+      const input = { id, type: 'course' as any, url: 'https://test.com', targetId: '123' };
 
       const taskId = await useCase.execute(input);
 
-      expect(taskId).toBeDefined();
+      expect(taskId).toBe(id);
       expect(repo.save).toHaveBeenCalled();
       const savedTask = (repo.save as any).mock.calls[0][0];
-      expect(savedTask.id).toBe(taskId);
+      expect(savedTask.id).toBe(id);
       expect(savedTask.status).toBe('PENDING');
     });
   });
@@ -58,6 +64,40 @@ describe('Task Management Use Cases', () => {
 
       expect(result).toBe(activeTask);
       expect(repo.findActive).toHaveBeenCalled();
+    });
+
+    it('should return undefined if no active task is found', async () => {
+      const repo = mockRepo();
+      const useCase = new GetActiveTask(repo);
+      (repo.findActive as any).mockResolvedValue(undefined);
+
+      const result = await useCase.execute();
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('GetAllTasks', () => {
+    it('should retrieve all tasks from the repository', async () => {
+      const repo = mockRepo();
+      const useCase = new GetAllTasks(repo);
+      (repo.findAll as any).mockResolvedValue([]);
+
+      const result = await useCase.execute();
+
+      expect(result).toEqual([]);
+      expect(repo.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('DeleteTask', () => {
+    it('should remove a task from the repository', async () => {
+      const repo = mockRepo();
+      const useCase = new DeleteTask(repo);
+
+      await useCase.execute({ id: 'task-1' });
+
+      expect(repo.delete).toHaveBeenCalledWith('task-1');
     });
   });
 

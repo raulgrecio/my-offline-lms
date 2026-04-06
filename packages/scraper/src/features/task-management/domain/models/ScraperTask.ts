@@ -20,11 +20,10 @@ export class ScraperTask {
     public updatedAt: Date
   ) { }
 
-  static create(data: { id?: string, type: ScraperTaskType, url: string, targetId?: string }): ScraperTask {
+  static create(data: { id: string, type: ScraperTaskType, url: string, targetId?: string }): ScraperTask {
     const now = new Date();
-    const id = data.id || Math.random().toString(36).substring(2, 11);
     return new ScraperTask(
-      id,
+      data.id,
       data.type,
       data.url,
       data.targetId || null,

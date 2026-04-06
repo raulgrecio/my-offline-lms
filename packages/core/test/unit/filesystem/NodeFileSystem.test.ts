@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Readable, Writable } from "node:stream";
+import fs from "node:fs";
 
 import { NodeFileSystem } from "@core/filesystem";
 
@@ -40,6 +40,10 @@ vi.mock("node:stream", () => ({
 
 describe("NodeFileSystem", () => {
   const nfs = new NodeFileSystem();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it("should delegate to fs and path methods", async () => {
     vi.mocked(fs.promises.access).mockResolvedValue(undefined);
@@ -95,5 +99,44 @@ describe("NodeFileSystem", () => {
     vi.mocked(fs.promises.appendFile).mockResolvedValue(undefined);
     await nfs.appendFile("foo", "append data");
     expect(fs.promises.appendFile).toHaveBeenCalledWith("foo", "append data");
+  });
+
+  describe("Coverage Extensions", () => {
+    it("should handle default constructor without logger", async () => {
+      const nfs = new NodeFileSystem();
+      expect(nfs).toBeDefined();
+      // Force access to fail for this check
+      vi.mocked(fs.promises.access).mockRejectedValueOnce(new Error("ENOENT"));
+      expect(await nfs.exists("/tmp/nonexistent")).toBe(false);
+    });
+
+    it("should call logger debug if provided", async () => {
+      const mockLogger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        withContext: vi.fn().mockReturnThis()
+      } as any;
+
+      const nfs = new NodeFileSystem(mockLogger);
+      await nfs.exists("test-file");
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+
+    it("should return null from createReadStream/createWriteStream if toWeb is missing", () => {
+      const originalToWebR = Readable.toWeb;
+      const originalToWebW = Writable.toWeb;
+      try {
+        (Readable as any).toWeb = undefined;
+        (Writable as any).toWeb = undefined;
+        const nfs = new NodeFileSystem();
+        expect(nfs.createReadStream("foo")).toBeNull();
+        expect(nfs.createWriteStream("foo")).toBeNull();
+      } finally {
+        (Readable as any).toWeb = originalToWebR;
+        (Writable as any).toWeb = originalToWebW;
+      }
+    });
   });
 });

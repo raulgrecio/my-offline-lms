@@ -18,6 +18,19 @@ describe('SQLiteLearningPathRepository', () => {
     repo.saveLearningPath({ id: 'lp1', slug: 's1', title: 'T1', description: 'D1' });
     const lp = repo.getLearningPathById('lp1');
     expect(lp).toEqual({ id: 'lp1', slug: 's1', title: 'T1', description: 'D1' });
+
+
+    repo.saveLearningPath({ id: 'lp1', slug: 's2', title: 'T2', description: 'D2' });
+    expect(repo.getLearningPathById('lp1')?.title).toBe('T2');
+  });
+
+  it('should get all learning paths ordered by title', () => {
+    repo.saveLearningPath({ id: 'lp2', slug: 's2', title: 'B', description: '' });
+    repo.saveLearningPath({ id: 'lp1', slug: 's1', title: 'A', description: '' });
+    const all = repo.getAllLearningPaths();
+    expect(all).toHaveLength(2);
+    expect(all[0].title).toBe('A');
+    expect(all[1].title).toBe('B');
   });
 
   it('should add courses to path and retrieve them', () => {
@@ -31,6 +44,9 @@ describe('SQLiteLearningPathRepository', () => {
     expect(courses).toHaveLength(1);
     expect(courses[0].id).toBe('c1');
     expect(courses[0].orderIndex).toBe(1);
+
+    repo.addCourseToPath({ pathId: 'lp1', courseId: 'c1', orderIndex: 5 });
+    expect(repo.getCoursesForPath('lp1')[0].orderIndex).toBe(5);
   });
 
   it('should return null if LP not found', () => {

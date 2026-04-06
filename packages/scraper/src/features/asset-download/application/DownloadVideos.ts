@@ -73,7 +73,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
 
     try {
       for (let i = 0; i < pendingVideos.length; i++) {
-        this.logger.info(`======================================================`, "");
+        this.logger.info(`======================================================`);
         this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
         await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
         await new Promise(r => setTimeout(r, 5000));
@@ -82,7 +82,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
       await this.browserProvider.close();
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 Finalizada la descarga de vídeos del curso ${courseId}.`);
   }
 

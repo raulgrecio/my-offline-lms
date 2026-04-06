@@ -55,9 +55,9 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
     this.logger.info(`📚 Encontrados ${courses.length} cursos. Procesando tipo de descarga: ${type}...`);
 
     for (const course of courses) {
-      this.logger.info(`======================================================`, "");
+      this.logger.info(`======================================================`);
       this.logger.info(`📦 Procesando Curso [${course.orderIndex}/${courses.length}]: ${course.title} (ID: ${course.id})`);
-      this.logger.info(`======================================================`, "");
+      this.logger.info(`======================================================`);
 
       if (type === 'guide' || type === 'all') {
         await this.downloadGuides.execute({ courseId: course.id });
@@ -68,8 +68,8 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
       }
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 ¡Descarga del Learning Path ${pathId} COMPLETADA!`);
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
   }
 }

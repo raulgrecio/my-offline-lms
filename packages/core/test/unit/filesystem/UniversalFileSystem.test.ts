@@ -118,8 +118,11 @@ describe("UniversalFileSystem & UniversalPath", () => {
       expect((await ufs.stat("/file")).size).toBe(10);
 
       // Protocol fallback (supported protocol but not registered)
-      await ufs.readdir("s3://foo");
+      const mockLogger = { debug: vi.fn(), withContext: vi.fn().mockReturnThis() } as any;
+      const ufsWithLogger = new UniversalFileSystem(mockLocalFs, mockLogger);
+      await ufsWithLogger.readdir("s3://foo");
       expect(mockLocalFs.readdir).toHaveBeenCalledWith("s3://foo");
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("No remote for s3, using local"));
 
       // Unsupported protocol should throw
       await expect(ufs.readdir("unknown://foo")).rejects.toThrow("Unsupported protocol: unknown");
@@ -175,7 +178,69 @@ describe("UniversalFileSystem & UniversalPath", () => {
       expect(up.join("http://a", "b")).toBe("http://join");
 
       vi.mocked(mockLocalPath.join).mockReturnValue("/join");
+      vi.mocked(mockLocalPath.resolve).mockReturnValue("/join");
       expect(up.join("/a", "b")).toBe("/join");
+
+      // Unregistered protocol fallback
+      expect(up.join("s3://bucket", "key")).toBe("/join");
+
+      // Empty paths
+      expect(up.resolve()).toBe("/join"); // resolve calls resolve, which is mocked to /join
+
+      // HTTPS normalization
+      expect(up.join("https://site", "file")).toBe("http://join");
+    });
+  });
+
+  describe("Coverage Extensions", () => {
+    const mockLocalFs = {
+      exists: vi.fn(),
+      withContext: vi.fn().mockReturnThis()
+    } as any;
+
+    const mockLocalPath = {
+      resolve: vi.fn(),
+      join: vi.fn(),
+      dirname: vi.fn(),
+      extname: vi.fn().mockReturnValue(".txt"),
+      isAbsolute: vi.fn(),
+      sep: "/"
+    } as any;
+
+    it("UniversalPath should provide extname delegation", () => {
+      const up = new UniversalPath(mockLocalPath);
+      expect(up.extname("test.txt")).toBe(".txt");
+      expect(mockLocalPath.extname).toHaveBeenCalledWith("test.txt");
+    });
+
+    it("UniversalPath should provide access to local separator", () => {
+      const up = new UniversalPath(mockLocalPath);
+      expect(up.sep).toBe("/");
+    });
+
+    it("UniversalFileSystem should route blob:// protocol", async () => {
+      const mockBlobFs = { exists: vi.fn().mockResolvedValue(true) } as any;
+      const ufs = new UniversalFileSystem(mockLocalFs);
+      ufs.registerRemote("blob", mockBlobFs);
+
+      expect(await ufs.exists("blob://account/container/file")).toBe(true);
+      expect(mockBlobFs.exists).toHaveBeenCalledWith("blob://account/container/file");
+    });
+
+    it("UniversalPath should normalize https to http in protocol detection", () => {
+      const up = new UniversalPath(mockLocalPath);
+      vi.mocked(mockLocalPath.dirname).mockReturnValue("dir");
+      const mockHttpPath = { dirname: vi.fn().mockReturnValue("http-dir") } as any;
+      const remotes = new Map<any, any>([["http", mockHttpPath]]);
+      const upWithRemotes = new UniversalPath(mockLocalPath, remotes);
+      expect(upWithRemotes.dirname("https://example.com/file")).toBe("http-dir");
+    });
+
+    it("UniversalPath should identify Windows drive letters as absolute", () => {
+      const up = new UniversalPath(new NodePath());
+      expect(up.isAbsolute("Z:\\path")).toBe(true);
+      expect(up.isAbsolute("a:/path")).toBe(true);
     });
   });
 });
+

@@ -71,4 +71,10 @@ describe('config/paths', () => {
   it('should return correct assets dir', async () => {
     expect(await getAssetsDir()).toBe('/mock/monorepo/data/assets');
   });
+
+  it('should return correct logs dir and file', async () => {
+    const { getLogsDir, getLogsFile } = await import('@scraper/config/paths');
+    expect(await getLogsDir()).toBe('/mock/monorepo/packages/scraper/data/logs');
+    expect(await getLogsFile()).toBe('/mock/monorepo/packages/scraper/data/logs/scraper.log');
+  });
 });

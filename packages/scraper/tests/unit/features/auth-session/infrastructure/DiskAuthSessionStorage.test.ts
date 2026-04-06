@@ -142,7 +142,7 @@ describe('DiskAuthSessionStorage', () => {
       expect(await storage.isValidSession()).toBe(false);
     });
 
-    it('should return false if cookies array is empty', async () => {
+    it('should return false if cookies array is empty or not an array', async () => {
       const storage = new DiskAuthSessionStorage({
         fs: mockFs,
         path: mockPath,
@@ -151,6 +151,16 @@ describe('DiskAuthSessionStorage', () => {
       mockFs.exists.mockResolvedValue(true);
       mockFs.readFile = vi.fn().mockResolvedValue(Buffer.from(JSON.stringify({
         cookies: []
+      })));
+      expect(await storage.isValidSession()).toBe(false);
+
+      mockFs.readFile.mockResolvedValue(Buffer.from(JSON.stringify({
+        not_cookies: []
+      })));
+      expect(await storage.isValidSession()).toBe(false);
+
+      mockFs.readFile.mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: "not-an-array"
       })));
       expect(await storage.isValidSession()).toBe(false);
     });
@@ -169,6 +179,52 @@ describe('DiskAuthSessionStorage', () => {
         ]
       })));
       expect(await storage.isValidSession()).toBe(true);
+    });
+
+    it('should return false if reading the auth file fails (catch block)', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => mockBaseDir });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockRejectedValue(new Error('Disk error'));
+      expect(await storage.isValidSession()).toBe(false);
+    });
+  });
+
+  describe('getSessionExpiry', () => {
+    it('should return null if session file does not exist', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => mockBaseDir });
+      mockFs.exists.mockResolvedValue(false);
+      expect(await storage.getSessionExpiry()).toBeNull();
+    });
+
+    it('should return the minimum expiry from matching auth cookies including GP_AUTH prefix', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => mockBaseDir });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: [
+          { name: 'ora_session', expires: 2000, domain: 'd.com' },
+          { name: 'GP_AUTH_TOKEN', expires: 1500, domain: 'd.com' },
+          { name: 'SSO_TOKEN', expires: 2500, domain: 'd.com' },
+          { name: 'GP_AUTH_XYZ', expires: 1800, domain: 'd.com' },
+          { name: 'other', expires: 500, domain: 'd.com' } // Should ignore
+        ]
+      })));
+      expect(await storage.getSessionExpiry()).toBe(1500);
+    });
+
+    it('should return null if no matching cookies have expiries', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => mockBaseDir });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue(Buffer.from(JSON.stringify({
+        cookies: [{ name: 'ora_session', expires: 0, domain: 'd.com' }]
+      })));
+      expect(await storage.getSessionExpiry()).toBeNull();
+    });
+
+    it('should return null if JSON is corrupt (catch block)', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => mockBaseDir });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue(Buffer.from('{{BAD JSON'));
+      expect(await storage.getSessionExpiry()).toBeNull();
     });
   });
 });

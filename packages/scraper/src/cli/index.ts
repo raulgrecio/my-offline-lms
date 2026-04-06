@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { type DownloadType } from '@core/domain';
+import { type DownloadType, generateId } from '@core/domain';
 import { ScraperService } from '../ScraperService';
 
 dotenv.config();
@@ -105,7 +105,7 @@ export async function runCLI() {
     }
 
     const command = metadata.command;
-    const CLI_TASK_ID = "cli-task";
+    const taskId = generateId();
 
     switch (command) {
       case CLI_COMMANDS.LOGIN: {
@@ -115,39 +115,51 @@ export async function runCLI() {
       case CLI_COMMANDS.SYNC_COURSE: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL del curso.");
-        await scraper.syncCourse({ url: target, taskId: CLI_TASK_ID });
+        await scraper.syncCourse({ url: target, taskId: taskId });
         break;
       }
       case CLI_COMMANDS.SYNC_PATH: {
         const target = args[1];
         if (!target) throw new Error("Falta la URL o ID numérico del Learning Path.");
-        await scraper.syncPath({ url: target, taskId: CLI_TASK_ID });
+        await scraper.syncPath({ url: target, taskId: taskId });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_GUIDES: {
-        const id = args[1];
+        let id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download({ type: 'guide', taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
+        if (id.startsWith('http')) {
+          id = scraper.resolveCourseId(id);
+        }
+        await scraper.download({ type: 'guide', taskId: taskId, entityId: id, entityType: 'course' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_VIDEOS: {
-        const id = args[1];
+        let id = args[1];
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download({ type: 'video', taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
+        if (id.startsWith('http')) {
+          id = scraper.resolveCourseId(id);
+        }
+        await scraper.download({ type: 'video', taskId: taskId, entityId: id, entityType: 'course' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_PATH: {
-        const id = args[1];
+        let id = args[1];
         const type = (args[2] as DownloadType) || 'all';
         if (!id) throw new Error("Falta el ID del Learning Path.");
-        await scraper.download({ type, taskId: CLI_TASK_ID, entityId: id, entityType: 'path' });
+        if (id.startsWith('http')) {
+          id = scraper.resolvePathId(id);
+        }
+        await scraper.download({ type, taskId: taskId, entityId: id, entityType: 'path' });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_COURSE: {
-        const id = args[1];
+        let id = args[1];
         const type = (args[2] as DownloadType) || 'all';
         if (!id) throw new Error("Falta el ID del curso.");
-        await scraper.download({ type, taskId: CLI_TASK_ID, entityId: id, entityType: 'course' });
+        if (id.startsWith('http')) {
+          id = scraper.resolveCourseId(id);
+        }
+        await scraper.download({ type, taskId: taskId, entityId: id, entityType: 'course' });
         break;
       }
     }

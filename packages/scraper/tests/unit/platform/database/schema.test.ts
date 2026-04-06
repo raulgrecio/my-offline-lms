@@ -4,11 +4,21 @@ import { SQLiteDatabase } from '@core/database';
 import { NodeFileSystem } from '@core/filesystem';
 
 import { initDb } from '@scraper/platform/database';
+import { logger } from '@scraper/platform/logging';
 
 vi.mock('@scraper/config/paths', () => ({
   getDataDir: vi.fn().mockResolvedValue('/tmp/mock-data'),
   getDbPath: vi.fn().mockResolvedValue(':memory:'),
 }));
+
+vi.mock('@scraper/platform/logging', () => ({
+  logger: {
+    info: vi.fn(),
+    debug: vi.fn(),
+    withContext: vi.fn().mockReturnThis(),
+  },
+}));
+
 
 vi.mock('@core/filesystem', async (importOriginal) => {
   const actual = await importOriginal<any>();
@@ -50,6 +60,7 @@ describe('Database Schema', () => {
 
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
     expect(tables.length).toBeGreaterThan(0);
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('provided instance'));
     db.close();
   });
 
@@ -59,6 +70,8 @@ describe('Database Schema', () => {
 
     const tables = (db as SQLiteDatabase).prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
     expect(tables.length).toBeGreaterThan(0);
+    expect(logger.debug).toHaveBeenCalledWith('Mock SQL query');
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Database schema initialized.'));
     db.close();
   });
 });

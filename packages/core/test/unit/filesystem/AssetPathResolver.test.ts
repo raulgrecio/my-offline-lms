@@ -20,6 +20,9 @@ describe("AssetPathResolver (Windows Support)", () => {
     },
     createWriteStream: function (p: string, options?: any): WritableStream | null {
       throw new Error("Function not implemented.");
+    },
+    appendFile: function (p: string, content: string | Buffer): Promise<void> {
+      throw new Error("Function not implemented.");
     }
   };
 
@@ -200,131 +203,87 @@ describe("AssetPathResolver (Windows Support)", () => {
     expect(await resolver.getDefaultWritePath()).toBe("/custom-data");
   });
 
-  it("should handle absolute and relative search paths", async () => {
-    vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({
-      defaultWritePath: "/data",
-      searchPaths: [
-        { path: "/abs", label: "Abs" },
-        { path: "rel", label: "Rel" }
-      ]
-    }));
-    vi.mocked(mockFs.exists).mockImplementation(async (p) => {
-      if (p === "/abs" || p === "/root/rel" || p === "/config.json") return true;
-      return false;
+  describe("Coverage Extensions", () => {
+    it("should handle concurrent initialization calls", async () => {
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      vi.mocked(mockFs.readFile).mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(JSON.stringify({})), 10)));
+      const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      const p1 = resolver.ensureInitialized();
+      const p2 = resolver.ensureInitialized();
+      expect(p1).toStrictEqual(p2);
+      await p1;
     });
 
-    const resolver = new AssetPathResolver({
-      configPath: "/config.json",
-      monorepoRoot: "/root",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
+    it("should handle catastrophic disk errors during config load", async () => {
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      vi.mocked(mockFs.readFile).mockRejectedValue(new Error("Disk Failure"));
+      const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await expect(resolver.ensureInitialized()).resolves.toBeUndefined();
+      expect(await resolver.getDefaultWritePath()).toBe("/r/data/assets");
     });
-    await resolver.ensureInitialized();
 
-    expect(await resolver.assetExistsAnywhere("1", "video", "not-exists.mp4")).toBe(false);
-  });
-
-  it("should handle missing or corrupt config file and silence errors", async () => {
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
-
-    vi.mocked(mockFs.exists).mockImplementation(async (p) => {
-      if (p === "/config.json") return false;
-      if (p === "/") return false;
-      return true;
+    it("should handle absolute and relative search paths", async () => {
+      vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [{ path: "/abs", label: "Abs" }, { path: "rel", label: "Rel" }] }));
+      vi.mocked(mockFs.exists).mockImplementation(async (p) => {
+        if (p === "/abs" || p === "/root/rel" || p === "/config.json") return true;
+        return false;
+      });
+      const resolver = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await resolver.ensureInitialized();
+      expect(await resolver.assetExistsAnywhere("1", "video", "not-exists.mp4")).toBe(false);
     });
-    vi.mocked(mockFs.mkdir).mockResolvedValue(undefined as any);
-    vi.mocked(mockFs.writeFile).mockResolvedValue(undefined);
 
-    const r1 = new AssetPathResolver({
-      configPath: "/config.json",
-      monorepoRoot: "/root",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
+    it("should handle missing or corrupt config file and silence errors", async () => {
+      vi.mocked(mockFs.exists).mockImplementation(async (p) => {
+        if (p === "/config.json") return false;
+        if (p === "/") return false;
+        return true;
+      });
+      vi.mocked(mockFs.mkdir).mockResolvedValue(undefined as any);
+      vi.mocked(mockFs.writeFile).mockResolvedValue(undefined);
+      const r1 = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await r1.ensureInitialized();
+      expect(mockFs.mkdir).toHaveBeenCalledWith("/", { recursive: true });
+
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      vi.mocked(mockFs.readFile).mockResolvedValue("NOT JSON");
+      const r2 = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await r2.ensureInitialized();
     });
-    await r1.ensureInitialized();
-    expect(mockFs.mkdir).toHaveBeenCalledWith("/", { recursive: true });
 
-    vi.mocked(mockFs.exists).mockResolvedValue(true);
-    vi.mocked(mockFs.readFile).mockResolvedValue("NOT JSON");
-    const r2 = new AssetPathResolver({
-      configPath: "/config.json",
-      monorepoRoot: "/root",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
+    it("should handle readdir error in listAssets", async () => {
+      vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [{ path: "/p1", label: "P1" }] }));
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      vi.mocked(mockFs.readdir).mockRejectedValue(new Error("Disk error"));
+      const resolver = new AssetPathResolver({ configPath: "/config.json", monorepoRoot: "/root", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await resolver.ensureInitialized();
+      const assets = await resolver.listAssets("123", "video");
+      expect(assets).toEqual([]);
     });
-    await r2.ensureInitialized();
 
-    errorSpy.mockRestore();
-  });
-
-  it("should handle readdir error in listAssets", async () => {
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
-    vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({
-      defaultWritePath: "/data",
-      searchPaths: [{ path: "/p1", label: "P1" }]
-    }));
-    vi.mocked(mockFs.exists).mockResolvedValue(true);
-    vi.mocked(mockFs.readdir).mockRejectedValue(new Error("Disk error"));
-
-    const resolver = new AssetPathResolver({
-      configPath: "/config.json",
-      monorepoRoot: "/root",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
+    it("should handle null config edge cases", async () => {
+      vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await resolver.ensureInitialized();
+      (resolver as any).config = null;
+      expect(await resolver.getAvailablePaths()).toEqual([]);
+      expect(await resolver.getDefaultWritePath()).toBe("/r/data/assets");
+      await expect(resolver.saveNewPath("/p", "L")).resolves.toBeUndefined();
+      await expect(resolver.removePath("/p")).resolves.toBeUndefined();
+      await (resolver as any).saveConfig();
     });
-    await resolver.ensureInitialized();
 
-    const assets = await resolver.listAssets("123", "video");
-    expect(assets).toEqual([]);
-    errorSpy.mockRestore();
-  });
-
-  it("should handle null config edge cases", async () => {
-    vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
-    vi.mocked(mockFs.exists).mockResolvedValue(true);
-    const resolver = new AssetPathResolver({
-      configPath: "/c.json",
-      monorepoRoot: "/r",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
+    it("should handle resolveExistingPath edge cases", async () => {
+      vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      const resolver = new AssetPathResolver({ configPath: "/c.json", monorepoRoot: "/r", fs: mockFs, path: mockPath, logger: new NoopLogger() });
+      await resolver.ensureInitialized();
+      vi.mocked(mockFs.exists).mockResolvedValue(true);
+      expect(await resolver.resolveExistingPath("/already/exists.mp4")).toBe("/already/exists.mp4");
+      vi.mocked(mockFs.exists).mockResolvedValue(false);
+      expect(await resolver.resolveExistingPath("/tmp")).toBeNull();
+      expect(await resolver.resolveExistingPath("/a/unknown/file.txt")).toBeNull();
     });
-    await resolver.ensureInitialized();
-
-    // Force null config to hit defensive branches
-    (resolver as any).config = null;
-    expect(await resolver.getAvailablePaths()).toEqual([]);
-    expect(await resolver.getDefaultWritePath()).toBe("/r/data/assets");
-    await expect(resolver.saveNewPath("/p", "L")).resolves.toBeUndefined();
-    await expect(resolver.removePath("/p")).resolves.toBeUndefined();
-    await (resolver as any).saveConfig();
-  });
-
-  it("should handle resolveExistingPath edge cases", async () => {
-    vi.mocked(mockFs.readFile).mockResolvedValue(JSON.stringify({ defaultWritePath: "/data", searchPaths: [] }));
-    vi.mocked(mockFs.exists).mockResolvedValue(true);
-    const resolver = new AssetPathResolver({
-      configPath: "/c.json",
-      monorepoRoot: "/r",
-      fs: mockFs,
-      path: mockPath,
-      logger: new NoopLogger(),
-    });
-    await resolver.ensureInitialized();
-
-    // Path already exists
-    vi.mocked(mockFs.exists).mockResolvedValue(true);
-    expect(await resolver.resolveExistingPath("/already/exists.mp4")).toBe("/already/exists.mp4");
-
-    // Short path
-    vi.mocked(mockFs.exists).mockResolvedValue(false);
-    expect(await resolver.resolveExistingPath("/tmp")).toBeNull();
-
-    // Unknown type
-    expect(await resolver.resolveExistingPath("/a/unknown/file.txt")).toBeNull();
   });
 });

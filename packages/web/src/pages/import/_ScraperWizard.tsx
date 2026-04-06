@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+import { generateId } from '@core/domain';
+
 import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { API_ROUTES } from '@web/platform/api/routes';
 import { apiClient } from '@web/platform/api/client';
@@ -169,16 +171,18 @@ export const ScraperWizard: React.FC = () => {
     const type = selectedItem ? selectedItem.type : contentType;
     const targetId = selectedItem ? selectedItem.id : undefined;
 
+    const id = generateId();
     try {
       const data = await apiClient.post<any>(API_ROUTES.SCRAPER.SYNC, {
+        taskId: id,
         url,
         type,
         targetId,
         downloadVideos: downloadOptions.videos,
         downloadGuides: downloadOptions.guides
       });
-      if (data.taskId) {
-        setTaskId(data.taskId);
+      if (data.ok) {
+        setTaskId(id);
         setExecutionResult(null);
         // We could also redirect to tasks tab here if we wanted, 
         // but for now let's keep the wizard flow.

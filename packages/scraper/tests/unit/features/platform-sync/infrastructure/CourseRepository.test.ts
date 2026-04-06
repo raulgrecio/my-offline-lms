@@ -32,6 +32,30 @@ describe('SQLiteCourseRepository', () => {
     const assets = repo.getCourseAssets('c1');
     expect(assets).toHaveLength(1);
     expect(assets[0].id).toBe('a1');
+    expect(assets[0].metadata).toEqual({});
+
+    db.prepare("INSERT INTO Course_Assets (id, course_id, metadata) VALUES ('a2', 'c1', '{\"foo\":1}')").run();
+    expect(repo.getCourseAssets('c1')[1].metadata).toEqual({ foo: 1 });
+  });
+
+  it('should get courses with full sync status', () => {
+    repo.saveCourse({ id: 'C1', title: 'A_Course', slug: 's1' });
+    repo.saveCourse({ id: 'C2', title: 'B_Course', slug: 's2' });
+
+    // C1: 1 video downloaded, 1 video pending, 1 guide downloaded
+    db.prepare("INSERT INTO Course_Assets (id, course_id, type, local_path) VALUES ('v1', 'C1', 'video', '/p')").run();
+    db.prepare("INSERT INTO Course_Assets (id, course_id, type) VALUES ('v2', 'C1', 'video')").run();
+    db.prepare("INSERT INTO Course_Assets (id, course_id, type, local_path) VALUES ('g1', 'C1', 'guide', '/p')").run();
+
+    const status = repo.getCoursesWithSyncStatus();
+    expect(status).toHaveLength(2);
+    expect(status[0].id).toBe('C1');
+    expect(status[0].totalAssets).toBe(3);
+    expect(status[0].downloadedAssets).toBe(2);
+    expect(status[0].totalVideos).toBe(2);
+    expect(status[0].downloadedVideos).toBe(1);
+    expect(status[0].totalGuides).toBe(1);
+    expect(status[0].downloadedGuides).toBe(1);
   });
 
   it('should return null if course not found', () => {

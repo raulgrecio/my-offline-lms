@@ -91,14 +91,18 @@ export class BrowserProvider implements IBrowserProvider {
     if (this.contexts.has(context)) {
       this.contexts.delete(context);
       // We don't strictly await here to avoid deadlocks if the browser is already closing/closed
-      await context.close().catch(() => { });
+      await context.close().catch((e) => { 
+        this.logger?.error(`Error al cerrar el contexto: ${e.message}`);
+      });
     }
 
     // Auto-close browser if no more contexts are alive
     if (this.contexts.size === 0 && this.browser) {
       const b = this.browser;
       this.browser = null;
-      await b.close().catch(() => { });
+      await b.close().catch((e) => { 
+        this.logger?.error(`Error al cerrar el navegador: ${e.message}`);
+      });
     }
   }
 

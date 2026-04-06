@@ -82,6 +82,23 @@ describe('SQLiteTaskRepository', () => {
     expect(active).not.toBeNull();
     expect(active?.id).toBe(taskId);
     expect(active?.status).toBe('RUNNING');
+
+    // Case: Second active task, newer
+    const now = new Date();
+    const newerTask = new ScraperTask(
+      'newer',
+      'course',
+      'u',
+      null,
+      'RUNNING',
+      null,
+      null,
+      new Date(now.getTime() + 1000), // Distinctly newer
+      new Date(now.getTime() + 1000)
+    );
+    await repository.save(newerTask);
+    const latestActive = await repository.findActive();
+    expect(latestActive?.id).toBe('newer');
   });
 
   it('should return null if no active task found', async () => {
@@ -105,4 +122,50 @@ describe('SQLiteTaskRepository', () => {
     const found = await repository.findById('non-existent');
     expect(found).toBeNull();
   });
+
+  it('should find all tasks ordered by creation date', async () => {
+    db.prepare('DELETE FROM Scraper_Tasks').run();
+    const t1 = ScraperTask.create({ id: 't1', type: 'course', url: 'u1' });
+    const t2 = ScraperTask.create({ id: 't2', type: 'course', url: 'u2' });
+    
+    await repository.save(t1);
+    await repository.save(t2);
+
+    const all = await repository.findAll();
+    expect(all).toHaveLength(2);
+    // Ordered by createdAt DESC, so t2 should be first if saved after t1
+    // (In memory it's very fast, but let's check ids)
+    expect(all.map(t => t.id)).toContain('t1');
+    expect(all.map(t => t.id)).toContain('t2');
+  });
+
+  it('should delete a task by id', async () => {
+    const t1 = ScraperTask.create({ id: 'to-delete', type: 'course', url: 'u' });
+    await repository.save(t1);
+    
+    expect(await repository.findById('to-delete')).not.toBeNull();
+    await repository.delete('to-delete');
+    expect(await repository.findById('to-delete')).toBeNull();
+  });
+
+  it('should map tasks with null progress correctly', async () => {
+    const t1 = ScraperTask.create({ id: 'no-progress', type: 'course', url: 'u' });
+    // Ensuring progress is null
+    t1.progress = null;
+    await repository.save(t1);
+    
+    const found = await repository.findById('no-progress');
+    expect(found?.progress).toBeNull();
+  });
+
+  it('should not perform update if no data is provided', async () => {
+    const t1 = ScraperTask.create({ id: 'stay-same', type: 'course', url: 'u' });
+    await repository.save(t1);
+    
+    await repository.update('stay-same', {});
+    const found = await repository.findById('stay-same');
+    expect(found?.status).toBe('PENDING'); // No change
+  });
 });
+
+

@@ -19,6 +19,7 @@ describe("S3FileSystem", () => {
     await expect(s3.readdir("s3://foo")).rejects.toThrow();
     await expect(s3.unlink("s3://foo")).rejects.toThrow();
     await expect(s3.rename("s3://foo", "s3://bar")).rejects.toThrow();
+    await expect(s3.appendFile("s3://foo", "data")).rejects.toThrow();
 
     expect(s3.createReadStream("s3://foo")).toBeNull();
     expect(s3.createWriteStream("s3://foo")).toBeNull();

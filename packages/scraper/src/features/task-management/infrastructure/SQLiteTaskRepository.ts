@@ -7,7 +7,7 @@ export class SQLiteTaskRepository implements ITaskRepository {
 
   async save(task: ScraperTask): Promise<void> {
     this.db.prepare(
-      'INSERT INTO Scraper_Tasks (id, type, target_id, url, status, progress, error, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT OR REPLACE INTO Scraper_Tasks (id, type, target_id, url, status, progress, error, updatedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(
       task.id,
       task.type,
@@ -16,8 +16,8 @@ export class SQLiteTaskRepository implements ITaskRepository {
       task.status,
       task.progress ? JSON.stringify(task.progress) : null,
       task.error,
+      task.updatedAt.toISOString(),
       task.createdAt.toISOString(),
-      task.updatedAt.toISOString()
     );
   }
 
@@ -38,9 +38,8 @@ export class SQLiteTaskRepository implements ITaskRepository {
       values.push(data.error);
     }
 
-    updates.push('updatedAt = CURRENT_TIMESTAMP');
-
     if (updates.length > 0) {
+      updates.push('updatedAt = CURRENT_TIMESTAMP');
       this.db.prepare(
         `UPDATE Scraper_Tasks SET ${updates.join(', ')} WHERE id = ?`
       ).run(...values, id);

@@ -30,7 +30,7 @@ async function run() {
 
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  logger.info("Navigating to course page:", courseUrl);
+  logger.info(`Navigating to course page: ${courseUrl}`);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(8000);
 
