@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
-import { type DownloadType, generateId } from '@core/domain';
+import { DownloadType, generateId } from '@core/domain';
 import { ScraperService } from '../ScraperService';
+import { ScraperTaskCategory } from '../features/task-management';
 
 dotenv.config();
 
@@ -130,7 +131,7 @@ export async function runCLI() {
         if (id.startsWith('http')) {
           id = scraper.resolveCourseId(id);
         }
-        await scraper.download({ type: 'guide', taskId: taskId, entityId: id, entityType: 'course' });
+        await scraper.download({ download: DownloadType.GUIDE, taskId: taskId, entityId: id, entityType: ScraperTaskCategory.COURSE });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_VIDEOS: {
@@ -139,27 +140,27 @@ export async function runCLI() {
         if (id.startsWith('http')) {
           id = scraper.resolveCourseId(id);
         }
-        await scraper.download({ type: 'video', taskId: taskId, entityId: id, entityType: 'course' });
+        await scraper.download({ download: DownloadType.VIDEO, taskId: taskId, entityId: id, entityType: ScraperTaskCategory.COURSE });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_PATH: {
         let id = args[1];
-        const type = (args[2] as DownloadType) || 'all';
+        const type = (args[2] as DownloadType) || DownloadType.ALL;
         if (!id) throw new Error("Falta el ID del Learning Path.");
         if (id.startsWith('http')) {
           id = scraper.resolvePathId(id);
         }
-        await scraper.download({ type, taskId: taskId, entityId: id, entityType: 'path' });
+        await scraper.download({ download: type, taskId: taskId, entityId: id, entityType: ScraperTaskCategory.PATH });
         break;
       }
       case CLI_COMMANDS.DOWNLOAD_COURSE: {
         let id = args[1];
-        const type = (args[2] as DownloadType) || 'all';
+        const type = (args[2] as DownloadType) || DownloadType.ALL;
         if (!id) throw new Error("Falta el ID del curso.");
         if (id.startsWith('http')) {
           id = scraper.resolveCourseId(id);
         }
-        await scraper.download({ type, taskId: taskId, entityId: id, entityType: 'course' });
+        await scraper.download({ download: type, taskId: taskId, entityId: id, entityType: ScraperTaskCategory.COURSE });
         break;
       }
     }

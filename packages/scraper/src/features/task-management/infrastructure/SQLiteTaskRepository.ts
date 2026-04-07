@@ -1,5 +1,5 @@
 import type { IDatabase } from '@core/database/IDatabase';
-import { ScraperTask, type ScraperTaskStatus } from '../domain/models/ScraperTask';
+import { ScraperTask, type ScraperTaskStatus, type ScraperTaskProgress } from '../domain/models/ScraperTask';
 import type { ITaskRepository } from '../domain/ports/ITaskRepository';
 
 export class SQLiteTaskRepository implements ITaskRepository {
@@ -7,21 +7,23 @@ export class SQLiteTaskRepository implements ITaskRepository {
 
   async save(task: ScraperTask): Promise<void> {
     this.db.prepare(
-      'INSERT OR REPLACE INTO Scraper_Tasks (id, type, target_id, url, status, progress, error, updatedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT OR REPLACE INTO Scraper_Tasks (id, type, action, target_id, url, status, progress, error, metadata, updatedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(
       task.id,
       task.type,
+      task.action,
       task.targetId,
       task.url,
       task.status,
       task.progress ? JSON.stringify(task.progress) : null,
       task.error,
+      task.metadata ? JSON.stringify(task.metadata) : null,
       task.updatedAt.toISOString(),
       task.createdAt.toISOString(),
     );
   }
 
-  async update(id: string, data: Partial<{ status: ScraperTaskStatus, progress: any, error: string }>): Promise<void> {
+  async update(id: string, data: Partial<{ status: ScraperTaskStatus, progress: Partial<ScraperTaskProgress>, error: string, metadata: Record<string, any> }>): Promise<void> {
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -30,12 +32,16 @@ export class SQLiteTaskRepository implements ITaskRepository {
       values.push(data.status);
     }
     if (data.progress) {
-      updates.push('progress = ?');
+      updates.push('progress = json_patch(COALESCE(progress, \'{}\'), ?)');
       values.push(JSON.stringify(data.progress));
     }
     if (data.error) {
       updates.push('error = ?');
       values.push(data.error);
+    }
+    if (data.metadata) {
+      updates.push('metadata = json_patch(COALESCE(metadata, \'{}\'), ?)');
+      values.push(JSON.stringify(data.metadata));
     }
 
     if (updates.length > 0) {
@@ -75,11 +81,13 @@ export class SQLiteTaskRepository implements ITaskRepository {
     return new ScraperTask(
       row.id,
       row.type,
+      row.action,
       row.url,
       row.target_id,
       row.status,
       row.progress ? JSON.parse(row.progress) : null,
       row.error,
+      row.metadata ? JSON.parse(row.metadata) : null,
       new Date(row.createdAt),
       new Date(row.updatedAt)
     );

@@ -1,8 +1,8 @@
-import { ScraperTask, type ScraperTaskStatus } from '../models/ScraperTask';
+import { ScraperTask, type ScraperTaskStatus, type ScraperTaskProgress } from '../models/ScraperTask';
 
 export interface ITaskRepository {
   save(task: ScraperTask): Promise<void>;
-  update(id: string, data: Partial<{ status: ScraperTaskStatus, progress: any, error: string }>): Promise<void>;
+  update(id: string, data: Partial<{ status: ScraperTaskStatus, progress: Partial<ScraperTaskProgress>, error: string, metadata: Record<string, any> }>): Promise<void>;
   findById(id: string): Promise<ScraperTask | null>;
   findActive(): Promise<ScraperTask | null>;
   findAll(): Promise<ScraperTask[]>;

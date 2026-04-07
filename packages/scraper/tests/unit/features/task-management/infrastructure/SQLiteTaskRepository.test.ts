@@ -5,7 +5,7 @@ import { NodeFileSystem } from '@core/filesystem';
 import { ConsoleLogger } from '@core/logging';
 
 import { getDb } from '@scraper/platform/database';
-import { ScraperTask, SQLiteTaskRepository } from '@scraper/features/task-management';
+import { ScraperTask, SQLiteTaskRepository, ScraperTaskCategory, ScraperTaskStatus, ScraperTaskAction } from '@scraper/features/task-management';
 
 describe('SQLiteTaskRepository', () => {
   let db: IDatabase;
@@ -29,7 +29,8 @@ describe('SQLiteTaskRepository', () => {
   it('should save and find a task by id', async () => {
     const task = ScraperTask.create({
       id: 'test-task-1',
-      type: 'course',
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
       url: 'https://test.com/course',
       targetId: 'course-123'
     });
@@ -45,6 +46,7 @@ describe('SQLiteTaskRepository', () => {
     expect(found).not.toBeNull();
     expect(found?.id).toBe(task.id);
     expect(found?.type).toBe(task.type);
+    expect(found?.action).toBe(task.action);
     expect(found?.url).toBe(task.url);
   });
 
@@ -52,45 +54,49 @@ describe('SQLiteTaskRepository', () => {
     const taskId = 'test-task-2';
     const task = ScraperTask.create({
       id: taskId,
-      type: 'course',
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
       url: 'https://test.com/course'
     });
     await repository.save(task);
 
     const progress = { step: 'Downloading', percent: 50 };
     await repository.update(taskId, {
-      status: 'RUNNING',
+      status: ScraperTaskStatus.RUNNING,
       progress: progress
     });
 
     const updated = await repository.findById(taskId);
-    expect(updated?.status).toBe('RUNNING');
-    expect(updated?.progress).toEqual(progress);
+    expect(updated?.status).toBe(ScraperTaskStatus.RUNNING);
+    expect(updated?.progress).toEqual(expect.objectContaining(progress));
   });
 
   it('should find the last active task', async () => {
     const taskId = 'active-task';
     const task = ScraperTask.create({
       id: taskId,
-      type: 'course',
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
       url: 'https://test.com/course'
     });
-    task.status = 'RUNNING';
+    task.status = ScraperTaskStatus.RUNNING;
     await repository.save(task);
 
     const active = await repository.findActive();
     expect(active).not.toBeNull();
     expect(active?.id).toBe(taskId);
-    expect(active?.status).toBe('RUNNING');
+    expect(active?.status).toBe(ScraperTaskStatus.RUNNING);
 
     // Case: Second active task, newer
     const now = new Date();
     const newerTask = new ScraperTask(
       'newer',
-      'course',
+      ScraperTaskCategory.COURSE,
+      ScraperTaskAction.SYNC_COURSE,
       'u',
       null,
-      'RUNNING',
+      ScraperTaskStatus.RUNNING,
+      null,
       null,
       null,
       new Date(now.getTime() + 1000), // Distinctly newer
@@ -109,12 +115,17 @@ describe('SQLiteTaskRepository', () => {
 
   it('should update task with error', async () => {
     const taskId = 'task-err-1';
-    const task = ScraperTask.create({ id: taskId, type: 'course', url: 'http://url', targetId: 'id2-sqlitetaskrepositorytest' });
+    const task = ScraperTask.create({
+      id: taskId,
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
+      url: 'http://url'
+    });
     await repository.save(task);
 
-    await repository.update(taskId, { status: 'FAILED', error: 'Test Error' });
+    await repository.update(taskId, { status: ScraperTaskStatus.FAILED, error: 'Test Error' });
     const found = await repository.findById(taskId);
-    expect(found?.status).toBe('FAILED');
+    expect(found?.status).toBe(ScraperTaskStatus.FAILED);
     expect(found?.error).toBe('Test Error');
   });
 
@@ -125,9 +136,9 @@ describe('SQLiteTaskRepository', () => {
 
   it('should find all tasks ordered by creation date', async () => {
     db.prepare('DELETE FROM Scraper_Tasks').run();
-    const t1 = ScraperTask.create({ id: 't1', type: 'course', url: 'u1' });
-    const t2 = ScraperTask.create({ id: 't2', type: 'course', url: 'u2' });
-    
+    const t1 = ScraperTask.create({ id: 't1', type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url: 'u1' });
+    const t2 = ScraperTask.create({ id: 't2', type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url: 'u2' });
+
     await repository.save(t1);
     await repository.save(t2);
 
@@ -140,31 +151,101 @@ describe('SQLiteTaskRepository', () => {
   });
 
   it('should delete a task by id', async () => {
-    const t1 = ScraperTask.create({ id: 'to-delete', type: 'course', url: 'u' });
+    const t1 = ScraperTask.create({ id: 'to-delete', type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url: 'u' });
     await repository.save(t1);
-    
+
     expect(await repository.findById('to-delete')).not.toBeNull();
     await repository.delete('to-delete');
     expect(await repository.findById('to-delete')).toBeNull();
   });
 
   it('should map tasks with null progress correctly', async () => {
-    const t1 = ScraperTask.create({ id: 'no-progress', type: 'course', url: 'u' });
-    // Ensuring progress is null
+    const t1 = ScraperTask.create({ id: 'no-progress', type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url: 'u' });
     t1.progress = null;
     await repository.save(t1);
-    
+
     const found = await repository.findById('no-progress');
     expect(found?.progress).toBeNull();
   });
 
   it('should not perform update if no data is provided', async () => {
-    const t1 = ScraperTask.create({ id: 'stay-same', type: 'course', url: 'u' });
+    const t1 = ScraperTask.create({ id: 'stay-same', type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url: 'u' });
     await repository.save(t1);
-    
+
     await repository.update('stay-same', {});
     const found = await repository.findById('stay-same');
-    expect(found?.status).toBe('PENDING'); // No change
+    expect(found?.status).toBe(ScraperTaskStatus.PENDING); // No change
+  });
+
+  it('should support partial metadata updates with json_patch', async () => {
+    const taskId = 'meta-patch';
+    const task = ScraperTask.create({
+      id: taskId,
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.DOWNLOAD_COURSE,
+      url: 'u',
+      metadata: { includeDownload: true, download: 'all', kept: true }
+    });
+    await repository.save(task);
+
+    // Partial update
+    await repository.update(taskId, { metadata: { download: 'video' } });
+
+    const found = await repository.findById(taskId);
+    expect(found?.metadata).toEqual({
+      includeDownload: true,
+      download: 'video',
+      kept: true
+    });
+  });
+
+  it('should support partial progress updates with json_patch', async () => {
+    const taskId = 'progress-patch';
+    const task = ScraperTask.create({
+      id: taskId,
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
+      url: 'u'
+    });
+    task.progress = { step: 'Step 1', details: 'Started' };
+    await repository.save(task);
+
+    // Partial update
+    await repository.update(taskId, { progress: { details: 'Moving' } });
+
+    const found = await repository.findById(taskId);
+    expect(found?.progress).toEqual({
+      step: 'Step 1',
+      details: 'Moving'
+    });
+  });
+
+  it('should strictly preserve unrelated metadata fields during partial updates (no data loss)', async () => {
+    const taskId = 'data-loss-prevention';
+    const initialMetadata = {
+      userPreference: 'dark-mode',
+      retries: 3,
+      nested: { a: 1 }
+    };
+    
+    const task = ScraperTask.create({
+      id: taskId,
+      type: ScraperTaskCategory.COURSE,
+      action: ScraperTaskAction.SYNC_COURSE,
+      url: 'u',
+      metadata: initialMetadata
+    });
+    await repository.save(task);
+
+    // Update only 'retries'
+    await repository.update(taskId, { metadata: { retries: 4 } });
+
+    const found = await repository.findById(taskId);
+    expect(found?.metadata).toEqual({
+      userPreference: 'dark-mode',
+      retries: 4,
+      nested: { a: 1 } // Should be preserved
+    });
   });
 });
 

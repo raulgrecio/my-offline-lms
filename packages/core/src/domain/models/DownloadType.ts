@@ -1,2 +1,7 @@
-import type { AssetType } from "./Asset";
-export type DownloadType = AssetType | 'all';
+export const DownloadType = {
+  ALL: 'all',
+  VIDEO: 'video',
+  GUIDE: 'guide',
+} as const;
+
+export type DownloadType = typeof DownloadType[keyof typeof DownloadType];

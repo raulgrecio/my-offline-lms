@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-import type { ScraperTaskStatus, ScraperTaskType } from '@scraper/features/task-management';
+import { ScraperTaskStatus, ScraperTaskCategory } from '@scraper/features/task-management';
 
 import { Icon, type IconName } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
@@ -10,7 +9,7 @@ import { logger } from '@web/platform/logging';
 
 interface ScraperTask {
   id: string;
-  type: ScraperTaskType;
+  category: ScraperTaskCategory;
   url: string;
   targetId: string | null;
   status: ScraperTaskStatus;
@@ -143,9 +142,9 @@ export const TaskList: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.type === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
                   }`}>
-                  {task.type === 'course' ? 'Curso' : 'Learning Path'}
+                  {task.category === 'course' ? 'Curso' : 'Learning Path'}
                 </span>
                 <p className="text-xs text-text-muted">
                   {config.getLabel(task)}
@@ -166,6 +165,7 @@ export const TaskList: React.FC = () => {
               <Button
                 variant="ghost"
                 square
+                size="sm"
                 icon="external-link"
                 onClick={() => window.open(task.url, '_blank')}
                 title="Visitar plataforma"
@@ -174,6 +174,7 @@ export const TaskList: React.FC = () => {
                 <Button
                   variant="ghost"
                   square
+                  size="sm"
                   icon="play"
                   onClick={() => handleStart(task.id)}
                   className="bg-surface-800"
@@ -184,6 +185,7 @@ export const TaskList: React.FC = () => {
                 <Button
                   variant="ghost"
                   square
+                  size="sm"
                   icon="square"
                   onClick={() => handleStop(task.id)}
                   className="bg-surface-800"
@@ -193,6 +195,7 @@ export const TaskList: React.FC = () => {
               <Button
                 variant="ghost"
                 square
+                size="sm"
                 icon="trash"
                 onClick={() => handleDelete(task.id)}
                 className="text-danger hover:bg-danger hover:text-white"

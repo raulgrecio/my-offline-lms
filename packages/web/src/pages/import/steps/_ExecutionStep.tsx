@@ -7,7 +7,10 @@ import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons'
 
 interface ExecutionStepProps {
   downloadOptions: { videos: boolean; guides: boolean };
-  setDownloadOptions: React.Dispatch<React.SetStateAction<{ videos: boolean; guides: boolean }>>;
+  onToggleVideo: () => void;
+  onToggleGuide: () => void;
+  includeDownload: boolean;
+  onToggleIncludeDownload: () => void;
   isLoading: boolean;
   executionResult: { success: boolean; message: string } | null;
   taskProgress: { step: string, status?: string } | null;
@@ -20,7 +23,10 @@ interface ExecutionStepProps {
 
 export const ExecutionStep: React.FC<ExecutionStepProps> = ({
   downloadOptions,
-  setDownloadOptions,
+  onToggleVideo,
+  onToggleGuide,
+  includeDownload,
+  onToggleIncludeDownload,
   isLoading,
   executionResult,
   taskProgress,
@@ -42,10 +48,33 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
         <div className="space-y-10">
           <div>
             <h4 className="text-[10px] font-black text-text-muted uppercase mb-6 tracking-[0.3em] opacity-50">Payload & Config</h4>
-            <div className="grid grid-cols-1 gap-4">
+            
+            {/* Auto-download Toggle */}
+            <div className="mb-6">
               <Button
                 variant="none"
-                onClick={() => setDownloadOptions(p => ({ ...p, videos: !p.videos }))}
+                onClick={onToggleIncludeDownload}
+                className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 w-full ${includeDownload ? 'bg-brand-500/5 border-brand-500/30' : 'bg-surface-900 border-border-subtle opacity-60'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`p-2 rounded-xl ${includeDownload ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' : 'bg-surface-800 text-text-muted'}`}>
+                    <Icon name="play" size="xs" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-xs tracking-tight text-text-primary">Descarga Automática</div>
+                    <div className="text-[9px] opacity-50 mt-0.5">Iniciar descarga tras sincronizar</div>
+                  </div>
+                </div>
+                <div className={`w-10 h-5 rounded-full relative transition-all ${includeDownload ? 'bg-brand-600' : 'bg-surface-800'}`}>
+                  <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${includeDownload ? 'right-1' : 'left-1'}`}></div>
+                </div>
+              </Button>
+            </div>
+
+            <div className={`grid grid-cols-1 gap-4 transition-all duration-500 ${!includeDownload ? 'opacity-20 pointer-events-none blur-sm scale-95' : ''}`}>
+              <Button
+                variant="none"
+                onClick={onToggleVideo}
                 className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 w-full ${downloadOptions.videos ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
               >
                 <div className="flex items-center gap-5">
@@ -64,7 +93,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
 
               <Button
                 variant="none"
-                onClick={() => setDownloadOptions(p => ({ ...p, guides: !p.guides }))}
+                onClick={onToggleGuide}
                 className={`flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 w-full ${downloadOptions.guides ? 'bg-brand-900/10 border-brand-500 shadow-xl shadow-brand-500/5' : 'bg-surface-900 border-border-subtle opacity-40 grayscale group-hover:grayscale-0'}`}
               >
                 <div className="flex items-center gap-5">

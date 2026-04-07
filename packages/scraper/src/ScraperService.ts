@@ -1,6 +1,6 @@
 import { ConsoleLogger, FileLogger, EventLogger, LogBroker, type ILogger } from '@core/logging';
 import { type IDatabase } from '@core/database';
-import { type DownloadType } from '@core/domain';
+import { DownloadType } from '@core/domain';
 import { NodeFileSystem, NodePath, UniversalFileSystem, HttpFileSystem, AssetPathResolver } from '@core/filesystem';
 
 import { env } from './config/env';
@@ -43,7 +43,8 @@ import {
   GetAllTasks,
   DeleteTask,
   type CreateTaskInput,
-  type ScraperTaskType,
+  ScraperTaskCategory,
+  ScraperTaskAction,
 } from './features/task-management';
 import { ScraperOrchestrator } from './features/shared';
 import { BrowserProvider, BrowserInterceptor } from './platform/browser';
@@ -298,7 +299,56 @@ export class ScraperService {
   }
 
   async startTask(id: string) {
-    return await this.startTaskUseCase.execute({ id });
+    const task = await this.deps.taskRepo.findById(id);
+    if (!task) {
+      throw new Error(`Tarea con ID ${id} no encontrada`);
+    }
+
+    this.deps.logger.info(`Iniciando/Reintentando tarea ${id} (${task.action})...`);
+
+    switch (task.action) {
+      case ScraperTaskAction.SYNC_COURSE:
+        await this.syncCourse({ url: task.url, taskId: id });
+        if (task.metadata?.includeDownload !== false && task.metadata?.download) {
+          const { courseId } = this.deps.urlProvider.resolveCourseUrl(task.url);
+          return this.download({
+            download: task.metadata.download,
+            taskId: id,
+            entityId: courseId,
+            entityType: ScraperTaskCategory.COURSE
+          });
+        }
+        return;
+      case ScraperTaskAction.SYNC_PATH:
+        await this.syncPath({ url: task.url, taskId: id });
+        if (task.metadata?.includeDownload !== false && task.metadata?.download) {
+          const { pathId } = this.deps.urlProvider.resolveLearningPathUrl(task.url);
+          return this.download({
+            download: task.metadata.download,
+            taskId: id,
+            entityId: pathId,
+            entityType: ScraperTaskCategory.PATH
+          });
+        }
+        return;
+      case ScraperTaskAction.DOWNLOAD_COURSE:
+        return this.download({
+          download: task.metadata?.download || task.metadata?.type || DownloadType.ALL,
+          taskId: id,
+          entityId: task.targetId!,
+          entityType: ScraperTaskCategory.COURSE
+        });
+      case ScraperTaskAction.DOWNLOAD_PATH:
+        return this.download({
+          download: task.metadata?.download || task.metadata?.type || DownloadType.ALL,
+          taskId: id,
+          entityId: task.targetId!,
+          entityType: ScraperTaskCategory.PATH
+        });
+      default:
+        // Por si acaso es una tarea antigua sin acción
+        return await this.startTaskUseCase.execute({ id });
+    }
   }
 
   async deleteTask(id: string) {
@@ -338,7 +388,7 @@ export class ScraperService {
     });
 
     const { courseId } = this.deps.urlProvider.resolveCourseUrl(url);
-    await this.ensureTaskExists({ id: taskId, type: 'course', url, targetId: courseId });
+    await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url, targetId: courseId });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Sincronizando metadatos del curso...', onCleanup: () => this.cleanup() },
@@ -392,7 +442,7 @@ export class ScraperService {
     });
 
     const { pathId } = this.deps.urlProvider.resolveLearningPathUrl(url);
-    await this.ensureTaskExists({ id: taskId, type: 'path', url, targetId: pathId });
+    await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.PATH, action: ScraperTaskAction.SYNC_PATH, url, targetId: pathId });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Sincronizando metadatos de la ruta...', onCleanup: () => this.cleanup() },
@@ -402,11 +452,11 @@ export class ScraperService {
     );
   }
 
-  async download({ type, taskId, entityId, entityType }: {
-    type: DownloadType;
+  async download({ download, taskId, entityId, entityType }: {
+    download: DownloadType;
     taskId: string;
     entityId: string;
-    entityType: ScraperTaskType
+    entityType: ScraperTaskCategory
   }) {
     const videoDownloader = new YtDlpVideoDownloader({
       authSessionStorage: this.deps.authSessionStorage,
@@ -470,19 +520,26 @@ export class ScraperService {
       logger: this.deps.logger
     });
 
-    const entityUrl = entityType === 'path'
+    const entityUrl = entityType === ScraperTaskCategory.PATH
       ? this.deps.urlProvider.getLearningPathUrl({ id: entityId })
       : this.deps.urlProvider.getCourseUrl({ id: entityId });
 
-    await this.ensureTaskExists({ id: taskId, type: entityType, url: entityUrl, targetId: entityId });
+    await this.ensureTaskExists({
+      id: taskId,
+      type: entityType,
+      action: entityType === ScraperTaskCategory.PATH ? ScraperTaskAction.DOWNLOAD_PATH : ScraperTaskAction.DOWNLOAD_COURSE,
+      url: entityUrl,
+      targetId: entityId,
+      metadata: { type: download }
+    });
 
     await this.orchestrator.run(
       { taskId, mainStep: 'Descargando recursos...', onCleanup: () => this.cleanup() },
       async () => {
-        if (entityType === 'path') {
-          await downloadPath.execute({ pathInput: entityId, type });
+        if (entityType === ScraperTaskCategory.PATH) {
+          await downloadPath.execute({ pathInput: entityId, type: download });
         } else {
-          await downloadCourse.execute({ courseInput: entityId, type });
+          await downloadCourse.execute({ courseInput: entityId, type: download });
         }
       }
     );

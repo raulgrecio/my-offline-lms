@@ -1,12 +1,11 @@
 import React, { useMemo } from 'react';
 import { Icon } from '@web/components/Icon';
-import { Button } from '@web/components/Button';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
-import type { ScraperTaskType } from '@scraper/features/task-management';
 import { ContentItemCard, type ContentItem } from '../components/_ContentItemCard';
 import { ContentTypeFilter } from '../components/_ContentTypeFilter';
 import { SelectionCard } from '../components/_SelectionCard';
+import { ScraperTaskCategory } from '@scraper/features/task-management';
 
 interface SelectionStepProps {
   availableContent: {
@@ -17,8 +16,8 @@ interface SelectionStepProps {
   setSelectedItem: (item: ContentItem | null) => void;
   newUrl: string;
   setNewUrl: (url: string) => void;
-  contentType: ScraperTaskType;
-  setContentType: (type: ScraperTaskType) => void;
+  contentType: ScraperTaskCategory;
+  setContentType: (category: ScraperTaskCategory) => void;
 }
 
 const PLACEHOLDERS = {
@@ -39,7 +38,7 @@ export interface UITheme {
   ring: string;
 }
 
-export const THEMES: Record<ScraperTaskType, UITheme> = {
+export const THEMES: Record<ScraperTaskCategory, UITheme> = {
   course: {
     primary: 'brand-500',
     activeBg: 'bg-brand-600',
@@ -89,9 +88,9 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
   return (
     <div className="space-y-6">
       {/* Global Type Filter */}
-      <ContentTypeFilter 
-        contentType={contentType} 
-        setContentType={setContentType} 
+      <ContentTypeFilter
+        contentType={contentType}
+        setContentType={setContentType}
         onTypeChange={() => setSelectedItem(null)}
         themes={THEMES}
       />
@@ -147,7 +146,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
                       setSelectedItem(item);
                       setNewUrl('');
                     }}
-                    theme={THEMES[item.type]}
+                    theme={THEMES[item.category] || THEMES.course}
                   />
                 </li>
               ))}

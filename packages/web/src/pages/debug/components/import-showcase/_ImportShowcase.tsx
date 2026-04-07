@@ -6,7 +6,7 @@ import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { SelectionStep } from '@web/pages/import/steps/_SelectionStep';
 import { AuthStep } from '@web/pages/import/steps/_AuthStep';
 import { ExecutionStep } from '@web/pages/import/steps/_ExecutionStep';
-import type { ScraperTaskType } from '@scraper/features/task-management';
+import { ScraperTaskCategory } from '@scraper/features/task-management';
 
 const stepsConfig: WizardStepConfig[] = [
   { id: 'selection', label: 'Origen', icon: 'layers' },
@@ -28,7 +28,7 @@ const mockAvailableContent = {
       totalGuides: 35,
       downloadedGuides: 7,
       isComplete: false,
-      type: 'course' as const
+      category: ScraperTaskCategory.COURSE
     },
     {
       id: 'c2',
@@ -42,7 +42,7 @@ const mockAvailableContent = {
       totalGuides: 80,
       downloadedGuides: 0,
       isComplete: false,
-      type: 'course' as const
+      category: ScraperTaskCategory.COURSE
     },
     {
       id: 'c3',
@@ -56,7 +56,7 @@ const mockAvailableContent = {
       totalGuides: 50,
       downloadedGuides: 0,
       isComplete: false,
-      type: 'course' as const
+      category: ScraperTaskCategory.COURSE
     },
     {
       id: 'c4',
@@ -70,7 +70,7 @@ const mockAvailableContent = {
       totalGuides: 60,
       downloadedGuides: 0,
       isComplete: false,
-      type: 'course' as const
+      category: ScraperTaskCategory.COURSE
     },
     {
       id: 'c5',
@@ -84,7 +84,7 @@ const mockAvailableContent = {
       totalGuides: 45,
       downloadedGuides: 0,
       isComplete: false,
-      type: 'course' as const
+      category: ScraperTaskCategory.COURSE
     }
   ],
   paths: []
@@ -98,7 +98,8 @@ export const ImportShowcase: React.FC = () => {
   // State for SelectionStep
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<ScraperTaskType>('course');
+  const [contentType, setContentType] = useState<ScraperTaskCategory>(ScraperTaskCategory.COURSE);
+  const [includeDownload, setIncludeDownload] = useState(true);
 
   // State for AuthStep
   const [authStatus, setAuthStatus] = useState({
@@ -208,7 +209,10 @@ export const ImportShowcase: React.FC = () => {
 
           <ExecutionStep
             downloadOptions={downloadOptions}
-            setDownloadOptions={setDownloadOptions}
+            onToggleVideo={() => setDownloadOptions(p => ({ ...p, videos: !p.videos }))}
+            onToggleGuide={() => setDownloadOptions(p => ({ ...p, guides: !p.guides }))}
+            includeDownload={includeDownload}
+            onToggleIncludeDownload={() => setIncludeDownload(!includeDownload)}
             isLoading={scene === 'auth_checking' || scene === 'exec_running'}
             executionResult={executionResult}
             taskProgress={taskProgress}

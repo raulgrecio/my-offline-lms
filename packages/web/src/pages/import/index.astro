@@ -56,20 +56,23 @@ import { TaskList } from "./components/_TaskList";
     const inactiveClasses = "text-text-muted hover:text-brand-400";
 
     if (tabTasks && tabWizard && viewTasks && viewWizard) {
+      const active = activeClasses.split(" ");
+      const inactive = inactiveClasses.split(" ");
+
       tabTasks.addEventListener("click", () => {
-        tabTasks.classList.add(activeClasses);
-        tabTasks.classList.remove(inactiveClasses);
-        tabWizard.classList.remove(activeClasses);
-        tabWizard.classList.add(inactiveClasses);
+        tabTasks.classList.add(...active);
+        tabTasks.classList.remove(...inactive);
+        tabWizard.classList.remove(...active);
+        tabWizard.classList.add(...inactive);
         viewTasks.classList.remove("hidden");
         viewWizard.classList.add("hidden");
       });
 
       tabWizard.addEventListener("click", () => {
-        tabWizard.classList.add(activeClasses);
-        tabWizard.classList.remove(inactiveClasses);
-        tabTasks.classList.remove(activeClasses);
-        tabTasks.classList.add(inactiveClasses);
+        tabWizard.classList.add(...active);
+        tabWizard.classList.remove(...inactive);
+        tabTasks.classList.remove(...active);
+        tabTasks.classList.add(...inactive);
         viewWizard.classList.remove("hidden");
         viewTasks.classList.add("hidden");
       });

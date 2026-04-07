@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
 import { generateId } from '@core/domain';
+import { ScraperTaskCategory } from '@scraper/features/task-management';
 
 import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { API_ROUTES } from '@web/platform/api/routes';
 import { apiClient } from '@web/platform/api/client';
+import { logger } from '@web/platform/logging';
 
 import { SelectionStep } from './steps/_SelectionStep';
 import { AuthStep } from './steps/_AuthStep';
 import { ExecutionStep } from './steps/_ExecutionStep';
-import type { ScraperTaskType } from '@scraper/features/task-management';
-import { logger } from '@web/platform/logging';
 
 interface ContentItem {
   id: string;
@@ -24,7 +24,7 @@ interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: ScraperTaskType;
+  category: ScraperTaskCategory;
 }
 
 interface AvailableContentResponse {
@@ -56,8 +56,9 @@ export const ScraperWizard: React.FC = () => {
   });
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<ScraperTaskType>('course');
+  const [contentType, setContentType] = useState<ScraperTaskCategory>('course');
   const [downloadOptions, setDownloadOptions] = useState({ videos: true, guides: true });
+  const [includeDownload, setIncludeDownload] = useState(true);
 
   const [authStatus, setAuthStatus] = useState<{ isAuthenticated: boolean; isLoggingIn: boolean; message: string; checked: boolean }>({
     isAuthenticated: false,
@@ -78,7 +79,8 @@ export const ScraperWizard: React.FC = () => {
       .then(task => {
         if (task && task.id && task.status === 'RUNNING') {
           setTaskId(task.id);
-          setTaskProgress(task.progress ? JSON.parse(task.progress) : { step: 'Recuperando estado...' });
+          const progressData = typeof task.progress === 'string' ? JSON.parse(task.progress) : task.progress;
+          setTaskProgress(progressData || { step: 'Recuperando estado...' });
           // If we have an active task, we should be in the execution step
           // The GenericWizard currently doesn't expose a way to set the initial step via props easily 
           // without modifying it, but we can at least ensure we are tracking it.
@@ -96,7 +98,8 @@ export const ScraperWizard: React.FC = () => {
         try {
           const task = await apiClient.get<any>(`${API_ROUTES.SCRAPER.STATUS}?taskId=${taskId}`);
           if (task) {
-            setTaskProgress(task.progress ? JSON.parse(task.progress) : null);
+            const progressData = typeof task.progress === 'string' ? JSON.parse(task.progress) : task.progress;
+            setTaskProgress(progressData || null);
             if (task.status === 'COMPLETED') {
               setExecutionResult({ success: true, message: 'Proceso finalizado con éxito.' });
               setTaskId(null);
@@ -166,10 +169,14 @@ export const ScraperWizard: React.FC = () => {
     }
   };
 
+  const handleToggleVideo = () => setDownloadOptions(p => ({ ...p, videos: !p.videos }));
+  const handleToggleGuide = () => setDownloadOptions(p => ({ ...p, guides: !p.guides }));
+  const handleToggleIncludeDownload = () => setIncludeDownload(prev => !prev);
+
   const startScraping = async () => {
     setIsLoading(true);
     const url = selectedItem ? selectedItem.url : newUrl;
-    const type = selectedItem ? selectedItem.type : contentType;
+    const type = selectedItem ? selectedItem.category : contentType;
     const targetId = selectedItem ? selectedItem.id : undefined;
 
     const id = generateId();
@@ -180,7 +187,8 @@ export const ScraperWizard: React.FC = () => {
         type,
         targetId,
         downloadVideos: downloadOptions.videos,
-        downloadGuides: downloadOptions.guides
+        downloadGuides: downloadOptions.guides,
+        includeDownload,
       });
       if (data.ok) {
         setTaskId(id);
@@ -218,16 +226,19 @@ export const ScraperWizard: React.FC = () => {
       />
 
       <ExecutionStep
-        downloadOptions={downloadOptions}
-        setDownloadOptions={setDownloadOptions}
-        isLoading={isLoading || !!taskId}
-        executionResult={executionResult}
-        taskProgress={taskProgress}
-        selectedItem={selectedItem}
-        newUrl={newUrl}
-        contentType={contentType}
-        startScraping={startScraping}
         cancelScraping={cancelScraping}
+        contentType={contentType}
+        downloadOptions={downloadOptions}
+        executionResult={executionResult}
+        includeDownload={includeDownload}
+        isLoading={isLoading || !!taskId}
+        newUrl={newUrl}
+        onToggleGuide={handleToggleGuide}
+        onToggleIncludeDownload={handleToggleIncludeDownload}
+        onToggleVideo={handleToggleVideo}
+        selectedItem={selectedItem}
+        startScraping={startScraping}
+        taskProgress={taskProgress}
       />
     </GenericWizard>
   );

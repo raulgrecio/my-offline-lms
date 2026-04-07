@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '@web/components/Icon';
-import type { ScraperTaskType } from '@scraper/features/task-management';
+import { ScraperTaskCategory } from '@scraper/features/task-management';
 import type { UITheme } from '../steps/_SelectionStep';
 
 export interface ContentItem {
@@ -15,7 +15,7 @@ export interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: ScraperTaskType;
+  category: ScraperTaskCategory;
 }
 
 interface ContentItemCardProps {
@@ -38,8 +38,8 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
     }}
     aria-pressed={isSelected}
     className={`w-full text-left p-4 rounded-xl border transition-all relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand-500 overflow-hidden group/item ${isSelected
-      ? `${theme.activeBg}/15 ${theme.activeBorder} ${theme.activeShadow.replace('shadow-', 'shadow-[0_0_20px_-5px_')}`
-      : `bg-surface-900 border-border-subtle hover:bg-surface-800 ${theme.activeBorder.replace('border-', 'hover:border-').replace('/50', '/50')}`
+      ? `${theme?.activeBg || ''}/15 ${theme?.activeBorder || ''} ${theme?.activeShadow?.replace('shadow-', 'shadow-[0_0_20px_-5px_') || ''}`
+      : `bg-surface-900 border-border-subtle hover:bg-surface-800 ${theme?.activeBorder?.replace('border-', 'hover:border-')?.replace('/50', '/50') || ''}`
       }`}
   >
     {/* Background indicator for type */}
@@ -50,7 +50,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
         {item.title}
       </div>
       <div className={`ml-2 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-tighter font-black ${theme.badge}`}>
-        {item.type === 'path' ? 'Path' : 'Course'}
+        {item.category === ScraperTaskCategory.PATH ? 'Path' : 'Course'}
       </div>
     </div>
 
@@ -62,8 +62,8 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
       <div className="flex items-center gap-1.5">
         <Icon name="play" size="xs" className="opacity-40" />
         <span className="text-text-muted font-medium">Videos:</span>
-        <span className={item.downloadedVideos === item.totalVideos 
-          ? 'text-green-400' 
+        <span className={item.downloadedVideos === item.totalVideos
+          ? 'text-green-400'
           : (theme.hoverText.includes(':') ? theme.hoverText.split(':')[1] : theme.hoverText)}>
           {item.downloadedVideos}/{item.totalVideos}
         </span>
@@ -71,8 +71,8 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
       <div className="flex items-center gap-1.5">
         <Icon name="file-text" size="xs" className="opacity-40" />
         <span className="text-text-muted font-medium">Guías:</span>
-        <span className={item.downloadedGuides === item.totalGuides 
-          ? 'text-green-400' 
+        <span className={item.downloadedGuides === item.totalGuides
+          ? 'text-green-400'
           : (theme.hoverText.includes(':') ? theme.hoverText.split(':')[1] : theme.hoverText)}>
           {item.downloadedGuides}/{item.totalGuides}
         </span>
