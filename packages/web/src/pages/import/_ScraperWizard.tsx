@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { generateId } from '@core/domain';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, ScraperTaskStatus } from '@scraper/features/task-management';
 
 import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { API_ROUTES } from '@web/platform/api/routes';
@@ -100,13 +100,13 @@ export const ScraperWizard: React.FC = () => {
           if (task) {
             const progressData = typeof task.progress === 'string' ? JSON.parse(task.progress) : task.progress;
             setTaskProgress(progressData || null);
-            if (task.status === 'COMPLETED') {
+            if (task.status === ScraperTaskStatus.COMPLETED) {
               setExecutionResult({ success: true, message: 'Proceso finalizado con éxito.' });
               setTaskId(null);
-            } else if (task.status === 'FAILED') {
+            } else if (task.status === ScraperTaskStatus.FAILED) {
               setExecutionResult({ success: false, message: task.error || 'Error en la ejecución.' });
               setTaskId(null);
-            } else if (task.status === 'CANCELLED') {
+            } else if (task.status === ScraperTaskStatus.CANCELLED) {
               setExecutionResult({ success: false, message: 'Proceso cancelado.' });
               setTaskId(null);
             }
