@@ -51,41 +51,25 @@ import { TaskList } from "./components/_TaskList";
     const viewTasks = document.getElementById("view-tasks");
     const viewWizard = document.getElementById("view-wizard");
 
+    const activeClasses =
+      "bg-brand-600 text-white shadow-lg shadow-brand-600/20";
+    const inactiveClasses = "text-text-muted hover:text-brand-400";
+
     if (tabTasks && tabWizard && viewTasks && viewWizard) {
       tabTasks.addEventListener("click", () => {
-        tabTasks.classList.add(
-          "bg-brand-600",
-          "text-white",
-          "shadow-lg",
-          "shadow-brand-600/20",
-        );
-        tabTasks.classList.remove("text-text-muted", "hover:text-brand-400");
-        tabWizard.classList.remove(
-          "bg-brand-600",
-          "text-white",
-          "shadow-lg",
-          "shadow-brand-600/20",
-        );
-        tabWizard.classList.add("text-text-muted", "hover:text-brand-400");
+        tabTasks.classList.add(activeClasses);
+        tabTasks.classList.remove(inactiveClasses);
+        tabWizard.classList.remove(activeClasses);
+        tabWizard.classList.add(inactiveClasses);
         viewTasks.classList.remove("hidden");
         viewWizard.classList.add("hidden");
       });
 
       tabWizard.addEventListener("click", () => {
-        tabWizard.classList.add(
-          "bg-brand-600",
-          "text-white",
-          "shadow-lg",
-          "shadow-brand-600/20",
-        );
-        tabWizard.classList.remove("text-text-muted", "hover:text-brand-400");
-        tabTasks.classList.remove(
-          "bg-brand-600",
-          "text-white",
-          "shadow-lg",
-          "shadow-brand-600/20",
-        );
-        tabTasks.classList.add("text-text-muted", "hover:text-brand-400");
+        tabWizard.classList.add(activeClasses);
+        tabWizard.classList.remove(inactiveClasses);
+        tabTasks.classList.remove(activeClasses);
+        tabTasks.classList.add(inactiveClasses);
         viewWizard.classList.remove("hidden");
         viewTasks.classList.add("hidden");
       });
