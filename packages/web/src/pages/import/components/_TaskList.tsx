@@ -138,15 +138,15 @@ export const TaskList: React.FC = () => {
             {/* Información Principal */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-1">
-                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.type === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
-                  }`}>
-                  {task.type === 'course' ? 'Curso' : 'Ruta'}
-                </span>
-                <h3 className="font-bold text-text-primary truncate">{task.targetId || task.url}</h3>
+                <h3 className="font-bold text-text-primary truncate">{task.url}</h3>
               </div>
 
               <div className="flex items-center gap-3">
-                <p className="text-xs text-text-muted truncate">
+                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.type === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                  }`}>
+                  {task.type === 'course' ? 'Curso' : 'Learning Path'}
+                </span>
+                <p className="text-xs text-text-muted">
                   {config.getLabel(task)}
                 </p>
                 {task.status === 'RUNNING' && task.progress?.percent && (
@@ -162,6 +162,13 @@ export const TaskList: React.FC = () => {
 
             {/* Acciones */}
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                square
+                icon="external-link"
+                onClick={() => window.open(task.url, '_blank')}
+                title="Visitar plataforma"
+              />
               {task.status !== 'RUNNING' && (
                 <Button
                   variant="ghost"
