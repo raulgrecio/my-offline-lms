@@ -3,6 +3,7 @@ import type { ILearningPathRepository } from "@web/features/learning-paths/domai
 import { NodeFileSystem, NodePath } from "@core/filesystem";
 import { getInterceptedDir } from "@scraper/config";
 import type { IPlatformUrlProvider } from "@scraper/features/platform-sync";
+import { logger } from "@web/platform/logging";
 
 export class GetAvailableContentToSync {
   constructor(
@@ -33,7 +34,7 @@ export class GetAvailableContentToSync {
       const fs = new NodeFileSystem();
       const path = new NodePath();
       const interceptedDir = await getInterceptedDir();
-      
+
       if (await fs.exists(interceptedDir)) {
         const folders = await fs.readdir(interceptedDir);
         for (const folder of folders) {
@@ -48,12 +49,12 @@ export class GetAvailableContentToSync {
               const content = await fs.readFile(path.join(folderPath, metadataFile), 'utf-8');
               const json = JSON.parse(content);
               const courseData = json.data || json; // Handle wrapped or unwrapped payloads
-              
+
               if (courseData && courseData.id && !coursesMap.has(courseData.id)) {
                 // Count videos/guides in the JSON
                 let totalVideos = 0;
                 let totalGuides = 0;
-                
+
                 (courseData.modules || []).forEach((m: any) => {
                   (m.components || []).forEach((c: any) => {
                     if (c.typeId === '1') totalVideos++;
@@ -85,7 +86,7 @@ export class GetAvailableContentToSync {
         }
       }
     } catch (err) {
-      console.error('[Discovery Error]:', err);
+      logger.error('[Discovery Error]:', err);
     }
 
     return {

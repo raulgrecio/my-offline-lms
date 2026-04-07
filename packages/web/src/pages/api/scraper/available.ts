@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 
 import { ScraperService } from '@scraper/ScraperService';
+import { logger } from '@web/platform/logging';
 
 export const GET: APIRoute = async () => {
   try {
@@ -12,7 +13,7 @@ export const GET: APIRoute = async () => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('[API Available Error]:', err);
+    logger.error('[API Available Error]:', err);
     return new Response(JSON.stringify({ error: 'Failed to fetch available content' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

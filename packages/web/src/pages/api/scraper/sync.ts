@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 
 import { ScraperService } from '@scraper/ScraperService';
 import type { ScraperTaskType } from '@scraper/features/task-management';
+import { logger } from '@web/platform/logging';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -46,7 +47,7 @@ export const POST: APIRoute = async ({ request }) => {
         });
 
       } catch (err: any) {
-        console.error('Async scraping error:', err);
+        logger.error('Async scraping error:', err);
       }
     })();
 

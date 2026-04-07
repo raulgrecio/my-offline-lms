@@ -10,6 +10,7 @@ import { SelectionStep } from './steps/_SelectionStep';
 import { AuthStep } from './steps/_AuthStep';
 import { ExecutionStep } from './steps/_ExecutionStep';
 import type { ScraperTaskType } from '@scraper/features/task-management';
+import { logger } from '@web/platform/logging';
 
 interface ContentItem {
   id: string;
@@ -84,7 +85,7 @@ export const ScraperWizard: React.FC = () => {
           // For now, if taskId is set, we will show the ExecutionStep content.
         }
       })
-      .catch(err => console.error('Error checking active task:', err));
+      .catch(err => logger.error('Error checking active task:', err));
   }, []);
 
   // Polling for task progress
@@ -108,7 +109,7 @@ export const ScraperWizard: React.FC = () => {
             }
           }
         } catch (err) {
-          console.error('Error polling task status:', err);
+          logger.error('Error polling task status:', err);
         }
       }, 2000);
     }
@@ -118,7 +119,7 @@ export const ScraperWizard: React.FC = () => {
   useEffect(() => {
     apiClient.get<AvailableContentResponse>(API_ROUTES.SCRAPER.AVAILABLE)
       .then(data => setAvailableContent(data))
-      .catch((err: any) => console.error('Error loading content', err));
+      .catch((err: any) => logger.error('Error loading content', err));
   }, []);
 
   const checkAuth = async () => {
@@ -150,7 +151,7 @@ export const ScraperWizard: React.FC = () => {
     try {
       await apiClient.post(API_ROUTES.SCRAPER.LOGIN);
     } catch (err: any) {
-      console.error('Failed to launch login:', err);
+      logger.error('Failed to launch login:', err);
     } finally {
       setAuthLoading(false);
     }
@@ -161,7 +162,7 @@ export const ScraperWizard: React.FC = () => {
     try {
       await apiClient.post(API_ROUTES.SCRAPER.CANCEL, { taskId });
     } catch (err: any) {
-      console.error('Failed to cancel:', err);
+      logger.error('Failed to cancel:', err);
     }
   };
 

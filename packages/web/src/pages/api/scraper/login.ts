@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 
 import { ScraperService } from '@scraper/ScraperService';
+import { logger } from '@web/platform/logging';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -8,7 +9,7 @@ export const POST: APIRoute = async ({ request }) => {
     // We don't await the login completion because it's interactive and the browser needs to stay open
     // BUT we should avoid spawning multiple instances
     scraper.login({ interactive: false, headless: false }).catch((err: any) => {
-      console.error('Interactive login error:', err);
+      logger.error('Interactive login error:', err);
     });
 
     return new Response(JSON.stringify({

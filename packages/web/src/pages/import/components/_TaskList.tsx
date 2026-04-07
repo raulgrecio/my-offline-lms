@@ -6,6 +6,7 @@ import { Icon, type IconName } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
 import { apiClient } from '@web/platform/api/client';
 import { API_ROUTES } from '@web/platform/api/routes';
+import { logger } from '@web/platform/logging';
 
 interface ScraperTask {
   id: string;
@@ -61,7 +62,7 @@ export const TaskList: React.FC = () => {
       const data = await apiClient.get<ScraperTask[]>(API_ROUTES.SCRAPER.LIST);
       setTasks(data);
     } catch (err) {
-      console.error('Error fetching tasks:', err);
+      logger.error('Error fetching tasks:', err);
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,7 @@ export const TaskList: React.FC = () => {
       await apiClient.post(API_ROUTES.SCRAPER.START, { taskId });
       fetchTasks();
     } catch (err) {
-      console.error('Error starting task:', err);
+      logger.error('Error starting task:', err);
     }
   };
 
@@ -87,7 +88,7 @@ export const TaskList: React.FC = () => {
       await apiClient.post(API_ROUTES.SCRAPER.CANCEL, { taskId });
       fetchTasks();
     } catch (err) {
-      console.error('Error stopping task:', err);
+      logger.error('Error stopping task:', err);
     }
   };
 
@@ -97,7 +98,7 @@ export const TaskList: React.FC = () => {
       await apiClient.post(API_ROUTES.SCRAPER.DELETE, { taskId });
       fetchTasks();
     } catch (err) {
-      console.error('Error deleting task:', err);
+      logger.error('Error deleting task:', err);
     }
   };
 
