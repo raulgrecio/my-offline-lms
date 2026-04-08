@@ -7,6 +7,9 @@ export const GET: APIRoute = async ({ request }) => {
       // 1. Subscribe to LogBroker events
       const unsubscribe = LogBroker.subscribe((entry) => {
         try {
+          // Suppress debug entries for the UI console
+          if (entry.payload.level === 'debug') return;
+
           // Normalize the data for the frontend LogEntry interface
           const normalizedLog = {
             timestamp: entry.metadata.timestamp,

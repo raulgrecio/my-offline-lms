@@ -22,24 +22,13 @@ export class ConsoleLogger implements ILogger {
   }
 
   debug(message: string): void {
-    if (this.isDebugEnabled()) {
-      console.debug(this.format("DEBUG", message));
-    }
+    console.debug(this.format("DEBUG", message));
   }
 
   withContext(context: string): ConsoleLogger {
     return new ConsoleLogger(context);
   }
 
-  private isDebugEnabled(): boolean {
-    if (typeof process !== "undefined") {
-      return process.env.DEBUG === "true" || process.env.NODE_ENV === "development";
-    }
-    if (typeof window !== "undefined") {
-      return (window as any).DEBUG === "true";
-    }
-    return false;
-  }
 
   private format(level: string, message: string): string {
     const timestamp = new Date().toISOString();

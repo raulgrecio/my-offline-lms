@@ -53,38 +53,10 @@ describe("Logging Module", () => {
       expect(errorSpy).toHaveBeenCalledTimes(3);
     });
 
-    it("should log debug messages when DEBUG is true", () => {
+    it("should log debug messages (internal filtering is removed; Router handles it)", () => {
       const logger = new ConsoleLogger();
-
-      // Mock process.env
-      const originalWindow = globalThis.window;
-      const originalProcess = globalThis.process;
-      delete (globalThis as any).window;
-
-      // Case 1: DEBUG=true
-      (globalThis as any).process = { env: { DEBUG: "true" } };
-      logger.debug?.("debug message");
+      logger.debug("debug message");
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: debug message"));
-
-      // Case 2: NODE_ENV=development
-      (globalThis as any).process = { env: { NODE_ENV: "development", DEBUG: "false" } };
-      logger.debug?.("dev message");
-      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: dev message"));
-
-      // Browser simulation
-      delete (globalThis as any).process;
-      (globalThis as any).window = { DEBUG: "true" };
-      logger.debug?.("browser debug");
-      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining("DEBUG: browser debug"));
-
-      // Default hidden case
-      delete (globalThis as any).window;
-      logger.debug?.("hidden");
-      expect(debugSpy).toHaveBeenCalledTimes(3);
-
-      // Cleanup
-      globalThis.window = originalWindow;
-      globalThis.process = originalProcess;
     });
 
 
