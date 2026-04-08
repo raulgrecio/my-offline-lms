@@ -96,10 +96,10 @@ export const LogConsole: React.FC = () => {
         ) : (
           <div className="space-y-1.5 pb-10">
             {logs.map((log, i) => (
-              <div key={i} className="flex gap-3 group animate-in fade-in duration-300">
+              <div key={i} className="flex gap-1">
                 <span className="text-text-muted opacity-30 select-none">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                <span className={`uppercase font-bold w-12 text-right ${getLevelColor(log.level)}`}>{log.level}</span>
-                <span className="text-brand-500 opacity-60">[{log.context}]</span>
+                <span className={`uppercase font-bold ${getLevelColor(log.level)}`}>{log.level}</span>
+                <span className="text-brand-500 opacity-60 pr-2">[{log.context}]</span>
                 <span className="text-text-primary flex-1 break-all group-hover:text-white transition-colors">{log.message}</span>
               </div>
             ))}
