@@ -1,4 +1,4 @@
-import { type DownloadType } from '@core/domain';
+import { DownloadType } from '@core/domain';
 import { type ILogger } from '@core/logging';
 
 import { type IUseCase } from '@scraper/features/shared';
@@ -13,6 +13,7 @@ import { DownloadVideos } from "./DownloadVideos";
 export interface DownloadCourseInput {
   courseInput: string;
   type: DownloadType;
+  taskId?: string;
 }
 
 export interface DownloadCourseOptions {
@@ -38,8 +39,8 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
     this.logger = options.logger.withContext("DownloadCourse");
   }
 
-  async execute(input: DownloadCourseInput): Promise<void> {
-    const { courseInput, type = 'all' } = input;
+  async execute(input: DownloadCourseInput, signal?: AbortSignal): Promise<void> {
+    const { courseInput, type = DownloadType.ALL } = input;
     const courseId = this.namingService.extractIdFromInput(courseInput);
 
     this.logger.info(`🚀 Iniciando descarga para curso: ${courseId}`);
@@ -57,11 +58,11 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
 
 
     if (type === 'guide' || type === 'all') {
-      await this.downloadGuides.execute({ courseId: course.id });
+      await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId }, signal);
     }
 
     if (type === 'video' || type === 'all') {
-      await this.downloadVideos.execute({ courseId: course.id });
+      await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
     }
 
     this.logger.info(`======================================================`);

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import { type ILogger } from '@core/logging';
 
 import { AssetNamingService, DownloadPath } from '@scraper/features/asset-download';
@@ -7,10 +6,6 @@ import { AssetNamingService, DownloadPath } from '@scraper/features/asset-downlo
 describe('DownloadPath Use Case', () => {
   const mockLearningPathRepo = {
     getCoursesForPath: vi.fn()
-  } as any;
-
-  const mockSyncLearningPath = {
-    execute: vi.fn()
   } as any;
 
   const mockDownloadGuides = {
@@ -35,7 +30,6 @@ describe('DownloadPath Use Case', () => {
     vi.clearAllMocks();
     useCase = new DownloadPath({
       learningPathRepo: mockLearningPathRepo,
-      syncLearningPath: mockSyncLearningPath,
       downloadGuides: mockDownloadGuides,
       downloadVideos: mockDownloadVideos,
       namingService: new AssetNamingService(),
@@ -64,10 +58,10 @@ describe('DownloadPath Use Case', () => {
 
     expect(mockDownloadGuides.execute).toHaveBeenCalledTimes(2);
     expect(mockDownloadVideos.execute).toHaveBeenCalledTimes(2);
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course1' });
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course1' });
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course2' });
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course2' });
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }), undefined);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }), undefined);
   });
 
   it('should only call guides download when type is guide', async () => {
@@ -75,7 +69,7 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'guide' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
@@ -84,7 +78,7 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'video' });
 
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
 });

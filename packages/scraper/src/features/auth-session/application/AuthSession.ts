@@ -43,7 +43,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
     this.logger.info(`Iniciando sesión de autenticación para: ${baseUrl}`);
 
     const isSessionValidForLoading = await this.authStorage.isValidSession();
-    const context = await this.browserProvider.getHeadfulContext(headless);
+    const context = await this.browserProvider.getHeadfulContext({ headless });
     this.activeContext = context;
 
     // --- MONITOR DE SESIÓN (Basado en Logs Nativos de Oracle) ---

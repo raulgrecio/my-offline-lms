@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import SubtitleDisplay from "@web/components/VideoPlayer/SubtitleDisplay";
 import { apiClient } from "@web/platform/api/client";
+import { logger } from "@web/platform/logging";
 
 // Mock apiClient
 vi.mock("@web/platform/api/client", () => ({
@@ -26,12 +27,12 @@ with two lines
 // Mock ResizeObserver
 let resizeCallback: ResizeObserverCallback | null = null;
 class ResizeObserverMock {
-    constructor(cb: ResizeObserverCallback) {
-      resizeCallback = cb;
-    }
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+  constructor(cb: ResizeObserverCallback) {
+    resizeCallback = cb;
+  }
+  observe() { }
+  unobserve() { }
+  disconnect() { }
 }
 window.ResizeObserver = ResizeObserverMock as any;
 
@@ -47,16 +48,16 @@ describe("SubtitleDisplay Component", () => {
       <SubtitleDisplay src="subs.vtt" currentTime={2} isVisible={true} />
     );
     await waitFor(() => { expect(screen.getByText(/First/)).toBeInTheDocument(); });
-    
+
     const wrapper = container.querySelector("div")!;
     const parent = wrapper.parentElement!;
     vi.spyOn(parent, 'getBoundingClientRect').mockReturnValue({ width: 1000, height: 1000 } as any);
     vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue({ width: 200, height: 50 } as any);
 
     await act(async () => {
-       if (resizeCallback) resizeCallback([], {} as any);
+      if (resizeCallback) resizeCallback([], {} as any);
     });
-    
+
     expect(wrapper.style.left).toBe("50%"); // defaults should remain after clamp with these values
   });
 
@@ -102,7 +103,7 @@ describe("SubtitleDisplay Component", () => {
 
   it("should hide subtitles when isVisible is false", async () => {
     render(<SubtitleDisplay src="subs.vtt" currentTime={2} isVisible={false} />);
-    
+
     await waitFor(() => {
       expect(screen.queryByText("First subtitle line")).not.toBeInTheDocument();
     });
@@ -110,7 +111,7 @@ describe("SubtitleDisplay Component", () => {
 
   it("should handle multi-line subtitles by replacing newline with <br/>", async () => {
     render(<SubtitleDisplay src="subs.vtt" currentTime={5} isVisible={true} />);
-    
+
     await waitFor(() => {
       const el = screen.getByText(/Second subtitle/);
       expect(el.innerHTML).toContain("Second subtitle<br>with two lines");
@@ -119,7 +120,7 @@ describe("SubtitleDisplay Component", () => {
 
   it("should load position from localStorage", async () => {
     localStorage.setItem("subtitle_position", JSON.stringify({ x: 20, y: 30 }));
-    
+
     const { container } = render(
       <SubtitleDisplay src="subs.vtt" currentTime={2} isVisible={true} />
     );
@@ -132,15 +133,14 @@ describe("SubtitleDisplay Component", () => {
   });
   it("should handle error when fetching subtitles", async () => {
     vi.mocked(apiClient.getText).mockRejectedValue(new Error("Network fail"));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => { });
+
     render(<SubtitleDisplay src="subs.vtt" currentTime={2} isVisible={true} />);
-    
+
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Error fetching subtitles:'));
-      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+      expect(errorSpy).toHaveBeenCalledWith('Error fetching subtitles:', expect.any(Error));
     });
-    consoleSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it("should handle dragging the subtitles", async () => {
@@ -153,39 +153,39 @@ describe("SubtitleDisplay Component", () => {
     });
 
     const subtitleElement = screen.getByText("First subtitle line");
-    
+
     // Initial position is 50%, 15% (defaults)
     const wrapper = container.querySelector("div");
     if (!wrapper) throw new Error("Wrapper not found");
-    
+
     // Simulate mousedown
     fireEvent.mouseDown(subtitleElement, { clientX: 100, clientY: 100 });
-    
+
     // Simulate mouse move
     // JSDOM parent Rect is empty by default, so we might need more mocks for getBoundingClientRect
     const parent = wrapper.parentElement!;
     vi.spyOn(parent, 'getBoundingClientRect').mockReturnValue({
-        width: 1000, height: 1000, top: 0, left: 0, bottom: 1000, right: 1000,
-        x: 0, y: 0, toJSON: () => {}
+      width: 1000, height: 1000, top: 0, left: 0, bottom: 1000, right: 1000,
+      x: 0, y: 0, toJSON: () => { }
     });
     vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue({
-        width: 200, height: 50, top: 0, left: 0, bottom: 50, right: 200,
-        x: 0, y: 0, toJSON: () => {}
+      width: 200, height: 50, top: 0, left: 0, bottom: 50, right: 200,
+      x: 0, y: 0, toJSON: () => { }
     });
 
     fireEvent.mouseMove(window, { clientX: 200, clientY: 150 });
-    
+
     // newX = 50% * 1000 + (200 - 100) = 500 + 100 = 600
     // newXPos = 600 / 1000 = 60%
-    
+
     // Actually the logic uses bottom position. 15% * 1000 - (150 - 100) = 150 - 50 = 100 (from bottom)
     // newYPos = 100 / 1000 = 10%
-    
+
     await waitFor(() => {
-        expect(wrapper.style.left).toBe("60%");
-        expect(wrapper.style.bottom).toBe("10%");
+      expect(wrapper.style.left).toBe("60%");
+      expect(wrapper.style.bottom).toBe("10%");
     });
-    
+
     fireEvent.mouseUp(window);
   });
 
@@ -201,16 +201,16 @@ describe("SubtitleDisplay Component", () => {
     vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue({ width: 200, height: 50 } as any);
 
     fireEvent.mouseDown(subtitleElement, { clientX: 100, clientY: 100 });
-    
+
     // Drag way out of bounds (top left)
     fireEvent.mouseMove(window, { clientX: -500, clientY: -1000 });
     await waitFor(() => {
-        // halfWidth is 100. newXPixels capped at 100. 100/1000 = 10%
-        expect(wrapper.style.left).toBe("10%");
-        // capped at parentHeight - containerHeight = 1000 - 50 = 950. 950 / 1000 = 95%
-        expect(wrapper.style.bottom).toBe("95%");
+      // halfWidth is 100. newXPixels capped at 100. 100/1000 = 10%
+      expect(wrapper.style.left).toBe("10%");
+      // capped at parentHeight - containerHeight = 1000 - 50 = 950. 950 / 1000 = 95%
+      expect(wrapper.style.bottom).toBe("95%");
     });
-    
+
     fireEvent.mouseUp(window);
   });
 
@@ -230,14 +230,14 @@ Content`;
   });
 
   it("should return 0 for malformed timestamp parts", async () => {
-     const malformedVtt = `WEBVTT
+    const malformedVtt = `WEBVTT
 1
 abc:def:ghi --> 00:00:02.000
 Broken`;
-     vi.mocked(apiClient.getText).mockResolvedValue(malformedVtt);
-     await act(async () => {
-       render(<SubtitleDisplay src="subs.vtt" currentTime={0} isVisible={true} />);
-     });
+    vi.mocked(apiClient.getText).mockResolvedValue(malformedVtt);
+    await act(async () => {
+      render(<SubtitleDisplay src="subs.vtt" currentTime={0} isVisible={true} />);
+    });
   });
 
   it("should prevent default on touch move if cancelable", async () => {
@@ -246,11 +246,11 @@ Broken`;
     );
     await waitFor(() => { expect(screen.getByText(/First/)).toBeInTheDocument(); });
     const subtitleElement = screen.getByText(/First/);
-    
+
     await act(async () => {
       fireEvent.touchStart(subtitleElement, { touches: [{ clientX: 100, clientY: 100 }] });
     });
-    
+
     const ev = new TouchEvent('touchmove', {
       touches: [{ clientX: 110, clientY: 110 }] as any,
       cancelable: true
@@ -259,7 +259,7 @@ Broken`;
     await act(async () => {
       window.dispatchEvent(ev);
     });
-    
+
     expect(ev.preventDefault).toHaveBeenCalled();
   });
 
@@ -269,15 +269,15 @@ Broken`;
 01:00.000 --> 02:00.000
 Short format`;
     vi.mocked(apiClient.getText).mockResolvedValue(vttShort);
-    
+
     const { rerender } = render(<SubtitleDisplay src="subs.vtt" currentTime={0} isVisible={true} />);
-    
+
     await act(async () => {
-        rerender(<SubtitleDisplay src="subs.vtt" currentTime={70} isVisible={true} />);
+      rerender(<SubtitleDisplay src="subs.vtt" currentTime={70} isVisible={true} />);
     });
-    
+
     await waitFor(() => {
-        expect(screen.getByText("Short format")).toBeInTheDocument();
+      expect(screen.getByText("Short format")).toBeInTheDocument();
     });
   });
 
@@ -302,9 +302,9 @@ Second
 `;
     vi.mocked(apiClient.getText).mockResolvedValue(multipleVtt);
     const { rerender } = render(<SubtitleDisplay src="subs.vtt" currentTime={3} isVisible={true} />);
-    
+
     await waitFor(() => { expect(screen.getByText("First")).toBeInTheDocument(); });
-    
+
     await act(async () => {
       rerender(<SubtitleDisplay src="subs.vtt" currentTime={5} isVisible={true} />);
     });
@@ -354,9 +354,9 @@ Another valid
 
     fireEvent.touchStart(subtitleElement, { touches: [{ clientX: 100, clientY: 100 }] });
     fireEvent.touchMove(window, { touches: [{ clientX: 200, clientY: 150 }] });
-    
+
     await waitFor(() => {
-        expect(wrapper.style.left).toBe("60%");
+      expect(wrapper.style.left).toBe("60%");
     });
     fireEvent.touchEnd(window);
   });
@@ -366,11 +366,11 @@ Another valid
 1
 01:00,000 --> 02:00,000
 Comma format`;
-     vi.mocked(apiClient.getText).mockResolvedValue(vttComma);
-     await act(async () => {
-       render(<SubtitleDisplay src="subs.vtt" currentTime={70} isVisible={true} />);
-     });
-     await waitFor(() => { expect(screen.getByText("Comma format")).toBeInTheDocument(); });
+    vi.mocked(apiClient.getText).mockResolvedValue(vttComma);
+    await act(async () => {
+      render(<SubtitleDisplay src="subs.vtt" currentTime={70} isVisible={true} />);
+    });
+    await waitFor(() => { expect(screen.getByText("Comma format")).toBeInTheDocument(); });
   });
 
   it("should skip effect if parent is missing", async () => {

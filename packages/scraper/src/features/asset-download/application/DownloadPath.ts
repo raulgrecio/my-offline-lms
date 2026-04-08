@@ -1,4 +1,4 @@
-import { type DownloadType } from '@core/domain';
+import { DownloadType } from '@core/domain';
 import { type ILogger } from '@core/logging';
 
 import { type IUseCase } from '@scraper/features/shared';
@@ -11,6 +11,7 @@ import { DownloadVideos } from "./DownloadVideos";
 export interface DownloadPathInput {
   pathInput: string;
   type: DownloadType;
+  taskId?: string;
 }
 
 export interface DownloadPathOptions {
@@ -39,8 +40,8 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
     this.logger = options.logger.withContext("DownloadPath");
   }
 
-  async execute(input: DownloadPathInput): Promise<void> {
-    const { pathInput, type = 'all' } = input;
+  async execute(input: DownloadPathInput, signal?: AbortSignal): Promise<void> {
+    const { pathInput, type = DownloadType.ALL } = input;
     const pathId = this.namingService.extractIdFromInput(pathInput);
 
     this.logger.info(`🚀 Iniciando descarga para Learning Path: ${pathId}`);
@@ -55,16 +56,18 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
     this.logger.info(`📚 Encontrados ${courses.length} cursos. Procesando tipo de descarga: ${type}...`);
 
     for (const course of courses) {
+      if (signal?.aborted) return;
+
       this.logger.info(`======================================================`);
       this.logger.info(`📦 Procesando Curso [${course.orderIndex}/${courses.length}]: ${course.title} (ID: ${course.id})`);
       this.logger.info(`======================================================`);
 
       if (type === 'guide' || type === 'all') {
-        await this.downloadGuides.execute({ courseId: course.id });
+        await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId }, signal);
       }
 
       if (type === 'video' || type === 'all') {
-        await this.downloadVideos.execute({ courseId: course.id });
+        await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
       }
     }
 

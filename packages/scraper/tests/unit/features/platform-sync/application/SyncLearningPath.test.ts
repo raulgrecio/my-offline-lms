@@ -233,7 +233,7 @@ describe('SyncLearningPath Use Case', () => {
     };
     mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([payload]);
     await useCase.execute({ pathInput: 'lp1' });
-    expect(mockSyncCourseUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ offeringId: undefined }));
+    expect(mockSyncCourseUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ offeringId: undefined }), undefined);
   });
 
   it('should handle keepTempWorkspaces: true with null isolatedDirPath', async () => {

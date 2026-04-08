@@ -54,8 +54,8 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'course1', type: 'all' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'course1' });
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'course1' });
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
   });
 
   it('should only call guides download when type is guide', async () => {
@@ -63,7 +63,7 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'c1', type: 'guide' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
@@ -72,7 +72,7 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'c1', type: 'video' });
 
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith({ courseId: 'c1' });
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
 });

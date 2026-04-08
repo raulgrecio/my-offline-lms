@@ -22,6 +22,7 @@ export interface DownloadVideosConfig {
 
 export interface DownloadVideosInput {
   courseId: string;
+  taskId?: string;
 }
 
 export interface DownloadVideosOptions {
@@ -56,7 +57,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadVideosInput): Promise<void> {
+  async execute(input: DownloadVideosInput, signal?: AbortSignal): Promise<void> {
     const { courseId } = input;
     this.logger.info(`Iniciando procesamiento de vídeos para el curso: ${courseId}`);
 
@@ -68,11 +69,13 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
 
     this.logger.info(`⏳ Encontrados ${pendingVideos.length} vídeos pendientes. Comenzando...`);
 
-    // Unico navegador para todo el batch
-    const context = await this.browserProvider.getAuthenticatedContext();
+    // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
 
     try {
       for (let i = 0; i < pendingVideos.length; i++) {
+        if (signal?.aborted) return;
+
         this.logger.info(`======================================================`);
         this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
         await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);

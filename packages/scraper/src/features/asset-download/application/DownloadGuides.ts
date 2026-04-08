@@ -19,6 +19,7 @@ export interface DownloadGuidesConfig {
 
 export interface DownloadGuidesInput {
   courseId: string;
+  taskId?: string;
 }
 
 export interface DownloadGuidesOptions {
@@ -53,7 +54,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadGuidesInput): Promise<void> {
+  async execute(input: DownloadGuidesInput, signal?: AbortSignal): Promise<void> {
     const { courseId } = input;
     this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
 
@@ -66,16 +67,19 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.logger.info(`⏳ Encontradas ${pendingGuides.length} guías pendientes. Comenzando...`);
 
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
-    const context = await this.browserProvider.getAuthenticatedContext();
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
 
     try {
       for (let i = 0; i < pendingGuides.length; i++) {
+        if (signal?.aborted) return;
+
         this.logger.info(`======================================================`);
         this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await this.downloadSingleGuide({
           assetId: pendingGuides[i].id,
           courseId: pendingGuides[i].courseId,
-          sharedContext: context
+          sharedContext: context,
+          signal
         });
         await new Promise(r => setTimeout(r, 2000));
       }
@@ -87,7 +91,13 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
 
-  public async downloadSingleGuide({ assetId, courseId, sharedContext }: { assetId: string, courseId: string, sharedContext?: any }): Promise<void> {
+  public async downloadSingleGuide(options: {
+    assetId: string,
+    courseId: string,
+    sharedContext?: any,
+    signal?: AbortSignal
+  }): Promise<void> {
+    const { assetId, courseId, sharedContext, signal } = options;
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'guide') return;
 
@@ -179,6 +189,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       const downloadPage = await context.newPage();
 
       for (let i = 0; i < pagesCount; i++) {
+        if (signal?.aborted) return;
         const pageNum = i + 1;
         const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;

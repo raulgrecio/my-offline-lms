@@ -305,15 +305,15 @@ describe('SyncCourse Use Case', () => {
   it('should cover initial offeringId null branch and dynamic extraction', async () => {
     setupMockPage();
     // Test extraction from wrapperUrl
-    const payload = { 
-      filePath: 'p1.json', 
-      content: JSON.stringify({ 
-        url: 'https://platform.com/ou/course/slug/999?offeringId=999888', 
-        data: { id: '123', name: 'C' } 
-      }) 
+    const payload = {
+      filePath: 'p1.json',
+      content: JSON.stringify({
+        url: 'https://platform.com/ou/course/slug/999?offeringId=999888',
+        data: { id: '123', name: 'C' }
+      })
     };
     mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([payload]);
-    
+
     // We pass a null or empty offeringId initially if possible or just trigger the logic
     await useCase.execute({ courseInput: '123' });
     const logInfoCalls = (mockLogger.info as any).mock.calls.map((c: any) => c[0]);

@@ -42,11 +42,12 @@ import {
   StartTask,
   GetAllTasks,
   DeleteTask,
+  CleanupInterruptedTasks,
   type CreateTaskInput,
   ScraperTaskCategory,
   ScraperTaskAction,
 } from './features/task-management';
-import { ScraperOrchestrator } from './features/shared';
+import { TaskOrchestrator } from './features/task-management';
 import { BrowserProvider, BrowserInterceptor } from './platform/browser';
 import { getDb } from './platform/database';
 
@@ -70,7 +71,7 @@ export interface ScraperDependencies {
 export class ScraperService {
   private static instance: ScraperService;
 
-  private orchestrator: ScraperOrchestrator;
+  private orchestrator: TaskOrchestrator;
   private createTaskUseCase: CreateTask;
   private updateTaskUseCase: UpdateTask;
   private getActiveTaskUseCase: GetActiveTask;
@@ -82,6 +83,7 @@ export class ScraperService {
   private startTaskUseCase: StartTask;
   private getAllTasksUseCase: GetAllTasks;
   private deleteTaskUseCase: DeleteTask;
+  private cleanupInterruptedTasksUseCase: CleanupInterruptedTasks;
 
   public isLoggingIn = false;
 
@@ -94,6 +96,7 @@ export class ScraperService {
     this.startTaskUseCase = new StartTask(deps.taskRepo);
     this.getAllTasksUseCase = new GetAllTasks(deps.taskRepo);
     this.deleteTaskUseCase = new DeleteTask(deps.taskRepo);
+    this.cleanupInterruptedTasksUseCase = new CleanupInterruptedTasks(deps.taskRepo, deps.logger);
 
     this.validateAuthUseCase = new ValidateAuthSession({
       authStorage: deps.authSessionStorage,
@@ -106,7 +109,7 @@ export class ScraperService {
       logger: deps.logger
     });
 
-    this.orchestrator = new ScraperOrchestrator({
+    this.orchestrator = new TaskOrchestrator({
       validator: this.validateAuthUseCase,
       updateTask: this.updateTaskUseCase,
       getTaskById: this.getTaskByIdUseCase,
@@ -121,6 +124,15 @@ export class ScraperService {
       deps.universalFs,
       deps.nodePath
     );
+  }
+
+  static async init(deps: ScraperDependencies): Promise<ScraperService> {
+    if (!ScraperService.instance) {
+      ScraperService.instance = new ScraperService(deps);
+      // Cleanup orphaned tasks on startup
+      await ScraperService.instance.cleanupInterruptedTasksUseCase.execute();
+    }
+    return ScraperService.instance;
   }
 
   static async create(): Promise<ScraperService> {
@@ -191,7 +203,7 @@ export class ScraperService {
       logger: eventLogger
     });
 
-    ScraperService.instance = new ScraperService({
+    return await ScraperService.init({
       db,
       logger: eventLogger,
       taskRepo,
@@ -207,8 +219,6 @@ export class ScraperService {
       universalFs,
       nodePath
     });
-
-    return ScraperService.instance;
   }
 
   async validateAuth() {
@@ -377,12 +387,9 @@ export class ScraperService {
     const { courseId } = this.deps.urlProvider.resolveCourseUrl(url);
     await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url, targetId: courseId });
 
-    await this.orchestrator.run(
-      { taskId, mainStep: 'Sincronizando metadatos del curso...', onCleanup: () => this.cleanup() },
-      async () => {
-        await syncCourse.execute({ courseInput: url });
-      }
-    );
+    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando curso', onCleanup: () => this.cleanup() }, async (signal) => {
+      await syncCourse.execute({ courseInput: url, taskId }, signal);
+    });
   }
 
   async syncPath({ url, taskId }: { url: string; taskId: string }) {
@@ -431,12 +438,9 @@ export class ScraperService {
     const { pathId } = this.deps.urlProvider.resolveLearningPathUrl(url);
     await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.PATH, action: ScraperTaskAction.SYNC_PATH, url, targetId: pathId });
 
-    await this.orchestrator.run(
-      { taskId, mainStep: 'Sincronizando metadatos de la ruta...', onCleanup: () => this.cleanup() },
-      async () => {
-        await syncPath.execute({ pathInput: url });
-      }
-    );
+    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando ruta de aprendizaje', onCleanup: () => this.cleanup() }, async (signal) => {
+      await syncPath.execute({ pathInput: url, taskId }, signal);
+    });
   }
 
   async download({ download, taskId, entityId, entityType }: {
@@ -519,14 +523,13 @@ export class ScraperService {
       targetId: entityId,
       metadata: { type: download }
     });
-
     await this.orchestrator.run(
       { taskId, mainStep: 'Descargando recursos...', onCleanup: () => this.cleanup() },
-      async () => {
+      async (signal) => {
         if (entityType === ScraperTaskCategory.PATH) {
-          await downloadPath.execute({ pathInput: entityId, type: download });
+          await downloadPath.execute({ pathInput: entityId, type: download, taskId }, signal);
         } else {
-          await downloadCourse.execute({ courseInput: entityId, type: download });
+          await downloadCourse.execute({ courseInput: entityId, type: download, taskId }, signal);
         }
       }
     );

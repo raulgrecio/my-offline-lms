@@ -1,14 +1,14 @@
 import React from 'react';
 import { Icon } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
-import type { ScraperTaskType } from '@scraper/features/task-management';
+import type { ScraperTaskCategory } from '@scraper/features/task-management';
 import type { UITheme } from '../steps/_SelectionStep';
 
 interface ContentTypeFilterProps {
-  contentType: ScraperTaskType;
-  setContentType: (type: ScraperTaskType) => void;
+  contentType: ScraperTaskCategory;
+  setContentType: (type: ScraperTaskCategory) => void;
   onTypeChange?: () => void;
-  themes: Record<ScraperTaskType, UITheme>;
+  themes: Record<ScraperTaskCategory, UITheme>;
 }
 
 export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
@@ -17,7 +17,7 @@ export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
   onTypeChange,
   themes
 }) => {
-  const handleTypeChange = (type: ScraperTaskType) => {
+  const handleTypeChange = (type: ScraperTaskCategory) => {
     if (type !== contentType) {
       setContentType(type);
       onTypeChange?.();
@@ -30,11 +30,10 @@ export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
         <Button
           variant="none"
           onClick={() => handleTypeChange('course')}
-          className={`flex-1 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xl transition-all duration-300 ${
-            contentType === 'course' 
-              ? `${themes.course.activeBg} text-white shadow-lg ${themes.course.activeShadow} ring-1 ${themes.course.ring}` 
+          className={`flex-1 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xl transition-all duration-300 ${contentType === 'course'
+              ? `${themes.course.activeBg} text-white shadow-lg ${themes.course.activeShadow} ring-1 ${themes.course.ring}`
               : `text-text-muted hover:${themes.course.primary} ${themes.course.hoverBg}`
-          }`}
+            }`}
         >
           <div className="flex items-center justify-center gap-2">
             <Icon name="book-open" size="xs" />
@@ -44,11 +43,10 @@ export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
         <Button
           variant="none"
           onClick={() => handleTypeChange('path')}
-          className={`flex-1 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xl transition-all duration-300 ${
-            contentType === 'path' 
-              ? `${themes.path.activeBg} text-white shadow-lg ${themes.path.activeShadow} ring-1 ${themes.path.ring}` 
+          className={`flex-1 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xl transition-all duration-300 ${contentType === 'path'
+              ? `${themes.path.activeBg} text-white shadow-lg ${themes.path.activeShadow} ring-1 ${themes.path.ring}`
               : `text-text-muted hover:${themes.path.primary} ${themes.path.hoverBg}`
-          }`}
+            }`}
         >
           <div className="flex items-center justify-center gap-2">
             <Icon name="graduation-cap" size="xs" />

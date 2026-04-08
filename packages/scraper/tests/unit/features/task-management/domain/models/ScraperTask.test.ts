@@ -9,7 +9,7 @@ describe('ScraperTask', () => {
     const url = 'https://example.com/course';
     const targetId = 'course-1';
 
-    const task = ScraperTask.create({ id, type, url, targetId });
+    const task = ScraperTask.create({ id, type, action: 'SYNC_COURSE', url, targetId });
 
     expect(task.id).toBe(id);
     expect(task.type).toBe(type);
@@ -28,6 +28,7 @@ describe('ScraperTask', () => {
       const task = ScraperTask.create({
         id,
         type: 'course',
+        action: 'SYNC_COURSE',
         url: 'https://example.com/course'
       });
 

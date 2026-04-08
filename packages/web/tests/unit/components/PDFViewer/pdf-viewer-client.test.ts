@@ -3,6 +3,7 @@ import * as pdfjs from "pdfjs-dist";
 
 import { apiClient } from "@web/platform/api";
 import { initPdfViewer } from "@web/components/PDFViewer/pdf-viewer-client";
+import { logger } from "@web/platform/logging";
 
 // Mock pdfjs-dist
 vi.mock("pdfjs-dist", () => ({
@@ -509,7 +510,7 @@ describe("PDFViewer Client Logic", () => {
       promise: Promise.reject(new Error("PDF Load Failed")),
     } as any);
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => { });
     initPdfViewer({
       assetId: "a1", courseId: "c1", path: "bad.pdf", initialPage: 1,
       options: { progressUrl: "/api/progress", metadataUrl: "/api/metadata" },
@@ -517,8 +518,9 @@ describe("PDFViewer Client Logic", () => {
 
     await vi.waitFor(() => {
       expect(document.querySelector('[data-error-message]')?.textContent).toBe("PDF Load Failed");
+      expect(errorSpy).toHaveBeenCalled();
     });
-    consoleSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it("should handle error in fetchVisitedSegments", async () => {
@@ -623,14 +625,14 @@ describe("PDFViewer Client Logic", () => {
       }),
     } as any);
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => { });
     initPdfViewer({
       assetId: "a1", courseId: "c1", path: "fail.pdf", initialPage: 1,
       options: { progressUrl: "/api/progress", metadataUrl: "/api/metadata" },
     });
 
-    await vi.waitFor(() => { expect(consoleSpy).toHaveBeenCalled(); });
-    consoleSpy.mockRestore();
+    await vi.waitFor(() => { expect(errorSpy).toHaveBeenCalled(); });
+    errorSpy.mockRestore();
   });
 
   it("should cover rotation scale branch and input Enter events", async () => {

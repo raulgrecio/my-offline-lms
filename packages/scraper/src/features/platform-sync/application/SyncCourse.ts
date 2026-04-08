@@ -8,9 +8,11 @@ import { type ICourseRepository } from '../domain/ports/ICourseRepository';
 import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
 import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
 
+
 export interface SyncCourseInput {
   courseInput: string;
   offeringId?: string;
+  taskId?: string;
 }
 
 type SyncCourseConfig = {
@@ -58,8 +60,8 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: SyncCourseInput): Promise<void> {
-    const { courseInput, offeringId } = input;
+  async execute(input: SyncCourseInput, signal?: AbortSignal): Promise<void> {
+    const { courseInput, offeringId, taskId } = input;
 
     if (!courseInput) {
       this.logger.error("No se proporcionó courseUrl o IDs.");
@@ -75,8 +77,9 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
 
     this.logger.info(`🚀 Iniciando sincronización del curso: ${courseId} (${url})`);
 
-    const browser = await this.browserProvider.getAuthenticatedContext();
-    const page = await browser.newPage();
+    // Step 1: Open Browser & Navigate
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
+    const page = await context.newPage();
 
     const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'course', execTimestamp: Date.now() });
     const isolatedInterceptedDataRepo = this.createInterceptedRepo(isolatedDirPath);
@@ -108,6 +111,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
         const processedPayloadPaths: string[] = [];
 
         for (const wrapper of intercepted) {
+          if (signal?.aborted) return;
           processedPayloadPaths.push(wrapper.filePath);
 
           let raw: any;

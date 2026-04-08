@@ -14,6 +14,6 @@ export class StartTask {
     }
 
     task.start();
-    await this.taskRepo.update(task.id, { status: task.status, progress: task.progress });
+    await this.taskRepo.update(task.id, { status: task.status, progress: task.progress ?? undefined });
   }
 }

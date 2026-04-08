@@ -4,18 +4,10 @@ import { LogHistory } from "./LogHistory";
 import { LogRouter, type RouteOptions } from "./LogRouter";
 import type { ILogger } from "./ILogger";
 import type { LogEvent } from "./LogEvent";
+import { getSafeBroadcastChannel } from "../broadcast/BroadcastChannelUtils";
+
 const LOG_CHANNEL_NAME = 'my-offline-lms-logs';
 
-// Helper to get BroadcastChannel safely in any environment
-const getChannel = () => {
-  if (typeof BroadcastChannel !== 'undefined') {
-    const channel = new BroadcastChannel(LOG_CHANNEL_NAME);
-    // In Node.js, we unref it to not block process exit
-    if ((channel as any).unref) (channel as any).unref();
-    return channel;
-  }
-  return null;
-};
 
 /**
  * Standardized logging facade for the overall application.
@@ -25,7 +17,7 @@ class LogBrokerFacade {
   private readonly bus = new LogEventBus();
   private readonly history = new LogHistory(this.bus);
   private readonly router = new LogRouter(this.bus);
-  private readonly channel = getChannel();
+  private readonly channel = getSafeBroadcastChannel(LOG_CHANNEL_NAME);
 
   constructor() {
     if (this.channel) {

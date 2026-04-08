@@ -13,6 +13,7 @@ import { SyncCourse } from "./SyncCourse";
 
 export interface SyncLearningPathInput {
   pathInput: string;
+  taskId?: string;
 }
 
 export interface SyncLearningPathConfig {
@@ -57,7 +58,8 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.config = options.config;
   }
 
-  async execute({ pathInput }: SyncLearningPathInput): Promise<void> {
+  async execute(input: SyncLearningPathInput, signal?: AbortSignal): Promise<void> {
+    const { pathInput, taskId } = input;
     if (!pathInput) {
       this.logger.error("No se proporcionó pathInput");
       return;
@@ -72,7 +74,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.logger.info(`Iniciando mapeo y sincronización de ruta: ${url} (ID: ${pathId})`);
 
     // 1. Extraer datos (Navegador)
-    const context = await this.browserProvider.getAuthenticatedContext();
+    const context = await this.browserProvider.getAuthenticatedContext({ signal });
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
@@ -90,7 +92,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
       await page.close();
 
       // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
-      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
+      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }, signal);
 
     } finally {
       // --- Isolated Execution Environment Cleanup ---
@@ -107,10 +109,11 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     }
   }
 
-  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator> }): Promise<void> {
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator>, taskId?: string }, signal?: AbortSignal): Promise<void> {
     const intercepted = await isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
 
     for (const payload of intercepted) {
+      if (signal?.aborted) return;
       const json = JSON.parse(payload.content);
 
       const lpData = json.data?.lpPageData;
@@ -145,7 +148,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
         const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
 
         // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
-        await this.syncCourse.execute({ courseInput: courseUrl, offeringId });
+        await this.syncCourse.execute({ courseInput: courseUrl, offeringId, taskId }, signal);
 
         orderIndex++;
         coursesAdded++;

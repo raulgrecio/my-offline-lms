@@ -34,7 +34,8 @@ export class BrowserProvider implements IBrowserProvider {
   }
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
-  async getHeadfulContext(headless: boolean = false): Promise<BrowserContext> {
+  async getHeadfulContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<BrowserContext> {
+    const { headless = false } = options;
     if (!this.browser) {
       this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
       this.browser = await chromium.launch({
@@ -75,23 +76,37 @@ export class BrowserProvider implements IBrowserProvider {
 
     const context = await this.browser.newContext(contextOptions);
     this.contexts.add(context);
+
+    // [REACTIVE CANCELLATION] If an AbortSignal is provided, close the context immediately on abort.
+    // This force-cancels any pending Playwright operations (goto, waitFor, etc.)
+    if (signal) {
+      if (signal.aborted) {
+        this.closeContext(context).catch(() => { });
+      } else {
+        signal.addEventListener('abort', () => {
+          this.logger?.info('Señal de aborto recibida. Cerrando contexto de navegador inmediatamente...');
+          this.closeContext(context).catch(() => { });
+        }, { once: true });
+      }
+    }
+
     return context;
   }
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
-  async getAuthenticatedContext(): Promise<BrowserContext> {
+  async getAuthenticatedContext(options: {} = {}, signal?: AbortSignal): Promise<BrowserContext> {
     const exists = await this.fs.exists(this.config.authStateFile);
     if (!exists) {
       throw new Error("No existe sesion guardada. Ejecute el login primero.");
     }
-    return this.getHeadfulContext(true); // force headless for background ops
+    return this.getHeadfulContext({ headless: true }, signal); // force headless for background ops
   }
 
   async closeContext(context: BrowserContext): Promise<void> {
     if (this.contexts.has(context)) {
       this.contexts.delete(context);
       // We don't strictly await here to avoid deadlocks if the browser is already closing/closed
-      await context.close().catch((e) => { 
+      await context.close().catch((e) => {
         this.logger?.error(`Error al cerrar el contexto: ${e.message}`);
       });
     }
@@ -100,7 +115,7 @@ export class BrowserProvider implements IBrowserProvider {
     if (this.contexts.size === 0 && this.browser) {
       const b = this.browser;
       this.browser = null;
-      await b.close().catch((e) => { 
+      await b.close().catch((e) => {
         this.logger?.error(`Error al cerrar el navegador: ${e.message}`);
       });
     }

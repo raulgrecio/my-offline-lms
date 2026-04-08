@@ -8,4 +8,7 @@ export * from './application/GetTaskById';
 export * from './application/CancelTask';
 export * from './application/StartTask';
 export * from './application/GetAllTasks';
+export * from './application/CleanupInterruptedTasks';
 export * from './application/DeleteTask';
+export * from './application/TaskOrchestrator';
+export * from './infrastructure/TaskBroker';

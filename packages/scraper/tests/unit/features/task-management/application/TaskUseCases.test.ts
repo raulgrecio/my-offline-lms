@@ -28,7 +28,7 @@ describe('Task Management Use Cases', () => {
       const repo = mockRepo();
       const useCase = new CreateTask(repo);
       const id = generateId();
-      const input = { id, type: 'course' as any, url: 'https://test.com', targetId: '123' };
+      const input = { id, type: 'course' as any, action: 'SYNC_COURSE' as any, url: 'https://test.com', targetId: '123' };
 
       const taskId = await useCase.execute(input);
 
@@ -57,7 +57,7 @@ describe('Task Management Use Cases', () => {
     it('should retrieve the active task from the repository', async () => {
       const repo = mockRepo();
       const useCase = new GetActiveTask(repo);
-      const activeTask = ScraperTask.create({ id: 'active', type: 'course', url: '...' });
+      const activeTask = ScraperTask.create({ id: 'active', type: 'course', action: 'SYNC_COURSE', url: '...' });
       (repo.findActive as any).mockResolvedValue(activeTask);
 
       const result = await useCase.execute();
@@ -116,7 +116,7 @@ describe('Task Management Use Cases', () => {
     it('should find a task by its ID', async () => {
       const repo = mockRepo();
       const useCase = new GetTaskById(repo);
-      const task = ScraperTask.create({ id: 'task-1', type: 'course', url: '...' });
+      const task = ScraperTask.create({ id: 'task-1', type: 'course', action: 'SYNC_COURSE', url: '...' });
       (repo.findById as any).mockResolvedValue(task);
 
       const result = await useCase.execute({ id: 'task-1' });
@@ -130,7 +130,7 @@ describe('Task Management Use Cases', () => {
     it('should transition a PENDING task to RUNNING', async () => {
       const repo = mockRepo();
       const useCase = new StartTask(repo);
-      const task = ScraperTask.create({ id: 'task-1', type: 'course', url: 'https://test.com' });
+      const task = ScraperTask.create({ id: 'task-1', type: 'course', action: 'SYNC_COURSE', url: 'https://test.com' });
       (repo.findById as any).mockResolvedValue(task);
 
       await useCase.execute({ id: 'task-1' });
