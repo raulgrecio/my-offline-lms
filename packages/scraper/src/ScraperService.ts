@@ -124,18 +124,7 @@ export class ScraperService {
   }
 
   static async create(): Promise<ScraperService> {
-    // Patrón de persistencia del Singleton en entorno de desarrollo (HMR).
-    // Evita que el estado se pierda cuando Vite o Astro recargan los módulos en caliente.
-    const isDev = process.env.NODE_ENV !== 'production';
-    const globalContainer = globalThis as any;
-
-    if (isDev && globalContainer.__SCRAPER_INSTANCE__) {
-      ScraperService.instance = globalContainer.__SCRAPER_INSTANCE__;
-      return ScraperService.instance;
-    }
-
     if (ScraperService.instance) {
-      if (isDev) globalContainer.__SCRAPER_INSTANCE__ = ScraperService.instance;
       return ScraperService.instance;
     }
 
@@ -218,8 +207,6 @@ export class ScraperService {
       universalFs,
       nodePath
     });
-
-    if (isDev) (globalThis as any).__SCRAPER_INSTANCE__ = ScraperService.instance;
 
     return ScraperService.instance;
   }

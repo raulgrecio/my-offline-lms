@@ -20,6 +20,15 @@ export class LogHistory {
   }
 
   /**
+   * Adds an entry from an external source (e.g., BroadcastChannel).
+   */
+  addExternal(event: LogEvent): void {
+    if (event.payload.level !== 'debug') {
+      this.add(event);
+    }
+  }
+
+  /**
    * Adds an entry to the history buffer.
    */
   private add(event: LogEvent): void {

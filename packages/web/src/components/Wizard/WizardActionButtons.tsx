@@ -43,7 +43,7 @@ export const WizardActionButtons: React.FC<ActionButtonProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center pt-8 border-t border-border-subtle mt-12 bg-surface-950/20 px-4 -mx-4 rounded-b-3xl">
+    <div className="flex justify-between items-center pt-6 border-t border-border-subtle bg-surface-950/10 rounded-b-3xl">
       <div>
         {!isFirst && !hideBack && (
           <Button

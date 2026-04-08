@@ -7,7 +7,15 @@ export const GET: APIRoute = async ({ request }) => {
       // 1. Subscribe to LogBroker events
       const unsubscribe = LogBroker.subscribe((entry) => {
         try {
-          controller.enqueue(`data: ${JSON.stringify(entry)}\n\n`);
+          // Normalize the data for the frontend LogEntry interface
+          const normalizedLog = {
+            timestamp: entry.metadata.timestamp,
+            level: entry.payload.level,
+            context: entry.metadata.context || 'system',
+            message: entry.payload.message
+          };
+
+          controller.enqueue(`data: ${JSON.stringify(normalizedLog)}\n\n`);
         } catch (e) {
           // Stream might be closed
           unsubscribe();

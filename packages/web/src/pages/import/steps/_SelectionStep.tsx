@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
+
+import { ScraperTaskCategory } from '@scraper/features/task-management';
+
 import { Icon } from '@web/components/Icon';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
+
 import { ContentItemCard, type ContentItem } from '../components/_ContentItemCard';
 import { ContentTypeFilter } from '../components/_ContentTypeFilter';
 import { SelectionCard } from '../components/_SelectionCard';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
 
 interface SelectionStepProps {
   availableContent: {
@@ -43,7 +46,7 @@ export const THEMES: Record<ScraperTaskCategory, UITheme> = {
     primary: 'brand-500',
     activeBg: 'bg-brand-600',
     activeBorder: 'border-brand-500/50',
-    activeShadow: 'shadow-[0_0_20px_-5px_rgba(var(--color-brand-500-rgb),0.2)]',
+    activeShadow: 'shadow-xl shadow-brand-500/25',
     hoverBg: 'hover:bg-brand-500/5',
     hoverText: 'group-hover/item:text-brand-400',
     indicator: 'bg-brand-500/50',
@@ -54,7 +57,7 @@ export const THEMES: Record<ScraperTaskCategory, UITheme> = {
     primary: 'amber-500',
     activeBg: 'bg-amber-500',
     activeBorder: 'border-amber-500/50',
-    activeShadow: 'shadow-[0_0_20px_-5px_rgba(245,158,11,0.2)]',
+    activeShadow: 'shadow-xl shadow-amber-500/25',
     hoverBg: 'hover:bg-amber-500/5',
     hoverText: 'group-hover/item:text-amber-400',
     indicator: 'bg-amber-500/50',
@@ -75,7 +78,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
   const { setCanProceed } = useWizard();
 
   const filteredPending = useMemo(() => {
-    const list = contentType === 'course' ? availableContent.courses : availableContent.paths;
+    const list = contentType === ScraperTaskCategory.COURSE ? availableContent.courses : availableContent.paths;
     return list.filter(c => !c.isComplete);
   }, [availableContent, contentType]);
 
@@ -99,7 +102,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
         {/* NEW CONTENT CARD */}
         <SelectionCard
           icon="plus"
-          title={`Nuevo ${contentType === 'course' ? 'Curso' : 'Path'}`}
+          title={`Nuevo ${contentType === ScraperTaskCategory.COURSE ? 'Curso' : 'Path'}`}
           description="Ingresa una URL de Oracle University para sincronizar nuevos metadatos y assets."
           isActive={!!newUrl}
           theme={currentTheme}
@@ -108,7 +111,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder={contentType === 'course' ? PLACEHOLDERS.course : PLACEHOLDERS.path}
+                placeholder={contentType === ScraperTaskCategory.COURSE ? PLACEHOLDERS.course : PLACEHOLDERS.path}
                 className={`w-full bg-surface-900 border border-border-subtle rounded-xl px-4 py-3.5 text-xs outline-none transition-all placeholder:text-text-muted/30 text-text-primary focus:ring-1 ${contentType === 'path' ? 'focus:border-amber-500 focus:ring-amber-500' : 'focus:border-brand-500 focus:ring-brand-500'
                   }`}
                 value={newUrl}
@@ -125,7 +128,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
         <SelectionCard
           icon="rotate-cw"
           title="Contenido Pendiente"
-          description={`Continúa con las descargas de ${contentType === 'course' ? 'cursos' : 'rutas'} previamente detectados.`}
+          description={`Continúa con las descargas de ${contentType === ScraperTaskCategory.COURSE ? 'cursos' : 'rutas'} previamente detectados.`}
           isActive={!!selectedItem}
           theme={currentTheme}
         >
@@ -134,7 +137,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
               {filteredPending.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-10 text-text-muted text-xs italic opacity-40">
                   <Icon name="inbox" size="lg" className="mb-2" />
-                  No hay {contentType === 'course' ? 'cursos' : 'learning paths'} detectados
+                  No hay {contentType === ScraperTaskCategory.COURSE ? 'cursos' : 'learning paths'} detectados
                 </div>
               )}
               {filteredPending.map(item => (
@@ -146,7 +149,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
                       setSelectedItem(item);
                       setNewUrl('');
                     }}
-                    theme={THEMES[item.category] || THEMES.course}
+                    theme={currentTheme}
                   />
                 </li>
               ))}

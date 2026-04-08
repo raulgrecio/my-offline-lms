@@ -1,11 +1,7 @@
 ---
 export const prerender = false;
 
-import {
-  AssetPathResolver,
-  NodeFileSystem,
-  NodePath,
-} from "@core/filesystem";
+import { AssetPathResolver, NodeFileSystem, NodePath } from "@core/filesystem";
 
 import { getAssetConfigPath, getMonorepoRoot } from "@web/config/paths";
 import { API_ROUTES } from "@web/platform/api/routes";
@@ -49,7 +45,7 @@ const hasPaths = paths.length > 0;
 
   <div
     id="settings-view"
-    class="max-w-4xl mx-auto"
+    class="max-w-5xl mx-auto"
     data-api-url={assetPathsUrl}
   >
     <CollapsibleCard initialOpen={false}>
@@ -108,7 +104,12 @@ const hasPaths = paths.length > 0;
         </div>
 
         <div class="flex justify-end pt-2">
-          <Button type="submit" variant="primary" hoverEffect="translate" icon="plus">
+          <Button
+            type="submit"
+            variant="primary"
+            hoverEffect="translate"
+            icon="plus"
+          >
             Guardar ubicación
           </Button>
         </div>
@@ -192,7 +193,7 @@ const hasPaths = paths.length > 0;
           alert(
             `Error al eliminar: ${
               err instanceof Error ? err.message : String(err)
-            }`
+            }`,
           );
         }
       }
@@ -205,7 +206,7 @@ const hasPaths = paths.length > 0;
     e.preventDefault();
     const pathInput = document.getElementById("path-input") as HTMLInputElement;
     const labelInput = document.getElementById(
-      "label-input"
+      "label-input",
     ) as HTMLInputElement;
 
     try {

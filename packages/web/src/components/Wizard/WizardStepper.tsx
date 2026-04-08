@@ -7,7 +7,7 @@ export const WizardStepper: React.FC = () => {
   const { steps, currentStepIndex } = useWizard();
 
   return (
-    <div className="flex items-center justify-between mb-16 px-4">
+    <div className="flex items-center justify-between mb-10 px-4">
       {steps.map((step, idx) => {
         const isActive = currentStepIndex === idx;
         const isPast = currentStepIndex > idx;
