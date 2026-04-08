@@ -48,7 +48,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
         <div className="space-y-10">
           <div>
             <h4 className="text-[10px] font-black text-text-muted uppercase mb-6 tracking-[0.3em] opacity-50">Payload & Config</h4>
-            
+
             {/* Auto-download Toggle */}
             <div className="mb-6">
               <Button
@@ -156,7 +156,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
                       {taskProgress?.step || 'Preparando clusters de scraping...'}
                     </p>
                   </div>
-                  
+
                   {!executionResult && (
                     <Button
                       variant="danger"
@@ -205,7 +205,7 @@ export const ExecutionStep: React.FC<ExecutionStepProps> = ({
       </div>
 
       <WizardActionButtons
-        nextLabel="Sincronizar Ahora"
+        nextLabel="Crear Tarea de Sincronización"
         onNext={startScraping}
         hideNext={!!executionResult?.success}
       />

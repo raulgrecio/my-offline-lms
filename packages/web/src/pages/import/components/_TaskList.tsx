@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScraperTaskStatus, ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskStatus, ScraperTaskCategory, ScraperTaskAction } from '@scraper/features/task-management';
 
 import { Icon, type IconName } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
@@ -10,10 +10,12 @@ import { logger } from '@web/platform/logging';
 interface ScraperTask {
   id: string;
   category: ScraperTaskCategory;
+  action: ScraperTaskAction;
   url: string;
   targetId: string | null;
   status: ScraperTaskStatus;
   progress: { step: string; status?: string; percent?: number } | null;
+  metadata: any;
   error: string | null;
   createdAt: string;
   updatedAt: string;
@@ -101,6 +103,21 @@ export const TaskList: React.FC = () => {
     }
   };
 
+  const getCliCommand = (task: ScraperTask) => {
+    // Convertimos SYNC_COURSE -> sync-course
+    const cmd = task.action.toLowerCase().replace('_', '-');
+
+    // Si es una descarga, usamos el targetId si existe (ej: download-course 146047 all)
+    if (task.action.startsWith('DOWNLOAD') && task.targetId) {
+      const type = task.metadata?.download || 'all';
+      return `pnpm cli ${cmd} ${task.targetId} ${type}`;
+    }
+
+    // Si es una sincronización, usamos la URL (ej: sync-course "https://..." --download=all)
+    const download = task.metadata?.includeDownload ? ` --download=${task.metadata.download || 'all'}` : '';
+    return `pnpm cli ${cmd} ${task.url} ${download}`;
+  };
+
   if (loading && tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-text-muted">
@@ -136,10 +153,8 @@ export const TaskList: React.FC = () => {
             </div>
 
             {/* Información Principal */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-1">
-                <h3 className="font-bold text-text-primary truncate">{task.url}</h3>
-              </div>
+            <div className="flex-1 min-w-0 space-y-3">
+              <h3 className="font-bold text-text-primary truncate mb-0">{task.url}</h3>
 
               <div className="flex items-center gap-3">
                 <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
@@ -157,6 +172,15 @@ export const TaskList: React.FC = () => {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* CLI Command Hint */}
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] font-mono px-2 py-1 rounded bg-black/20 text-text-muted border border-white/5 flex items-center gap-2">
+                  <Icon name="terminal" size="xs" className="opacity-40" />
+                  <span className="opacity-60 uppercase tracking-tighter mr-1 text-[8px] border-r border-white/10 pr-1 hidden" aria-label="CLI equivalent" />
+                  {getCliCommand(task)}
+                </span>
               </div>
             </div>
 

@@ -15,7 +15,7 @@ export interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  category: ScraperTaskCategory;
+  type: ScraperTaskCategory;
 }
 
 interface ContentItemCardProps {
@@ -50,7 +50,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
         {item.title}
       </div>
       <div className={`ml-2 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-tighter font-black ${theme.badge}`}>
-        {item.category === ScraperTaskCategory.PATH ? 'Path' : 'Course'}
+        {item.type === ScraperTaskCategory.PATH ? 'Path' : 'Course'}
       </div>
     </div>
 

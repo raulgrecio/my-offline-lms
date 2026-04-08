@@ -19,7 +19,9 @@ import {
 import {
   DiskAuthSessionStorage,
   AuthSession,
-  ValidateAuthSession
+  ValidateAuthSession,
+  OracleAuthValidator,
+  type IAuthValidator
 } from './features/auth-session';
 import {
   SQLiteCourseRepository,
@@ -62,6 +64,7 @@ export interface ScraperDependencies {
   namingService: AssetNamingService;
   assetPathResolver: AssetPathResolver;
   authSessionStorage: DiskAuthSessionStorage;
+  authValidator: IAuthValidator;
   createInterceptedRepo: InterceptedRepoCreator;
   urlProvider: OraclePlatformUrlProvider;
   universalFs: UniversalFileSystem;
@@ -100,12 +103,14 @@ export class ScraperService {
 
     this.validateAuthUseCase = new ValidateAuthSession({
       authStorage: deps.authSessionStorage,
+      validator: deps.authValidator,
       logger: deps.logger
     });
 
     this.loginUseCase = new AuthSession({
       browserProvider: deps.browserProvider,
       authStorage: deps.authSessionStorage,
+      validator: deps.authValidator,
       logger: deps.logger
     });
 
@@ -214,6 +219,7 @@ export class ScraperService {
       namingService: new AssetNamingService(),
       assetPathResolver,
       authSessionStorage,
+      authValidator: new OracleAuthValidator(),
       createInterceptedRepo,
       urlProvider: new OraclePlatformUrlProvider(),
       universalFs,
@@ -226,7 +232,8 @@ export class ScraperService {
   }
 
   async getSessionExpiry() {
-    return await this.deps.authSessionStorage.getSessionExpiry();
+    const cookies = await this.deps.authSessionStorage.getCookies();
+    return this.deps.authValidator.getExpiry(cookies);
   }
 
   async login({ interactive = false, headless = false, baseUrl }: {

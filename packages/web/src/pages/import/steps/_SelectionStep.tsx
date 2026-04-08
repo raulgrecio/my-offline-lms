@@ -20,7 +20,7 @@ interface SelectionStepProps {
   newUrl: string;
   setNewUrl: (url: string) => void;
   contentType: ScraperTaskCategory;
-  setContentType: (category: ScraperTaskCategory) => void;
+  setContentType: (type: ScraperTaskCategory) => void;
 }
 
 const PLACEHOLDERS = {

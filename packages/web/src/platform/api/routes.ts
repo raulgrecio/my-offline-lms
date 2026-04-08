@@ -29,5 +29,6 @@ export const API_ROUTES = {
     LIST: "/api/scraper/list",
     DELETE: "/api/scraper/delete",
     START: "/api/scraper/start",
+    SAVE_SESSION: "/api/scraper/save-session",
   },
 } as const;

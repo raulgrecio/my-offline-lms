@@ -24,7 +24,7 @@ interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  category: ScraperTaskCategory;
+  type: ScraperTaskCategory;
 }
 
 interface AvailableContentResponse {
@@ -176,10 +176,13 @@ export const ScraperWizard: React.FC = () => {
   const startScraping = async () => {
     setIsLoading(true);
     const url = selectedItem ? selectedItem.url : newUrl;
-    const type = selectedItem ? selectedItem.category : contentType;
+    const type = selectedItem ? selectedItem.type : contentType;
     const targetId = selectedItem ? selectedItem.id : undefined;
 
     const id = generateId();
+    // Defaulting to autoStart: false as per user feedback to 'create then play'
+    const autoStart = false;
+
     try {
       const data = await apiClient.post<any>(API_ROUTES.SCRAPER.SYNC, {
         taskId: id,
@@ -189,14 +192,23 @@ export const ScraperWizard: React.FC = () => {
         downloadVideos: downloadOptions.videos,
         downloadGuides: downloadOptions.guides,
         includeDownload,
+        autoStart,
       });
+
       if (data.ok) {
-        setTaskId(id);
-        setExecutionResult(null);
-        // We could also redirect to tasks tab here if we wanted, 
-        // but for now let's keep the wizard flow.
+        if (autoStart) {
+          setTaskId(id);
+          setExecutionResult(null);
+        } else {
+          // Task created but not started.
+          setTaskId(null); // No polling needed
+          setExecutionResult({
+            success: true,
+            message: 'Tarea registrada correctamente. Ya puedes iniciarla desde tu panel de tareas.'
+          });
+        }
       } else {
-        setExecutionResult({ success: true, message: data.message });
+        setExecutionResult({ success: false, message: data.message });
       }
     } catch (err: any) {
       setExecutionResult({ success: false, message: err.message || 'Error desconocido' });

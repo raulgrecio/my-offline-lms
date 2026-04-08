@@ -28,7 +28,7 @@ const mockAvailableContent = {
       totalGuides: 35,
       downloadedGuides: 7,
       isComplete: false,
-      category: ScraperTaskCategory.COURSE
+      type: ScraperTaskCategory.COURSE
     },
     {
       id: 'c2',
@@ -42,7 +42,7 @@ const mockAvailableContent = {
       totalGuides: 80,
       downloadedGuides: 0,
       isComplete: false,
-      category: ScraperTaskCategory.COURSE
+      type: ScraperTaskCategory.COURSE
     },
     {
       id: 'c3',
@@ -56,7 +56,7 @@ const mockAvailableContent = {
       totalGuides: 50,
       downloadedGuides: 0,
       isComplete: false,
-      category: ScraperTaskCategory.COURSE
+      type: ScraperTaskCategory.COURSE
     },
     {
       id: 'c4',
@@ -70,7 +70,7 @@ const mockAvailableContent = {
       totalGuides: 60,
       downloadedGuides: 0,
       isComplete: false,
-      category: ScraperTaskCategory.COURSE
+      type: ScraperTaskCategory.COURSE
     },
     {
       id: 'c5',
@@ -84,7 +84,7 @@ const mockAvailableContent = {
       totalGuides: 45,
       downloadedGuides: 0,
       isComplete: false,
-      category: ScraperTaskCategory.COURSE
+      type: ScraperTaskCategory.COURSE
     }
   ],
   paths: []

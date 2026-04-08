@@ -6,6 +6,7 @@ import { PLATFORM } from "@scraper/config";
 import { type IBrowserProvider } from "@scraper/platform/browser";
 
 import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
+import { type IAuthValidator } from "../domain/ports/IAuthValidator";
 
 export interface AuthSessionInput {
   baseUrl?: string;
@@ -16,18 +17,21 @@ export interface AuthSessionInput {
 export interface AuthSessionOptions {
   browserProvider: IBrowserProvider;
   authStorage: IAuthSessionStorage;
+  validator: IAuthValidator;
   logger: ILogger;
 }
 
 export class AuthSession implements IUseCase<AuthSessionInput, void> {
   private browserProvider: IBrowserProvider;
   private authStorage: IAuthSessionStorage;
+  private validator: IAuthValidator;
   private logger: ILogger;
   private activeContext: any = null;
 
   constructor(options: AuthSessionOptions) {
     this.browserProvider = options.browserProvider;
     this.authStorage = options.authStorage;
+    this.validator = options.validator;
     this.logger = options.logger.withContext("AuthSession");
   }
 
@@ -42,25 +46,34 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
 
     this.logger.info(`Iniciando sesión de autenticación para: ${baseUrl}`);
 
-    const isSessionValidForLoading = await this.authStorage.isValidSession();
+    const cookies = await this.authStorage.getCookies();
+    const isSessionValidForLoading = this.validator.isValid(cookies);
     const context = await this.browserProvider.getHeadfulContext({ headless });
     this.activeContext = context;
 
     // --- MONITOR DE SESIÓN (Basado en Logs Nativos de Oracle) ---
     const page = await context.newPage();
+    let lastUserStatus: string | null = null;
 
     page.on('console', msg => {
       const text = msg.text();
 
       // Detección de Sala (Login/Logout Oficial de Oracle)
       if (text.includes('joinedRoom')) {
-        if (text.includes('"roomId":"guest"')) {
-          this.logger.info("🔥 [SISTEMA] Estado detectado: Invitado (Sesión Cerrada).");
-        } else if (text.includes('"roomId":"')) {
-          const match = text.match(/"roomId":"([^"]+)"/);
-          const userId = match ? match[1] : 'desconocido';
-          this.logger.info(`🔥 [SISTEMA] ¡LOGIN DETECTADO! Usuario: ${userId}`);
-          this.logger.info("👉 Ya puedes pulsar 'ENTER' en esta terminal para guardar la sesión.");
+        const isGuest = text.includes('"roomId":"guest"');
+        const match = text.match(/"roomId":"([^"]*)"/);
+        const userId = match?.[1] || (isGuest ? 'guest' : 'desconocido');
+
+        // Solo loguear si el estado ha cambiado para evitar duplicados en la terminal
+        if (userId !== lastUserStatus) {
+          lastUserStatus = userId;
+          
+          if (isGuest) {
+            this.logger.info("🔥 [SISTEMA] Estado detectado: Invitado (Sesión Cerrada).");
+          } else {
+            this.logger.info(`🔥 [SISTEMA] ¡LOGIN DETECTADO! Usuario: ${userId}`);
+            this.logger.info("👉 Ya puedes pulsar 'ENTER' en esta terminal para guardar la sesión.");
+          }
         }
       }
 

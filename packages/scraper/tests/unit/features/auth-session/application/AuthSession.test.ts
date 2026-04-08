@@ -25,9 +25,13 @@ describe('AuthSession Use Case', () => {
     getAuthFile: vi.fn().mockResolvedValue('/mock/state.json'),
     getCookiesFile: vi.fn().mockResolvedValue('/mock/cookies.txt'),
     saveCookies: vi.fn(),
+    getCookies: vi.fn().mockResolvedValue([]),
     ensureAuthDir: vi.fn(),
-    isValidSession: vi.fn().mockResolvedValue(false),
-    getSessionExpiry: vi.fn().mockResolvedValue(null),
+  } as any;
+
+  const mockValidator = {
+    isValid: vi.fn().mockReturnValue(false),
+    getExpiry: vi.fn().mockReturnValue(null),
   } as any;
 
   const mockLogger: ILogger = {
@@ -45,6 +49,7 @@ describe('AuthSession Use Case', () => {
     useCase = new AuthSession({
       browserProvider: mockBrowserProvider,
       authStorage: mockAuthStorage,
+      validator: mockValidator,
       logger: mockLogger,
     });
 
@@ -423,7 +428,7 @@ describe('AuthSession Use Case', () => {
     });
 
     it('should log when a valid previous session is loaded', async () => {
-      mockAuthStorage.isValidSession.mockResolvedValue(true);
+      mockValidator.isValid.mockReturnValue(true);
       const mockPage = { goto: vi.fn().mockResolvedValue(undefined), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), close: vi.fn().mockResolvedValue(undefined) } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
@@ -451,6 +456,7 @@ describe('AuthSession Use Case', () => {
       const standaloneUseCase = new AuthSession({
         browserProvider: mockBrowserProvider,
         authStorage: mockAuthStorage,
+        validator: mockValidator,
         logger: mockLogger,
       });
       const result = await standaloneUseCase.saveActiveSession();

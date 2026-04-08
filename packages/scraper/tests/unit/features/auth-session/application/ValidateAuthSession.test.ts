@@ -3,21 +3,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { type ILogger } from '@core/logging';
 
 import { type IAuthSessionStorage, ValidateAuthSession } from '@scraper/features/auth-session';
+import { type IAuthValidator } from '@scraper/features/auth-session/domain/ports/IAuthValidator';
 
 describe('ValidateAuthSession', () => {
   let authStorageMock: IAuthSessionStorage;
+  let validatorMock: IAuthValidator;
   let loggerMock: ILogger;
   let useCase: ValidateAuthSession;
 
   beforeEach(() => {
     authStorageMock = {
-      isValidSession: vi.fn(),
+      getCookies: vi.fn().mockResolvedValue([]),
       getAuthFile: vi.fn(),
       getCookiesFile: vi.fn(),
       ensureAuthDir: vi.fn(),
       saveCookies: vi.fn(),
-      getSessionExpiry: vi.fn(),
-    };
+    } as any;
+    validatorMock = {
+      isValid: vi.fn(),
+    } as any;
     loggerMock = {
       warn: vi.fn(),
       error: vi.fn(),
@@ -27,19 +31,20 @@ describe('ValidateAuthSession', () => {
     } as any;
     useCase = new ValidateAuthSession({
       authStorage: authStorageMock,
+      validator: validatorMock,
       logger: loggerMock,
     });
   });
 
   it('should return true if session is valid', async () => {
-    vi.mocked(authStorageMock.isValidSession).mockResolvedValue(true);
+    vi.mocked(validatorMock.isValid).mockReturnValue(true);
     const result = await useCase.execute();
     expect(result).toBe(true);
     expect(loggerMock.warn).not.toHaveBeenCalled();
   });
 
   it('should return false and log a warning if session is invalid', async () => {
-    vi.mocked(authStorageMock.isValidSession).mockResolvedValue(false);
+    vi.mocked(validatorMock.isValid).mockReturnValue(false);
     const result = await useCase.execute();
     expect(result).toBe(false);
     expect(loggerMock.warn).toHaveBeenCalledWith(
