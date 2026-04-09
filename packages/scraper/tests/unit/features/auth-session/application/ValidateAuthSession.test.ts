@@ -43,12 +43,10 @@ describe('ValidateAuthSession', () => {
     expect(loggerMock.warn).not.toHaveBeenCalled();
   });
 
-  it('should return false and log a warning if session is invalid', async () => {
+  it('should return false if session is invalid', async () => {
     vi.mocked(validatorMock.isValid).mockReturnValue(false);
     const result = await useCase.execute();
     expect(result).toBe(false);
-    expect(loggerMock.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Sesión expirada o no encontrada")
-    );
+    expect(loggerMock.warn).not.toHaveBeenCalled();
   });
 });

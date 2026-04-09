@@ -13,8 +13,14 @@ export interface BrowserProviderConfig {
   authStateFile: string;
 }
 
+const BROWSER_TYPES = ['headful', 'headless'] as const;
+type BrowserType = typeof BROWSER_TYPES[number];
+
 export class BrowserProvider implements IBrowserProvider {
-  private browser: Browser | null = null;
+  private browsers: Record<BrowserType, Browser | null> = {
+    headful: null,
+    headless: null
+  };
   private contexts: Set<BrowserContext> = new Set();
   private logger?: ILogger;
   private fs: IFileSystem;
@@ -36,9 +42,11 @@ export class BrowserProvider implements IBrowserProvider {
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
   async getHeadfulContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<BrowserContext> {
     const { headless = false } = options;
-    if (!this.browser) {
+    const type = headless ? 'headless' : 'headful';
+
+    if (!this.browsers[type]) {
       this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
-      this.browser = await chromium.launch({
+      this.browsers[type] = await chromium.launch({
         headless,
         executablePath: this.config.chromeExecutablePath || undefined,
         channel: this.config.chromeExecutablePath ? undefined : "chrome",
@@ -48,12 +56,25 @@ export class BrowserProvider implements IBrowserProvider {
         ]
       });
 
-      this.browser.on('disconnected', () => {
-        this.logger?.info('Canal de comunicación con el navegador cerrado.');
-        this.browser = null;
-        this.contexts.clear();
+      const browserInstance = this.browsers[type]!;
+      browserInstance.on('disconnected', () => {
+        this.logger?.info(`Canal de comunicación con el navegador (${type}) cerrado.`);
+        this.browsers[type] = null;
+
+        // Limpiamos de la memoria solo los contextos huérfanos que pertenecían a este motor
+        for (const ctx of this.contexts) {
+          try {
+            if (ctx.browser() === browserInstance) {
+              this.contexts.delete(ctx);
+            }
+          } catch (e) {
+            this.contexts.delete(ctx);
+          }
+        }
       });
     }
+
+    const currentBrowser = this.browsers[type]!;
 
     // Always use state if it exists
     const stats = await this.fs.stat(this.config.authStateFile).catch(() => null);
@@ -74,7 +95,7 @@ export class BrowserProvider implements IBrowserProvider {
       ? { storageState: this.config.authStateFile }
       : {};
 
-    const context = await this.browser.newContext(contextOptions);
+    const context = await currentBrowser.newContext(contextOptions);
     this.contexts.add(context);
 
     // [REACTIVE CANCELLATION] If an AbortSignal is provided, close the context immediately on abort.
@@ -112,12 +133,14 @@ export class BrowserProvider implements IBrowserProvider {
     }
 
     // Auto-close browser if no more contexts are alive
-    if (this.contexts.size === 0 && this.browser) {
-      const b = this.browser;
-      this.browser = null;
-      await b.close().catch((e) => {
-        this.logger?.error(`Error al cerrar el navegador: ${e.message}`);
-      });
+    for (const type of BROWSER_TYPES) {
+      const b = this.browsers[type];
+      if (b && b.contexts().length === 0) {
+        this.browsers[type] = null;
+        await b.close().catch((e) => {
+          this.logger?.error(`Error al cerrar el navegador (${type}): ${e.message}`);
+        });
+      }
     }
   }
 
@@ -127,7 +150,10 @@ export class BrowserProvider implements IBrowserProvider {
     }
     this.contexts.clear();
 
-    if (this.browser) await this.browser.close();
-    this.browser = null;
+    for (const type of BROWSER_TYPES) {
+      const b = this.browsers[type];
+      if (b) await b.close();
+      this.browsers[type] = null;
+    }
   }
 }
