@@ -23,7 +23,14 @@ class LogBrokerFacade {
     if (this.channel) {
       this.channel.onmessage = (event) => {
         const logEvent = event.data as LogEvent;
-        this.bus.emit(logEvent);
+        const remoteEvent: LogEvent = {
+          ...logEvent,
+          metadata: {
+            ...logEvent.metadata,
+            isRemote: true
+          }
+        };
+        this.bus.emit(remoteEvent);
       };
     }
   }

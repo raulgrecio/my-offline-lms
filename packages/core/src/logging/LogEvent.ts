@@ -17,6 +17,8 @@ export interface LogPayload {
 export interface LogMetadata extends EventMetadata {
   /** Optional context name for logging identification */
   readonly context?: string;
+  /** Identifies if this event was broadcasted from another worker/process */
+  readonly isRemote?: boolean;
 }
 
 /**

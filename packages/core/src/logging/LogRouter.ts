@@ -66,6 +66,11 @@ export class LogRouter {
   }
 
   private shouldRoute(event: LogEvent, options: RouteOptions): boolean {
+    // Ignore remote events to prevent duplicate outputs across workers sharing the same terminal/file
+    if (event.metadata.isRemote) {
+      return false;
+    }
+
     const minLevelPriority = LevelPriority[options.minLevel ?? "debug"];
     const currentLevelPriority = LevelPriority[event.payload.level];
 
