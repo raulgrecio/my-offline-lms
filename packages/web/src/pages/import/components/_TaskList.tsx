@@ -1,59 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ScraperTaskStatus, ScraperTaskCategory, ScraperTaskAction } from '@scraper/features/task-management';
 
-import { Icon, type IconName } from '@web/components/Icon';
-import { Button } from '@web/components/Button';
-import { EmptyState } from '@web/components/EmptyState';
 import { apiClient } from '@web/platform/api/client';
 import { API_ROUTES } from '@web/platform/api/routes';
 import { logger } from '@web/platform/logging';
+import { EmptyState } from '@web/components/EmptyState';
 
-interface ScraperTask {
-  id: string;
-  category: ScraperTaskCategory;
-  action: ScraperTaskAction;
-  url: string;
-  targetId: string | null;
-  status: ScraperTaskStatus;
-  progress: { step: string; status?: string; percent?: number } | null;
-  metadata: any;
-  error: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const STATUS_CONFIG: Record<ScraperTaskStatus, { icon: IconName; color: string; getLabel: (task: ScraperTask) => string; cardStyle: string }> = {
-  RUNNING: {
-    icon: 'loader',
-    color: 'bg-brand-600 text-white animate-pulse',
-    getLabel: (task: ScraperTask) => task.progress?.step || 'Procesando...',
-    cardStyle: 'bg-brand-900/10 border-brand-500/50 shadow-lg shadow-brand-500/5'
-  },
-  COMPLETED: {
-    icon: 'check',
-    color: 'bg-green-500/10 text-green-500',
-    getLabel: () => 'Finalizado correctamente',
-    cardStyle: 'bg-surface-900 border-border-subtle'
-  },
-  FAILED: {
-    icon: 'alert-circle',
-    color: 'bg-red-500/10 text-red-500',
-    getLabel: (task: ScraperTask) => task.error || 'Error desconocido',
-    cardStyle: 'bg-surface-900 border-border-subtle'
-  },
-  CANCELLED: {
-    icon: 'x',
-    color: 'bg-surface-800 text-text-muted',
-    getLabel: () => 'Cancelado por el usuario',
-    cardStyle: 'bg-surface-900 border-border-subtle'
-  },
-  PENDING: {
-    icon: 'clock',
-    color: 'bg-surface-800 text-text-muted',
-    getLabel: () => 'Pendiente de iniciar',
-    cardStyle: 'bg-surface-900 border-border-subtle'
-  }
-};
+import { TaskItem, type ScraperTask } from './_TaskItem';
 
 export const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<ScraperTask[]>([]);
@@ -104,21 +56,6 @@ export const TaskList: React.FC = () => {
     }
   };
 
-  const getCliCommand = (task: ScraperTask) => {
-    // Convertimos SYNC_COURSE -> sync-course
-    const cmd = task.action.toLowerCase().replace('_', '-');
-
-    // Si es una descarga, usamos el targetId si existe (ej: download-course 146047 all)
-    if (task.action.startsWith('DOWNLOAD') && task.targetId) {
-      const type = task.metadata?.download || 'all';
-      return `pnpm cli ${cmd} ${task.targetId} ${type}`;
-    }
-
-    // Si es una sincronización, usamos la URL (ej: sync-course "https://..." --download=all)
-    const download = task.metadata?.includeDownload ? ` --download=${task.metadata.download || 'all'}` : '';
-    return `pnpm cli ${cmd} ${task.url} ${download}`;
-  };
-
   if (loading && tasks.length === 0) {
     return (
       <EmptyState
@@ -140,95 +77,15 @@ export const TaskList: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {tasks.map((task) => {
-        const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.PENDING;
-
-        return (
-          <div
-            key={task.id}
-            className={`flex items-center gap-6 p-6 rounded-3xl border transition-all hover:border-brand-500/30 ${config.cardStyle}`}
-          >
-            {/* Icono de Estado */}
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${config.color}`}>
-              <Icon name={config.icon} size="md" />
-            </div>
-
-            {/* Información Principal */}
-            <div className="flex-1 min-w-0 space-y-3">
-              <h3 className="font-bold text-text-primary truncate mb-0">{task.url}</h3>
-
-              <div className="flex items-center gap-3">
-                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
-                  }`}>
-                  {task.category === 'course' ? 'Curso' : 'Learning Path'}
-                </span>
-                <p className="text-xs text-text-muted">
-                  {config.getLabel(task)}
-                </p>
-                {task.status === 'RUNNING' && task.progress?.percent && (
-                  <div className="w-24 h-1.5 bg-surface-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-brand-500 transition-all duration-500"
-                      style={{ width: `${task.progress.percent}%` }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* CLI Command Hint */}
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] font-mono px-2 py-1 rounded bg-black/20 text-text-muted border border-white/5 flex items-center gap-2">
-                  <Icon name="terminal" size="xs" className="opacity-40" />
-                  <span className="opacity-60 uppercase tracking-tighter mr-1 text-[8px] border-r border-white/10 pr-1 hidden" aria-label="CLI equivalent" />
-                  {getCliCommand(task)}
-                </span>
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                square
-                size="sm"
-                icon="external-link"
-                onClick={() => window.open(task.url, '_blank')}
-                title="Visitar plataforma"
-              />
-              {task.status !== 'RUNNING' && (
-                <Button
-                  variant="ghost"
-                  square
-                  size="sm"
-                  icon="play"
-                  onClick={() => handleStart(task.id)}
-                  className="bg-surface-800"
-                />
-              )}
-
-              {task.status === 'RUNNING' && (
-                <Button
-                  variant="ghost"
-                  square
-                  size="sm"
-                  icon="square"
-                  onClick={() => handleStop(task.id)}
-                  className="bg-surface-800"
-                />
-              )}
-
-              <Button
-                variant="ghost"
-                square
-                size="sm"
-                icon="trash"
-                onClick={() => handleDelete(task.id)}
-                className="text-danger hover:bg-danger hover:text-white"
-              />
-            </div>
-          </div>
-        );
-      })}
+      {tasks.map((task) => (
+        <TaskItem
+          key={task.id}
+          task={task}
+          onStart={handleStart}
+          onStop={handleStop}
+          onDelete={handleDelete}
+        />
+      ))}
     </div>
   );
 };
