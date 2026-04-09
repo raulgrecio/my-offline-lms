@@ -3,11 +3,14 @@ export const prerender = false;
 
 import { APP_ROUTES } from "@web/platform/router/routes";
 import { getLearningPathDetails } from "@web/features/learning-paths";
-import { getCourseProgress, getLearningPathProgress } from "@web/features/progress";
+import {
+  getCourseProgress,
+  getLearningPathProgress,
+} from "@web/features/progress";
 import { getIsFavorite } from "@web/features/favorites";
 import Layout from "@web/layouts/Layout.astro";
 import CourseCard from "@web/components/CourseCard.astro";
-import EmptyState from "@web/components/EmptyState.astro";
+import EmptyState from "@web/components/EmptyState/EmptyState.astro";
 import { Icon } from "@web/components/Icon";
 import FavoriteButton from "@web/components/FavoriteButton.astro";
 import PageHeader from "@web/components/PageHeader.astro";
@@ -43,7 +46,7 @@ const courseData = await Promise.all(
       progress,
       isFavorite,
     };
-  })
+  }),
 );
 
 const progress = lpProgress.progress;

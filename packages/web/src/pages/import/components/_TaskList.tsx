@@ -3,6 +3,7 @@ import { ScraperTaskStatus, ScraperTaskCategory, ScraperTaskAction } from '@scra
 
 import { Icon, type IconName } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
+import { EmptyState } from '@web/components/EmptyState';
 import { apiClient } from '@web/platform/api/client';
 import { API_ROUTES } from '@web/platform/api/routes';
 import { logger } from '@web/platform/logging';
@@ -120,20 +121,20 @@ export const TaskList: React.FC = () => {
 
   if (loading && tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-text-muted">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Cargando tareas...</p>
-      </div>
+      <EmptyState
+        variant="loading"
+        message="Cargando tareas..."
+      />
     );
   }
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-surface-900 border border-dashed border-border-subtle rounded-3xl text-text-muted">
-        <Icon name="inbox" size="xl" className="mb-4 opacity-20" />
-        <p className="text-sm font-medium">No hay tareas pendientes</p>
-        <p className="text-xs opacity-50 mt-1">Usa el mago de importación para crear una nueva</p>
-      </div>
+      <EmptyState
+        icon="inbox"
+        title="No hay tareas pendientes"
+        message="Usa el asistente de importación para crear una nueva"
+      />
     );
   }
 
