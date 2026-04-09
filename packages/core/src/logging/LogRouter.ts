@@ -28,6 +28,10 @@ export class LogRouter {
     this.routes.push({ logger, options });
   }
 
+  clearTransports(): void {
+    this.routes = [];
+  }
+
   /**
    * Evaluates each route using the Event's Metadata and Payload.
    */

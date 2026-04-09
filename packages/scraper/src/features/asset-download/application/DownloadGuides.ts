@@ -205,6 +205,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
 
         let buffer: number[] | null = null;
         for (let attempt = 1; attempt <= 3; attempt++) {
+          if (signal?.aborted) return;
           try {
             await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
             buffer = await downloadPage.evaluate(DownloadGuides.downloadImageAsArray, imageUrl);

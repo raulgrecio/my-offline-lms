@@ -6,6 +6,7 @@ import { logger } from '@web/platform/logging';
 export interface AuthStatus {
   isAuthenticated: boolean;
   isLoggingIn: boolean;
+  isLoginDetected?: boolean;
   message: string;
   checked: boolean;
 }
@@ -14,19 +15,21 @@ export function useAuth() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>({
     isAuthenticated: false,
     isLoggingIn: false,
+    isLoginDetected: false,
     message: '',
     checked: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLaunchingLogin, setIsLaunchingLogin] = useState(false);
 
-  const checkAuth = useCallback(async () => {
-    setIsLoading(true);
+  const checkAuth = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const data = await apiClient.get<any>(API_ROUTES.SCRAPER.AUTH_STATUS);
       const status = {
         isAuthenticated: data.isAuthenticated,
         isLoggingIn: data.isLoggingIn,
+        isLoginDetected: data.isLoginDetected,
         message: data.message,
         checked: true
       };
@@ -36,13 +39,14 @@ export function useAuth() {
       const status = {
         isAuthenticated: false,
         isLoggingIn: false,
+        isLoginDetected: false,
         message: err.message || 'Error al verificar sesión',
         checked: true
       };
       setAuthStatus(status);
       return false;
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, []);
 
@@ -76,10 +80,28 @@ export function useAuth() {
     }
   }, [checkAuth]);
 
-  // Initial check
+  // Initial check and auto-polling during login
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    let interval: NodeJS.Timeout | null = null;
+
+    if (authStatus.isLoggingIn || isLaunchingLogin) {
+      interval = setInterval(() => {
+        checkAuth(true); // silent polling
+      }, 2000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [authStatus.isLoggingIn, isLaunchingLogin, checkAuth]);
+
+  /*// Reactive updates when window regains focus
+  useEffect(() => {
+    const onFocus = () => checkAuth(true);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [checkAuth]);*/
 
   return {
     authStatus,

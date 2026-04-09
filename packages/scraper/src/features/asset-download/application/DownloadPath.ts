@@ -71,6 +71,13 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
       }
     }
 
+    if (signal?.aborted) {
+      this.logger.warn(`======================================================`);
+      this.logger.warn(`🛑 Descarga del Learning Path ${pathId} CANCELADA.`);
+      this.logger.warn(`======================================================`);
+      return;
+    }
+
     this.logger.info(`======================================================`);
     this.logger.info(`🎉 ¡Descarga del Learning Path ${pathId} COMPLETADA!`);
     this.logger.info(`======================================================`);

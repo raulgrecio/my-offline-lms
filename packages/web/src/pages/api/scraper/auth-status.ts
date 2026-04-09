@@ -11,13 +11,15 @@ export const GET: APIRoute = async () => {
 
     const isAuthenticated = await scraper.validateAuth();
     const isLoggingIn = scraper.isLoggingIn;
+    const isLoginDetected = scraper.isLoginDetected;
     const expiresAt = isAuthenticated ? await scraper.getSessionExpiry() : null;
 
     return new Response(JSON.stringify({
       isAuthenticated,
       isLoggingIn,
+      isLoginDetected,
       expiresAt,
-      message: isAuthenticated ? 'Sesión de Oracle válida' : (isLoggingIn ? 'Esperando login en el navegador...' : 'No se detectó sesión')
+      message: isAuthenticated ? 'Sesión válida' : (isLoggingIn ? 'Esperando login en el navegador...' : 'No se detectó sesión')
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

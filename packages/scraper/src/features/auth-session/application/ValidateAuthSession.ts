@@ -26,10 +26,6 @@ export class ValidateAuthSession implements IUseCase<void, boolean> {
     const cookies = await this.authStorage.getCookies();
     const isValid = this.validator.isValid(cookies);
 
-    if (!isValid) {
-      this.logger.warn("Sesión expirada o no encontrada. Por favor, ejecuta 'pnpm cli login' de nuevo.");
-    }
-
     return isValid;
   }
 }

@@ -27,6 +27,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
   private validator: IAuthValidator;
   private logger: ILogger;
   private activeContext: any = null;
+  public isLoginDetected: boolean = false;
 
   constructor(options: AuthSessionOptions) {
     this.browserProvider = options.browserProvider;
@@ -42,6 +43,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
       headless = !interactive
     } = input;
 
+    this.isLoginDetected = false;
     await this.authStorage.ensureAuthDir();
 
     this.logger.info(`Iniciando sesión de autenticación para: ${baseUrl}`);
@@ -51,14 +53,14 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
     const context = await this.browserProvider.getHeadfulContext({ headless });
     this.activeContext = context;
 
-    // --- MONITOR DE SESIÓN (Basado en Logs Nativos de Oracle) ---
+    // --- MONITOR DE SESIÓN (Basado en Logs Nativos) ---
     const page = await context.newPage();
     let lastUserStatus: string | null = null;
 
     page.on('console', msg => {
       const text = msg.text();
 
-      // Detección de Sala (Login/Logout Oficial de Oracle)
+      // Detección de Sala (Login/Logout Oficial)
       if (text.includes('joinedRoom')) {
         const isGuest = text.includes('"roomId":"guest"');
         const match = text.match(/"roomId":"([^"]*)"/);
@@ -67,12 +69,21 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
         // Solo loguear si el estado ha cambiado para evitar duplicados en la terminal
         if (userId !== lastUserStatus) {
           lastUserStatus = userId;
-          
+
           if (isGuest) {
             this.logger.info("🔥 [SISTEMA] Estado detectado: Invitado (Sesión Cerrada).");
+            this.isLoginDetected = false;
+
+            // Ahora, al detectar el logout explícito, forzamos el auto-guardado para borrar el rastro previo
+            this.saveActiveSession().catch(e => this.logger.error(`Error al limpiar sesión: ${e.message}`, e));
           } else {
             this.logger.info(`🔥 [SISTEMA] ¡LOGIN DETECTADO! Usuario: ${userId}`);
             this.logger.info("👉 Ya puedes pulsar 'ENTER' en esta terminal para guardar la sesión.");
+
+            this.isLoginDetected = true;
+
+            // Ahora, al detectar el login explícito, forzamos el auto-guardado para guardar el rastro
+            this.saveActiveSession().catch(e => this.logger.error(`Error en autoguardado: ${e.message}`, e));
           }
         }
       }
@@ -97,7 +108,7 @@ export class AuthSession implements IUseCase<AuthSessionInput, void> {
       }
     });
 
-    this.logger.info("📡 Monitoreo de sesión nativo activado (Basado en logs de Oracle).");
+    this.logger.info("📡 Monitoreo de sesión nativo activado (Basado en logs).");
 
     if (isSessionValidForLoading) {
       this.logger.info("👉 Se ha cargado una sesión previa detectada como válida.");

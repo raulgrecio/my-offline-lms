@@ -301,7 +301,7 @@ describe('AuthSession Use Case', () => {
     expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
 
-  describe('Oracle Session Monitoring & Edge Cases', () => {
+  describe('Session Monitoring & Edge Cases', () => {
     it('should monitor console logs for joinedRoom events', async () => {
       const mockPage = {
         goto: vi.fn().mockResolvedValue(undefined),

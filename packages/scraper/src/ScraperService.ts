@@ -90,6 +90,10 @@ export class ScraperService {
 
   public isLoggingIn = false;
 
+  get isLoginDetected(): boolean {
+    return this.loginUseCase.isLoginDetected;
+  }
+
   private constructor(private readonly deps: ScraperDependencies) {
     this.createTaskUseCase = new CreateTask(deps.taskRepo);
     this.updateTaskUseCase = new UpdateTask(deps.taskRepo);
@@ -153,6 +157,7 @@ export class ScraperService {
     const logFile = await getLogsFile();
 
     // 1. Setup LogBroker subscribers
+    LogBroker.clearTransports();
     LogBroker.addTransport(new ConsoleLogger(), { minLevel: 'info' });
 
     // File output (using a base FS that doesn't log to avoid loops)

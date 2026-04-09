@@ -72,6 +72,10 @@ class LogBrokerFacade {
     this.router.addTransport(logger, options);
   }
 
+  clearTransports() {
+    this.router.clearTransports();
+  }
+
   clear() {
     this.history.clear();
   }

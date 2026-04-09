@@ -56,7 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </h4>
           <p className="text-xs text-text-muted leading-relaxed px-4">
             {isAuthenticated
-              ? 'Tu sesión en Oracle MyLearn está activa. Puedes cerrar esta ventana y empezar a descargar.'
+              ? 'Tu sesión está activa. Puedes cerrar esta ventana y empezar a descargar.'
               : 'Necesitamos validar tu acceso a la plataforma para poder sincronizar el contenido.'}
           </p>
         </div>
@@ -76,12 +76,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Button
                   variant="primary"
                   block
+                  disabled={!authStatus.isLoginDetected}
                   onClick={saveSession}
                   loading={isLoading}
-                  icon="check-circle"
-                  className="bg-status-completed hover:bg-status-completed shadow-lg shadow-status-completed/20"
+                  icon={authStatus.isLoginDetected ? "check-circle" : "loader"}
+                  className={authStatus.isLoginDetected ? "bg-status-completed hover:bg-status-completed shadow-lg shadow-status-completed/20 text-white" : "bg-surface-700 hover:bg-surface-700 text-text-muted cursor-not-allowed"}
                 >
-                  Confirmar y Guardar Sesión
+                  {authStatus.isLoginDetected ? "Sesión Válida - Guardar y Cerrar" : "Esperando validación..."}
                 </Button>
                 <Button variant="ghost" block onClick={launchLogin} size="sm">
                   Re-abrir navegador
@@ -115,7 +116,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Button
                     variant="ghost"
                     block
-                    onClick={checkAuth}
+                    onClick={() => checkAuth()}
                     loading={isLoading && !isLaunchingLogin}
                     icon="rotate-cw"
                     size="sm"

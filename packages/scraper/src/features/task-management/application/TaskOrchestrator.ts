@@ -79,6 +79,11 @@ export class TaskOrchestrator {
       // Execute actual work with the signal
       await work(controller.signal);
 
+      // Check if it was aborted gracefully inside work()
+      if (controller.signal.aborted) {
+        throw new Error(TASK_CANCELLED_ERROR);
+      }
+
       // Step 4: Success Transition
       if (taskId) {
         await this.deps.updateTask.execute({

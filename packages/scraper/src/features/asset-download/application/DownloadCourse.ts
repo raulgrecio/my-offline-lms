@@ -65,6 +65,13 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
       await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
     }
 
+    if (signal?.aborted) {
+      this.logger.warn(`======================================================`);
+      this.logger.warn(`🛑 Descarga del curso ${courseId} CANCELADA.`);
+      this.logger.warn(`======================================================`);
+      return;
+    }
+
     this.logger.info(`======================================================`);
     this.logger.info(`🎉 ¡Descarga del curso ${courseId} COMPLETADA!`);
     this.logger.info(`======================================================`);

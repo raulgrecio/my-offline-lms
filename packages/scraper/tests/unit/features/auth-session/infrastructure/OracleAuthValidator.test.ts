@@ -15,9 +15,21 @@ describe('OracleAuthValidator', () => {
       expect(validator.isValid(cookies)).toBe(false);
     });
 
-    it('should return true if authToken and an active session cookie exist', () => {
+    it('should return false if authToken is from a Guest user', () => {
+      const guestPayload = Buffer.from(JSON.stringify({ email: 'my.learn.guest@oracle.com' })).toString('base64');
+      const token = `header.${guestPayload}.signature`;
       const cookies = [
-        { name: 'authToken', value: 'some.jwt.token', expires: Date.now() / 1000 + 1000 },
+        { name: 'authToken', value: token, expires: Date.now() / 1000 + 1000 },
+        { name: 'ora_session', value: 'v', expires: Date.now() / 1000 + 1000 }
+      ];
+      expect(validator.isValid(cookies)).toBe(false);
+    });
+
+    it('should return true if authToken and an active session cookie exist (valid user)', () => {
+      const userPayload = Buffer.from(JSON.stringify({ email: 'user@example.com' })).toString('base64');
+      const token = `header.${userPayload}.signature`;
+      const cookies = [
+        { name: 'authToken', value: token, expires: Date.now() / 1000 + 1000 },
         { name: 'ora_session', value: 'v', expires: Date.now() / 1000 + 1000 }
       ];
       expect(validator.isValid(cookies)).toBe(true);
