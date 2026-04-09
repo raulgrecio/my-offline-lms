@@ -81,19 +81,19 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
         {/* Content Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
-            <span className={`text-2xs uppercase font-black tracking-[0.2em] px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
+            <span className={`text-2xs uppercase font-semibold tracking-wider px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
               {task.category === 'course' ? 'Curso' : 'Learning Path'}
             </span>
             <span className="text-2xs text-text-muted opacity-40 font-mono tracking-tighter">ID: {task.id.slice(0, 8)}</span>
           </div>
-          <h3 className="font-bold text-text-primary truncate mb-1 text-sm tracking-tight">{task.url}</h3>
+          <h3 className="text-text-primary truncate mb-1 text-sm tracking-tight font-medium">{task.url}</h3>
 
           <div className="flex items-center gap-2">
-            <p className={`text-xs font-bold ${task.status === 'RUNNING' ? 'text-brand-500' : 'text-text-muted opacity-60'}`}>
+            <p className={`text-xs ${task.status === 'RUNNING' ? 'text-brand-500' : 'text-text-muted opacity-60'}`}>
               {config.getLabel(task)}
             </p>
             {task.status === 'RUNNING' && task.progress?.percent !== undefined && (
-              <span className="text-2xs font-mono text-brand-500 font-bold bg-brand-500/10 px-1.5 rounded">
+              <span className="text-2xs font-mono text-brand-500 font-semibold bg-brand-500/10 px-1.5 rounded">
                 {Math.round(task.progress.percent)}%
               </span>
             )}
@@ -152,7 +152,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
         <div className="px-5 pb-4 pt-1 border-t border-border-subtle/30 mt-1">
           <div className="flex items-center gap-2 mb-2">
             <Icon name="terminal" size="xs" className="text-text-muted opacity-40" />
-            <span className="text-2xs font-black text-text-muted uppercase tracking-widest opacity-40">CLI Equivalent</span>
+            <span className="text-2xs font-bold text-text-muted uppercase tracking-widest opacity-40">CLI Equivalent</span>
           </div>
           <div className="p-3 rounded-xl bg-black/20 border border-white/5 font-mono text-2xs text-text-muted whitespace-nowrap overflow-x-auto">
             {getCliCommand(task)}

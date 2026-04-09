@@ -11,6 +11,8 @@ import { ScraperWizard } from "./components/ScraperWizard/_ScraperWizard";
 import { TaskList } from "./components/_TaskList";
 import { SessionStatus } from "./components/_SessionStatus";
 import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
+import InfoCard from "@web/components/InfoCard.astro";
 ---
 
 <Layout title="Importar Contenido">
@@ -41,24 +43,18 @@ import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
 
     {/* Tasks Section */}
     <section>
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <h2 class="text-xl font-bold text-text-primary">Tareas en curso</h2>
-        </div>
-      </div>
-
+      <SectionHeader id="tareas-section" title="Tareas en curso" />
       <TaskList client:load />
     </section>
   </div>
 
   {/* Live Terminal Log */}
   <section class="animate-in fade-in slide-in-from-bottom-6 duration-1000 mt-8">
-    <div class="flex items-center gap-2 mb-4 px-2">
-      <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
-      <h2 class="text-xs font-bold uppercase tracking-widest text-text-muted">
-        Live Activity / Terminal
-      </h2>
-    </div>
+    <SectionHeader
+      id="terminal-section"
+      title="Live Activity / Terminal"
+      icon="terminal"
+    />
     <LogConsole client:load />
   </section>
 
@@ -66,42 +62,19 @@ import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
   <section
     class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-border-subtle"
   >
-    <div
-      class="p-8 rounded-3xl bg-surface-900 border border-border-subtle flex items-start gap-5 group hover:border-brand-500/30 transition-all"
+    <InfoCard title="Control de Tiempo" icon="clock">
+      Las sincronizaciones iniciales (metadatos) son rápidas, pero la descarga
+      de vídeos y guías puede tardar dependiendo de tu conexión.
+    </InfoCard>
+
+    <InfoCard
+      title="Descarga Automática"
+      icon="check-circle"
+      variant="completed"
     >
-      <div
-        class="p-3 rounded-2xl bg-brand-600/10 text-brand-500 group-hover:scale-110 transition-transform"
-      >
-        <Icon name="clock" size="md" />
-      </div>
-      <div>
-        <h3 class="text-lg font-bold text-text-primary mb-2">
-          Control de Tiempo
-        </h3>
-        <p class="text-sm text-text-muted leading-relaxed">
-          Las sincronizaciones iniciales (metadatos) son rápidas, pero la
-          descarga de vídeos y guías puede tardar dependiendo de tu conexión.
-        </p>
-      </div>
-    </div>
-    <div
-      class="p-8 rounded-3xl bg-surface-900 border border-border-subtle flex items-start gap-5 group hover:border-status-completed/30 transition-all"
-    >
-      <div
-        class="p-3 rounded-2xl bg-status-completed/10 text-status-completed group-hover:scale-110 transition-transform"
-      >
-        <Icon name="check-circle" size="md" />
-      </div>
-      <div>
-        <h3 class="text-lg font-bold text-text-primary mb-2">
-          Descarga Automática
-        </h3>
-        <p class="text-sm text-text-muted leading-relaxed">
-          Una vez finalizada la descarga de un asset, el visor local se
-          actualizará automáticamente con el contenido listo para usar offline.
-        </p>
-      </div>
-    </div>
+      Una vez finalizada la descarga de un asset, el visor local se actualizará
+      automáticamente con el contenido listo para usar offline.
+    </InfoCard>
   </section>
 </Layout>
 
