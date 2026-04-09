@@ -33,13 +33,13 @@ const STATUS_CONFIG: Record<ScraperTaskStatus, { icon: IconName; color: string; 
   },
   COMPLETED: {
     icon: 'check',
-    color: 'bg-green-500/10 text-green-500',
+    color: 'bg-status-completed/10 text-status-completed',
     getLabel: () => 'Finalizado correctamente',
     cardStyle: 'bg-surface-900 border-border-subtle'
   },
   FAILED: {
     icon: 'alert-circle',
-    color: 'bg-red-500/10 text-red-500',
+    color: 'bg-status-failed/10 text-status-failed',
     getLabel: (task: ScraperTask) => task.error || 'Error desconocido',
     cardStyle: 'bg-surface-900 border-border-subtle'
   },
@@ -52,7 +52,7 @@ const STATUS_CONFIG: Record<ScraperTaskStatus, { icon: IconName; color: string; 
   PENDING: {
     icon: 'clock',
     color: 'bg-surface-800 text-text-muted',
-    getLabel: () => 'Pendiente de iniciar',
+    getLabel: () => 'Listo para iniciar',
     cardStyle: 'bg-surface-900 border-border-subtle'
   }
 };
@@ -61,98 +61,103 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
   const config = STATUS_CONFIG[task.status] || STATUS_CONFIG.PENDING;
 
   const getCliCommand = (task: ScraperTask) => {
-    // Convertimos SYNC_COURSE -> sync-course
     const cmd = task.action.toLowerCase().replace('_', '-');
-
-    // Si es una descarga, usamos el targetId si existe (ej: download-course 146047 all)
     if (task.action.startsWith('DOWNLOAD') && task.targetId) {
       const type = task.metadata?.download || 'all';
       return `pnpm cli ${cmd} ${task.targetId} ${type}`;
     }
-
-    // Si es una sincronización, usamos la URL (ej: sync-course "https://..." --download=all)
     const download = task.metadata?.includeDownload ? ` --download=${task.metadata.download || 'all'}` : '';
     return `pnpm cli ${cmd} ${task.url} ${download}`;
   };
 
   return (
-    <div className={`flex items-center gap-6 p-6 rounded-3xl border transition-all hover:border-brand-500/30 ${config.cardStyle}`}>
-      {/* Icono de Estado */}
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${config.color}`}>
-        <Icon name={config.icon} size="md" />
-      </div>
+    <div className={`group flex flex-col p-1 rounded-3xl border transition-all duration-500 ${config.cardStyle}`}>
+      <div className="flex items-center gap-5 p-5">
+        {/* State Icon */}
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110 ${config.color}`}>
+          <Icon name={task.status === 'RUNNING' ? 'loader' : config.icon} size="md" className={task.status === 'RUNNING' ? 'animate-spin' : ''} />
+        </div>
 
-      {/* Información Principal */}
-      <div className="flex-1 min-w-0 space-y-3">
-        <h3 className="font-bold text-text-primary truncate mb-0">{task.url}</h3>
+        {/* Content Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <span className={`text-2xs uppercase font-black tracking-[0.2em] px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
+              {task.category === 'course' ? 'Curso' : 'Learning Path'}
+            </span>
+            <span className="text-2xs text-text-muted opacity-40 font-mono tracking-tighter">ID: {task.id.slice(0, 8)}</span>
+          </div>
+          <h3 className="font-bold text-text-primary truncate mb-1 text-sm tracking-tight">{task.url}</h3>
 
-        <div className="flex items-center gap-3">
-          <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md ${task.category === 'course' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'}`}>
-            {task.category === 'course' ? 'Curso' : 'Learning Path'}
-          </span>
-          <p className="text-xs text-text-muted">
-            {config.getLabel(task)}
-          </p>
-          {task.status === 'RUNNING' && task.progress?.percent && (
-            <div className="w-24 h-1.5 bg-surface-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-brand-500 transition-all duration-500"
-                style={{ width: `${task.progress.percent}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <p className={`text-xs font-bold ${task.status === 'RUNNING' ? 'text-brand-500' : 'text-text-muted opacity-60'}`}>
+              {config.getLabel(task)}
+            </p>
+            {task.status === 'RUNNING' && task.progress?.percent !== undefined && (
+              <span className="text-2xs font-mono text-brand-500 font-bold bg-brand-500/10 px-1.5 rounded">
+                {Math.round(task.progress.percent)}%
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 px-2">
+          {task.status !== 'RUNNING' && (
+            <Button
+              variant="primary"
+              square
+              size="sm"
+              icon="play"
+              onClick={() => onStart(task.id)}
+              className="shadow-lg shadow-brand-600/20"
+              title="Iniciar tarea"
+            />
           )}
-        </div>
 
-        {/* CLI Command Hint */}
-        <div className="flex items-center gap-1">
-          <span className="text-[9px] font-mono px-2 py-1 rounded bg-black/20 text-text-muted border border-white/5 flex items-center gap-2">
-            <Icon name="terminal" size="xs" className="opacity-40" />
-            <span className="opacity-60 uppercase tracking-tighter mr-1 text-[8px] border-r border-white/10 pr-1 hidden" aria-label="CLI equivalent" />
-            {getCliCommand(task)}
-          </span>
+          {task.status === 'RUNNING' && (
+            <Button
+              variant="danger"
+              square
+              size="sm"
+              icon="square"
+              onClick={() => onStop(task.id)}
+              title="Detener tarea"
+            />
+          )}
+
+          <Button
+            variant="ghost"
+            square
+            size="sm"
+            icon="trash"
+            onClick={() => onDelete(task.id)}
+            className="text-text-muted hover:text-status-failed hover:bg-status-failed/10"
+            title="Eliminar"
+          />
         </div>
       </div>
 
-      {/* Acciones */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          square
-          size="sm"
-          icon="external-link"
-          onClick={() => window.open(task.url, '_blank')}
-          title="Visitar plataforma"
-        />
-        {task.status !== 'RUNNING' && (
-          <Button
-            variant="ghost"
-            square
-            size="sm"
-            icon="play"
-            onClick={() => onStart(task.id)}
-            className="bg-surface-800"
+      {/* Progress Bar (Full Width at bottom if running) */}
+      {task.status === 'RUNNING' && (
+        <div className="h-1 w-full bg-surface-800 rounded-b-3xl overflow-hidden">
+          <div
+            className="h-full bg-brand-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--brand-500-rgb),0.5)]"
+            style={{ width: `${task.progress?.percent || 0}%` }}
           />
-        )}
+        </div>
+      )}
 
-        {task.status === 'RUNNING' && (
-          <Button
-            variant="ghost"
-            square
-            size="sm"
-            icon="square"
-            onClick={() => onStop(task.id)}
-            className="bg-surface-800"
-          />
-        )}
-
-        <Button
-          variant="ghost"
-          square
-          size="sm"
-          icon="trash"
-          onClick={() => onDelete(task.id)}
-          className="text-danger hover:bg-danger hover:text-white"
-        />
+      {/* CLI Hint on hover */}
+      <div className="max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-500 ease-in-out">
+        <div className="px-5 pb-4 pt-1 border-t border-border-subtle/30 mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="terminal" size="xs" className="text-text-muted opacity-40" />
+            <span className="text-2xs font-black text-text-muted uppercase tracking-widest opacity-40">CLI Equivalent</span>
+          </div>
+          <div className="p-3 rounded-xl bg-black/20 border border-white/5 font-mono text-2xs text-text-muted whitespace-nowrap overflow-x-auto">
+            {getCliCommand(task)}
+          </div>
+        </div>
       </div>
     </div>
   );

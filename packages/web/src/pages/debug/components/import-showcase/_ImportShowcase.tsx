@@ -3,15 +3,15 @@ import { Icon } from '@web/components/Icon';
 import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 
 // Import existing steps
-import { SelectionStep } from '@web/pages/import/steps/_SelectionStep';
-import { AuthStep } from '@web/pages/import/steps/_AuthStep';
-import { ExecutionStep } from '@web/pages/import/steps/_ExecutionStep';
+import { SelectionStep } from '@web/pages/import/components/ScraperWizard/_SelectionStep';
+import { AssetSelectionStep } from '@web/pages/import/components/ScraperWizard/_AssetSelectionStep';
+import { SummaryStep } from '@web/pages/import/components/ScraperWizard/_SummaryStep';
 import { ScraperTaskCategory } from '@scraper/features/task-management';
 
 const stepsConfig: WizardStepConfig[] = [
   { id: 'selection', label: 'Origen', icon: 'layers' },
-  { id: 'auth', label: 'Sesión', icon: 'lock' },
-  { id: 'execution', label: 'Descarga', icon: 'play' }
+  { id: 'assets', label: 'Assets', icon: 'settings' },
+  { id: 'summary', label: 'Resumen', icon: 'check-circle' }
 ];
 
 const mockAvailableContent = {
@@ -90,94 +90,52 @@ const mockAvailableContent = {
   paths: []
 };
 
-type SceneId = 'selection_empty' | 'selection_populated' | 'selection_scroll' | 'auth_checking' | 'auth_success' | 'auth_error' | 'exec_ready' | 'exec_running' | 'exec_complete';
+type SceneId = 'selection_empty' | 'selection_populated' | 'assets_config' | 'summary_ready' | 'summary_complete';
 
 export const ImportShowcase: React.FC = () => {
   const [scene, setScene] = useState<SceneId>('selection_populated');
 
-  // State for SelectionStep
+  // State
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newUrl, setNewUrl] = useState('');
   const [contentType, setContentType] = useState<ScraperTaskCategory>(ScraperTaskCategory.COURSE);
-  const [includeDownload, setIncludeDownload] = useState(true);
-
-  // State for AuthStep
-  const [authStatus, setAuthStatus] = useState({
-    isAuthenticated: false,
-    isLoggingIn: false,
-    message: '',
-    checked: false
-  });
-
-  // State for ExecutionStep
   const [downloadOptions, setDownloadOptions] = useState({ videos: true, guides: true });
-  const [taskProgress, setTaskProgress] = useState<any>(
-    scene === 'exec_running' ? { step: 'Descargando Video: Introducción a OCI...', status: 'Sincronizando' } : null
-  );
   const [executionResult, setExecutionResult] = useState<any>(
-    scene === 'exec_complete' ? { success: true, message: 'La descarga ha finalizado y el contenido está disponible offline.' } : null
+    scene === 'summary_complete' ? { success: true, message: 'Tarea registrada correctamente. Ya puedes iniciarla desde tu panel de tareas.' } : null
   );
 
   // Sync state with scene changes
   React.useEffect(() => {
-    if (scene === 'auth_success') {
-      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Handshake completado con éxito.', checked: true });
-      setExecutionResult(null);
-      setTaskProgress(null);
-    } else if (scene === 'auth_error') {
-      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: 'La sesión ha expirado o no existe.', checked: true });
-      setExecutionResult(null);
-      setTaskProgress(null);
-    } else if (scene === 'auth_checking') {
-      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: '', checked: false });
-      setExecutionResult(null);
-      setTaskProgress(null);
-    } else if (scene === 'exec_running') {
-      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
-      setTaskProgress({ step: 'Descargando Video: Introducción a OCI...', status: 'Sincronizando' });
-      setExecutionResult(null);
-    } else if (scene === 'exec_complete') {
-      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
-      setTaskProgress(null);
-      setExecutionResult({ success: true, message: 'La descarga ha finalizado y el contenido está disponible offline.' });
-    } else if (scene === 'exec_ready') {
-      setAuthStatus({ isAuthenticated: true, isLoggingIn: false, message: 'Autenticado', checked: true });
-      setTaskProgress(null);
-      setExecutionResult(null);
+    if (scene === 'summary_complete') {
+      setExecutionResult({ success: true, message: 'Tarea registrada correctamente. Ya puedes iniciarla desde tu panel de tareas.' });
     } else {
-      setAuthStatus({ isAuthenticated: false, isLoggingIn: false, message: '', checked: false });
       setExecutionResult(null);
-      setTaskProgress(null);
     }
   }, [scene]);
 
   const scenes: { id: SceneId; label: string; group: string }[] = [
-    { id: 'selection_empty', label: 'Vacío', group: 'Selección' },
-    { id: 'selection_populated', label: 'Con Items', group: 'Selección' },
-    { id: 'selection_scroll', label: 'Con Scroll', group: 'Selección' },
-    { id: 'auth_checking', label: 'Verificando', group: 'Sesión' },
-    { id: 'auth_success', label: 'Éxito', group: 'Sesión' },
-    { id: 'auth_error', label: 'Error', group: 'Sesión' },
-    { id: 'exec_ready', label: 'Listo', group: 'Ejecución' },
-    { id: 'exec_running', label: 'Corriendo', group: 'Ejecución' },
-    { id: 'exec_complete', label: 'Finalizado', group: 'Ejecución' },
+    { id: 'selection_empty', label: 'Carga: Vacío', group: 'Step 1' },
+    { id: 'selection_populated', label: 'Carga: Items', group: 'Step 1' },
+    { id: 'assets_config', label: 'Selección Assets', group: 'Step 2' },
+    { id: 'summary_ready', label: 'Resumen Listo', group: 'Step 3' },
+    { id: 'summary_complete', label: 'Éxito Final', group: 'Step 3' },
   ];
 
-  const currentStepId = scene.startsWith('selection') ? 'selection' : (scene.startsWith('auth') ? 'auth' : 'execution');
+  const currentStepId = scene.startsWith('selection') ? 'selection' : (scene.startsWith('assets') ? 'assets' : 'summary');
 
   return (
     <div className="space-y-10">
       {/* Scene Selector */}
       <div className="flex flex-wrap gap-4 p-6 bg-surface-950/80 backdrop-blur rounded-3xl border border-white/5 sticky top-0 z-50 shadow-xl">
-        {['Selección', 'Sesión', 'Ejecución'].map(group => (
+        {['Step 1', 'Step 2', 'Step 3'].map(group => (
           <div key={group} className="space-y-3">
-            <div className="text-[9px] font-black text-brand-500/60 uppercase tracking-[0.3em] ml-1">{group}</div>
+            <div className="text-2xs font-black text-brand-500/60 uppercase tracking-[0.3em] ml-1">{group}</div>
             <div className="flex gap-2">
               {scenes.filter(s => s.group === group).map(s => (
                 <button
                   key={s.id}
                   onClick={() => setScene(s.id)}
-                  className={`px-4 py-2 text-[10px] font-bold rounded-xl transition-all border ${scene === s.id ? 'bg-brand-600 border-brand-500 text-white shadow-xl shadow-brand-600/20 translate-y-[-2px]' : 'bg-surface-900 border-border-subtle text-text-muted hover:border-brand-500/50 hover:bg-surface-800'}`}
+                  className={`px-4 py-2 text-2xs font-bold rounded-xl transition-all border ${scene === s.id ? 'bg-brand-600 border-brand-500 text-white shadow-xl shadow-brand-600/20 translate-y-[-2px]' : 'bg-surface-900 border-border-subtle text-text-muted hover:border-brand-500/50 hover:bg-surface-800'}`}
                 >
                   {s.label}
                 </button>
@@ -199,28 +157,21 @@ export const ImportShowcase: React.FC = () => {
             setContentType={setContentType}
           />
 
-          <AuthStep
-            authStatus={authStatus}
-            isLoading={scene === 'auth_checking'}
-            authLoading={false}
-            checkAuth={async () => { setScene('auth_checking'); setTimeout(() => setScene('auth_success'), 1500); return true; }}
-            launchLogin={async () => { }}
-          />
-
-          <ExecutionStep
+          <AssetSelectionStep
+            contentType={contentType}
             downloadOptions={downloadOptions}
             onToggleVideo={() => setDownloadOptions(p => ({ ...p, videos: !p.videos }))}
             onToggleGuide={() => setDownloadOptions(p => ({ ...p, guides: !p.guides }))}
-            includeDownload={includeDownload}
-            onToggleIncludeDownload={() => setIncludeDownload(!includeDownload)}
-            isLoading={scene === 'auth_checking' || scene === 'exec_running'}
+          />
+
+          <SummaryStep
+            downloadOptions={downloadOptions}
+            isLoading={false}
             executionResult={executionResult}
-            taskProgress={taskProgress}
             selectedItem={selectedItem || mockAvailableContent.courses[0]}
             newUrl={newUrl}
             contentType={contentType}
-            startScraping={async () => { setScene('exec_running'); setTimeout(() => setScene('exec_complete'), 3000); }}
-            cancelScraping={async () => { setScene('exec_ready'); }}
+            startScraping={async () => { setScene('summary_complete'); }}
           />
         </GenericWizard>
       </div>
@@ -231,22 +182,22 @@ export const ImportShowcase: React.FC = () => {
           <div className="w-10 h-10 bg-brand-600/10 text-brand-400 rounded-2xl flex items-center justify-center">
             <Icon name="layers" size="sm" />
           </div>
-          <h4 className="font-bold text-text-primary tracking-tight">Step 1: Selection</h4>
-          <p className="text-xs text-text-muted leading-relaxed opacity-60">Permite elegir entre reanudar una descarga interrumpida o iniciar una nueva ingresando una URL de Oracle University.</p>
+          <h4 className="font-bold text-text-primary tracking-tight">Paso 1: Origen</h4>
+          <p className="text-xs text-text-muted leading-relaxed opacity-60">Selección del curso o introducción de una URL manual.</p>
         </div>
         <div className="p-8 bg-surface-950/40 rounded-4xl border border-white/5 space-y-4">
           <div className="w-10 h-10 bg-brand-600/10 text-brand-400 rounded-2xl flex items-center justify-center">
-            <Icon name="lock" size="sm" />
+            <Icon name="settings" size="sm" />
           </div>
-          <h4 className="font-bold text-text-primary tracking-tight">Step 2: Authentication</h4>
-          <p className="text-xs text-text-muted leading-relaxed opacity-60">Valida la sesión mediante el ScraperService. Si falla, ofrece abrir un navegador controlado para realizar el login interactivo.</p>
+          <h4 className="font-bold text-text-primary tracking-tight">Paso 2: Assets</h4>
+          <p className="text-xs text-text-muted leading-relaxed opacity-60">Configuración granular de los activos a sincronizar (Vídeos/PDFs).</p>
         </div>
         <div className="p-8 bg-surface-950/40 rounded-4xl border border-white/5 space-y-4">
           <div className="w-10 h-10 bg-brand-600/10 text-brand-400 rounded-2xl flex items-center justify-center">
-            <Icon name="play" size="sm" />
+            <Icon name="check-circle" size="sm" />
           </div>
-          <h4 className="font-bold text-text-primary tracking-tight">Step 3: Execution</h4>
-          <p className="text-xs text-text-muted leading-relaxed opacity-60">Controla la ejecución del proceso, mostrando logs en tiempo real y permitiendo seleccionar qué activos descargar (Videos/PDFs).</p>
+          <h4 className="font-bold text-text-primary tracking-tight">Paso 3: Resumen</h4>
+          <p className="text-xs text-text-muted leading-relaxed opacity-60">Revisión final de los datos y registro de la tarea en la base de datos.</p>
         </div>
       </div>
     </div>

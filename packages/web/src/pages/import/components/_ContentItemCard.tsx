@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@web/components/Icon';
 import { ScraperTaskCategory } from '@scraper/features/task-management';
-import type { UITheme } from '../steps/_SelectionStep';
+import type { UITheme } from './_category-themes';
 
 export interface ContentItem {
   id: string;
@@ -46,24 +46,24 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
     <div className={`absolute top-0 left-0 w-1 h-full ${isSelected ? theme.indicator : ''}`} />
 
     <div className="flex justify-between items-start mb-1">
-      <div className={`font-bold text-[11px] truncate flex-1 transition-colors text-text-primary ${theme.hoverText}`}>
+      <div className={`font-bold text-xs truncate flex-1 transition-colors text-text-primary ${theme.hoverText}`}>
         {item.title}
       </div>
-      <div className={`ml-2 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-tighter font-black ${theme.badge}`}>
+      <div className={`ml-2 px-1.5 py-0.5 rounded text-2xs uppercase tracking-tighter font-black ${theme.badge}`}>
         {item.type === ScraperTaskCategory.PATH ? 'Path' : 'Course'}
       </div>
     </div>
 
-    <div className="text-[9px] text-text-muted mb-3 truncate font-mono opacity-50 group-hover/item:opacity-80 transition-opacity">
+    <div className="text-2xs text-text-muted mb-3 truncate font-mono opacity-50 group-hover/item:opacity-80 transition-opacity">
       {item.url}
     </div>
 
-    <div className="flex items-center gap-4 text-[9px] font-mono font-bold tracking-tight">
+    <div className="flex items-center gap-4 text-2xs font-mono font-bold tracking-tight">
       <div className="flex items-center gap-1.5">
         <Icon name="play" size="xs" className="opacity-40" />
         <span className="text-text-muted font-medium">Videos:</span>
         <span className={item.downloadedVideos === item.totalVideos
-          ? 'text-green-400'
+          ? 'text-status-completed'
           : (theme.hoverText.includes(':') ? theme.hoverText.split(':')[1] : theme.hoverText)}>
           {item.downloadedVideos}/{item.totalVideos}
         </span>
@@ -72,7 +72,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({ item, isSelect
         <Icon name="file-text" size="xs" className="opacity-40" />
         <span className="text-text-muted font-medium">Guías:</span>
         <span className={item.downloadedGuides === item.totalGuides
-          ? 'text-green-400'
+          ? 'text-status-completed'
           : (theme.hoverText.includes(':') ? theme.hoverText.split(':')[1] : theme.hoverText)}>
           {item.downloadedGuides}/{item.totalGuides}
         </span>

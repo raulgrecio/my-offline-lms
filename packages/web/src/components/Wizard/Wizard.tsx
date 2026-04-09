@@ -25,6 +25,27 @@ const StepRenderer: React.FC<{ index: number, children: React.ReactNode }> = ({ 
   );
 };
 
+export const GenericWizardLayout: React.FC<WizardProps> = ({
+  steps,
+  children,
+  className = ""
+}) => {
+  return (
+    <div className={`max-w-4xl mx-auto ${className}`}>
+      <WizardStepper />
+      <div className="relative mt-8">
+        {React.Children.map(children, (child, index) => {
+          return (
+            <StepRenderer index={index}>
+              {child}
+            </StepRenderer>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export const GenericWizard: React.FC<WizardProps> = ({
   steps,
   children,
@@ -35,18 +56,9 @@ export const GenericWizard: React.FC<WizardProps> = ({
 }) => {
   return (
     <WizardProvider steps={steps} onFinish={onFinish} initialStepIndex={initialStepIndex} initialStepId={initialStepId}>
-      <div className={`max-w-5xl mx-auto ${className}`}>
-        <WizardStepper />
-        <div className="relative">
-          {React.Children.map(children, (child, index) => {
-            return (
-              <StepRenderer index={index}>
-                {child}
-              </StepRenderer>
-            );
-          })}
-        </div>
-      </div>
+      <GenericWizardLayout steps={steps} className={className}>
+        {children}
+      </GenericWizardLayout>
     </WizardProvider>
   );
 };

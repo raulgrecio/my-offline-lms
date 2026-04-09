@@ -46,8 +46,8 @@ const SettingsContent = ({
       <div className="h-px bg-white/10 mx-1 my-1"></div>
       <div className="flex flex-col gap-2 p-1">
         <div className="flex items-center justify-between px-2">
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Opacidad</span>
-          <span className="text-[10px] font-mono text-brand-500">{Math.round(subtitleOpacity * 100)}%</span>
+          <span className="text-2xs font-bold text-white/40 uppercase tracking-wider">Opacidad</span>
+          <span className="text-2xs font-mono text-brand-500">{Math.round(subtitleOpacity * 100)}%</span>
         </div>
         <input
           type="range"

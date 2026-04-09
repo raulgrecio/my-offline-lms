@@ -72,7 +72,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
               ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
                 <div class="flex flex-col items-center gap-2">
                   <Button size={s}>Button {s}</Button>
-                  <span class="text-[10px] font-mono text-text-muted">{s}</span>
+                  <span class="text-2xs font-mono text-text-muted">{s}</span>
                 </div>
               ))
             }
@@ -91,7 +91,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
               ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
                 <div class="flex flex-col items-center gap-2">
                   <Button square size={s} icon="plus" />
-                  <span class="text-[10px] font-mono text-text-muted">
+                  <span class="text-2xs font-mono text-text-muted">
                     sq-{s}
                   </span>
                 </div>
@@ -114,7 +114,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                   <Button size={s} icon="download">
                     Save {s}
                   </Button>
-                  <span class="text-[10px] font-mono text-text-muted">
+                  <span class="text-2xs font-mono text-text-muted">
                     {s} with icon
                   </span>
                 </div>
@@ -146,7 +146,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           </h4>
           <div class="flex flex-col gap-4 items-start">
             <div class="space-y-2 w-full">
-              <p class="text-[10px] text-text-muted">
+              <p class="text-2xs text-text-muted">
                 Dual Icons (Left & Right):
               </p>
               <div class="flex flex-wrap gap-2">
@@ -168,7 +168,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
             </div>
 
             <div class="space-y-2 w-full">
-              <p class="text-[10px] text-text-muted">Square Variants:</p>
+              <p class="text-2xs text-text-muted">Square Variants:</p>
               <div class="flex flex-wrap gap-2">
                 {
                   (
@@ -197,7 +197,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           </h4>
           <div class="flex flex-col gap-3 items-start">
             <div class="space-y-2 w-full">
-              <p class="text-[10px] text-text-muted">
+              <p class="text-2xs text-text-muted">
                 Loading States (All Variants):
               </p>
               <div class="grid grid-cols-2 gap-2">
@@ -209,7 +209,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
               </div>
             </div>
             <div class="space-y-2 w-full pt-2">
-              <p class="text-[10px] text-text-muted">Disabled States:</p>
+              <p class="text-2xs text-text-muted">Disabled States:</p>
               <div class="flex flex-wrap gap-2">
                 <Button variant="outline" disabled size="sm"
                   >Action Unavailable</Button
@@ -231,14 +231,14 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           </h4>
           <div class="space-y-4">
             <div class="space-y-2">
-              <p class="text-[10px] text-text-muted">Default (Inline):</p>
+              <p class="text-2xs text-text-muted">Default (Inline):</p>
               <div class="flex gap-2">
                 <Button size="sm">Option A</Button>
                 <Button size="sm">Option B</Button>
               </div>
             </div>
             <div class="space-y-2">
-              <p class="text-[10px] text-text-muted">Block (Full Width):</p>
+              <p class="text-2xs text-text-muted">Block (Full Width):</p>
               <Button block variant="primary" hoverEffect="translate">
                 Submit Data
               </Button>
@@ -317,7 +317,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                 icon="sidebar"
                 variant="ghost"
               />
-              <span class="text-[10px] text-text-muted">variant="ghost"</span>
+              <span class="text-2xs text-text-muted">variant="ghost"</span>
             </div>
             <div class="flex flex-col items-center gap-2">
               <ViewerButton
@@ -327,7 +327,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                 variant="zoom"
                 iconSize="xs"
               />
-              <span class="text-[10px] text-text-muted">variant="zoom"</span>
+              <span class="text-2xs text-text-muted">variant="zoom"</span>
             </div>
           </div>
 
@@ -337,7 +337,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
             </h4>
             <div class="flex flex-col items-start gap-2">
               <ViewerFitControl />
-              <p class="text-[10px] text-text-muted italic">
+              <p class="text-2xs text-text-muted italic">
                 Composite component using multiple ViewerButtons
               </p>
             </div>
@@ -366,7 +366,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                 isFavorite={false}
                 size="sm"
               />
-              <span class="text-[10px] text-text-muted">Inactive (sm)</span>
+              <span class="text-2xs text-text-muted">Inactive (sm)</span>
             </div>
             <div class="flex flex-col items-center gap-2">
               <FavoriteButton
@@ -375,7 +375,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                 isFavorite={true}
                 size="md"
               />
-              <span class="text-[10px] text-text-muted">Active (md)</span>
+              <span class="text-2xs text-text-muted">Active (md)</span>
             </div>
             <div class="flex flex-col items-center gap-2">
               <FavoriteButton
@@ -385,7 +385,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                 size="lg"
                 hoverEffect="translate"
               />
-              <span class="text-[10px] text-text-muted">Large (Translate)</span>
+              <span class="text-2xs text-text-muted">Large (Translate)</span>
             </div>
           </div>
         </div>

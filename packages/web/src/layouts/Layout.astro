@@ -28,19 +28,13 @@ const navLinks = [
 ] as const;
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <title>{title} — Offline LMS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (function () {
@@ -55,7 +49,7 @@ const navLinks = [
       })();
     </script>
   </head>
-  <body class="min-h-screen flex flex-col w-screen overflow-x-hidden">
+  <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
     <!-- ─── Top Navigation ─────────────────────────────────────────── -->
     <header
       id="main-header"

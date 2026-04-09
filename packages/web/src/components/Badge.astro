@@ -33,7 +33,7 @@ const {
   dataStatus
 } = Astro.props as BadgeProps;
 
-const baseClasses = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-wider border transition-all duration-200";
+const baseClasses = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border transition-all duration-200";
 
 const dotColorClasses: Partial<Record<BadgeVariant, string>> = {
   'brand': 'bg-brand-500',

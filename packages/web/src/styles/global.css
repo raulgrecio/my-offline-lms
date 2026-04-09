@@ -1,10 +1,10 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 
 /* ─── Variables System ───────────────────────────────────────────────────── */
 :root {
   /* Typography */
-  --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
-
+  --font-sans: 'Inter Variable', 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
   /* Brand colors (Constant) */
   --brand-50: #fff1ef;
   --brand-100: #ffe0db;
@@ -42,6 +42,7 @@
   --color-status-not-started: #94a3b8; /* Slate 400 */
   --color-status-failed: #ef4444; /* Red 500 */
   --color-status-downloading: #f59e0b; /* Amber 500 */
+  --color-status-info: #3b82f6; /* Blue 500 */
  
   --color-danger: #ef4444; /* Red 500 */
   --color-danger-hover: #dc2626; /* Red 600 */
@@ -78,6 +79,7 @@
   --color-status-not-started: #64748b; /* Slate 500 */
   --color-status-failed: #dc2626; /* Red 600 */
   --color-status-downloading: #d97706; /* Amber 600 */
+  --color-status-info: #2563eb; /* Blue 600 */
 
   --color-danger: #dc2626; /* Red 600 */
   --color-danger-hover: #b91c1c; /* Red 700 */
@@ -133,6 +135,7 @@
   --color-status-not-started: var(--color-status-not-started);
   --color-status-failed: var(--color-status-failed);
   --color-status-downloading: var(--color-status-downloading);
+  --color-status-info: var(--color-status-info);
   --color-danger: var(--color-danger);
   --color-danger-hover: var(--color-danger-hover);
   --color-danger-active: var(--color-danger-active);

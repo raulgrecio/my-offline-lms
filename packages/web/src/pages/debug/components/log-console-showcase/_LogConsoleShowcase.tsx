@@ -11,7 +11,7 @@ export const LogConsoleShowcase: React.FC = () => {
             <p className="text-text-secondary text-sm">The console in its natural habitat, waiting for scraper logs.</p>
           </div>
           <div className="px-3 py-1 bg-brand-500/10 border border-brand-500/20 rounded-full">
-            <span className="text-[10px] font-bold text-brand-400 uppercase tracking-wider">Live SSE Component</span>
+            <span className="text-2xs font-bold text-brand-400 uppercase tracking-wider">Live SSE Component</span>
           </div>
         </div>
 
@@ -33,7 +33,7 @@ export const LogConsoleShowcase: React.FC = () => {
               ].map((item, i) => (
                 <li key={i} className="flex gap-3">
                   <div className="w-5 h-5 rounded bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold">0{i + 1}</span>
+                    <span className="text-2xs font-bold">0{i + 1}</span>
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-text-primary">{item.title}</h4>
@@ -46,7 +46,7 @@ export const LogConsoleShowcase: React.FC = () => {
 
           <div className="p-6 bg-surface-950 border border-border-subtle rounded-2xl space-y-4">
             <h3 className="text-lg font-bold text-text-primary">Technical Specs</h3>
-            <div className="space-y-2 font-mono text-[10px]">
+            <div className="space-y-2 font-mono text-2xs">
               <div className="flex justify-between border-b border-white/5 pb-1">
                 <span className="text-text-muted italic">Endpoint:</span>
                 <span className="text-brand-400">/api/scraper/logs</span>

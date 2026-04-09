@@ -6,9 +6,10 @@ import { Icon } from '@web/components/Icon';
 import { useWizard } from '@web/components/Wizard/WizardContext';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
 
-import { ContentItemCard, type ContentItem } from '../components/_ContentItemCard';
-import { ContentTypeFilter } from '../components/_ContentTypeFilter';
-import { SelectionCard } from '../components/_SelectionCard';
+import { ContentItemCard, type ContentItem } from '../_ContentItemCard';
+import { ContentTypeFilter } from '../_ContentTypeFilter';
+import { SelectionCard } from '../_SelectionCard';
+import { THEMES } from '../_category-themes';
 
 interface SelectionStepProps {
   availableContent: {
@@ -28,43 +29,6 @@ const PLACEHOLDERS = {
   path: 'https://mylearn.database.com/ou/learning-path/...'
 };
 
-// Centralized Theme System
-export interface UITheme {
-  primary: string;
-  activeBg: string;
-  activeBorder: string;
-  activeShadow: string;
-  hoverBg: string;
-  hoverText: string;
-  indicator: string;
-  badge: string;
-  ring: string;
-}
-
-export const THEMES: Record<ScraperTaskCategory, UITheme> = {
-  course: {
-    primary: 'brand-500',
-    activeBg: 'bg-brand-600',
-    activeBorder: 'border-brand-500/50',
-    activeShadow: 'shadow-xl shadow-brand-500/25',
-    hoverBg: 'hover:bg-brand-500/5',
-    hoverText: 'group-hover/item:text-brand-400',
-    indicator: 'bg-brand-500/50',
-    badge: 'bg-brand-500/10 text-brand-500 border-brand-500/20',
-    ring: 'ring-brand-400/20'
-  },
-  path: {
-    primary: 'amber-500',
-    activeBg: 'bg-amber-500',
-    activeBorder: 'border-amber-500/50',
-    activeShadow: 'shadow-xl shadow-amber-500/25',
-    hoverBg: 'hover:bg-amber-500/5',
-    hoverText: 'group-hover/item:text-amber-400',
-    indicator: 'bg-amber-500/50',
-    badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    ring: 'ring-amber-400/20'
-  }
-};
 
 export const SelectionStep: React.FC<SelectionStepProps> = ({
   availableContent,
@@ -103,7 +67,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
         <SelectionCard
           icon="plus"
           title={`Nuevo ${contentType === ScraperTaskCategory.COURSE ? 'Curso' : 'Path'}`}
-          description="Ingresa una URL de Oracle University para sincronizar nuevos metadatos y assets."
+          description="Ingresa una URL para sincronizar nuevos metadatos y assets."
           isActive={!!newUrl}
           theme={currentTheme}
         >
@@ -158,7 +122,7 @@ export const SelectionStep: React.FC<SelectionStepProps> = ({
         </SelectionCard>
       </div>
 
-      <WizardActionButtons nextLabel="Continuar a Sesión" />
+      <WizardActionButtons nextLabel="Continuar" />
     </div>
   );
 };

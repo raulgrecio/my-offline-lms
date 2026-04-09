@@ -13,6 +13,7 @@ import PageHeader from "@web/components/PageHeader.astro";
 import EmptyState from "@web/components/EmptyState/EmptyState.astro";
 import CollapsibleCard from "@web/components/CollapsibleCard.astro";
 import Button from "@web/components/Button.astro";
+import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
 
 const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
 
@@ -49,21 +50,12 @@ const hasPaths = paths.length > 0;
     data-api-url={assetPathsUrl}
   >
     <CollapsibleCard initialOpen={false}>
-      <div slot="header" class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-600/10 text-brand-600 group-hover:scale-110 transition-all duration-300"
-        >
-          <Icon name="plus" size="md" />
-        </div>
-        <div>
-          <span class="block font-bold text-text-primary leading-tight">
-            Añadir nueva ubicación
-          </span>
-          <span class="block text-[11px] text-text-muted mt-1 leading-tight">
-            Configura una nueva carpeta local para tu catálogo de contenidos
-          </span>
-        </div>
-      </div>
+      <CollapsibleHeader
+        slot="header"
+        icon="plus"
+        title="Añadir nueva ubicación"
+        subtitle="Configura una nueva carpeta local para tu catálogo de contenidos"
+      />
       <p class="text-sm text-text-secondary mb-6 leading-relaxed">
         El sistema escaneará estas carpetas para sincronizar la biblioteca de
         vídeos y guías locales. Use rutas absolutas y etiquetas descriptivas.
@@ -127,7 +119,7 @@ const hasPaths = paths.length > 0;
       <div id="path-list" class="flex flex-col gap-3">
         {
           error ? (
-            <div class="py-12 text-center text-red-500 bg-red-500/5 rounded-2xl border border-dashed border-red-500/20">
+            <div class="py-12 text-center text-status-failed bg-status-failed/5 rounded-2xl border border-dashed border-status-failed/20">
               <div class="flex justify-center mb-2">
                 <Icon name="alert-circle" size="lg" />
               </div>

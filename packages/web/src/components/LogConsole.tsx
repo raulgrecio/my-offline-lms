@@ -47,8 +47,8 @@ export const LogConsole: React.FC = () => {
 
   const getLevelColor = (level: string) => {
     switch (level.toLowerCase()) {
-      case 'error': return 'text-red-400';
-      case 'warn': return 'text-yellow-400';
+      case 'error': return 'text-status-failed';
+      case 'warn': return 'text-status-downloading';
       case 'info': return 'text-brand-400 font-bold';
       case 'debug': return 'text-text-muted opacity-60';
       default: return 'text-text-secondary';
@@ -61,22 +61,22 @@ export const LogConsole: React.FC = () => {
       <div className="flex items-center justify-between px-4 py-2 bg-surface-900 border-b border-border-subtle">
         <div className="flex items-center gap-4">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-status-failed/20 border border-status-failed/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-status-downloading/20 border border-status-downloading/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-status-completed/20 border border-status-completed/50" />
           </div>
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] font-mono">Scraper_Terminal_v1.0</span>
+          <span className="text-2xs font-bold text-text-muted uppercase tracking-[0.2em] font-mono">Scraper_Terminal_v1.0</span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAutoScroll(!autoScroll)}
-            className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${autoScroll ? 'bg-brand-600/20 border-brand-500/50 text-brand-400' : 'bg-surface-800 border-border-subtle text-text-muted hover:text-text-primary'}`}
+            className={`text-2xs font-bold px-2 py-1 rounded border transition-all ${autoScroll ? 'bg-brand-600/20 border-brand-500/50 text-brand-400' : 'bg-surface-800 border-border-subtle text-text-muted hover:text-text-primary'}`}
           >
             {autoScroll ? 'AUTO-SCROLL ON' : 'AUTO-SCROLL OFF'}
           </button>
           <button
             onClick={() => setLogs([])}
-            className="text-text-muted hover:text-red-400 transition-colors"
+            className="text-text-muted hover:text-status-failed transition-colors"
             title="Clear console"
           >
             <Icon name="trash" size="xs" />
@@ -87,7 +87,7 @@ export const LogConsole: React.FC = () => {
       {/* Console Content */}
       <div
         ref={scrollRef}
-        className="flex-1 p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar bg-brand-950/10"
+        className="flex-1 p-4 font-mono text-xs overflow-y-auto custom-scrollbar bg-brand-950/10"
       >
         {logs.length === 0 ? (
           <div className="h-full flex items-center justify-center text-text-muted italic opacity-30 select-none">
@@ -110,10 +110,10 @@ export const LogConsole: React.FC = () => {
       {/* Console Status Bar */}
       <div className="px-4 py-1.5 bg-brand-600/5 border-t border-border-subtle flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-          <span className="text-[9px] font-bold text-text-muted uppercase tracking-wider">{isConnected ? 'CONNECTED' : 'DISCONNECTED'}</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-status-completed animate-pulse' : 'bg-status-failed'}`} />
+          <span className="text-2xs font-bold text-text-muted uppercase tracking-wider">{isConnected ? 'CONNECTED' : 'DISCONNECTED'}</span>
         </div>
-        <span className="text-[9px] font-mono text-text-muted opacity-50">UTF-8 / Node.js 20.x</span>
+        <span className="text-2xs font-mono text-text-muted opacity-50">UTF-8 / Node.js 20.x</span>
       </div>
     </div>
   );

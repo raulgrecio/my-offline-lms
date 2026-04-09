@@ -23,6 +23,7 @@ interface WizardContextType {
   setCanProceed: (value: boolean) => void;
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
+  reset: () => void;
 }
 
 const WizardContext = createContext<WizardContextType | undefined>(undefined);
@@ -82,6 +83,12 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({
     }
   }, [steps.length]);
 
+  const reset = useCallback(() => {
+    setCurrentStepIndex(calculatedInitialIndex);
+    setCanProceed(true);
+    setIsLoading(false);
+  }, [calculatedInitialIndex]);
+
   const value = useMemo(() => ({
     currentStepIndex,
     steps,
@@ -89,13 +96,14 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({
     next,
     back,
     goTo,
+    reset,
     isFirst: currentStepIndex === 0,
     isLast: currentStepIndex === steps.length - 1,
     canProceed,
     setCanProceed,
     isLoading,
     setIsLoading,
-  }), [currentStepIndex, steps, next, back, goTo, canProceed, isLoading]);
+  }), [currentStepIndex, steps, next, back, goTo, reset, canProceed, isLoading]);
 
   return (
     <WizardContext.Provider value={value}>

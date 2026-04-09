@@ -43,7 +43,7 @@ export const WizardStepper: React.FC = () => {
               {/* Label Info */}
               <div className="hidden md:flex flex-col">
                 <span className={`
-                  text-[9px] font-black uppercase tracking-[0.2em] transition-colors duration-500
+                  text-2xs font-black uppercase tracking-[0.2em] transition-colors duration-500
                   ${isActive ? 'text-brand-400' : 'text-text-muted'}
                 `}>
                   Paso {idx + 1}

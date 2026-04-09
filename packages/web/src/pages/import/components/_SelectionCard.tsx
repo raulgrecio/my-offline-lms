@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon, type IconName } from '@web/components/Icon';
 
-import { type UITheme } from '../steps/_SelectionStep';
+import type { UITheme } from './_category-themes';
 
 interface SelectionCardProps {
   icon: IconName;
@@ -21,7 +21,7 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
   children
 }) => {
   return (
-    <div className={`p-8 bg-surface-800 rounded-3xl border flex flex-col group transition-all duration-500 ${isActive ? `${theme.activeBorder} ring-1 ${theme.ring} ${theme.activeShadow} bg-surface-800/80` : 'border-border-subtle hover:border-brand-500/50 shadow-sm'
+    <div className={`p-8 bg-surface-800 rounded-3xl border flex flex-col group transition-all duration-500 ${isActive ? `${theme.activeBorder} ring-1 ${theme.ring} ${theme.activeShadow} bg-surface-800/80` : 'border-border-subtle hover:border-border-default hover:bg-surface-900/40 shadow-sm'
       }`}>
       <div className="flex items-center gap-4 mb-6">
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shrink-0 ${isActive ? `${theme.activeBg} text-white shadow-lg ${theme.activeShadow}` : 'bg-surface-900 text-text-muted'
@@ -33,7 +33,7 @@ export const SelectionCard: React.FC<SelectionCardProps> = ({
         </h3>
       </div>
 
-      <p className="text-[11px] text-text-muted mb-6 leading-relaxed">
+      <p className="text-xs text-text-muted mb-6 leading-relaxed">
         {description}
       </p>
 
