@@ -20,6 +20,7 @@ describe('DownloadGuides Use Case', () => {
     mockBrowserProvider = {
       getAuthenticatedContext: vi.fn(),
       close: vi.fn().mockResolvedValue(undefined),
+      closeContext: vi.fn().mockResolvedValue(undefined),
     };
 
     mockCourseRepo = {
@@ -249,7 +250,7 @@ describe('DownloadGuides Use Case', () => {
 
     await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' });
 
-    expect(mockBrowserProvider.close).toHaveBeenCalled();
+    expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
 
   it('should NOT close browser provider if sharedContext is provided', async () => {
@@ -639,6 +640,7 @@ describe('DownloadGuides Use Case', () => {
         waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://src') }),
         evaluate: vi.fn().mockResolvedValue(0), // Fail later but passes the branch 126
         close: vi.fn(),
+    closeContext: vi.fn(),
       };
       const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
       mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
@@ -665,7 +667,7 @@ describe('DownloadGuides Use Case', () => {
       mockAssetRepo.getAssetById.mockReturnValue(asset);
       mockBrowserProvider.getAuthenticatedContext.mockRejectedValue(new Error('no context'));
       await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' }); // sharedContext is undefined
-      expect(mockBrowserProvider.close).toHaveBeenCalled();
+      expect(mockBrowserProvider.closeContext).not.toHaveBeenCalled();
     });
 
     it('should handle null ekitType gracefully', async () => {

@@ -30,6 +30,7 @@ describe('SyncLearningPath Use Case', () => {
   const mockBrowserProvider = {
     getAuthenticatedContext: vi.fn(),
     close: vi.fn(),
+    closeContext: vi.fn(),
   } as any;
 
   const mockLearningPathRepo: Mocked<ILearningPathRepository> = {

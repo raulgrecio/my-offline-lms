@@ -23,7 +23,8 @@ describe('DownloadVideos Use Case', () => {
 
     mockBrowserProvider = {
       getAuthenticatedContext: vi.fn(),
-      close: vi.fn().mockResolvedValue(undefined)
+      close: vi.fn().mockResolvedValue(undefined),
+      closeContext: vi.fn().mockResolvedValue(undefined)
     };
 
     mockCourseRepo = {
@@ -211,7 +212,7 @@ describe('DownloadVideos Use Case', () => {
     mockAssetStorage.verifyVideoIntegrity.mockReturnValue(false);
 
     await useCase.downloadSingleVideo('v1', '123');
-    expect(mockBrowserProvider.close).toHaveBeenCalled();
+    expect(mockBrowserProvider.closeContext).toHaveBeenCalled();
   });
 
   it('should throw error if redirected to login page', async () => {

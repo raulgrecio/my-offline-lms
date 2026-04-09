@@ -82,7 +82,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
         await new Promise(r => setTimeout(r, 5000));
       }
     } finally {
-      await this.browserProvider.close();
+      await this.browserProvider.closeContext(context);
     }
 
     this.logger.info(`======================================================`);
@@ -188,7 +188,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
         await page.close().catch(() => { });
       }
       if (!sharedContext && context) {
-        await this.browserProvider.close();
+        await this.browserProvider.closeContext(context);
       }
     }
   }

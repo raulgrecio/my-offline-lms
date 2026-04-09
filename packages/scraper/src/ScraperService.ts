@@ -548,6 +548,7 @@ export class ScraperService {
   }
 
   async cleanup() {
-    await this.deps.browserProvider.close();
+    // Intentionally left empty. 
+    // Tasks are responsible for closing their own contexts inside finally blocks.
   }
 }

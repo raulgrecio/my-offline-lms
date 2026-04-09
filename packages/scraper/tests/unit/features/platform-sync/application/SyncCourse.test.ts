@@ -28,6 +28,7 @@ describe('SyncCourse Use Case', () => {
     getHeadfulContext: vi.fn(),
     getAuthenticatedContext: vi.fn(),
     close: vi.fn(),
+    closeContext: vi.fn(),
   } as any;
 
   const mockCourseRepo = {

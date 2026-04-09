@@ -266,6 +266,8 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
       }
 
     } finally {
+      await this.browserProvider.closeContext(context);
+      
       if (isolatedDirPath && !this.config.keepTempWorkspaces) {
         await isolatedInterceptedDataRepo.deleteWorkspace();
       } else if (isolatedDirPath) {

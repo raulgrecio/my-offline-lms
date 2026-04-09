@@ -84,7 +84,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
         await new Promise(r => setTimeout(r, 2000));
       }
     } finally {
-      await this.browserProvider.close();
+      await this.browserProvider.closeContext(context);
     }
 
     this.logger.info(`======================================================`);
@@ -245,8 +245,8 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       this.logger.error(`❌ Error extrayendo guía:`, err);
       this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {
-      if (!sharedContext) {
-        await this.browserProvider.close();
+      if (!sharedContext && context) {
+        await this.browserProvider.closeContext(context);
       } else if (page) {
         await page.close().catch(() => { });
       }

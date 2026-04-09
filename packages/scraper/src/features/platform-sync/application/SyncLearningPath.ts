@@ -95,6 +95,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
       await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }, signal);
 
     } finally {
+      await this.browserProvider.closeContext(context);
       // --- Isolated Execution Environment Cleanup ---
       if (!this.config.keepTempWorkspaces) {
         if (isolatedDirPath) {
