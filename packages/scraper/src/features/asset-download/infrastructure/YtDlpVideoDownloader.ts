@@ -35,17 +35,41 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
     args.push(url);
 
     return new Promise((resolve, reject) => {
-      // Pipe subprocess output to main process to show progress
+      // Listen to subprocess output to show progress in LogConsole
       const ytDlpProcess = spawn("yt-dlp", args);
       let stderr = "";
 
-      ytDlpProcess.stdout.pipe(process.stdout);
+      const stripAnsi = (str: string) => str.replace(/\x1B\[[0-9;]*[mK]/g, "");
 
-      ytDlpProcess.stderr.on("data", (data: any) => {
+      const handleOutput = (data: any, isError = false) => {
         const msg = data.toString();
-        stderr += msg;
-        process.stderr.write(data);
-      });
+        if (isError) stderr += msg;
+
+        // Limpiamos la salida (yt-dlp usa retornos de carro \r para el progreso)
+        // y enviamos cada línea significativa al logger
+        const lines = msg.split(/[\r\n]+/).filter((line: string) => line.trim().length > 0);
+        for (const line of lines) {
+          const cleanLine = stripAnsi(line);
+          if (isError) {
+            this.logger.warn(cleanLine);
+          } else {
+            // Solo logueamos líneas de descarga o información útil para no saturar
+            if (cleanLine.includes('[download]') || cleanLine.includes('[ffmpeg]') || cleanLine.includes('[info]')) {
+              this.logger.info(cleanLine);
+            }
+          }
+        }
+
+        // Seguimos enviando a la terminal para el usuario del CLI
+        if (isError) {
+          process.stderr.write(data);
+        } else {
+          process.stdout.write(data);
+        }
+      };
+
+      ytDlpProcess.stdout.on("data", (data) => handleOutput(data, false));
+      ytDlpProcess.stderr.on("data", (data) => handleOutput(data, true));
 
       ytDlpProcess.on("close", (code: number | null) => {
         if (code === 0) {

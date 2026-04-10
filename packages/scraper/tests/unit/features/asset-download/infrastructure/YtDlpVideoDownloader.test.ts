@@ -38,7 +38,6 @@ describe('YtDlpVideoDownloader', () => {
   function createMockProcess() {
     const mockProcess = new EventEmitter() as any;
     mockProcess.stdout = new EventEmitter();
-    mockProcess.stdout.pipe = vi.fn();
     mockProcess.stderr = new EventEmitter();
     return mockProcess;
   }
@@ -50,11 +49,15 @@ describe('YtDlpVideoDownloader', () => {
     const promise = downloader.download('http://example.com/video', '/mock/out.mp4');
 
     await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 1);
+
+    // Simulate stdout data
+    mockProcess.stdout.emit('data', Buffer.from('[download]   10% of 100MiB'));
+
     mockProcess.emit('close', 0);
 
     await expect(promise).resolves.toBeUndefined();
     expect(spawn).toHaveBeenCalledWith('yt-dlp', expect.anything());
-    expect(mockProcess.stdout.pipe).toHaveBeenCalledWith(process.stdout);
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('[download]'));
   });
 
   it('should include referer in args if provided', async () => {
