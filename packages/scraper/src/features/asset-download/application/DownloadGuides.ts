@@ -195,12 +195,10 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;
 
         // Skip if we already downloaded this page successfully in a previous run
-        if (await this.assetStorage.assetExists(cachedImgPath)) {
-          const size = await this.assetStorage.getTempImageSize(cachedImgPath);
-          if (size > 0) {
-            this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
-            continue;
-          }
+        const size = await this.assetStorage.getTempImageSize(cachedImgPath);
+        if (size > 0) {
+          this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
+          continue;
         }
 
         let buffer: number[] | null = null;

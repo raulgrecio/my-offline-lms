@@ -141,7 +141,7 @@ describe('DiskAssetStorage', () => {
   });
 
   it('should check if asset exists', async () => {
-    mockFs.exists.mockResolvedValue(true);
+    mockResolver.resolveExistingPath.mockResolvedValue('/mock/file.pdf');
     expect(await storage.assetExists('/mock/file.pdf')).toBe(true);
   });
 
@@ -189,7 +189,7 @@ describe('DiskAssetStorage', () => {
   });
 
   it('should return 0 from getTempImageSize if file does not exist', async () => {
-    mockFs.exists.mockResolvedValue(false);
+    mockFs.stat.mockRejectedValue(new Error('ENOENT'));
     expect(await storage.getTempImageSize('/mock/not-exist.png')).toBe(0);
   });
 

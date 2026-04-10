@@ -80,6 +80,10 @@ describe('BrowserProvider (Multi-session Support)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default FS mock behavior - reset for every test to avoid pollution
+    vi.mocked(mockFs.stat).mockRejectedValue(new Error('ENOENT'));
+    vi.mocked(mockFs.exists).mockResolvedValue(false);
+
     mockBrowser = createMockBrowser();
     
     let isFirstCall = true;
@@ -229,12 +233,11 @@ describe('BrowserProvider (Multi-session Support)', () => {
     });
 
     it('should throw error in getAuthenticatedContext if session does not exist', async () => {
-      vi.mocked(mockFs.exists).mockResolvedValue(false);
-      await expect(provider.getAuthenticatedContext()).rejects.toThrow("No existe sesion guardada");
+      // stats == null in code because mockFs.stat rejects by default
+      await expect(provider.getAuthenticatedContext()).rejects.toThrow(/No existe sesión guardada/i);
     });
 
     it('should return a headless context in getAuthenticatedContext if session exists', async () => {
-      vi.mocked(mockFs.exists).mockResolvedValue(true);
       vi.mocked(mockFs.stat).mockResolvedValue({ mtime: new Date() } as any);
       
       const ctx = await provider.getAuthenticatedContext();

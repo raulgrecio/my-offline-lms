@@ -50,11 +50,11 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
   async getCookies(): Promise<any[]> {
     const authFile = await this.getAuthFile();
     try {
-      if (!(await this.fs.exists(authFile))) return [];
       const content = await this.fs.readFile(authFile);
       const state = JSON.parse(content.toString());
       return Array.isArray(state.cookies) ? state.cookies : [];
     } catch {
+      // Si no existe o falla la lectura, devolvemos array vacío
       return [];
     }
   }
@@ -68,12 +68,10 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     // Intentar leer el estado actual para preservar localStorage si existe
     let state: any = { cookies: [], origins: [] };
     try {
-      if (await this.fs.exists(this.authFile!)) {
-        const content = await this.fs.readFile(this.authFile!);
-        state = JSON.parse(content.toString());
-      }
+      const content = await this.fs.readFile(this.authFile!);
+      state = JSON.parse(content.toString());
     } catch {
-      // Si falla la lectura, empezamos de cero con el objeto base
+      // Si falla la lectura (archivo no existe o corrupto), empezamos de cero
     }
 
     state.cookies = cookies;

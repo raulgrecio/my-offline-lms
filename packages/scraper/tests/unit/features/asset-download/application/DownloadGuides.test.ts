@@ -430,11 +430,13 @@ describe('DownloadGuides Use Case', () => {
       // Simulate that the output PDF DOES NOT exist yet
       mockAssetStorage.assetExists.mockImplementation((path: string) => {
         if (path === outputPath) return Promise.resolve(false);
-        if (path.includes('page_')) return Promise.resolve(true); // Images exist
         return Promise.resolve(false);
       });
 
-      mockAssetStorage.getTempImageSize.mockResolvedValue(1000);
+      mockAssetStorage.getTempImageSize.mockImplementation((path: string) => {
+        if (path.includes('page_')) return Promise.resolve(1000); // Images exist
+        return Promise.resolve(0);
+      });
 
       // Mock browser interactions
       const mockPage = {
@@ -454,7 +456,7 @@ describe('DownloadGuides Use Case', () => {
       await useCase.downloadSingleGuide({ assetId, courseId });
 
       // Assert
-      expect(mockAssetStorage.assetExists).toHaveBeenCalledWith(expect.stringContaining('page_0001.png'));
+      expect(mockAssetStorage.getTempImageSize).toHaveBeenCalledWith(expect.stringContaining('page_0001.png'));
       expect(mockPage.evaluate).not.toHaveBeenCalledWith(expect.any(Function), expect.stringContaining('.jpg'));
       expect(mockAssetStorage.buildPDFFromImages).toHaveBeenCalledWith(tempDir, outputPath);
       expect(mockAssetRepo.updateAssetCompletion).toHaveBeenCalledWith(
@@ -483,12 +485,14 @@ describe('DownloadGuides Use Case', () => {
 
       mockAssetStorage.assetExists.mockImplementation((path: string) => {
         if (path === outputPath) return Promise.resolve(false);
-        if (path.includes('page_0001')) return Promise.resolve(true); // Page 1 exists
-        if (path.includes('page_0002')) return Promise.resolve(false); // Page 2 missing
         return Promise.resolve(false);
       });
 
-      mockAssetStorage.getTempImageSize.mockResolvedValue(1000);
+      mockAssetStorage.getTempImageSize.mockImplementation((path: string) => {
+        if (path.includes('page_0001')) return Promise.resolve(1000); // Page 1 exists
+        if (path.includes('page_0002')) return Promise.resolve(0); // Page 2 missing
+        return Promise.resolve(0);
+      });
 
       const mockPage = {
         goto: vi.fn().mockResolvedValue(undefined),

@@ -15,7 +15,6 @@ export class NodeFileSystem implements IFileSystem {
   async exists(p: string): Promise<boolean> {
     try {
       await fs.promises.access(p);
-      this.logger.debug?.(`exists check for ${p}: true`);
       return true;
     } catch {
       this.logger.debug?.(`exists check for ${p}: false`);

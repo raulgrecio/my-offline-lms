@@ -110,7 +110,7 @@ describe("NodeFileSystem", () => {
       expect(await nfs.exists("/tmp/nonexistent")).toBe(false);
     });
 
-    it("should call logger debug if provided", async () => {
+    it("should NOT call logger debug on success but SHOULD call on failure for exists", async () => {
       const mockLogger = {
         debug: vi.fn(),
         info: vi.fn(),
@@ -120,8 +120,16 @@ describe("NodeFileSystem", () => {
       } as any;
 
       const nfs = new NodeFileSystem(mockLogger);
-      await nfs.exists("test-file");
-      expect(mockLogger.debug).toHaveBeenCalled();
+      
+      // Success case
+      vi.mocked(fs.promises.access).mockResolvedValue(undefined);
+      await nfs.exists("test-file-success");
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+
+      // Failure case
+      vi.mocked(fs.promises.access).mockRejectedValue(new Error("ENOENT"));
+      await nfs.exists("test-file-fail");
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining("false"));
     });
 
     it("should return null from createReadStream/createWriteStream if toWeb is missing", () => {

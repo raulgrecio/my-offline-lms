@@ -41,8 +41,25 @@ export class BrowserProvider implements IBrowserProvider {
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
   async getHeadfulContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<BrowserContext> {
+    const { context } = await this._getContext(options, signal);
+    return context;
+  }
+
+  /** Gets an authenticated headless context for background tasks (downloading, scraping) */
+  async getAuthenticatedContext(options: {} = {}, signal?: AbortSignal): Promise<BrowserContext> {
+    const { context, sessionLoaded } = await this._getContext({ headless: true }, signal);
+
+    if (!sessionLoaded) {
+      await this.closeContext(context);
+      throw new Error("No existe sesión guardada o ha sido eliminada. Ejecute el login primero.");
+    }
+
+    return context;
+  }
+
+  private async _getContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<{ context: BrowserContext; sessionLoaded: boolean }> {
     const { headless = false } = options;
-    const type = headless ? 'headless' : 'headful';
+    const type: BrowserType = headless ? 'headless' : 'headful';
 
     if (!this.browsers[type]) {
       this.logger?.info(`Lanzando navegador chromium (headless: ${headless})...`);
@@ -61,7 +78,6 @@ export class BrowserProvider implements IBrowserProvider {
         this.logger?.info(`Canal de comunicación con el navegador (${type}) cerrado.`);
         this.browsers[type] = null;
 
-        // Limpiamos de la memoria solo los contextos huérfanos que pertenecían a este motor
         for (const ctx of this.contexts) {
           try {
             if (ctx.browser() === browserInstance) {
@@ -76,12 +92,11 @@ export class BrowserProvider implements IBrowserProvider {
 
     const currentBrowser = this.browsers[type]!;
 
-    // Always use state if it exists
+    // Perform a single stat() call to check existence and age
     const stats = await this.fs.stat(this.config.authStateFile).catch(() => null);
+    const exists = stats !== null;
 
     if (stats) {
-      // stats.mtime might not be present in all IFileSystem implementations if not standardized, 
-      // but NodeFileSystem has it. For now we assume if it exists we check age if possible.
       // @ts-ignore
       const mtime = stats.mtime || new Date();
       const hoursOld = (Date.now() - mtime.getTime()) / (1000 * 60 * 60);
@@ -90,7 +105,6 @@ export class BrowserProvider implements IBrowserProvider {
       }
     }
 
-    const exists = stats !== null;
     const contextOptions = exists
       ? { storageState: this.config.authStateFile }
       : {};
@@ -98,8 +112,6 @@ export class BrowserProvider implements IBrowserProvider {
     const context = await currentBrowser.newContext(contextOptions);
     this.contexts.add(context);
 
-    // [REACTIVE CANCELLATION] If an AbortSignal is provided, close the context immediately on abort.
-    // This force-cancels any pending Playwright operations (goto, waitFor, etc.)
     if (signal) {
       if (signal.aborted) {
         this.closeContext(context).catch(() => { });
@@ -111,16 +123,7 @@ export class BrowserProvider implements IBrowserProvider {
       }
     }
 
-    return context;
-  }
-
-  /** Gets an authenticated headless context for background tasks (downloading, scraping) */
-  async getAuthenticatedContext(options: {} = {}, signal?: AbortSignal): Promise<BrowserContext> {
-    const exists = await this.fs.exists(this.config.authStateFile);
-    if (!exists) {
-      throw new Error("No existe sesion guardada. Ejecute el login primero.");
-    }
-    return this.getHeadfulContext({ headless: true }, signal); // force headless for background ops
+    return { context, sessionLoaded: exists };
   }
 
   async closeContext(context: BrowserContext): Promise<void> {

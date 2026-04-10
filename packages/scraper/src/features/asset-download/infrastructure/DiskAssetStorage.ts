@@ -64,7 +64,7 @@ export class DiskAssetStorage implements IAssetStorage {
 
   async assetExists(filePath: string): Promise<boolean> {
     await this.ensureInitialized();
-    if (await this.fs.exists(filePath)) return true;
+    // resolveExistingPath returns the path if it exists (either directly or via search paths)
     return (await this.resolver!.resolveExistingPath(filePath)) !== null;
   }
 
@@ -87,8 +87,12 @@ export class DiskAssetStorage implements IAssetStorage {
   }
 
   async getTempImageSize(imagePath: string): Promise<number> {
-    if (!(await this.fs.exists(imagePath))) return 0;
-    return (await this.fs.stat(imagePath)).size;
+    try {
+      const stats = await this.fs.stat(imagePath);
+      return stats.size;
+    } catch {
+      return 0;
+    }
   }
 
   async buildPDFFromImages(sourceDir: string, outputPath: string, options: PDFOptions = { optimize: false, quality: 80 }): Promise<void> {
