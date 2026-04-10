@@ -75,6 +75,14 @@ describe('config/paths', () => {
   it('should return correct logs dir and file', async () => {
     const { getLogsDir, getLogsFile } = await import('@scraper/config/paths');
     expect(await getLogsDir()).toBe('/mock/monorepo/logs');
-    expect(await getLogsFile()).toBe('/mock/monorepo/logs/scraper.log');
+
+    // Correctly mock the system clock
+    const fixedTimestamp = new Date('2026-04-10T13:00:52.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(fixedTimestamp);
+
+    expect(await getLogsFile()).toBe('/mock/monorepo/logs/2026-04-10/scraper_13-00-52.log');
+
+    vi.useRealTimers();
   });
 });
