@@ -36,6 +36,19 @@ describe("createLazyService", () => {
     expect(factory).toHaveBeenCalledTimes(2);
   });
 
+  it("should allow retrying if initialization throws synchronously", async () => {
+    const factory = vi.fn().mockImplementation(() => {
+      throw new Error("Sync error");
+    });
+
+    const getService = createLazyService(factory);
+
+    await expect(getService()).rejects.toThrow("Sync error");
+    factory.mockImplementation(() => Promise.resolve("success"));
+    
+    expect(await getService()).toBe("success");
+  });
+
   it("should return the same promise for concurrent calls during initialization", async () => {
     let resolveFactory: (value: string) => void;
     const factoryPromise = new Promise<string>((resolve) => {

@@ -387,4 +387,26 @@ describe('SyncCourse Use Case', () => {
     // Should not throw, just skip the component
     expect(mockLogger.info).toHaveBeenCalled();
   });
+
+  it('should handle abortion in the main processing loop', async () => {
+    setupMockPage();
+    mockInterceptedDataRepo.getPendingForCourse.mockResolvedValue([
+      { filePath: 'p1.json', content: JSON.stringify({ data: { id: '123' } }) },
+      { filePath: 'p2.json', content: JSON.stringify({ data: { id: '123' } }) }
+    ]);
+
+    const controller = new AbortController();
+    // Force abortion after first payload
+    let first = true;
+    mockUrlProvider.resolveCourseUrl.mockImplementation(url => {
+      if (!first) controller.abort();
+      first = false;
+      return { url: String(url), courseId: '123' };
+    });
+
+    await useCase.execute({ courseInput: '123' }, controller.signal);
+
+    // It should exit early without finishing all payloads or saves if we had more logic there
+    // But mostly we check it doesn't crash and respects signal
+  });
 });

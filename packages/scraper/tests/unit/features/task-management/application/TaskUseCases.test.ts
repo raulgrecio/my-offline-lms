@@ -140,6 +140,22 @@ describe('Task Management Use Cases', () => {
       expect(repo.update).toHaveBeenCalledWith(task.id, { status: 'RUNNING', progress: task.progress });
     });
 
+    it('should transition a task without progress to RUNNING', async () => {
+      const repo = mockRepo();
+      const useCase = new StartTask(repo);
+      const task = ScraperTask.create({ id: 'task-no-progress', type: 'course', action: 'SYNC_COURSE', url: 'https://test.com' });
+      // Reset progress to null manually if ScraperTask.create sets it
+      (task as any).progress = null;
+      (repo.findById as any).mockResolvedValue(task);
+
+      await useCase.execute({ id: 'task-no-progress' });
+
+      expect(repo.update).toHaveBeenCalledWith('task-no-progress', { 
+        status: 'RUNNING', 
+        progress: { step: 'Iniciando proceso...' } 
+      });
+    });
+
     it('should throw error if task not found', async () => {
       const repo = mockRepo();
       const useCase = new StartTask(repo);

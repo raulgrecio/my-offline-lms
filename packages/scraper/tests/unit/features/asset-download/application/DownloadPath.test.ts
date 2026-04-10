@@ -81,4 +81,18 @@ describe('DownloadPath Use Case', () => {
     expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
+
+  it('should handle abortion signal', async () => {
+    mockLearningPathRepo.getCoursesForPath.mockReturnValue([{ id: 'c1', title: 'T1', orderIndex: 1 }]);
+    const controller = new AbortController();
+
+    // Abort during first course download
+    mockDownloadGuides.execute.mockImplementation(() => {
+      controller.abort();
+    });
+
+    await useCase.execute({ pathInput: 'p1', type: 'all' }, controller.signal);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('CANCELADA'));
+  });
 });

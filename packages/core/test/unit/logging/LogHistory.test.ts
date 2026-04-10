@@ -52,4 +52,13 @@ describe("LogHistory", () => {
     history.clear();
     expect(history.getEntries()).toHaveLength(0);
   });
+
+  it("should support adding external events", () => {
+    history.addExternal(createEvent("info", "external msg"));
+    expect(history.getEntries()).toHaveLength(1);
+    expect(history.getEntries()[0].payload.message).toBe("external msg");
+
+    history.addExternal(createEvent("debug", "external debug"));
+    expect(history.getEntries()).toHaveLength(1); // Still 1
+  });
 });

@@ -73,6 +73,10 @@ class TaskBrokerFacade {
       }
     });
   }
+
+  reset() {
+    this.subscribers.clear();
+  }
 }
 
 export const TaskBroker = new TaskBrokerFacade();

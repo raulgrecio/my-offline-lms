@@ -19,6 +19,7 @@ describe('DiskAuthSessionStorage', () => {
     exists: vi.fn().mockResolvedValue(true),
     mkdir: vi.fn().mockResolvedValue(undefined),
     writeFile: vi.fn().mockResolvedValue(undefined),
+    readFile: vi.fn().mockResolvedValue(Buffer.from('{}')),
   } as any;
   const mockPath = {
     join: vi.fn((...args) => args.join('/')),
@@ -113,4 +114,59 @@ describe('DiskAuthSessionStorage', () => {
     expect(content).toContain('a.com\tFALSE\t/\tTRUE\t0\tn\tv');
   });
 
+  describe('getCookies', () => {
+    it('should return empty array if file does not exist', async () => {
+      const storage = new DiskAuthSessionStorage({ 
+        fs: mockFs, 
+        path: mockPath, 
+        getAuthDir: async () => '/dir' 
+      });
+      mockFs.exists.mockResolvedValue(false);
+      const cookies = await storage.getCookies();
+      expect(cookies).toEqual([]);
+    });
+
+    it('should return cookies from valid state file', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue(JSON.stringify({ cookies: [{ name: 'c1' }] }));
+      
+      const cookies = await storage.getCookies();
+      expect(cookies).toEqual([{ name: 'c1' }]);
+    });
+
+    it('should return empty array if JSON is malformed', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue('invalid-json');
+      
+      const cookies = await storage.getCookies();
+      expect(cookies).toEqual([]);
+    });
+  });
+
+  describe('saveCookies with existing state', () => {
+    it('should merge with existing localStorage origins if present', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+      mockFs.exists.mockResolvedValue(true);
+      mockFs.readFile.mockResolvedValue(JSON.stringify({ cookies: [], origins: [{ origin: 'o1' }] }));
+      
+      await storage.saveCookies([{ name: 'new', domain: 'example.com', path: '/', secure: true }]);
+      
+      const writeCall = vi.mocked(mockFs.writeFile).mock.calls.find((c: string[]) => c[0].endsWith('state.json'));
+      const state = JSON.parse(writeCall![1]);
+      expect(state.origins).toEqual([{ origin: 'o1' }]);
+      expect(state.cookies).toEqual([{ name: 'new', domain: 'example.com', path: '/', secure: true }]);
+    });
+
+    it('should handle malformed existing state file during save', async () => {
+       const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+       mockFs.exists.mockResolvedValue(true);
+       mockFs.readFile.mockResolvedValue('invalid-json');
+       
+       await storage.saveCookies([]);
+       // Should still succeed and write a fresh state
+       expect(mockFs.writeFile).toHaveBeenCalled();
+    });
+  });
 });

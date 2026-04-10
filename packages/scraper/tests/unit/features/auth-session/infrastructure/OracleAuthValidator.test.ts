@@ -83,5 +83,48 @@ describe('OracleAuthValidator', () => {
 
       expect(validator.getExpiry(cookies)).toBe(future);
     });
+
+    it('should ignore JWT expiry if it is in the past', () => {
+      const now = Math.round(Date.now() / 1000);
+      const past = now - 1000;
+      const payload = Buffer.from(JSON.stringify({ exp: past })).toString('base64');
+      const token = `header.${payload}.signature`;
+
+      const cookies = [
+        { name: 'authToken', value: token, expires: now + 2000 },
+        { name: 'ora_session', expires: now + 3000 }
+      ];
+
+      expect(validator.getExpiry(cookies)).toBe(now + 2000);
+    });
+  });
+
+  describe('JWT edge cases', () => {
+    it('should handle malformed JWT tokens gracefully', () => {
+      const cookies = [{ name: 'authToken', value: 'not-a-jwt' }];
+      expect(validator.isValid(cookies)).toBe(false); // splitted length check
+      expect(validator.getExpiry(cookies)).toBeNull();
+    });
+
+    it('should handle invalid base64 in JWT', () => {
+      const cookies = [{ name: 'authToken', value: 'header.!!!.signature' }];
+      expect(validator.isValid(cookies)).toBe(false); // parse JSON fail
+    });
+
+    it('should check if JWT is expired using isJwtExpired (private but used in logic indirectly)', () => {
+      const now = Math.round(Date.now() / 1000);
+      const past = now - 1000;
+      const payload = Buffer.from(JSON.stringify({ exp: past })).toString('base64');
+      const token = `header.${payload}.signature`;
+
+      // We can't call private method directly easily without casting to any
+      const isExpired = (validator as any).isJwtExpired(token);
+      expect(isExpired).toBe(true);
+
+      const futureToken = `header.${Buffer.from(JSON.stringify({ exp: now + 1000 })).toString('base64')}.signature`;
+      expect((validator as any).isJwtExpired(futureToken)).toBe(false);
+      
+      expect((validator as any).isJwtExpired('invalid')).toBe(false);
+    });
   });
 });

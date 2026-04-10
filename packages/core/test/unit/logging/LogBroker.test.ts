@@ -6,6 +6,7 @@ import type { LogEvent } from "@core/logging/LogEvent";
 describe("LogBroker Facade", () => {
   beforeEach(() => {
     LogBroker.clear();
+    LogBroker.clearTransports();
     vi.clearAllMocks();
   });
 
@@ -74,6 +75,39 @@ describe("LogBroker Facade", () => {
     LogBroker.addTransport(mockLogger); // Should not throw
     LogBroker.emit("info", "no options test");
     expect(mockLogger.info).toHaveBeenCalledWith("no options test");
+  });
+
+  it("should handle remote messages from BroadcastChannel", () => {
+    const subscribeMock = vi.fn();
+    LogBroker.subscribe(subscribeMock);
+
+    // Get the global BroadcastChannel mock (or create one if needed)
+    // In Vitest, we can mock it
+    const channel = (LogBroker as any).channel;
+    if (channel && channel.onmessage) {
+      const remoteEvent: LogEvent = {
+        type: "LOG_EMITTED",
+        payload: { level: "info", message: "Remote Message" },
+        metadata: { id: "rem-1", timestamp: new Date().toISOString() }
+      };
+      
+      channel.onmessage({ data: remoteEvent } as MessageEvent);
+      
+      expect(subscribeMock).toHaveBeenCalled();
+      const call = subscribeMock.mock.calls.find(c => c[0].payload?.message === "Remote Message");
+      expect(call).toBeDefined();
+      expect(call![0].metadata.isRemote).toBe(true);
+    }
+  });
+
+  it("should clear transports", () => {
+    LogBroker.addTransport(mockLogger);
+    LogBroker.emit("info", "Visible");
+    expect(mockLogger.info).toHaveBeenCalledWith("Visible");
+
+    LogBroker.clearTransports();
+    LogBroker.emit("info", "Hidden");
+    expect(mockLogger.info).toHaveBeenCalledTimes(1);
   });
 });
 

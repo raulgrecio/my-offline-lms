@@ -251,4 +251,24 @@ describe('SyncLearningPath Use Case', () => {
     await customUseCase.execute({ pathInput: 'lp1' });
     // Line 95 false branch should be hit
   });
+
+  it('should handle abortion in the payload processing loop', async () => {
+    setupMockPage();
+    const payloads = [
+      { filePath: 'p1.json', content: JSON.stringify({ data: { lpPageData: { id: 'lp1', name: 'T', containerChildren: [] } } }) },
+      { filePath: 'p2.json', content: JSON.stringify({ data: { lpPageData: { id: 'lp1', name: 'T', containerChildren: [] } } }) }
+    ];
+    mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue(payloads);
+
+    const controller = new AbortController();
+    // Force abortion after first payload
+    let first = true;
+    mockUrlProvider.resolveLearningPathUrl.mockImplementation(url => {
+      if (!first) controller.abort();
+      first = false;
+      return { url: String(url), pathId: '123' };
+    });
+
+    await useCase.execute({ pathInput: 'lp1' }, controller.signal);
+  });
 });

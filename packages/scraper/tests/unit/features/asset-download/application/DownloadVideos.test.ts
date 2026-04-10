@@ -346,4 +346,24 @@ describe('DownloadVideos Use Case', () => {
     await useCase.downloadSingleVideo('v1', '123');
     expect(mockPage.locator).not.toHaveBeenCalled();
   });
+
+  it('should handle abortion in the main videos loop', async () => {
+    const mockAsset = { id: 'v1', url: 'http://v1/v1', type: 'video', metadata: { title: "V1" }, courseId: '123' };
+    mockAssetRepo.getPendingAssets.mockReturnValue([mockAsset, { ...mockAsset, id: 'v2', url: 'http://v2/v2' }]);
+    mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
+    mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+
+    const controller = new AbortController();
+    
+    // Trigger abortion when verifying integrity of first video
+    mockAssetStorage.verifyVideoIntegrity.mockImplementation(() => {
+      controller.abort();
+      return true; // Already exists
+    });
+
+    await useCase.execute({ courseId: '123' }, controller.signal);
+
+    // Should only call verifyVideoIntegrity once (the trigger)
+    expect(mockAssetStorage.verifyVideoIntegrity).toHaveBeenCalledTimes(1);
+  });
 });

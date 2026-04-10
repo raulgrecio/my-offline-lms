@@ -99,4 +99,25 @@ describe("LogRouter", () => {
 
     expect(mockLogger.withContext).toHaveBeenCalledWith("MyService");
   });
+
+  it("should ignore remote events to prevent duplication", () => {
+    router.addTransport(mockLogger);
+    const remoteEvent: LogEvent = {
+      ...createEvent("info", "remote msg"),
+      metadata: { ...createEvent("info", "remote msg").metadata, isRemote: true }
+    };
+
+    bus.emit(remoteEvent);
+    expect(mockLogger.info).not.toHaveBeenCalled();
+  });
+
+  it("should clear transports", () => {
+    router.addTransport(mockLogger);
+    bus.emit(createEvent("info", "Visible"));
+    expect(mockLogger.info).toHaveBeenCalledWith("Visible");
+
+    router.clearTransports();
+    bus.emit(createEvent("info", "Hidden"));
+    expect(mockLogger.info).toHaveBeenCalledTimes(1);
+  });
 });

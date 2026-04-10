@@ -634,13 +634,13 @@ describe('DownloadGuides Use Case', () => {
       mockAssetRepo.getAssetById.mockReturnValue(asset);
       mockAssetStorage.findExistingAsset.mockResolvedValue(null); // File not found
       mockAssetStorage.assetExists.mockResolvedValue(false);
-      
+
       const mockPage = {
         goto: vi.fn().mockResolvedValue(undefined),
         waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://src') }),
         evaluate: vi.fn().mockResolvedValue(0), // Fail later but passes the branch 126
         close: vi.fn(),
-    closeContext: vi.fn(),
+        closeContext: vi.fn(),
       };
       const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
       mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
@@ -693,6 +693,48 @@ describe('DownloadGuides Use Case', () => {
 
       await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1', sharedContext: mockContext });
       expect(mockAssetRepo.updateAssetStatus).toHaveBeenCalledWith('g1', 'FAILED');
+    });
+
+    it('should handle abortion in the main guides loop', async () => {
+      mockAssetRepo.getPendingAssets.mockReturnValue([
+        { id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' }, courseId: 'c1' },
+        { id: 'g2', type: 'guide', metadata: { ekitId: 'e2', offeringId: 'off2' }, courseId: 'c1' }
+      ]);
+      mockBrowserProvider.getAuthenticatedContext.mockResolvedValue({
+        close: vi.fn(), closeContext: vi.fn(), newPage: vi.fn()
+      });
+
+      const controller = new AbortController();
+      // Abort after first guide (mocking downloadSingleGuide to handle the second one)
+      vi.spyOn(useCase, 'downloadSingleGuide').mockImplementation(async () => {
+        controller.abort();
+      });
+
+      await useCase.execute({ courseId: 'c1' }, controller.signal);
+
+      expect(useCase.downloadSingleGuide).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle abortion in the page download loop', async () => {
+      const mockPage = {
+        goto: vi.fn().mockResolvedValue(undefined),
+        waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://src') }),
+        evaluate: vi.fn().mockResolvedValue(10), // 10 pages
+        close: vi.fn(),
+      };
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), close: vi.fn() };
+      mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
+      mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
+
+      const controller = new AbortController();
+      mockPage.goto.mockImplementation(async () => {
+        controller.abort();
+      });
+
+      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1', signal: controller.signal });
+
+      // Should exit before the page download loop, but after initial navigations
+      expect(mockPage.goto).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -75,4 +75,14 @@ describe('DownloadCourse Use Case', () => {
     expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
+
+  it('should handle abortion signal', async () => {
+    mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
+    const controller = new AbortController();
+    controller.abort();
+
+    await useCase.execute({ courseInput: 'c1', type: 'all' }, controller.signal);
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('CANCELADA'));
+  });
 });
