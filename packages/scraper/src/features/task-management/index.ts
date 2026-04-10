@@ -1,6 +1,7 @@
 export * from './domain/models/ScraperTask';
 export * from './domain/ports/ITaskRepository';
 export * from './infrastructure/SQLiteTaskRepository';
+export * from './application/AbortContext';
 export * from './application/CreateTask';
 export * from './application/UpdateTask';
 export * from './application/GetActiveTask';

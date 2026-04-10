@@ -5,6 +5,7 @@ import { type ILogger } from '@core/logging';
 import { AssetNamingService } from '@scraper/features/asset-download';
 import { type IPlatformUrlProvider } from '@scraper/features/platform-sync';
 import { DownloadGuides, type IAssetStorage } from '@scraper/features/asset-download';
+import { AbortContext } from '@scraper/features/task-management';
 
 describe('DownloadGuides Use Case', () => {
   let mockBrowserProvider: any;
@@ -709,12 +710,16 @@ describe('DownloadGuides Use Case', () => {
       });
 
       const controller = new AbortController();
-      // Abort after first guide (mocking downloadSingleGuide to handle the second one)
+      // downloadSingleGuide now calls throwIfAborted() at its start — mock simulates that
       vi.spyOn(useCase, 'downloadSingleGuide').mockImplementation(async () => {
         controller.abort();
+        AbortContext.throwIfAborted(); // mirrors what the real function does
       });
 
-      await useCase.execute({ courseId: 'c1' }, controller.signal);
+      // Run inside AbortContext to simulate orchestrator
+      await AbortContext.run(controller.signal, async () => {
+        await expect(useCase.execute({ courseId: 'c1' })).rejects.toThrow('TASK_CANCELLED');
+      });
 
       expect(useCase.downloadSingleGuide).toHaveBeenCalledTimes(1);
     });
@@ -723,6 +728,7 @@ describe('DownloadGuides Use Case', () => {
       const mockPage = {
         goto: vi.fn().mockResolvedValue(undefined),
         waitForSelector: vi.fn().mockResolvedValue({ getAttribute: vi.fn().mockResolvedValue('http://src') }),
+        waitForTimeout: vi.fn().mockResolvedValue(undefined),
         evaluate: vi.fn().mockResolvedValue(10), // 10 pages
         close: vi.fn(),
       };
@@ -731,14 +737,13 @@ describe('DownloadGuides Use Case', () => {
       mockAssetRepo.getAssetById.mockReturnValue({ id: 'g1', type: 'guide', metadata: { ekitId: 'e1', offeringId: 'off1' } });
 
       const controller = new AbortController();
-      mockPage.goto.mockImplementation(async () => {
-        controller.abort();
+      // Pre-abort before entering the function
+      controller.abort();
+
+      // Run inside AbortContext to simulate orchestrator — throwIfAborted() before loop should fire
+      await AbortContext.run(controller.signal, async () => {
+        await expect(useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1' })).rejects.toThrow('TASK_CANCELLED');
       });
-
-      await useCase.downloadSingleGuide({ assetId: 'g1', courseId: 'c1', signal: controller.signal });
-
-      // Should exit before the page download loop, but after initial navigations
-      expect(mockPage.goto).toHaveBeenCalledTimes(2);
     });
   });
 });

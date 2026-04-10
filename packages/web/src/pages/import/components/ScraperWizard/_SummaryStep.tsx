@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 
 import { Icon } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
@@ -14,7 +14,7 @@ interface SummaryStepProps {
   executionResult: { success: boolean; message: string } | null;
   selectedItem: any;
   newUrl: string;
-  contentType: ScraperTaskCategory;
+  contentType: ScraperTaskCategoryType;
   downloadOptions: { videos: boolean; guides: boolean };
   startScraping: () => Promise<void>;
 }

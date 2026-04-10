@@ -1,15 +1,15 @@
 import React from 'react';
-import { ScraperTaskStatus, ScraperTaskCategory, ScraperTaskAction } from '@scraper/features/task-management';
+import { type ScraperTaskStatusType, type ScraperTaskCategoryType, type ScraperTaskActionType } from '@scraper/features/task-management/domain/models/ScraperTask';
 import { Icon, type IconName } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
 
 export interface ScraperTask {
   id: string;
-  category: ScraperTaskCategory;
-  action: ScraperTaskAction;
+  category: ScraperTaskCategoryType;
+  action: ScraperTaskActionType;
   url: string;
   targetId: string | null;
-  status: ScraperTaskStatus;
+  status: ScraperTaskStatusType;
   progress: { step: string; status?: string; percent?: number } | null;
   metadata: any;
   error: string | null;
@@ -24,7 +24,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
 }
 
-const STATUS_CONFIG: Record<ScraperTaskStatus, { icon: IconName; color: string; getLabel: (task: ScraperTask) => string; cardStyle: string }> = {
+const STATUS_CONFIG: Record<ScraperTaskStatusType, { icon: IconName; color: string; getLabel: (task: ScraperTask) => string; cardStyle: string }> = {
   RUNNING: {
     icon: 'loader',
     color: 'bg-brand-600 text-white animate-pulse',
@@ -71,7 +71,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
   };
 
   return (
-    <div className={`group flex flex-col p-1 rounded-3xl border transition-all duration-500 ${config.cardStyle}`}>
+    <div className={`relative overflow-hidden group flex flex-col p-1 rounded-3xl border transition-all duration-500 ${config.cardStyle}`}>
       <div className="flex items-center gap-5 p-5">
         {/* State Icon */}
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110 ${config.color}`}>
@@ -137,16 +137,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
         </div>
       </div>
 
-      {/* Progress Bar (Full Width at bottom if running) */}
-      {task.status === 'RUNNING' && (
-        <div className="h-1 w-full bg-surface-800 rounded-b-3xl overflow-hidden">
-          <div
-            className="h-full bg-brand-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--brand-500-rgb),0.5)]"
-            style={{ width: `${task.progress?.percent || 0}%` }}
-          />
-        </div>
-      )}
-
       {/* CLI Hint on hover */}
       <div className="max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-500 ease-in-out">
         <div className="px-5 pb-4 pt-1 border-t border-border-subtle/30 mt-1">
@@ -154,11 +144,21 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onStart, onStop, onDel
             <Icon name="terminal" size="xs" className="text-text-muted opacity-40" />
             <span className="text-2xs font-bold text-text-muted uppercase tracking-widest opacity-40">CLI Equivalent</span>
           </div>
-          <div className="p-3 rounded-xl bg-black/20 border border-white/5 font-mono text-2xs text-text-muted whitespace-nowrap overflow-x-auto">
+          <div className="p-3 rounded-xl bg-black/20 border border-white/5 font-mono text-2xs text-text-muted whitespace-nowrap overflow-x-auto custom-scrollbar">
             {getCliCommand(task)}
           </div>
         </div>
       </div>
+
+      {/* Progress Bar (Full Width strictly absolute at bottom if running) */}
+      {task.status === 'RUNNING' && (
+        <div className="absolute bottom-0 left-0 w-full h-[3px] bg-surface-800 z-10">
+          <div
+            className="h-full bg-brand-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(var(--brand-500-rgb),0.5)]"
+            style={{ width: `${task.progress?.percent || 0}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 };

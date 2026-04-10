@@ -3,10 +3,10 @@ import { Icon } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
 import { WizardActionButtons } from '@web/components/Wizard/WizardActionButtons';
 import { THEMES } from '../_category-themes';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 
 interface AssetSelectionStepProps {
-  contentType: ScraperTaskCategory;
+  contentType: ScraperTaskCategoryType;
   downloadOptions: { videos: boolean; guides: boolean };
   onToggleVideo: () => void;
   onToggleGuide: () => void;

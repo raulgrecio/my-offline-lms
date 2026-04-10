@@ -6,7 +6,8 @@ import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
 import { SelectionStep } from '@web/pages/import/components/ScraperWizard/_SelectionStep';
 import { AssetSelectionStep } from '@web/pages/import/components/ScraperWizard/_AssetSelectionStep';
 import { SummaryStep } from '@web/pages/import/components/ScraperWizard/_SummaryStep';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
+import type { ContentItem } from '@web/pages/import/components/_ContentItemCard';
 
 const stepsConfig: WizardStepConfig[] = [
   { id: 'selection', label: 'Origen', icon: 'layers' },
@@ -14,7 +15,7 @@ const stepsConfig: WizardStepConfig[] = [
   { id: 'summary', label: 'Resumen', icon: 'check-circle' }
 ];
 
-const mockAvailableContent = {
+const mockAvailableContent: { courses: ContentItem[], paths: ContentItem[] } = {
   courses: [
     {
       id: 'c1',
@@ -98,7 +99,7 @@ export const ImportShowcase: React.FC = () => {
   // State
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<ScraperTaskCategory>(ScraperTaskCategory.COURSE);
+  const [contentType, setContentType] = useState<ScraperTaskCategoryType>(ScraperTaskCategory.COURSE);
   const [downloadOptions, setDownloadOptions] = useState({ videos: true, guides: true });
   const [executionResult, setExecutionResult] = useState<any>(
     scene === 'summary_complete' ? { success: true, message: 'Tarea registrada correctamente. Ya puedes iniciarla desde tu panel de tareas.' } : null

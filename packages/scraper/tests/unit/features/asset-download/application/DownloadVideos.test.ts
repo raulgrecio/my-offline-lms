@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type ILogger } from '@core/logging';
 
 import { AssetNamingService, DownloadVideos } from '@scraper/features/asset-download';
+import { AbortContext } from '@scraper/features/task-management';
 
 describe('DownloadVideos Use Case', () => {
   let callCount = 0;
@@ -354,14 +355,17 @@ describe('DownloadVideos Use Case', () => {
     mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
 
     const controller = new AbortController();
-    
-    // Trigger abortion when verifying integrity of first video
+
+    // Abort when first video is processed
     mockAssetStorage.verifyVideoIntegrity.mockImplementation(() => {
       controller.abort();
       return true; // Already exists
     });
 
-    await useCase.execute({ courseId: '123' }, controller.signal);
+    // Run inside AbortContext to simulate orchestrator
+    await AbortContext.run(controller.signal, async () => {
+      await expect(useCase.execute({ courseId: '123' })).rejects.toThrow('TASK_CANCELLED');
+    });
 
     // Should only call verifyVideoIntegrity once (the trigger)
     expect(mockAssetStorage.verifyVideoIntegrity).toHaveBeenCalledTimes(1);

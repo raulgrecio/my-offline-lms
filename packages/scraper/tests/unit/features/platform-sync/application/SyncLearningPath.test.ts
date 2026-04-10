@@ -13,6 +13,7 @@ import {
 } from '@scraper/features/platform-sync';
 
 import { AssetNamingService } from '@scraper/features/asset-download';
+import { AbortContext } from '@scraper/features/task-management';
 
 import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
 
@@ -234,7 +235,7 @@ describe('SyncLearningPath Use Case', () => {
     };
     mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue([payload]);
     await useCase.execute({ pathInput: 'lp1' });
-    expect(mockSyncCourseUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ offeringId: undefined }), undefined);
+    expect(mockSyncCourseUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ offeringId: undefined }));
   });
 
   it('should handle keepTempWorkspaces: true with null isolatedDirPath', async () => {
@@ -261,14 +262,11 @@ describe('SyncLearningPath Use Case', () => {
     mockInterceptedDataRepo.getPendingForLearningPath.mockResolvedValue(payloads);
 
     const controller = new AbortController();
-    // Force abortion after first payload
-    let first = true;
-    mockUrlProvider.resolveLearningPathUrl.mockImplementation(url => {
-      if (!first) controller.abort();
-      first = false;
-      return { url: String(url), pathId: '123' };
-    });
+    controller.abort();
 
-    await useCase.execute({ pathInput: 'lp1' }, controller.signal);
+    // Run inside AbortContext to simulate orchestrator
+    await AbortContext.run(controller.signal, async () => {
+      await expect(useCase.execute({ pathInput: 'lp1' })).rejects.toThrow('TASK_CANCELLED');
+    });
   });
 });

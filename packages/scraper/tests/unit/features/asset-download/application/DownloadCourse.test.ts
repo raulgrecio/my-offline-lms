@@ -3,6 +3,7 @@ import { type ILogger } from '@core/logging';
 
 import { DownloadCourse } from '@scraper/features/asset-download';
 import { AssetNamingService } from '@scraper/features/asset-download';
+import { AbortContext } from '@scraper/features/task-management';
 
 describe('DownloadCourse Use Case', () => {
   const mockCourseRepo = {
@@ -54,8 +55,8 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'course1', type: 'all' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }));
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }));
   });
 
   it('should only call guides download when type is guide', async () => {
@@ -63,7 +64,7 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'c1', type: 'guide' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }));
     expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
@@ -72,17 +73,18 @@ describe('DownloadCourse Use Case', () => {
 
     await useCase.execute({ courseInput: 'c1', type: 'video' });
 
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }));
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
 
-  it('should handle abortion signal', async () => {
+  it('should stop when AbortContext is aborted', async () => {
     mockCourseRepo.getCourseById.mockReturnValue({ id: 'c1', title: 'T1' });
     const controller = new AbortController();
     controller.abort();
 
-    await useCase.execute({ courseInput: 'c1', type: 'all' }, controller.signal);
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('CANCELADA'));
+    // Run inside an AbortContext to simulate what the orchestrator does
+    await AbortContext.run(controller.signal, async () => {
+      await expect(useCase.execute({ courseInput: 'c1', type: 'all' })).rejects.toThrow('TASK_CANCELLED');
+    });
   });
 });

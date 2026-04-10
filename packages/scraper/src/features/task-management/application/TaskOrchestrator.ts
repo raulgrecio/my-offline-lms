@@ -3,6 +3,7 @@ import { type ILogger } from '@core/logging';
 import { type ValidateAuthSession } from '@scraper/features/auth-session';
 
 import { TaskBroker, CANCEL_TASK_COMMAND } from '../infrastructure/TaskBroker';
+import { AbortContext } from './AbortContext';
 import { UpdateTask } from './UpdateTask';
 import { GetTaskById } from './GetTaskById';
 import { StartTask } from './StartTask';
@@ -41,7 +42,7 @@ export class TaskOrchestrator {
     });
   }
 
-  async run(options: ExecutionOptions, work: (signal?: AbortSignal) => Promise<void>): Promise<void> {
+  async run(options: ExecutionOptions, work: () => Promise<void>): Promise<void> {
     const { taskId, mainStep, successMessage = 'Proceso finalizado con éxito', onCleanup } = options;
 
     // Create abort controller for this execution
@@ -76,8 +77,8 @@ export class TaskOrchestrator {
         });
       }
 
-      // Execute actual work with the signal
-      await work(controller.signal);
+      // Execute actual work — signal is available via AbortContext.getSignal() / AbortContext.throwIfAborted()
+      await AbortContext.run(controller.signal, work);
 
       // Check if it was aborted gracefully inside work()
       if (controller.signal.aborted) {
@@ -134,17 +135,6 @@ export class TaskOrchestrator {
     if (controller) {
       this.logger.info(`Abortando tarea ${taskId} via AbortController...`);
       controller.abort();
-    }
-  }
-
-  /**
-   * Checkpoint for long-running tasks.
-   * Throws TASK_CANCELLED_ERROR if the signal has been aborted.
-   * This is a fast, in-memory check.
-   */
-  checkpoint(signal?: AbortSignal) {
-    if (signal?.aborted) {
-      throw new Error(TASK_CANCELLED_ERROR);
     }
   }
 

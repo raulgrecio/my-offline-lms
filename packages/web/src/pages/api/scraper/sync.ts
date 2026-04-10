@@ -2,12 +2,12 @@ import type { APIRoute } from 'astro';
 
 import { DownloadType } from '@core/domain';
 import { ScraperService } from '@scraper/ScraperService';
-import { ScraperTaskCategory, ScraperTaskAction } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType, ScraperTaskAction } from '@scraper/features/task-management';
 import { logger } from '@web/platform/logging';
 
 interface SyncRequestBody {
   url: string;
-  type: ScraperTaskCategory;
+  type: ScraperTaskCategoryType;
   targetId?: string;
   taskId: string;
   downloadVideos: boolean;

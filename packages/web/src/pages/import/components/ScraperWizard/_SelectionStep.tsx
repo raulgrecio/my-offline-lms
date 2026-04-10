@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 
 import { Icon } from '@web/components/Icon';
 import { useWizard } from '@web/components/Wizard/WizardContext';
@@ -20,8 +20,8 @@ interface SelectionStepProps {
   setSelectedItem: (item: ContentItem | null) => void;
   newUrl: string;
   setNewUrl: (url: string) => void;
-  contentType: ScraperTaskCategory;
-  setContentType: (type: ScraperTaskCategory) => void;
+  contentType: ScraperTaskCategoryType;
+  setContentType: (type: ScraperTaskCategoryType) => void;
 }
 
 const PLACEHOLDERS = {

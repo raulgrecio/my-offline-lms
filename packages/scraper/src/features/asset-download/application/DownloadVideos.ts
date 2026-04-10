@@ -5,6 +5,7 @@ import { type ILogger } from '@core/logging';
 import { type IUseCase } from '@scraper/features/shared';
 import { type ICourseRepository } from "@scraper/features/platform-sync";
 import { type IBrowserProvider } from "@scraper/platform/browser";
+import { AbortContext, TASK_CANCELLED_ERROR } from '@scraper/features/task-management';
 
 import { type IAssetRepository } from "../domain/ports/IAssetRepository";
 import { type IAssetStorage } from "../domain/ports/IAssetStorage";
@@ -57,7 +58,9 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadVideosInput, signal?: AbortSignal): Promise<void> {
+  async execute(input: DownloadVideosInput): Promise<void> {
+    AbortContext.throwIfAborted();
+
     const { courseId } = input;
     this.logger.info(`Iniciando procesamiento de vídeos para el curso: ${courseId}`);
 
@@ -70,15 +73,13 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
     this.logger.info(`⏳ Encontrados ${pendingVideos.length} vídeos pendientes. Comenzando...`);
 
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
-    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
+    const context = await this.browserProvider.getAuthenticatedContext();
 
     try {
       for (let i = 0; i < pendingVideos.length; i++) {
-        if (signal?.aborted) return;
-
+        await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
         this.logger.info(`======================================================`);
         this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
-        await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
         await new Promise(r => setTimeout(r, 5000));
       }
     } finally {
@@ -90,6 +91,8 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
   }
 
   public async downloadSingleVideo(assetId: string, courseId: string, sharedContext?: BrowserContext): Promise<void> {
+    AbortContext.throwIfAborted();
+
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'video') return;
 
@@ -180,7 +183,9 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
         this.assetRepo.updateAssetStatus(assetId, 'FAILED');
       }
 
-    } catch (err) {
+    } catch (err: any) {
+      // Re-lanzar errores de cancelación para que lleguen al orquestador
+      if (err?.message === TASK_CANCELLED_ERROR) throw err;
       this.logger.error(`❌ Error extrayendo vídeo ${assetId}:`, err);
       this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {

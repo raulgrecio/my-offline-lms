@@ -1,4 +1,4 @@
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 
 export interface UITheme {
   primary: string;
@@ -12,7 +12,7 @@ export interface UITheme {
   ring: string;
 }
 
-export const THEMES: Record<ScraperTaskCategory, UITheme> = {
+export const THEMES: Record<ScraperTaskCategoryType, UITheme> = {
   course: {
     primary: 'brand-500',
     activeBg: 'bg-brand-600',

@@ -3,6 +3,7 @@ import { type ILogger } from '@core/logging';
 
 import { type IUseCase } from '@scraper/features/shared';
 import { type ICourseRepository } from "@scraper/features/platform-sync";
+import { AbortContext } from '@scraper/features/task-management';
 
 import { type INamingService } from "../domain/ports/INamingService";
 
@@ -39,7 +40,8 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
     this.logger = options.logger.withContext("DownloadCourse");
   }
 
-  async execute(input: DownloadCourseInput, signal?: AbortSignal): Promise<void> {
+  async execute(input: DownloadCourseInput): Promise<void> {
+    AbortContext.throwIfAborted();
     const { courseInput, type = DownloadType.ALL } = input;
     const courseId = this.namingService.extractIdFromInput(courseInput);
 
@@ -58,18 +60,11 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
 
 
     if (type === 'guide' || type === 'all') {
-      await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId }, signal);
+      await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId });
     }
 
     if (type === 'video' || type === 'all') {
-      await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
-    }
-
-    if (signal?.aborted) {
-      this.logger.warn(`======================================================`);
-      this.logger.warn(`🛑 Descarga del curso ${courseId} CANCELADA.`);
-      this.logger.warn(`======================================================`);
-      return;
+      await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId });
     }
 
     this.logger.info(`======================================================`);

@@ -5,7 +5,7 @@ import { NodeFileSystem } from '@core/filesystem';
 import { ConsoleLogger } from '@core/logging';
 
 import { getDb } from '@scraper/platform/database';
-import { ScraperTask, SQLiteTaskRepository, ScraperTaskCategory, ScraperTaskStatus, ScraperTaskAction } from '@scraper/features/task-management';
+import { ScraperTask, ScraperTaskAction, ScraperTaskCategory, ScraperTaskStatus, SQLiteTaskRepository } from '@scraper/features/task-management';
 
 describe('SQLiteTaskRepository', () => {
   let db: IDatabase;
@@ -227,7 +227,7 @@ describe('SQLiteTaskRepository', () => {
       retries: 3,
       nested: { a: 1 }
     };
-    
+
     const task = ScraperTask.create({
       id: taskId,
       type: ScraperTaskCategory.COURSE,

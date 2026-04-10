@@ -46,8 +46,9 @@ import {
   DeleteTask,
   CleanupInterruptedTasks,
   type CreateTaskInput,
+  type ScraperTaskCategoryType,
   ScraperTaskCategory,
-  ScraperTaskAction,
+  ScraperTaskAction
 } from './features/task-management';
 import { TaskOrchestrator } from './features/task-management';
 import { BrowserProvider, BrowserInterceptor } from './platform/browser';
@@ -399,8 +400,8 @@ export class ScraperService {
     const { courseId } = this.deps.urlProvider.resolveCourseUrl(url);
     await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.COURSE, action: ScraperTaskAction.SYNC_COURSE, url, targetId: courseId });
 
-    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando curso', onCleanup: () => this.cleanup() }, async (signal) => {
-      await syncCourse.execute({ courseInput: url, taskId }, signal);
+    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando curso', onCleanup: () => this.cleanup() }, async () => {
+      await syncCourse.execute({ courseInput: url, taskId });
     });
   }
 
@@ -450,8 +451,8 @@ export class ScraperService {
     const { pathId } = this.deps.urlProvider.resolveLearningPathUrl(url);
     await this.ensureTaskExists({ id: taskId, type: ScraperTaskCategory.PATH, action: ScraperTaskAction.SYNC_PATH, url, targetId: pathId });
 
-    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando ruta de aprendizaje', onCleanup: () => this.cleanup() }, async (signal) => {
-      await syncPath.execute({ pathInput: url, taskId }, signal);
+    await this.orchestrator.run({ taskId, mainStep: 'Sincronizando ruta de aprendizaje', onCleanup: () => this.cleanup() }, async () => {
+      await syncPath.execute({ pathInput: url, taskId });
     });
   }
 
@@ -459,7 +460,7 @@ export class ScraperService {
     download: DownloadType;
     taskId: string;
     entityId: string;
-    entityType: ScraperTaskCategory
+    entityType: ScraperTaskCategoryType
   }) {
     const videoDownloader = new YtDlpVideoDownloader({
       authSessionStorage: this.deps.authSessionStorage,
@@ -537,11 +538,11 @@ export class ScraperService {
     });
     await this.orchestrator.run(
       { taskId, mainStep: 'Descargando recursos...', onCleanup: () => this.cleanup() },
-      async (signal) => {
+      async () => {
         if (entityType === ScraperTaskCategory.PATH) {
-          await downloadPath.execute({ pathInput: entityId, type: download, taskId }, signal);
+          await downloadPath.execute({ pathInput: entityId, type: download, taskId });
         } else {
-          await downloadCourse.execute({ courseInput: entityId, type: download, taskId }, signal);
+          await downloadCourse.execute({ courseInput: entityId, type: download, taskId });
         }
       }
     );

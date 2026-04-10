@@ -1,9 +1,9 @@
 import type { ITaskRepository } from '../domain/ports/ITaskRepository';
-import { type ScraperTaskStatus } from '../domain/models/ScraperTask';
+import { type ScraperTaskStatusType } from '../domain/models/ScraperTask';
 
 export interface UpdateTaskInput {
   id: string;
-  status?: ScraperTaskStatus;
+  status?: ScraperTaskStatusType;
   progress?: any;
   error?: string;
 }

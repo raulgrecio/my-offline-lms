@@ -1,14 +1,14 @@
 import React from 'react';
 import { Icon } from '@web/components/Icon';
 import { Button } from '@web/components/Button';
-import type { ScraperTaskCategory } from '@scraper/features/task-management';
+import type { ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 import type { UITheme } from './_category-themes';
 
 interface ContentTypeFilterProps {
-  contentType: ScraperTaskCategory;
-  setContentType: (type: ScraperTaskCategory) => void;
+  contentType: ScraperTaskCategoryType;
+  setContentType: (type: ScraperTaskCategoryType) => void;
   onTypeChange?: () => void;
-  themes: Record<ScraperTaskCategory, UITheme>;
+  themes: Record<ScraperTaskCategoryType, UITheme>;
 }
 
 export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
@@ -17,7 +17,7 @@ export const ContentTypeFilter: React.FC<ContentTypeFilterProps> = ({
   onTypeChange,
   themes
 }) => {
-  const handleTypeChange = (type: ScraperTaskCategory) => {
+  const handleTypeChange = (type: ScraperTaskCategoryType) => {
     if (type !== contentType) {
       setContentType(type);
       onTypeChange?.();

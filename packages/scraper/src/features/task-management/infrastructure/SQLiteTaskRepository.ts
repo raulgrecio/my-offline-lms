@@ -1,5 +1,5 @@
 import type { IDatabase } from '@core/database/IDatabase';
-import { ScraperTask, type ScraperTaskStatus, type ScraperTaskProgress } from '../domain/models/ScraperTask';
+import { ScraperTask, type ScraperTaskStatusType, type ScraperTaskProgress } from '../domain/models/ScraperTask';
 import type { ITaskRepository } from '../domain/ports/ITaskRepository';
 
 export class SQLiteTaskRepository implements ITaskRepository {
@@ -23,7 +23,7 @@ export class SQLiteTaskRepository implements ITaskRepository {
     );
   }
 
-  async update(id: string, data: Partial<{ status: ScraperTaskStatus, progress: Partial<ScraperTaskProgress>, error: string, metadata: Record<string, any> }>): Promise<void> {
+  async update(id: string, data: Partial<{ status: ScraperTaskStatusType, progress: Partial<ScraperTaskProgress>, error: string, metadata: Record<string, any> }>): Promise<void> {
     const updates: string[] = [];
     const values: any[] = [];
 

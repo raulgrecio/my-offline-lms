@@ -3,6 +3,7 @@ import { type ILogger } from '@core/logging';
 import { BrowserInterceptor, type IBrowserProvider } from "@scraper/platform/browser";
 import { type IUseCase } from '@scraper/features/shared';
 import { type INamingService } from "@scraper/features/asset-download";
+import { AbortContext } from '@scraper/features/task-management';
 
 import { type ICourseRepository } from '../domain/ports/ICourseRepository';
 import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
@@ -58,7 +59,9 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: SyncLearningPathInput, signal?: AbortSignal): Promise<void> {
+  async execute(input: SyncLearningPathInput): Promise<void> {
+    AbortContext.throwIfAborted();
+
     const { pathInput, taskId } = input;
     if (!pathInput) {
       this.logger.error("No se proporcionó pathInput");
@@ -74,7 +77,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.logger.info(`Iniciando mapeo y sincronización de ruta: ${url} (ID: ${pathId})`);
 
     // 1. Extraer datos (Navegador)
-    const context = await this.browserProvider.getAuthenticatedContext({ signal });
+    const context = await this.browserProvider.getAuthenticatedContext();
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
@@ -92,7 +95,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
       await page.close();
 
       // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
-      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }, signal);
+      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId });
 
     } finally {
       await this.browserProvider.closeContext(context);
@@ -110,54 +113,83 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     }
   }
 
-  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator>, taskId?: string }, signal?: AbortSignal): Promise<void> {
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator>, taskId?: string }): Promise<void> {
     const intercepted = await isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
 
     for (const payload of intercepted) {
-      if (signal?.aborted) return;
-      const json = JSON.parse(payload.content);
+      await this.processSinglePayload({ payload, pathId, isolatedInterceptedDataRepo, taskId });
+    }
+  }
 
-      const lpData = json.data?.lpPageData;
-      if (!lpData || !lpData.id || !lpData.containerChildren) continue;
+  private async processSinglePayload(options: {
+    payload: any;
+    pathId: string;
+    isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator>;
+    taskId?: string;
+  }): Promise<void> {
+    AbortContext.throwIfAborted();
 
-      const pathTitle = lpData.name;
-      const pathSlug = this.namingService.slugify(pathTitle);
-      const pathDesc = lpData.description || "";
+    const { payload, pathId, isolatedInterceptedDataRepo, taskId } = options;
 
-      this.logger.info(`🧭 Procesando Learning Path: ${pathTitle}`);
+    const json = JSON.parse(payload.content);
 
-      this.learningPathRepo.saveLearningPath({ id: pathId, slug: pathSlug, title: pathTitle, description: pathDesc });
+    const lpData = json.data?.lpPageData;
+    if (!lpData || !lpData.id || !lpData.containerChildren) return;
 
-      let orderIndex = 1;
-      let coursesAdded = 0;
+    const pathTitle = lpData.name;
+    const pathSlug = this.namingService.slugify(pathTitle);
+    const pathDesc = lpData.description || "";
 
-      // Extraer offeringId del URL del payload (ej: .../learning-path/35573/148510/...)
-      const offeringId = this.namingService.extractOfferingId(json.url) || undefined;
+    this.logger.info(`🧭 Procesando Learning Path: ${pathTitle}`);
 
-      for (const child of lpData.containerChildren) {
-        if (child.typeId !== "22") continue; // 22 is Standard Course
-        if (!child.id || !child.name) continue;
+    this.learningPathRepo.saveLearningPath({ id: pathId, slug: pathSlug, title: pathTitle, description: pathDesc });
 
-        const courseSlug = this.namingService.slugify(child.name);
+    let orderIndex = 1;
+    let coursesAdded = 0;
 
-        // Pre-guardamos el curso primero, para asegurarnos que en cualquier caso quede asociado al learning path
-        this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
-        this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });
+    // Extraer offeringId del URL del payload (ej: .../learning-path/35573/148510/...)
+    const offeringId = this.namingService.extractOfferingId(json.url) || undefined;
 
-        // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
-        this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
-        const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
-
-        // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
-        await this.syncCourse.execute({ courseInput: courseUrl, offeringId, taskId }, signal);
-
+    for (const child of lpData.containerChildren) {
+      const processed = await this.syncSingleCourseChild({ child, pathId, orderIndex, offeringId, taskId });
+      if (processed) {
         orderIndex++;
         coursesAdded++;
       }
-
-      this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
-
-      await isolatedInterceptedDataRepo.markAsProcessed(payload.filePath);
     }
+
+    this.logger.info(`✅ Vinculados y sincronizados ${coursesAdded} cursos a la ruta ${pathTitle}.`);
+
+    await isolatedInterceptedDataRepo.markAsProcessed(payload.filePath);
+  }
+
+  private async syncSingleCourseChild(options: {
+    child: any;
+    pathId: string;
+    orderIndex: number;
+    offeringId?: string;
+    taskId?: string;
+  }): Promise<boolean> {
+    AbortContext.throwIfAborted();
+
+    const { child, pathId, orderIndex, offeringId, taskId } = options;
+
+    if (child.typeId !== "22") return false; // 22 is Standard Course
+    if (!child.id || !child.name) return false;
+
+    const courseSlug = this.namingService.slugify(child.name);
+
+    // Pre-guardamos el curso primero, para asegurarnos que en cualquier caso quede asociado al learning path
+    this.courseRepo.saveCourse({ id: child.id, slug: courseSlug, title: child.name });
+    this.learningPathRepo.addCourseToPath({ pathId: pathId, courseId: child.id, orderIndex });
+
+    // 👉 Aquí está la clave: Sincronizar automáticamente el contenido interno del curso
+    this.logger.info(`📥 Sincronizando contenido interno del curso: ${child.name} (${child.id})...`);
+    const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
+
+    // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
+    await this.syncCourse.execute({ courseInput: courseUrl, offeringId, taskId });
+
+    return true;
   }
 }

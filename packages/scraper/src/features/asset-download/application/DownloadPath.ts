@@ -3,6 +3,7 @@ import { type ILogger } from '@core/logging';
 
 import { type IUseCase } from '@scraper/features/shared';
 import { type ILearningPathRepository, SyncLearningPath } from "@scraper/features/platform-sync";
+import { AbortContext } from '@scraper/features/task-management';
 
 import { type INamingService } from "../domain/ports/INamingService";
 import { DownloadGuides } from "./DownloadGuides";
@@ -40,7 +41,9 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
     this.logger = options.logger.withContext("DownloadPath");
   }
 
-  async execute(input: DownloadPathInput, signal?: AbortSignal): Promise<void> {
+  async execute(input: DownloadPathInput): Promise<void> {
+    AbortContext.throwIfAborted();
+
     const { pathInput, type = DownloadType.ALL } = input;
     const pathId = this.namingService.extractIdFromInput(pathInput);
 
@@ -56,26 +59,17 @@ export class DownloadPath implements IUseCase<DownloadPathInput, void> {
     this.logger.info(`📚 Encontrados ${courses.length} cursos. Procesando tipo de descarga: ${type}...`);
 
     for (const course of courses) {
-      if (signal?.aborted) return;
-
       this.logger.info(`======================================================`);
       this.logger.info(`📦 Procesando Curso [${course.orderIndex}/${courses.length}]: ${course.title} (ID: ${course.id})`);
       this.logger.info(`======================================================`);
 
       if (type === 'guide' || type === 'all') {
-        await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId }, signal);
+        await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId });
       }
 
       if (type === 'video' || type === 'all') {
-        await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
+        await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId });
       }
-    }
-
-    if (signal?.aborted) {
-      this.logger.warn(`======================================================`);
-      this.logger.warn(`🛑 Descarga del Learning Path ${pathId} CANCELADA.`);
-      this.logger.warn(`======================================================`);
-      return;
     }
 
     this.logger.info(`======================================================`);

@@ -6,14 +6,14 @@ export const ScraperTaskStatus = {
   CANCELLED: 'CANCELLED',
 } as const;
 
-export type ScraperTaskStatus = (typeof ScraperTaskStatus)[keyof typeof ScraperTaskStatus];
+export type ScraperTaskStatusType = (typeof ScraperTaskStatus)[keyof typeof ScraperTaskStatus];
 
 export const ScraperTaskCategory = {
   COURSE: 'course',
   PATH: 'path',
 } as const;
 
-export type ScraperTaskCategory = (typeof ScraperTaskCategory)[keyof typeof ScraperTaskCategory];
+export type ScraperTaskCategoryType = (typeof ScraperTaskCategory)[keyof typeof ScraperTaskCategory];
 
 export const ScraperTaskAction = {
   SYNC_COURSE: 'SYNC_COURSE',
@@ -22,7 +22,7 @@ export const ScraperTaskAction = {
   DOWNLOAD_PATH: 'DOWNLOAD_PATH'
 } as const;
 
-export type ScraperTaskAction = (typeof ScraperTaskAction)[keyof typeof ScraperTaskAction];
+export type ScraperTaskActionType = (typeof ScraperTaskAction)[keyof typeof ScraperTaskAction];
 
 export interface ScraperTaskProgress {
   step: string;
@@ -33,11 +33,11 @@ export interface ScraperTaskProgress {
 export class ScraperTask {
   constructor(
     public readonly id: string,
-    public readonly type: ScraperTaskCategory,
-    public readonly action: ScraperTaskAction,
+    public readonly type: ScraperTaskCategoryType,
+    public readonly action: ScraperTaskActionType,
     public readonly url: string,
     public readonly targetId: string | null,
-    public status: ScraperTaskStatus,
+    public status: ScraperTaskStatusType,
     public progress: ScraperTaskProgress | null,
     public error: string | null,
     public metadata: Record<string, any> | null,
@@ -47,8 +47,8 @@ export class ScraperTask {
 
   static create(data: {
     id: string,
-    type: ScraperTaskCategory,
-    action: ScraperTaskAction,
+    type: ScraperTaskCategoryType,
+    action: ScraperTaskActionType,
     url: string,
     targetId?: string,
     metadata?: Record<string, any>

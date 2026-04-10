@@ -1,10 +1,10 @@
-import { ScraperTask, type ScraperTaskCategory, type ScraperTaskAction } from '../domain/models/ScraperTask';
+import { ScraperTask, type ScraperTaskCategoryType, type ScraperTaskActionType } from '../domain/models/ScraperTask';
 import type { ITaskRepository } from '../domain/ports/ITaskRepository';
 
 export interface CreateTaskInput {
   id: string;
-  type: ScraperTaskCategory;
-  action: ScraperTaskAction;
+  type: ScraperTaskCategoryType;
+  action: ScraperTaskActionType;
   url: string;
   targetId?: string;
   metadata?: Record<string, any>;

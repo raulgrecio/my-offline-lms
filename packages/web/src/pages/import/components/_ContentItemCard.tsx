@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '@web/components/Icon';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 import type { UITheme } from './_category-themes';
 
 export interface ContentItem {
@@ -15,7 +15,7 @@ export interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: ScraperTaskCategory;
+  type: ScraperTaskCategoryType;
 }
 
 interface ContentItemCardProps {

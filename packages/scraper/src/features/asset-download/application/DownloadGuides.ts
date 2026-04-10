@@ -4,6 +4,7 @@ import { type IUseCase } from '@scraper/features/shared';
 import { type ICourseRepository } from "@scraper/features/platform-sync";
 import { type IPlatformUrlProvider } from "@scraper/features/platform-sync";
 import { type IBrowserProvider } from "@scraper/platform/browser";
+import { AbortContext, TASK_CANCELLED_ERROR } from '@scraper/features/task-management';
 
 import { type IAssetRepository } from "../domain/ports/IAssetRepository";
 import { type IAssetStorage } from "../domain/ports/IAssetStorage";
@@ -54,7 +55,9 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadGuidesInput, signal?: AbortSignal): Promise<void> {
+  async execute(input: DownloadGuidesInput): Promise<void> {
+    AbortContext.throwIfAborted();
+
     const { courseId } = input;
     this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
 
@@ -67,20 +70,17 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.logger.info(`⏳ Encontradas ${pendingGuides.length} guías pendientes. Comenzando...`);
 
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
-    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
+    const context = await this.browserProvider.getAuthenticatedContext();
 
     try {
       for (let i = 0; i < pendingGuides.length; i++) {
-        if (signal?.aborted) return;
-
-        this.logger.info(`======================================================`);
-        this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await this.downloadSingleGuide({
           assetId: pendingGuides[i].id,
           courseId: pendingGuides[i].courseId,
           sharedContext: context,
-          signal
         });
+        this.logger.info(`======================================================`);
+        this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await new Promise(r => setTimeout(r, 2000));
       }
     } finally {
@@ -95,9 +95,10 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     assetId: string,
     courseId: string,
     sharedContext?: any,
-    signal?: AbortSignal
   }): Promise<void> {
-    const { assetId, courseId, sharedContext, signal } = options;
+    AbortContext.throwIfAborted();
+
+    const { assetId, courseId, sharedContext } = options;
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'guide') return;
 
@@ -189,40 +190,10 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       const downloadPage = await context.newPage();
 
       for (let i = 0; i < pagesCount; i++) {
-        if (signal?.aborted) return;
         const pageNum = i + 1;
         const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;
-
-        // Skip if we already downloaded this page successfully in a previous run
-        const size = await this.assetStorage.getTempImageSize(cachedImgPath);
-        if (size > 0) {
-          this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
-          continue;
-        }
-
-        let buffer: number[] | null = null;
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          if (signal?.aborted) return;
-          try {
-            await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
-            buffer = await downloadPage.evaluate(DownloadGuides.downloadImageAsArray, imageUrl);
-            break;
-          } catch (e) {
-            this.logger.info(`⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
-            await new Promise(r => setTimeout(r, 3000));
-          }
-        }
-
-        if (buffer) {
-          await this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
-          this.logger.info(`  -> Descargada pág ${pageNum}/${pagesCount}`);
-          // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
-          await new Promise(r => setTimeout(r, 200));
-        } else {
-          await downloadPage.close();
-          throw new Error(`Imposible descargar la imagen de la página ${pageNum}`);
-        }
+        await this.downloadSinglePage({ downloadPage, pageNum, pagesCount, imageUrl, cachedImgPath });
       }
 
       await downloadPage.close();
@@ -239,7 +210,9 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       this.logger.info(`✅ Guía guardada en: ${outputPath}`);
       this.assetRepo.updateAssetCompletion(assetId, { ...meta, filename }, outputPath);
 
-    } catch (err) {
+    } catch (err: any) {
+      // Re-lanzar errores de cancelación para que lleguen al orquestador
+      if (err?.message === TASK_CANCELLED_ERROR) throw err;
       this.logger.error(`❌ Error extrayendo guía:`, err);
       this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {
@@ -251,6 +224,48 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     }
   }
 
+
+  private async downloadSinglePage(options: {
+    downloadPage: any;
+    pageNum: number;
+    pagesCount: number;
+    imageUrl: string;
+    cachedImgPath: string;
+  }): Promise<void> {
+    AbortContext.throwIfAborted();
+
+    const { downloadPage, pageNum, pagesCount, imageUrl, cachedImgPath } = options;
+
+    // Skip if we already downloaded this page successfully in a previous run
+    const size = await this.assetStorage.getTempImageSize(cachedImgPath);
+    if (size > 0) {
+      this.logger.info(`  -> Saltando pág ${pageNum}/${pagesCount} (Ya existe en caché)`);
+      return;
+    }
+
+    let buffer: number[] | null = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      AbortContext.throwIfAborted();
+      try {
+        await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
+        buffer = await downloadPage.evaluate(DownloadGuides.downloadImageAsArray, imageUrl);
+        break;
+      } catch (e) {
+        this.logger.info(`⚠️ Intento ${attempt} fallido bajando pág ${pageNum}. Reintentando...`);
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    }
+
+    if (buffer) {
+      await this.assetStorage.writeTempImage(cachedImgPath, Buffer.from(buffer));
+      this.logger.info(`  -> Descargada pág ${pageNum}/${pagesCount}`);
+      // Pequeño delay cortés para no gatillar bloqueos anti-DDoS de Oracle
+      await new Promise(r => setTimeout(r, 200));
+    } else {
+      await downloadPage.close();
+      throw new Error(`Imposible descargar la imagen de la página ${pageNum}`);
+    }
+  }
 
   /**
    * Lógica interna del navegador para extraer el número máximo de páginas.

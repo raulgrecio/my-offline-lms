@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { generateId } from '@core/domain';
-import { ScraperTaskCategory } from '@scraper/features/task-management';
+import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
 
 import { GenericWizardLayout, useWizard, WizardProvider, type WizardStepConfig } from '@web/components/Wizard';
 import { API_ROUTES } from '@web/platform/api/routes';
@@ -24,7 +24,7 @@ interface ContentItem {
   totalGuides: number;
   downloadedGuides: number;
   isComplete: boolean;
-  type: ScraperTaskCategory;
+  type: ScraperTaskCategoryType;
 }
 
 interface AvailableContentResponse {
@@ -46,7 +46,7 @@ const ScraperWizardContent: React.FC = () => {
   });
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [newUrl, setNewUrl] = useState('');
-  const [contentType, setContentType] = useState<ScraperTaskCategory>('course');
+  const [contentType, setContentType] = useState<ScraperTaskCategoryType>(ScraperTaskCategory.COURSE);
   const [downloadOptions, setDownloadOptions] = useState({ videos: true, guides: true });
 
   const [isLoading, setIsLoading] = useState(false);

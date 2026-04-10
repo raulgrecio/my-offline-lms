@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TaskOrchestrator, TASK_CANCELLED_ERROR } from '@scraper/features/task-management';
+import { TaskOrchestrator, TASK_CANCELLED_ERROR, AbortContext } from '@scraper/features/task-management';
 import { TaskBroker, CANCEL_TASK_COMMAND } from '@scraper/features/task-management';
 
 describe('TaskOrchestrator', () => {
@@ -65,32 +65,33 @@ describe('TaskOrchestrator', () => {
     }));
   });
 
-  it('should handle reactive cancellation via TaskBroker', async () => {
-    let resolveWork: any;
-    const workPromise = new Promise<void>((resolve) => { resolveWork = resolve; });
-    const work = vi.fn().mockImplementation(async (signal: AbortSignal) => {
-      // Simulate long running work that respects signal
-      return new Promise((resolve, reject) => {
-        signal.onabort = () => reject(new Error(TASK_CANCELLED_ERROR));
-        // We'll manually resolve it if needed, but here we want to trigger abort
+  it('should handle reactive cancellation via TaskBroker', async () =>
+    new Promise<void>((done) => {
+      const work = vi.fn().mockImplementation(async () => {
+        // Simulate long running work that reads signal from AbortContext
+        return new Promise<void>((resolve, reject) => {
+          const signal = AbortContext.getSignal();
+          if (!signal) return resolve();
+          signal.onabort = () => reject(new Error(TASK_CANCELLED_ERROR));
+        });
       });
-    });
 
-    const runPromise = orchestrator.run({ taskId: 'task-abc', mainStep: 'Sync' }, work);
+      const runPromise = orchestrator.run({ taskId: 'task-abc', mainStep: 'Sync' }, work);
 
-    // Give some time for the task to start and set activeTaskId
-    await new Promise(resolve => setTimeout(resolve, 10));
+      // Give some time for the task to start
+      setTimeout(() => {
+        TaskBroker.emit(CANCEL_TASK_COMMAND, 'task-abc');
+      }, 10);
 
-    // Trigger cancellation through broker
-    TaskBroker.emit(CANCEL_TASK_COMMAND, 'task-abc');
-
-    await runPromise;
-
-    expect(deps.updateTask.execute).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'task-abc',
-      status: 'CANCELLED'
-    }));
-  });
+      runPromise.then(() => {
+        expect(deps.updateTask.execute).toHaveBeenCalledWith(expect.objectContaining({
+          id: 'task-abc',
+          status: 'CANCELLED'
+        }));
+        done();
+      }).catch(done);
+    })
+  );
 
   it('should handle generic errors and mark task as FAILED', async () => {
     const work = vi.fn().mockRejectedValue(new Error("Unexpected Boom"));
@@ -116,13 +117,5 @@ describe('TaskOrchestrator', () => {
     
     expect(deps.updateTask.execute).not.toHaveBeenCalled();
     expect(work).toHaveBeenCalled();
-  });
-
-  it('should provide a checkpoint that throws if aborted', () => {
-    const controller = new AbortController();
-    expect(() => orchestrator.checkpoint(controller.signal)).not.toThrow();
-
-    controller.abort();
-    expect(() => orchestrator.checkpoint(controller.signal)).toThrow(TASK_CANCELLED_ERROR);
   });
 });

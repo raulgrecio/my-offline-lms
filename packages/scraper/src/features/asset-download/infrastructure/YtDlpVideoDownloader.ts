@@ -3,6 +3,7 @@ import { spawn } from "child_process";
 import { type ILogger } from '@core/logging';
 
 import { type IAuthSessionStorage } from "@scraper/features/auth-session";
+import { AbortContext } from "@scraper/features/task-management/application/AbortContext";
 
 import { type IVideoDownloader } from "../domain/ports/IVideoDownloader";
 
@@ -19,6 +20,8 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
   }
 
   async download(url: string, outputPath: string, referer?: string, retryCount = 0): Promise<void> {
+    AbortContext.throwIfAborted();
+    
     const cookiesFile = await this.authSessionStorage.getCookiesFile();
     const args: string[] = [
       "--cookies", cookiesFile,
@@ -35,9 +38,28 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
     args.push(url);
 
     return new Promise((resolve, reject) => {
+      AbortContext.throwIfAborted();
+      const signal = AbortContext.getSignal();
+
       // Listen to subprocess output to show progress in LogConsole
       const ytDlpProcess = spawn("yt-dlp", args);
       let stderr = "";
+
+      const onAbort = () => {
+        this.logger.warn(`Abortando proceso yt-dlp para ${url}`);
+        ytDlpProcess.kill("SIGKILL");
+        reject(new Error("Operation cancelled by user"));
+      };
+
+      if (signal) {
+        signal.addEventListener("abort", onAbort);
+      }
+
+      const cleanup = () => {
+        if (signal) {
+          signal.removeEventListener("abort", onAbort);
+        }
+      };
 
       const stripAnsi = (str: string) => str.replace(/\x1B\[[0-9;]*[mK]/g, "");
 
@@ -72,10 +94,18 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
       ytDlpProcess.stderr.on("data", (data) => handleOutput(data, true));
 
       ytDlpProcess.on("close", (code: number | null) => {
+        cleanup();
+        
+        if (signal?.aborted) {
+          reject(new Error("Operation cancelled by user"));
+          return;
+        }
+
         if (code === 0) {
           resolve();
           return;
         }
+
         // Detección de errores conocidos de sesión
         const isAuthError = stderr.includes("403") ||
           stderr.includes("Forbidden") ||
@@ -100,7 +130,12 @@ export class YtDlpVideoDownloader implements IVideoDownloader {
           this.download(url, outputPath, referer, retryCount + 1).then(resolve).catch(reject);
         }, delay);
       });
-      ytDlpProcess.on("error", (err: Error) => reject(err));
+      
+      ytDlpProcess.on("error", (err: Error) => {
+        cleanup();
+        reject(err);
+      });
     });
   }
 }
+

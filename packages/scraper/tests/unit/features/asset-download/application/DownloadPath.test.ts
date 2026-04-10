@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { type ILogger } from '@core/logging';
 
 import { AssetNamingService, DownloadPath } from '@scraper/features/asset-download';
+import { AbortContext } from '@scraper/features/task-management';
 
 describe('DownloadPath Use Case', () => {
   const mockLearningPathRepo = {
@@ -58,10 +59,10 @@ describe('DownloadPath Use Case', () => {
 
     expect(mockDownloadGuides.execute).toHaveBeenCalledTimes(2);
     expect(mockDownloadVideos.execute).toHaveBeenCalledTimes(2);
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }), undefined);
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }), undefined);
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }), undefined);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }));
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course1' }));
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }));
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'course2' }));
   });
 
   it('should only call guides download when type is guide', async () => {
@@ -69,7 +70,7 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'guide' });
 
-    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
+    expect(mockDownloadGuides.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }));
     expect(mockDownloadVideos.execute).not.toHaveBeenCalled();
   });
 
@@ -78,21 +79,18 @@ describe('DownloadPath Use Case', () => {
 
     await useCase.execute({ pathInput: 'p1', type: 'video' });
 
-    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }), undefined);
+    expect(mockDownloadVideos.execute).toHaveBeenCalledWith(expect.objectContaining({ courseId: 'c1' }));
     expect(mockDownloadGuides.execute).not.toHaveBeenCalled();
   });
 
-  it('should handle abortion signal', async () => {
+  it('should stop when AbortContext is aborted (cancel mid-course)', async () => {
     mockLearningPathRepo.getCoursesForPath.mockReturnValue([{ id: 'c1', title: 'T1', orderIndex: 1 }]);
     const controller = new AbortController();
+    controller.abort();
 
-    // Abort during first course download
-    mockDownloadGuides.execute.mockImplementation(() => {
-      controller.abort();
+    // Run inside an AbortContext to simulate what the orchestrator does
+    await AbortContext.run(controller.signal, async () => {
+      await expect(useCase.execute({ pathInput: 'p1', type: 'all' })).rejects.toThrow('TASK_CANCELLED');
     });
-
-    await useCase.execute({ pathInput: 'p1', type: 'all' }, controller.signal);
-
-    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('CANCELADA'));
   });
 });

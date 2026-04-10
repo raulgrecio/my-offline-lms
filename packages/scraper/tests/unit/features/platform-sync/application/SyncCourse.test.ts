@@ -12,6 +12,7 @@ import {
 
 import { SyncCourse } from '@scraper/features/platform-sync';
 import { BrowserInterceptor } from '@scraper/platform/browser/BrowserInterceptor';
+import { AbortContext } from '@scraper/features/task-management';
 
 vi.mock('@scraper/platform/browser/BrowserInterceptor', () => {
   return {
@@ -396,17 +397,12 @@ describe('SyncCourse Use Case', () => {
     ]);
 
     const controller = new AbortController();
-    // Force abortion after first payload
-    let first = true;
-    mockUrlProvider.resolveCourseUrl.mockImplementation(url => {
-      if (!first) controller.abort();
-      first = false;
-      return { url: String(url), courseId: '123' };
+    controller.abort();
+
+    // Run inside AbortContext to simulate orchestrator
+    await AbortContext.run(controller.signal, async () => {
+      // With a pre-aborted signal, it should throw on the first AbortContext.throwIfAborted() check
+      await expect(useCase.execute({ courseInput: '123' })).rejects.toThrow('TASK_CANCELLED');
     });
-
-    await useCase.execute({ courseInput: '123' }, controller.signal);
-
-    // It should exit early without finishing all payloads or saves if we had more logic there
-    // But mostly we check it doesn't crash and respects signal
   });
 });

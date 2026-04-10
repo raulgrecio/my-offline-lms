@@ -5,6 +5,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import type { IFileSystem, IPath } from "@core/filesystem";
 import type { ILogger } from '@core/logging';
 import type { IBrowserProvider } from "./IBrowserProvider";
+import { AbortContext } from '@scraper/features/task-management';
 
 chromium.use(stealth());
 
@@ -40,14 +41,14 @@ export class BrowserProvider implements IBrowserProvider {
   }
 
   /** Gets an existing context or creates a new headful one primarily for Login purposes */
-  async getHeadfulContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<BrowserContext> {
-    const { context } = await this._getContext(options, signal);
+  async getHeadfulContext(options: { headless?: boolean } = {}): Promise<BrowserContext> {
+    const { context } = await this._getContext(options);
     return context;
   }
 
   /** Gets an authenticated headless context for background tasks (downloading, scraping) */
-  async getAuthenticatedContext(options: {} = {}, signal?: AbortSignal): Promise<BrowserContext> {
-    const { context, sessionLoaded } = await this._getContext({ headless: true }, signal);
+  async getAuthenticatedContext(options: {} = {}): Promise<BrowserContext> {
+    const { context, sessionLoaded } = await this._getContext({ headless: true });
 
     if (!sessionLoaded) {
       await this.closeContext(context);
@@ -57,7 +58,7 @@ export class BrowserProvider implements IBrowserProvider {
     return context;
   }
 
-  private async _getContext(options: { headless?: boolean } = {}, signal?: AbortSignal): Promise<{ context: BrowserContext; sessionLoaded: boolean }> {
+  private async _getContext(options: { headless?: boolean } = {}): Promise<{ context: BrowserContext; sessionLoaded: boolean }> {
     const { headless = false } = options;
     const type: BrowserType = headless ? 'headless' : 'headful';
 
@@ -112,6 +113,8 @@ export class BrowserProvider implements IBrowserProvider {
     const context = await currentBrowser.newContext(contextOptions);
     this.contexts.add(context);
 
+    // Cierre reactivo: si hay un AbortSignal activo (vía AbortContext), cerramos el contexto al abortar
+    const signal = AbortContext.getSignal();
     if (signal) {
       if (signal.aborted) {
         this.closeContext(context).catch(() => { });
