@@ -1,8 +1,8 @@
-import { IDatabase, SQLiteDatabase } from '@my-offline-lms/core/database';
-import { IFileSystem, NodeFileSystem } from '@my-offline-lms/core/filesystem';
+import { type IDatabase, SQLiteDatabase } from '@core/database';
+import { type IFileSystem, NodeFileSystem } from '@core/filesystem';
 
-import { getDataDir, getDbPath } from '@config/paths';
-import { logger } from '@platform/logging';
+import { getDataDir, getDbPath } from '@scraper/config';
+import { logger } from '@scraper/platform/logging';
 
 export interface InitDbOptions {
   database?: IDatabase;

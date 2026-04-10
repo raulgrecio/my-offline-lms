@@ -1,6 +1,6 @@
-import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
-import { getDb } from "@db/database";
-import { logger } from "@platform/logging";
+import { SQLiteAssetRepository } from "@scraper/features/asset-download";
+import { getDb } from "@scraper/platform/database";
+import { logger } from "@scraper/platform/logging";
 
 async function fix79688Guide() {
   const db = await getDb();

@@ -1,4 +1,4 @@
-import { type Course, type Asset, type Metadata } from '@my-offline-lms/core/models';
+import { type Course, type Asset, type Metadata } from '@core/domain';
 
 export interface ICourseRepository {
   getAllCourses(): Course[];
@@ -6,4 +6,14 @@ export interface ICourseRepository {
   getAssetsByCourseId(id: string): Asset[];
   getAssetById(id: string): Asset | null;
   updateAssetMetadata({ id, metadata }: { id: string, metadata: Metadata }): void;
+  getCoursesWithSyncStatus(): CourseWithSyncStatus[];
+}
+
+export interface CourseWithSyncStatus extends Course {
+  totalAssets: number;
+  downloadedAssets: number;
+  totalVideos: number;
+  downloadedVideos: number;
+  totalGuides: number;
+  downloadedGuides: number;
 }

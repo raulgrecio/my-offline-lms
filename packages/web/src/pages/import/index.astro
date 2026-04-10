@@ -1,0 +1,102 @@
+---
+export const prerender = false;
+
+import Layout from "@web/layouts/Layout.astro";
+import PageHeader from "@web/components/PageHeader.astro";
+import { Icon } from "@web/components/Icon";
+import { LogConsole } from "@web/components/LogConsole";
+import CollapsibleCard from "@web/components/CollapsibleCard.astro";
+
+import { ScraperWizard } from "./components/ScraperWizard/_ScraperWizard";
+import { TaskList } from "./components/_TaskList";
+import { SessionStatus } from "./components/_SessionStatus";
+import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
+import InfoCard from "@web/components/InfoCard.astro";
+---
+
+<Layout title="Importar Contenido">
+  <PageHeader
+    title="Centro de Importación"
+    icon="download"
+    subtitle="Gestiona tus cursos y rutas de aprendizaje. Sincroniza metadatos e inicia descargas de assets."
+  >
+    <SessionStatus client:load slot="actions" />
+  </PageHeader>
+
+  <div class="max-w-5xl mx-auto space-y-10">
+    {/* Collapsible Wizard Section */}
+    <section class="animate-in fade-in slide-in-from-top-4 duration-700">
+      <CollapsibleCard initialOpen={false}>
+        <CollapsibleHeader
+          slot="header"
+          icon="plus"
+          title="Nueva Importación"
+          subtitle="Sincroniza un curso o ruta desde la plataforma"
+        />
+
+        <div class="pt-2 pb-0">
+          <ScraperWizard client:load />
+        </div>
+      </CollapsibleCard>
+    </section>
+
+    {/* Tasks Section */}
+    <section>
+      <SectionHeader id="tareas-section" title="Tareas en curso" />
+      <TaskList client:load />
+    </section>
+  </div>
+
+  {/* Live Terminal Log */}
+  <section class="animate-in fade-in slide-in-from-bottom-6 duration-1000 mt-8">
+    <SectionHeader
+      id="terminal-section"
+      title="Live Activity / Terminal"
+      icon="terminal"
+    />
+    <LogConsole client:load />
+  </section>
+
+  {/* Help Section */}
+  <section
+    class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-border-subtle"
+  >
+    <InfoCard title="Control de Tiempo" icon="clock">
+      Las sincronizaciones iniciales (metadatos) son rápidas, pero la descarga
+      de vídeos y guías puede tardar dependiendo de tu conexión.
+    </InfoCard>
+
+    <InfoCard
+      title="Descarga Automática"
+      icon="check-circle"
+      variant="completed"
+    >
+      Una vez finalizada la descarga de un asset, el visor local se actualizará
+      automáticamente con el contenido listo para usar offline.
+    </InfoCard>
+  </section>
+</Layout>
+
+<script>
+  function initWizardCollapse() {
+    document.addEventListener("wizard-finished", () => {
+      const wizardCard = document.querySelector("[data-collapsible]");
+      if (wizardCard) {
+        const btn = wizardCard.querySelector(
+          "[data-collapsible-trigger]",
+        ) as HTMLButtonElement;
+        const content = wizardCard.querySelector("[data-collapsible-content]");
+        const isVisible = content && !content.classList.contains("hidden");
+
+        if (isVisible) {
+          btn.click();
+        }
+      }
+    });
+  }
+
+  // Use both to ensure it works with Astro transitions
+  initWizardCollapse();
+  document.addEventListener("astro:page-load", initWizardCollapse);
+</script>

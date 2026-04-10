@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { apiClient } from '@platform/api/client';
-import { API_ROUTES } from '@platform/api/routes';
-import { VIDEO_SEGMENT_SIZE } from '@features/progress/application/constants';
+import { apiClient } from '@web/platform/api/client';
+import { API_ROUTES } from '@web/platform/api/routes';
+import { VIDEO_SEGMENT_SIZE } from '@web/features/progress/application/constants';
 import ControlOverlay from './ControlOverlay';
 import FullscreenButton from './FullscreenButton';
 import PlayerSettings, { type SubtitleMode } from './PlayerSettings';

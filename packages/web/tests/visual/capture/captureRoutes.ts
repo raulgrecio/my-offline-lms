@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
+import { logger } from "../logger";
 
 const BASE_URL = "http://localhost:4321";
 const fs = new NodeFileSystem();
@@ -40,7 +41,7 @@ export async function captureScreenshots(
   for (const route of routes) {
     const url = BASE_URL + route;
 
-    console.log(`capturing ${mode}: ${route}`);
+    logger.info(`capturing ${mode}: ${route}`);
 
     try {
       await page.goto(url, { waitUntil: "networkidle" });
@@ -60,7 +61,7 @@ export async function captureScreenshots(
       }
 
       if (await fs.exists(outputPath) && !force) {
-        console.log(`skipping ${mode}: ${route} (already exists)`);
+        logger.info(`skipping ${mode}: ${route} (already exists)`);
         continue;
       }
 
@@ -70,7 +71,7 @@ export async function captureScreenshots(
       });
 
     } catch (err) {
-      console.error(`failed to capture ${route}:`, err);
+      logger.error(`failed to capture ${route}:`, err);
     }
   }
 

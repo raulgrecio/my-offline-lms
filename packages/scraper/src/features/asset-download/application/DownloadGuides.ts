@@ -1,13 +1,13 @@
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ICourseRepository } from "@scraper/features/platform-sync";
+import { type IPlatformUrlProvider } from "@scraper/features/platform-sync";
+import { type IBrowserProvider } from "@scraper/platform/browser";
 
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { type IAssetRepository } from "../domain/ports/IAssetRepository";
+import { type IAssetStorage } from "../domain/ports/IAssetStorage";
+import { type INamingService } from "../domain/ports/INamingService";
 
 export interface DownloadGuidesConfig {
   keepTempImages: boolean;
@@ -19,6 +19,7 @@ export interface DownloadGuidesConfig {
 
 export interface DownloadGuidesInput {
   courseId: string;
+  taskId?: string;
 }
 
 export interface DownloadGuidesOptions {
@@ -53,7 +54,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadGuidesInput): Promise<void> {
+  async execute(input: DownloadGuidesInput, signal?: AbortSignal): Promise<void> {
     const { courseId } = input;
     this.logger.info(`Iniciando descarga de guías para el curso: ${courseId}`);
 
@@ -66,28 +67,37 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     this.logger.info(`⏳ Encontradas ${pendingGuides.length} guías pendientes. Comenzando...`);
 
     // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
-    const context = await this.browserProvider.getAuthenticatedContext();
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
 
     try {
       for (let i = 0; i < pendingGuides.length; i++) {
-        this.logger.info(`======================================================`, '');
+        if (signal?.aborted) return;
+
+        this.logger.info(`======================================================`);
         this.logger.info(`Guía ${i + 1}/${pendingGuides.length} (ID: ${pendingGuides[i].id})`);
         await this.downloadSingleGuide({
           assetId: pendingGuides[i].id,
           courseId: pendingGuides[i].courseId,
-          sharedContext: context
+          sharedContext: context,
+          signal
         });
         await new Promise(r => setTimeout(r, 2000));
       }
     } finally {
-      await this.browserProvider.close();
+      await this.browserProvider.closeContext(context);
     }
 
-    this.logger.info(`======================================================`, '');
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 Finalizada la descarga de guías del curso ${courseId}.`);
   }
 
-  public async downloadSingleGuide({ assetId, courseId, sharedContext }: { assetId: string, courseId: string, sharedContext?: any }): Promise<void> {
+  public async downloadSingleGuide(options: {
+    assetId: string,
+    courseId: string,
+    sharedContext?: any,
+    signal?: AbortSignal
+  }): Promise<void> {
+    const { assetId, courseId, sharedContext, signal } = options;
     const asset = this.assetRepo.getAssetById(assetId);
     if (!asset || asset.type !== 'guide') return;
 
@@ -131,12 +141,11 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
     }
 
     let context = sharedContext;
-    if (!context) {
-      context = await this.browserProvider.getAuthenticatedContext();
-    }
-
     let page = null;
     try {
+      if (!context) {
+        context = await this.browserProvider.getAuthenticatedContext();
+      }
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       page = await context.newPage();
       const tempImagesDir = await this.assetStorage.ensureTempDir(courseId, assetId);
@@ -180,6 +189,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       const downloadPage = await context.newPage();
 
       for (let i = 0; i < pagesCount; i++) {
+        if (signal?.aborted) return;
         const pageNum = i + 1;
         const imageUrl = `${baseImgUrl}${pageNum}.jpg`;
         const cachedImgPath = `${tempImagesDir}/page_${String(pageNum).padStart(4, '0')}.png`;
@@ -195,6 +205,7 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
 
         let buffer: number[] | null = null;
         for (let attempt = 1; attempt <= 3; attempt++) {
+          if (signal?.aborted) return;
           try {
             await downloadPage.goto(imageUrl, { waitUntil: 'load', timeout: 30000 });
             buffer = await downloadPage.evaluate(DownloadGuides.downloadImageAsArray, imageUrl);
@@ -234,8 +245,8 @@ export class DownloadGuides implements IUseCase<DownloadGuidesInput, void> {
       this.logger.error(`❌ Error extrayendo guía:`, err);
       this.assetRepo.updateAssetStatus(assetId, 'FAILED');
     } finally {
-      if (!sharedContext) {
-        await this.browserProvider.close();
+      if (!sharedContext && context) {
+        await this.browserProvider.closeContext(context);
       } else if (page) {
         await page.close().catch(() => { });
       }

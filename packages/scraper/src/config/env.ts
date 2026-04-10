@@ -1,14 +1,10 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import { logger } from '@platform/logging';
+import { fileURLToPath } from 'url';
+import { NodePath } from '@core/filesystem';
+import { logger } from '@scraper/platform/logging';
 
-// Load variables if they haven't been loaded yet by the entrypoint
-if (process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: '.env.test' });
-} else {
-  dotenv.config();
-}
-
+// Schema definition
 const envSchema = z.object({
   PLATFORM_BASE_URL: z.url(),
   CHROME_EXECUTABLE_PATH: z.string().optional(),
@@ -20,22 +16,59 @@ const envSchema = z.object({
   OPTIMIZE_IMAGES: z.coerce.boolean().default(true),
   IMAGE_QUALITY: z.coerce.number().int().min(1).max(100).default(80),
 
-  // Limpieza
+  // Cleanup
   KEEP_TEMP_WORKSPACES: z.coerce.boolean().default(false),
 
   // DATA_DIR for shared database and assets
   DATA_DIR: z.string().optional(),
+
+  // Debugging
+  DEBUG: z.coerce.boolean().default(false),
 });
 
-type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema>;
 
-const parsed = envSchema.safeParse(process.env);
+// Live dynamic binding for the env object
+export let env: Env = {} as Env;
 
-if (!parsed.success) {
-  logger.error("❌ Invalid environment variables. Verifique su archivo .env:", z.treeifyError(parsed.error));
-  if (process.env.NODE_ENV !== 'test') {
+/**
+ * Explicitly load environment variables for the scraper.
+ * Useful for library usage where path might be different than current CWD.
+ */
+export function loadScraperEnv(options?: { path?: string }) {
+  // If already loaded and valid, skip
+  if (env.PLATFORM_BASE_URL) return env;
+
+  const nodePath = new NodePath();
+  let envPath = options?.path;
+
+  if (!envPath) {
+    const fileName = '.env';
+
+    try {
+      // Cross-platform ESM/CJS path resolution
+      const currentFile = typeof import.meta.url !== 'undefined'
+        ? fileURLToPath(import.meta.url)
+        : (typeof __filename !== 'undefined' ? __filename : '');
+
+      const baseDir = nodePath.dirname(currentFile);
+      envPath = nodePath.join(baseDir, '../../', fileName);
+    } catch (e) {
+      // Fallback to current working directory as last resort
+      envPath = nodePath.join(process.cwd(), fileName);
+    }
+  }
+
+  dotenv.config({ path: envPath });
+
+  const parsed = envSchema.safeParse(process.env);
+
+  if (!parsed.success) {
+    const errorMsg = z.treeifyError(parsed.error);
+    logger.error("❌ Invalid environment variables. Verifique su archivo .env:", errorMsg);
     process.exit(1);
   }
-}
 
-export const env: Env = parsed.success ? parsed.data : {} as Env;
+  env = parsed.success ? parsed.data : {} as Env;
+  return env;
+}

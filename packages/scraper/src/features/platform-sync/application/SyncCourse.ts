@@ -1,17 +1,18 @@
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
-import { IInterceptedDataRepositoryFactory } from '@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory';
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { BrowserInterceptor, type IBrowserProvider } from "@scraper/platform/browser";
+import { type IUseCase } from '@scraper/features/shared';
+import { type IAssetRepository, type INamingService } from '@scraper/features/asset-download';
+
+import { type ICourseRepository } from '../domain/ports/ICourseRepository';
+import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
+import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
+
 
 export interface SyncCourseInput {
   courseInput: string;
   offeringId?: string;
+  taskId?: string;
 }
 
 type SyncCourseConfig = {
@@ -28,7 +29,7 @@ export interface SyncCourseOptions {
   browserProvider: IBrowserProvider;
   courseRepository: ICourseRepository;
   assetRepository: IAssetRepository;
-  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  createInterceptedRepo: InterceptedRepoCreator;
   browserInterceptor: BrowserInterceptor;
   urlProvider: IPlatformUrlProvider;
   namingService: INamingService;
@@ -40,7 +41,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
   private browserProvider: IBrowserProvider;
   private courseRepository: ICourseRepository;
   private assetRepository: IAssetRepository;
-  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private createInterceptedRepo: InterceptedRepoCreator;
   private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
@@ -51,7 +52,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
     this.browserProvider = options.browserProvider;
     this.courseRepository = options.courseRepository;
     this.assetRepository = options.assetRepository;
-    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.createInterceptedRepo = options.createInterceptedRepo;
     this.browserInterceptor = options.browserInterceptor;
     this.urlProvider = options.urlProvider;
     this.namingService = options.namingService;
@@ -59,8 +60,8 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: SyncCourseInput): Promise<void> {
-    const { courseInput, offeringId } = input;
+  async execute(input: SyncCourseInput, signal?: AbortSignal): Promise<void> {
+    const { courseInput, offeringId, taskId } = input;
 
     if (!courseInput) {
       this.logger.error("No se proporcionó courseUrl o IDs.");
@@ -76,11 +77,12 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
 
     this.logger.info(`🚀 Iniciando sincronización del curso: ${courseId} (${url})`);
 
-    const browser = await this.browserProvider.getAuthenticatedContext();
-    const page = await browser.newPage();
+    // Step 1: Open Browser & Navigate
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
+    const page = await context.newPage();
 
     const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'course', execTimestamp: Date.now() });
-    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
+    const isolatedInterceptedDataRepo = this.createInterceptedRepo(isolatedDirPath);
 
     try {
       this.logger.info("Navegando al curso para esperar interceptaciones...");
@@ -109,6 +111,7 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
         const processedPayloadPaths: string[] = [];
 
         for (const wrapper of intercepted) {
+          if (signal?.aborted) return;
           processedPayloadPaths.push(wrapper.filePath);
 
           let raw: any;
@@ -263,6 +266,8 @@ export class SyncCourse implements IUseCase<SyncCourseInput, void> {
       }
 
     } finally {
+      await this.browserProvider.closeContext(context);
+      
       if (isolatedDirPath && !this.config.keepTempWorkspaces) {
         await isolatedInterceptedDataRepo.deleteWorkspace();
       } else if (isolatedDirPath) {

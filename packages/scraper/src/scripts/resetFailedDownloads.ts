@@ -1,7 +1,7 @@
-import { getDb } from "@db/database";
+import { getDb } from "@scraper/platform/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-import { logger as baseLogger } from "@platform/logging";
-import { IDatabase } from "@my-offline-lms/core/database";
+import { logger as baseLogger } from "@scraper/platform/logging";
+import { type IDatabase } from "@core/database";
 
 const logger = baseLogger.withContext("resetFailedDownloads");
 

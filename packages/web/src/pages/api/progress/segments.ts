@@ -1,8 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getVisitedSegments } from '@features/progress';
-import { type AssetType } from '@my-offline-lms/core/models';
+import { getVisitedSegments } from '@web/features/progress';
+import { type AssetType } from '@core/domain';
 
 export const GET: APIRoute = async ({ url }) => {
   const assetId = url.searchParams.get('assetId');

@@ -6,7 +6,7 @@ import Button from "./Button.astro";
 interface SectionHeaderProps {
   id?: string;
   title: string;
-  icon: IconName;
+  icon?: IconName;
   href?: string;
 }
 
@@ -15,7 +15,7 @@ const { id, title, icon, href } = Astro.props as SectionHeaderProps;
 
 <div id={id} class="flex items-center justify-between mb-5">
   <h2 class="section-title">
-    <Icon name={icon} size="md" className="text-brand-600" />
+    {icon && <Icon name={icon} size="md" className="text-brand-600" />}
     {title}
   </h2>
   {

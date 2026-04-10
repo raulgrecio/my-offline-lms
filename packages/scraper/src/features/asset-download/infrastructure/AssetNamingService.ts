@@ -1,4 +1,4 @@
-import { INamingService } from "../domain/ports/INamingService";
+import { type INamingService } from "../domain/ports/INamingService";
 
 export class AssetNamingService implements INamingService {
   slugify(input: string): string {

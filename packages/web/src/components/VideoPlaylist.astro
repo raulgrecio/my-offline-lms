@@ -1,5 +1,5 @@
 ---
-import CircularProgress from "@components/CircularProgress.astro";
+import CircularProgress from "@web/components/CircularProgress.astro";
 
 export interface VideoPlayVideo {
   id: string;
@@ -39,7 +39,7 @@ const formatTime = (sec: number) => {
     <!-- Autoplay Toggle -->
     <label class="flex items-center gap-2 cursor-pointer group">
       <span
-        class="text-[10px] font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight"
+        class="text-2xs font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight"
         >Autoplay</span
       >
       <div class="relative inline-flex items-center">
@@ -96,7 +96,7 @@ const formatTime = (sec: number) => {
                   {v.title}
                 </p>
                 {vDuration > 0 && (
-                  <span class="text-[10px] font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded">
+                  <span class="text-2xs font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded">
                     {formatTime(vDuration)}
                   </span>
                 )}
@@ -109,7 +109,7 @@ const formatTime = (sec: number) => {
                       style={`width: ${vProgressPercent}%`}
                     />
                   </div>
-                  <span class="text-[9px] font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
+                  <span class="text-2xs font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
                     {vProgressPercent}%
                   </span>
                 </div>

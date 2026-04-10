@@ -1,5 +1,5 @@
-import { type LearningPath } from '@my-offline-lms/core/models';
-import type { IDatabase } from '@my-offline-lms/core/database';
+import { type LearningPath } from '@core/domain';
+import type { IDatabase } from '@core/database';
 import type { ILearningPathRepository } from "../domain/ports/ILearningPathRepository";
 import type { CourseWithOrderInPath } from "../domain/model/CourseWithOrderInPath";
 

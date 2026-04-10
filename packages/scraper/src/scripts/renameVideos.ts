@@ -1,8 +1,8 @@
-import { getDb } from "@db/database";
-import { AssetNamingService } from "@features/asset-download/infrastructure/AssetNamingService";
-import { getAssetsDir } from "@config/paths";
-import { logger as baseLogger } from "@platform/logging";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { getDb } from "@scraper/platform/database";
+import { AssetNamingService } from "@scraper/features/asset-download";
+import { getAssetsDir } from "@scraper/config";
+import { logger as baseLogger } from "@scraper/platform/logging";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
 
 const logger = baseLogger.withContext("renameVideos");
 

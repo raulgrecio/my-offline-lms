@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
 import { Readable, Writable } from "node:stream";
-import type { FileStats, IFileSystem } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class NodeFileSystem implements IFileSystem {
   private logger: ILogger;
@@ -34,6 +35,11 @@ export class NodeFileSystem implements IFileSystem {
   async writeFile(p: string, content: string | Buffer): Promise<void> {
     this.logger.debug?.(`writeFile to ${p}`);
     await fs.promises.writeFile(p, content);
+  }
+
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    this.logger.debug?.(`appendFile to ${p}`);
+    await fs.promises.appendFile(p, content);
   }
 
   async readdir(p: string): Promise<string[]> {

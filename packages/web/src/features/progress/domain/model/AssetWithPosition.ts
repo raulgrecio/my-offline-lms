@@ -1,3 +1,3 @@
-import { type Asset } from '@my-offline-lms/core/models';
+import { type Asset } from '@core/domain';
 
 export type AssetWithPosition = Asset & { position: number };

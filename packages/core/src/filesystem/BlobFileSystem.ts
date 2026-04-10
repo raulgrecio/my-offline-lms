@@ -1,4 +1,5 @@
 import { type MakeDirectoryOptions, type RmOptions } from "fs";
+
 import { type IFileSystem, type FileStats } from "./IFileSystem";
 import { type ILogger, NoopLogger } from "../logging";
 
@@ -28,6 +29,10 @@ export class BlobFileSystem implements IFileSystem {
 
   async writeFile(p: string, content: string | Buffer): Promise<void> {
     throw new Error(`[BlobFileSystem] writeFile not implemented for ${p}`);
+  }
+
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error(`[BlobFileSystem] appendFile not implemented for ${p}`);
   }
 
   async readdir(p: string): Promise<string[]> {

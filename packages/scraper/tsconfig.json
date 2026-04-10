@@ -1,19 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
+    "module": "ESNext",
     "moduleResolution": "node",
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@cli/*": ["src/cli/*"],
-      "@platform/*": ["src/platform/*"],
-      "@features/*": ["src/features/*"],
-      "@config/*": ["src/config/*"],
-      "@db/*": ["src/platform/database/*"],
-      "@core/*": ["../core/src/*"]
+      "@core/*": ["../core/src/*"],
+      "@scraper/*": ["src/*"],
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

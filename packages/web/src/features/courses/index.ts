@@ -1,5 +1,7 @@
-import { getDb } from "@platform/db/database";
-import { createLazyService } from "@my-offline-lms/core/di";
+import { createLazyService } from "@core/di";
+
+import { getDb } from "@web/platform/db/database";
+
 import { CourseManager } from "./application/CourseManager";
 import type { GetAssetByIdRequest } from "./application/use-cases/getAssetById";
 import type { GetAssetsByCourseIdRequest } from "./application/use-cases/getAssetsByCourseId";

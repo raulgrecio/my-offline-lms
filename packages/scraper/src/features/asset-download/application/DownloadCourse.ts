@@ -1,9 +1,11 @@
-import { DownloadType } from '@my-offline-lms/core/models';
-import { ILogger } from '@my-offline-lms/core/logging';
+import { DownloadType } from '@core/domain';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ICourseRepository } from "@scraper/features/platform-sync";
+
+import { type INamingService } from "../domain/ports/INamingService";
+
 
 import { DownloadGuides } from "./DownloadGuides";
 import { DownloadVideos } from "./DownloadVideos";
@@ -11,6 +13,7 @@ import { DownloadVideos } from "./DownloadVideos";
 export interface DownloadCourseInput {
   courseInput: string;
   type: DownloadType;
+  taskId?: string;
 }
 
 export interface DownloadCourseOptions {
@@ -36,8 +39,8 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
     this.logger = options.logger.withContext("DownloadCourse");
   }
 
-  async execute(input: DownloadCourseInput): Promise<void> {
-    const { courseInput, type = 'all' } = input;
+  async execute(input: DownloadCourseInput, signal?: AbortSignal): Promise<void> {
+    const { courseInput, type = DownloadType.ALL } = input;
     const courseId = this.namingService.extractIdFromInput(courseInput);
 
     this.logger.info(`🚀 Iniciando descarga para curso: ${courseId}`);
@@ -49,21 +52,28 @@ export class DownloadCourse implements IUseCase<DownloadCourseInput, void> {
       return;
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`📦 Procesando Curso [${course.id}]: ${course.title}`);
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
 
 
     if (type === 'guide' || type === 'all') {
-      await this.downloadGuides.execute({ courseId: course.id });
+      await this.downloadGuides.execute({ courseId: course.id, taskId: input.taskId }, signal);
     }
 
     if (type === 'video' || type === 'all') {
-      await this.downloadVideos.execute({ courseId: course.id });
+      await this.downloadVideos.execute({ courseId: course.id, taskId: input.taskId }, signal);
     }
 
-    this.logger.info(`======================================================`, "");
+    if (signal?.aborted) {
+      this.logger.warn(`======================================================`);
+      this.logger.warn(`🛑 Descarga del curso ${courseId} CANCELADA.`);
+      this.logger.warn(`======================================================`);
+      return;
+    }
+
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 ¡Descarga del curso ${courseId} COMPLETADA!`);
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
   }
 }

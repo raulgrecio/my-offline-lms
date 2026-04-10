@@ -1,5 +1,5 @@
-import { type Course, type Asset, type Metadata } from '@my-offline-lms/core/models';
-import type { IDatabase } from '@my-offline-lms/core/database';
+import { type Course, type Asset, type Metadata } from '@core/domain';
+import type { IDatabase } from '@core/database';
 import type { ICourseRepository } from "../domain/ports/ICourseRepository";
 
 export class SQLiteCourseRepository implements ICourseRepository {
@@ -58,5 +58,22 @@ export class SQLiteCourseRepository implements ICourseRepository {
     if (result && result.changes === 0) {
       throw new Error(`Asset with id ${id} not found`);
     }
+  }
+
+  getCoursesWithSyncStatus(): any[] {
+    return this.db.prepare(`
+        SELECT 
+            c.id, 
+            c.title,
+            c.slug,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id) as totalAssets,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND local_path IS NOT NULL) as downloadedAssets,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'video') as totalVideos,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'video' AND local_path IS NOT NULL) as downloadedVideos,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'guide') as totalGuides,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'guide' AND local_path IS NOT NULL) as downloadedGuides
+        FROM Courses c
+        ORDER BY c.title ASC
+    `).all();
   }
 }

@@ -1,8 +1,8 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import CourseCard from "@components/CourseCard.astro";
-import GuideCard from "@components/GuideCard.astro";
-import { Icon } from "@components/Icon";
+import Layout from "@web/layouts/Layout.astro";
+import CourseCard from "@web/components/CourseCard.astro";
+import GuideCard from "@web/components/GuideCard.astro";
+import { Icon } from "@web/components/Icon";
 
 const mockAssetId = "test-asset";
 const mockCourseId = "test-course";
@@ -58,7 +58,7 @@ const progressStates = [
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {progressStates.map(state => (
             <div class="space-y-2">
-              <h3 class="text-[10px] font-bold uppercase text-text-muted">{state.label}</h3>
+              <h3 class="text-2xs font-bold uppercase text-text-muted">{state.label}</h3>
               <GuideCard
                 assetId={mockAssetId}
                 courseId={mockCourseId}

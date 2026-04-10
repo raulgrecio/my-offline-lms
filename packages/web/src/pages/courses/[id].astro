@@ -1,24 +1,24 @@
 ---
 export const prerender = false;
 
-import type { GuideAsset, VideoAsset } from "@core/domain/models/Asset";
+import type { GuideAsset, VideoAsset } from "@core/domain";
 
-import { env } from "@config/env";
-import { API_ROUTES } from "@platform/api/routes";
-import { APP_ROUTES } from "@platform/router/routes";
-import { getCourseById, getAssetsByCourseId } from "@features/courses";
-import { getIsFavorite } from "@features/favorites";
-import { getCourseProgress, getAssetProgress } from "@features/progress";
-import Layout from "@layouts/Layout.astro";
-import FavoriteButton from "@components/FavoriteButton.astro";
-import Button from "@components/Button.astro";
-import EmptyState from "@components/EmptyState.astro";
-import { Icon } from "@components/Icon";
-import GuideCard from "@components/GuideCard.astro";
-import PageHeader from "@components/PageHeader.astro";
-import SectionHeader from "@components/SectionHeader.astro";
-import VideoPlayer from "@components/VideoPlayer";
-import VideoPlaylist from "@components/VideoPlaylist.astro";
+import { env } from "@web/config/env";
+import { API_ROUTES } from "@web/platform/api/routes";
+import { APP_ROUTES } from "@web/platform/router/routes";
+import { getCourseById, getAssetsByCourseId } from "@web/features/courses";
+import { getIsFavorite } from "@web/features/favorites";
+import { getCourseProgress, getAssetProgress } from "@web/features/progress";
+import Layout from "@web/layouts/Layout.astro";
+import FavoriteButton from "@web/components/FavoriteButton.astro";
+import Button from "@web/components/Button.astro";
+import EmptyState from "@web/components/EmptyState/EmptyState.astro";
+import { Icon } from "@web/components/Icon";
+import GuideCard from "@web/components/GuideCard.astro";
+import PageHeader from "@web/components/PageHeader.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
+import VideoPlayer from "@web/components/VideoPlayer";
+import VideoPlaylist from "@web/components/VideoPlaylist.astro";
 
 interface CoursePageProps {
   id?: string;
@@ -235,8 +235,8 @@ const videosList = videos.map((v) => ({
 
 <script>
   // Route relative imports
-  import { apiClient } from "@platform/api/client";
-  import { logger } from "@platform/logging";
+  import { apiClient } from "@web/platform/api/client";
+  import { logger } from "@web/platform/logging";
 
   const context = document.getElementById("course-page-context") as HTMLElement;
   const COURSE_PROGRESS_URL = context.dataset.progressUrl!;

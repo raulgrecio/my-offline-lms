@@ -1,14 +1,15 @@
-import { BrowserContext } from "playwright";
+import { type BrowserContext } from "playwright";
 
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { IAssetRepository } from "@features/asset-download/domain/ports/IAssetRepository";
-import { IAssetStorage } from "@features/asset-download/domain/ports/IAssetStorage";
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { IVideoDownloader } from "@features/asset-download/domain/ports/IVideoDownloader";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
+import { type IUseCase } from '@scraper/features/shared';
+import { type ICourseRepository } from "@scraper/features/platform-sync";
+import { type IBrowserProvider } from "@scraper/platform/browser";
+
+import { type IAssetRepository } from "../domain/ports/IAssetRepository";
+import { type IAssetStorage } from "../domain/ports/IAssetStorage";
+import { type INamingService } from "../domain/ports/INamingService";
+import { type IVideoDownloader } from "../domain/ports/IVideoDownloader";
 
 export interface DownloadVideosConfig {
   selectors: {
@@ -21,6 +22,7 @@ export interface DownloadVideosConfig {
 
 export interface DownloadVideosInput {
   courseId: string;
+  taskId?: string;
 }
 
 export interface DownloadVideosOptions {
@@ -55,7 +57,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
     this.config = options.config;
   }
 
-  async execute(input: DownloadVideosInput): Promise<void> {
+  async execute(input: DownloadVideosInput, signal?: AbortSignal): Promise<void> {
     const { courseId } = input;
     this.logger.info(`Iniciando procesamiento de vídeos para el curso: ${courseId}`);
 
@@ -67,21 +69,23 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
 
     this.logger.info(`⏳ Encontrados ${pendingVideos.length} vídeos pendientes. Comenzando...`);
 
-    // Unico navegador para todo el batch
-    const context = await this.browserProvider.getAuthenticatedContext();
+    // Unico navegador para procesar el lote (las guias son pesadas y abrir un navegador por cada una es ineficiente)
+    const context = await this.browserProvider.getAuthenticatedContext({}, signal);
 
     try {
       for (let i = 0; i < pendingVideos.length; i++) {
-        this.logger.info(`======================================================`, "");
+        if (signal?.aborted) return;
+
+        this.logger.info(`======================================================`);
         this.logger.info(`Vídeo ${i + 1}/${pendingVideos.length} (ID: ${pendingVideos[i].id})`);
         await this.downloadSingleVideo(pendingVideos[i].id, pendingVideos[i].courseId, context);
         await new Promise(r => setTimeout(r, 5000));
       }
     } finally {
-      await this.browserProvider.close();
+      await this.browserProvider.closeContext(context);
     }
 
-    this.logger.info(`======================================================`, "");
+    this.logger.info(`======================================================`);
     this.logger.info(`🎉 Finalizada la descarga de vídeos del curso ${courseId}.`);
   }
 
@@ -184,7 +188,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
         await page.close().catch(() => { });
       }
       if (!sharedContext && context) {
-        await this.browserProvider.close();
+        await this.browserProvider.closeContext(context);
       }
     }
   }

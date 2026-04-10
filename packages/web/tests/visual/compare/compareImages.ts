@@ -1,6 +1,7 @@
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
+import { logger } from "../logger";
 
 const fs = new NodeFileSystem();
 const path = new NodePath();
@@ -28,7 +29,7 @@ export async function compareImages() {
     const currentPath = path.join(currentDir, file);
 
     if (!(await fs.exists(currentPath))) {
-      console.warn(`current snapshot missing for ${file}`);
+      logger.warn(`current snapshot missing for ${file}`);
       continue;
     }
 
@@ -41,7 +42,7 @@ export async function compareImages() {
 
       // Handle dimension mismatch
       if (baseline.width !== current.width || baseline.height !== current.height) {
-        console.error(`Dimension mismatch for ${file}. Baseline: ${baseline.width}x${baseline.height}, Current: ${current.width}x${current.height}`);
+        logger.error(`Dimension mismatch for ${file}. Baseline: ${baseline.width}x${baseline.height}, Current: ${current.width}x${current.height}`);
         report.push({
           file,
           error: "dimension-mismatch",
@@ -78,9 +79,9 @@ export async function compareImages() {
         percentage: ((diffPixels / (baseline.width * baseline.height)) * 100).toFixed(2) + "%",
       });
 
-      console.log(`compared ${file}: ${diffPixels} pixels different`);
+      logger.info(`compared ${file}: ${diffPixels} pixels different`);
     } catch (err) {
-      console.error(`failed to compare ${file}:`, err);
+      logger.error(`failed to compare ${file}:`, err);
     }
   }
 

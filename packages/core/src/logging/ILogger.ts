@@ -1,7 +1,9 @@
+export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+
 export interface ILogger {
-  info(message: string, context?: string): void;
-  warn(message: string, context?: string): void;
-  error(message: string, error?: unknown, context?: string): void;
-  debug?(message: string, context?: string): void;
+  info(message: string): void;
+  warn(message: string): void;
+  error(message: string, error?: unknown): void;
+  debug?(message: string): void;
   withContext(context: string): ILogger;
 }

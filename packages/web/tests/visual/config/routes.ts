@@ -1,4 +1,4 @@
-import { NodeFileSystem, NodePath } from "@my-offline-lms/core/filesystem";
+import { NodeFileSystem, NodePath } from "@core/filesystem";
 
 const PAGES_DIR = "src/pages";
 const fs = new NodeFileSystem();

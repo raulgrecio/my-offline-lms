@@ -1,11 +1,11 @@
-import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
-import { IAuthSessionStorage } from "@features/auth-session/domain/ports/IAuthSessionStorage";
-import { env } from "@config/env";
+import { type IFileSystem, type IPath } from "@core/filesystem";
+
+import { type IAuthSessionStorage } from "../domain/ports/IAuthSessionStorage";
 
 export class DiskAuthSessionStorage implements IAuthSessionStorage {
-  private authDir: string | undefined;
-  private authFile: string | undefined;
-  private cookiesFile: string | undefined;
+  private authDir?: string;
+  private authFile?: string;
+  private cookiesFile?: string;
   private baseDirArg?: string;
   private fs: IFileSystem;
   private path: IPath;
@@ -47,33 +47,39 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     }
   }
 
-  async isValidSession(): Promise<boolean> {
+  async getCookies(): Promise<any[]> {
     const authFile = await this.getAuthFile();
-
     try {
+      if (!(await this.fs.exists(authFile))) return [];
       const content = await this.fs.readFile(authFile);
       const state = JSON.parse(content.toString());
-
-      if (!state.cookies || !Array.isArray(state.cookies) || state.cookies.length === 0) {
-        return false;
-      }
-
-      const now = Date.now() / 1000;
-      const platformDomain = new URL(env.PLATFORM_BASE_URL).hostname;
-
-      return state.cookies.some((c: any) => {
-        const isCorrectDomain = c.domain.includes(platformDomain) || platformDomain.includes(c.domain.replace(/^\./, ''));
-        const isNotExpired = !c.expires || c.expires <= 0 || c.expires > now;
-        return isCorrectDomain && isNotExpired;
-      });
+      return Array.isArray(state.cookies) ? state.cookies : [];
     } catch {
-      return false;
+      return [];
     }
   }
+
 
   async saveCookies(cookies: any[]): Promise<void> {
     await this.ensureInitialized();
     await this.ensureAuthDir();
+
+    // 1. Guardar en formato JSON (Playwright storageState)
+    // Intentar leer el estado actual para preservar localStorage si existe
+    let state: any = { cookies: [], origins: [] };
+    try {
+      if (await this.fs.exists(this.authFile!)) {
+        const content = await this.fs.readFile(this.authFile!);
+        state = JSON.parse(content.toString());
+      }
+    } catch {
+      // Si falla la lectura, empezamos de cero con el objeto base
+    }
+
+    state.cookies = cookies;
+    await this.fs.writeFile(this.authFile!, JSON.stringify(state, null, 2));
+
+    // 2. Guardar en formato Netscape (cookies.txt) para compatibilidad
     const cookiesStr = cookies
       .map((c: any) => {
         const includeSubdomains = c.domain.startsWith('.') ? "TRUE" : "FALSE";
@@ -82,9 +88,7 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
       })
       .join("\n");
 
-    await this.fs.writeFile(
-      this.cookiesFile!,
-      `# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n${cookiesStr}\n`,
-    );
+    const header = "# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n";
+    await this.fs.writeFile(this.cookiesFile!, header + cookiesStr + "\n");
   }
 }

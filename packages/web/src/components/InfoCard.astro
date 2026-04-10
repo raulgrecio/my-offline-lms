@@ -1,0 +1,63 @@
+---
+import { Icon } from "./Icon";
+import type { IconName } from "./Icon/icons";
+
+export interface Props {
+  title: string;
+  icon: IconName;
+  variant?: "brand" | "completed" | "failed" | "warning" | "info";
+  class?: string;
+}
+
+const { title, icon, variant = "brand", class: className = "" } = Astro.props;
+
+const variantClasses = {
+  brand: {
+    icon: "bg-brand-600/10 text-brand-500",
+    border: "hover:border-brand-500/30",
+  },
+  completed: {
+    icon: "bg-status-completed/10 text-status-completed",
+    border: "hover:border-status-completed/30",
+  },
+  failed: {
+    icon: "bg-status-failed/10 text-status-failed",
+    border: "hover:border-status-failed/30",
+  },
+  warning: {
+    icon: "bg-status-downloading/10 text-status-downloading",
+    border: "hover:border-status-downloading/30",
+  },
+  info: {
+    icon: "bg-status-info/10 text-status-info",
+    border: "hover:border-status-info/30",
+  },
+};
+
+const styles = variantClasses[variant] || variantClasses.brand;
+---
+
+<div
+  class:list={[
+    "p-8 rounded-3xl bg-surface-900 border border-border-subtle flex items-start gap-5 group transition-all duration-300",
+    styles.border,
+    className,
+  ]}
+>
+  <div
+    class:list={[
+      "p-3 rounded-2xl group-hover:scale-110 transition-transform duration-500",
+      styles.icon,
+    ]}
+  >
+    <Icon name={icon} size="md" />
+  </div>
+  <div>
+    <h3 class="text-lg font-bold text-text-primary mb-2 tracking-tight">
+      {title}
+    </h3>
+    <div class="text-sm text-text-muted leading-relaxed">
+      <slot />
+    </div>
+  </div>
+</div>

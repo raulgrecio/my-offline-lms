@@ -1,4 +1,4 @@
-import type { LearningPath } from '@my-offline-lms/core/models';
+import type { LearningPath } from '@core/domain';
 import type { ILearningPathRepository } from "../../domain/ports/ILearningPathRepository";
 
 export interface GetLearningPathByIdRequest {

@@ -1,5 +1,5 @@
-import { getDb } from "@db/database";
-import { logger } from "@platform/logging";
+import { getDb } from "@scraper/platform/database";
+import { logger } from "@scraper/platform/logging";
 
 async function main() {
   logger.info("Iniciando migración para eliminar UNIQUE constraint en Courses.slug...");

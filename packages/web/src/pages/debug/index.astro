@@ -1,26 +1,51 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import { Icon } from "@components/Icon";
+import Layout from "@web/layouts/Layout.astro";
+import { Icon } from "@web/components/Icon";
 
 const showcases = [
   {
     title: "Buttons",
-    description: "Visual regression and variant testing for the Button component.",
+    description:
+      "Visual regression and variant testing for the Button component.",
     href: "/debug/components/button-showcase",
-    icon: "play"
+    icon: "play",
   },
   {
     title: "Cards",
     description: "Testing various card layouts and interactive states.",
     href: "/debug/components/card-showcase",
-    icon: "layers"
+    icon: "layers",
   },
   {
     title: "Circular Progress",
     description: "Showcase for the new circular progress indicator.",
     href: "/debug/components/circular-progress-showcase",
-    icon: "rotate-cw"
-  }
+    icon: "rotate-cw",
+  },
+  {
+    title: "Icons",
+    description: "Grid view of all available SVG icons in the Oracle system.",
+    href: "/debug/components/icons-showcase",
+    icon: "layers",
+  },
+  {
+    title: "Wizard",
+    description: "Multi-step flow navigation with smooth transitions and premium buttons.",
+    href: "/debug/components/wizard-showcase",
+    icon: "book-open",
+  },
+  {
+    title: "LogConsole",
+    description: "Real-time terminal emulator with SSE integration and connection witness.",
+    href: "/debug/components/log-console-showcase",
+    icon: "terminal",
+  },
+  {
+    title: "Import Wizard",
+    description: "Complete preview of the content acquisition flow with all its states and steps.",
+    href: "/debug/components/import-showcase",
+    icon: "download",
+  },
 ];
 ---
 
@@ -28,47 +53,63 @@ const showcases = [
   <div class="max-w-4xl mx-auto py-12 px-6">
     <header class="mb-12 border-b border-border-subtle pb-8">
       <div class="flex items-center gap-3 mb-2">
-        <div class="w-10 h-10 rounded-xl bg-brand-600/10 flex items-center justify-center text-brand-600">
+        <div
+          class="w-10 h-10 rounded-xl bg-brand-600/10 flex items-center justify-center text-brand-600"
+        >
           <Icon name="settings" size="md" />
         </div>
         <h1 class="text-3xl font-bold text-text-primary">Debug & Showcases</h1>
       </div>
       <p class="text-text-secondary text-lg">
-        Central hub for component testing, visual regression, and design system audits.
+        Central hub for component testing, visual regression, and design system
+        audits.
       </p>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {showcases.map(item => (
-        <a 
-          href={item.href}
-          class="group block p-6 bg-surface-800 border border-border-subtle rounded-2xl hover:bg-surface-700 hover:border-brand-500/50 transition-all duration-300 no-underline"
-        >
-          <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-xl bg-surface-900 flex items-center justify-center text-text-muted group-hover:text-brand-400 group-hover:bg-brand-600/10 transition-colors">
-              <Icon name={item.icon as any} size="lg" />
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
-                <h3 class="text-lg font-bold text-text-primary group-hover:text-brand-400 transition-colors">
-                  {item.title}
-                </h3>
-                <Icon name="chevron-right" size="xs" className="text-text-muted group-hover:text-brand-500 translate-x-0 group-hover:translate-x-1 transition-all" />
+      {
+        showcases.map((item) => (
+          <a
+            href={item.href}
+            class="group block p-6 bg-surface-800 border border-border-subtle rounded-2xl hover:bg-surface-700 hover:border-brand-500/50 transition-all duration-300 no-underline"
+          >
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-surface-900 flex items-center justify-center text-text-muted group-hover:text-brand-400 group-hover:bg-brand-600/10 transition-colors">
+                <Icon name={item.icon as any} size="lg" />
               </div>
-              <p class="text-sm text-text-muted leading-relaxed">
-                {item.description}
-              </p>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                  <h3 class="text-lg font-bold text-text-primary group-hover:text-brand-400 transition-colors">
+                    {item.title}
+                  </h3>
+                  <Icon
+                    name="chevron-right"
+                    size="xs"
+                    className="text-text-muted group-hover:text-brand-500 translate-x-0 group-hover:translate-x-1 transition-all"
+                  />
+                </div>
+                <p class="text-sm text-text-muted leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
             </div>
-          </div>
-        </a>
-      ))}
+          </a>
+        ))
+      }
     </div>
 
     <div class="mt-16 pt-8 border-t border-border-subtle">
-      <div class="bg-surface-900/50 rounded-2xl p-6 border border-dashed border-border-subtle">
-        <h4 class="text-sm font-bold text-text-secondary uppercase tracking-wider mb-2">Development Tip</h4>
+      <div
+        class="bg-surface-900/50 rounded-2xl p-6 border border-dashed border-border-subtle"
+      >
+        <h4
+          class="text-sm font-bold text-text-secondary uppercase tracking-wider mb-2"
+        >
+          Development Tip
+        </h4>
         <p class="text-xs text-text-muted leading-relaxed">
-          These pages are excluded from the production build. Use them to verify component behavior across variants and states before submitting PRs.
+          These pages are excluded from the production build. Use them to verify
+          component behavior across variants and states before submitting PRs.
         </p>
       </div>
     </div>

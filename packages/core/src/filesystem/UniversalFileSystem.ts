@@ -1,6 +1,7 @@
 import { type MakeDirectoryOptions, type RmOptions } from "node:fs";
-import type { FileStats, IFileSystem } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export type FileSystemProtocol = "http" | "tcp" | "s3" | "blob";
 
@@ -66,6 +67,10 @@ export class UniversalFileSystem implements IFileSystem {
 
   async writeFile(p: string, content: string | Buffer): Promise<void> {
     return this.getBackend(p).writeFile(p, content);
+  }
+
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    return this.getBackend(p).appendFile(p, content);
   }
 
   async readdir(p: string): Promise<string[]> {

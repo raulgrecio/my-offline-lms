@@ -1,4 +1,4 @@
-import type { AssetType } from '@my-offline-lms/core/models';
+import type { AssetType } from '@core/domain';
 import { VIDEO_SEGMENT_SIZE } from "./constants";
 
 export interface AssetProgressConfig {

@@ -1,7 +1,7 @@
-import { Asset, Course } from '@my-offline-lms/core/models';
-import { IDatabase } from '@my-offline-lms/core/database';
+import type { Asset, Course } from '@core/domain';
+import { type IDatabase } from '@core/database';
 
-import { ICourseRepository } from '@features/platform-sync/domain/ports/ICourseRepository';
+import { type ICourseRepository } from '../domain/ports/ICourseRepository';
 
 export class SQLiteCourseRepository implements ICourseRepository {
   constructor(private db: IDatabase) { }
@@ -34,5 +34,22 @@ export class SQLiteCourseRepository implements ICourseRepository {
       status: row.status,
       localPath: row.local_path
     }));
+  }
+
+  getCoursesWithSyncStatus(): any[] {
+    return this.db.prepare(`
+        SELECT 
+            c.id, 
+            c.title,
+            c.slug,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id) as totalAssets,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND local_path IS NOT NULL) as downloadedAssets,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'video') as totalVideos,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'video' AND local_path IS NOT NULL) as downloadedVideos,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'guide') as totalGuides,
+            (SELECT COUNT(*) FROM Course_Assets WHERE course_id = c.id AND type = 'guide' AND local_path IS NOT NULL) as downloadedGuides
+        FROM Courses c
+        ORDER BY c.title ASC
+    `).all();
   }
 }

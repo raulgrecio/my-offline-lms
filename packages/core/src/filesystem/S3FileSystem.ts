@@ -1,6 +1,7 @@
 import { type MakeDirectoryOptions, type RmOptions } from "fs";
-import { type IFileSystem, type FileStats } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class S3FileSystem implements IFileSystem {
   private logger: ILogger;
@@ -24,6 +25,10 @@ export class S3FileSystem implements IFileSystem {
 
   async writeFile(p: string, content: string | Buffer): Promise<void> {
     throw new Error(`[S3FileSystem] writeFile not implemented for ${p}`);
+  }
+
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error(`[S3FileSystem] appendFile not implemented for ${p}`);
   }
 
   async readdir(p: string): Promise<string[]> {

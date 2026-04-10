@@ -1,4 +1,4 @@
-import { type LearningPath } from '@my-offline-lms/core/models';
+import { type LearningPath } from '@core/domain';
 import type { CourseWithOrderInPath } from "../model/CourseWithOrderInPath";
 
 export interface ILearningPathRepository {

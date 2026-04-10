@@ -12,6 +12,7 @@ export interface IFileSystem {
   readFile(p: string): Promise<Buffer>;
   readFile(p: string, encoding: BufferEncoding): Promise<string>;
   writeFile(p: string, content: string | Buffer): Promise<void>;
+  appendFile(p: string, content: string | Buffer): Promise<void>;
   readdir(p: string): Promise<string[]>;
   mkdir(p: string, options?: MakeDirectoryOptions): Promise<void>;
   rm?(p: string, options?: RmOptions): Promise<void>;

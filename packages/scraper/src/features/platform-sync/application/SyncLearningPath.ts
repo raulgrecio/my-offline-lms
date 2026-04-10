@@ -1,18 +1,19 @@
-import { ILogger } from '@my-offline-lms/core/logging';
+import { type ILogger } from '@core/logging';
 
-import { BrowserInterceptor } from "@platform/browser/BrowserInterceptor";
-import { IBrowserProvider } from "@platform/browser/IBrowserProvider";
-import { IUseCase } from '@features/shared/domain/ports/IUseCase';
-import { INamingService } from "@features/asset-download/domain/ports/INamingService";
-import { ICourseRepository } from "@features/platform-sync/domain/ports/ICourseRepository";
-import { IInterceptedDataRepositoryFactory } from "@features/platform-sync/domain/ports/IInterceptedDataRepositoryFactory";
-import { ILearningPathRepository } from "@features/platform-sync/domain/ports/ILearningPathRepository";
-import { IPlatformUrlProvider } from "@features/platform-sync/domain/ports/IPlatformUrlProvider";
+import { BrowserInterceptor, type IBrowserProvider } from "@scraper/platform/browser";
+import { type IUseCase } from '@scraper/features/shared';
+import { type INamingService } from "@scraper/features/asset-download";
+
+import { type ICourseRepository } from '../domain/ports/ICourseRepository';
+import { type InterceptedRepoCreator } from '../domain/ports/IInterceptedDataRepository';
+import { type ILearningPathRepository } from '../domain/ports/ILearningPathRepository';
+import { type IPlatformUrlProvider } from '../domain/ports/IPlatformUrlProvider';
 
 import { SyncCourse } from "./SyncCourse";
 
 export interface SyncLearningPathInput {
   pathInput: string;
+  taskId?: string;
 }
 
 export interface SyncLearningPathConfig {
@@ -24,7 +25,7 @@ export interface SyncLearningPathOptions {
   learningPathRepo: ILearningPathRepository;
   courseRepo: ICourseRepository;
   syncCourse: SyncCourse;
-  interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  createInterceptedRepo: InterceptedRepoCreator;
   browserInterceptor: BrowserInterceptor;
   urlProvider: IPlatformUrlProvider;
   namingService: INamingService;
@@ -37,7 +38,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
   private learningPathRepo: ILearningPathRepository;
   private courseRepo: ICourseRepository;
   private syncCourse: SyncCourse;
-  private interceptedDataRepoFactory: IInterceptedDataRepositoryFactory;
+  private createInterceptedRepo: InterceptedRepoCreator;
   private browserInterceptor: BrowserInterceptor;
   private urlProvider: IPlatformUrlProvider;
   private namingService: INamingService;
@@ -49,7 +50,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.learningPathRepo = options.learningPathRepo;
     this.courseRepo = options.courseRepo;
     this.syncCourse = options.syncCourse;
-    this.interceptedDataRepoFactory = options.interceptedDataRepoFactory;
+    this.createInterceptedRepo = options.createInterceptedRepo;
     this.browserInterceptor = options.browserInterceptor;
     this.urlProvider = options.urlProvider;
     this.namingService = options.namingService;
@@ -57,7 +58,8 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.config = options.config;
   }
 
-  async execute({ pathInput }: SyncLearningPathInput): Promise<void> {
+  async execute(input: SyncLearningPathInput, signal?: AbortSignal): Promise<void> {
+    const { pathInput, taskId } = input;
     if (!pathInput) {
       this.logger.error("No se proporcionó pathInput");
       return;
@@ -72,13 +74,13 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     this.logger.info(`Iniciando mapeo y sincronización de ruta: ${url} (ID: ${pathId})`);
 
     // 1. Extraer datos (Navegador)
-    const context = await this.browserProvider.getAuthenticatedContext();
+    const context = await this.browserProvider.getAuthenticatedContext({ signal });
     const page = await context.newPage();
 
     // Create an isolated repository for this specific execution
     // (We will initialize the actual path when setup returns it)
     const isolatedDirPath = await this.browserInterceptor.setup(page, { prefix: 'path', execTimestamp: Date.now() });
-    const isolatedInterceptedDataRepo = this.interceptedDataRepoFactory.create(isolatedDirPath);
+    const isolatedInterceptedDataRepo = this.createInterceptedRepo(isolatedDirPath);
 
     try {
       this.logger.info(`Carpeta de trabajo temporal: ${isolatedDirPath}`);
@@ -90,9 +92,10 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
       await page.close();
 
       // 2. Procesar JSON descargado y Sincronizar Cursos (Base de Datos)
-      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo });
+      await this.processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }, signal);
 
     } finally {
+      await this.browserProvider.closeContext(context);
       // --- Isolated Execution Environment Cleanup ---
       if (!this.config.keepTempWorkspaces) {
         if (isolatedDirPath) {
@@ -107,10 +110,11 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
     }
   }
 
-  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<IInterceptedDataRepositoryFactory['create']> }): Promise<void> {
+  private async processInterceptedData({ pathId, isolatedInterceptedDataRepo, taskId }: { pathId: string, isolatedInterceptedDataRepo: ReturnType<InterceptedRepoCreator>, taskId?: string }, signal?: AbortSignal): Promise<void> {
     const intercepted = await isolatedInterceptedDataRepo.getPendingForLearningPath(pathId);
 
     for (const payload of intercepted) {
+      if (signal?.aborted) return;
       const json = JSON.parse(payload.content);
 
       const lpData = json.data?.lpPageData;
@@ -145,7 +149,7 @@ export class SyncLearningPath implements IUseCase<SyncLearningPathInput, void> {
         const courseUrl = this.urlProvider.getCourseUrl({ slug: courseSlug, id: child.id });
 
         // Pasamos el offeringId si lo tenemos para ayudar a SyncCourse a ser más preciso
-        await this.syncCourse.execute({ courseInput: courseUrl, offeringId });
+        await this.syncCourse.execute({ courseInput: courseUrl, offeringId, taskId }, signal);
 
         orderIndex++;
         coursesAdded++;

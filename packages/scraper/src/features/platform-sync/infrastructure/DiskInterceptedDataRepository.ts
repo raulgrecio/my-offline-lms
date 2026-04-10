@@ -1,9 +1,8 @@
-import { type IFileSystem, type IPath } from "@my-offline-lms/core/filesystem";
-import { type ILogger } from '@my-offline-lms/core/logging';
+import { type IFileSystem, type IPath } from "@core/filesystem";
+import { type ILogger } from '@core/logging';
 
-import { PLATFORM } from "@config/platform";
-
-import { IInterceptedDataRepository, InterceptedPayload } from "@features/platform-sync/domain/ports/IInterceptedDataRepository";
+import { PLATFORM } from "@scraper/config";
+import { type IInterceptedDataRepository, type InterceptedPayload } from "@scraper/features/platform-sync";
 
 export class DiskInterceptedDataRepository implements IInterceptedDataRepository {
   private interceptedDir: string | undefined;
@@ -55,8 +54,8 @@ export class DiskInterceptedDataRepository implements IInterceptedDataRepository
     await this.initDir();
     const allFiles = await this.fs.readdir(this.interceptedDir!);
     const files = allFiles.filter(
-        file => pattern.test(file) && (!id || file.includes(id))
-      );
+      file => pattern.test(file) && (!id || file.includes(id))
+    );
 
     return Promise.all(files.map(async file => {
       const filePath = this.path.join(this.interceptedDir!, file);

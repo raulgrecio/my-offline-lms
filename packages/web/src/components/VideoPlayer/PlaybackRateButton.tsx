@@ -25,7 +25,7 @@ export default React.memo(function PlaybackRateButton({
       title="Velocidad de reproducción"
       aria-label={`Velocidad de reproducción actual: ${playbackRate}x`}
     >
-      <span className="text-[11px] font-bold leading-none opacity-80 group-hover:opacity-100 transition-opacity">
+      <span className="text-xs font-bold leading-none opacity-80 group-hover:opacity-100 transition-opacity">
         {playbackRate}x
       </span>
     </button>

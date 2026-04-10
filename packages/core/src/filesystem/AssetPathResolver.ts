@@ -1,6 +1,5 @@
-import type { AssetType } from "../domain/models/Asset";
-import { ASSET_FOLDERS } from "../domain/models/Asset";
-import type { AssetPathsJson } from "../domain/models/AssetPathsJson";
+import type { AssetPathsJson, AssetType } from "../domain";
+import { ASSET_FOLDERS } from "../domain";
 import { type ILogger, NoopLogger } from "../logging";
 import { type IFileSystem } from "./IFileSystem";
 import { type IPath } from "./IPath";

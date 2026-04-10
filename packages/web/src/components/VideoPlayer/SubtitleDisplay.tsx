@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
-import { apiClient } from '@platform/api/client';
-import { logger } from '@platform/logging';
+import { apiClient } from '@web/platform/api/client';
+import { logger } from '@web/platform/logging';
 
 interface Cue {
   start: number;

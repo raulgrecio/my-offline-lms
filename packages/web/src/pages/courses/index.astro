@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import { APP_ROUTES } from "@platform/router/routes";
-import { getAllCourses } from "@features/courses";
-import { getCourseProgress } from "@features/progress";
-import { getIsFavorite } from "@features/favorites";
-import Layout from "@layouts/Layout.astro";
-import CourseCard from "@components/CourseCard.astro";
-import EmptyState from "@components/EmptyState.astro";
-import PageHeader from "@components/PageHeader.astro";
-import VisibilityToggle from "@components/VisibilityToggle.astro";
+import { APP_ROUTES } from "@web/platform/router/routes";
+import { getAllCourses } from "@web/features/courses";
+import { getCourseProgress } from "@web/features/progress";
+import { getIsFavorite } from "@web/features/favorites";
+import Layout from "@web/layouts/Layout.astro";
+import CourseCard from "@web/components/CourseCard.astro";
+import EmptyState from "@web/components/EmptyState/EmptyState.astro";
+import PageHeader from "@web/components/PageHeader.astro";
+import VisibilityToggle from "@web/components/VisibilityToggle.astro";
 
 const showAll = Astro.url.searchParams.get("all") !== "false";
 const baseUrl = APP_ROUTES.COURSES.INDEX;
@@ -20,9 +20,9 @@ const coursesWithStatsResults = await Promise.all(
   courses.map(async (c) => {
     const [progress, isFavorite] = await Promise.all([
       getCourseProgress({ id: c.id }),
-      getIsFavorite({ id: c.id, type: "course" })
+      getIsFavorite({ id: c.id, type: "course" }),
     ]);
-    
+
     return {
       ...c,
       status: progress.status,
@@ -30,10 +30,12 @@ const coursesWithStatsResults = await Promise.all(
       progress: progress.progress,
       isFavorite,
     };
-  })
+  }),
 );
 
-const coursesWithStats = coursesWithStatsResults.filter((c) => showAll || c.totalAssets > 0);
+const coursesWithStats = coursesWithStatsResults.filter(
+  (c) => showAll || c.totalAssets > 0,
+);
 const hasContent = coursesWithStats.length > 0;
 ---
 

@@ -16,4 +16,5 @@ export const APP_ROUTES = {
     GUIDE: ({ assetId, courseId, path }: { assetId: string, courseId: string, path: string }) => `/viewer/?assetId=${assetId}&courseId=${courseId}&path=${encodeURIComponent(path)}`,
   },
   SETTINGS: "/settings",
+  IMPORT: "/import",
 } as const;

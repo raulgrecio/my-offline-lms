@@ -1,6 +1,7 @@
 import type { MakeDirectoryOptions } from "fs";
-import type { IFileSystem, FileStats } from "./IFileSystem";
+
 import { type ILogger, NoopLogger } from "../logging";
+import type { FileStats, IFileSystem } from "./IFileSystem";
 
 export class HttpFileSystem implements IFileSystem {
   private logger: ILogger;
@@ -24,6 +25,10 @@ export class HttpFileSystem implements IFileSystem {
 
   async writeFile(p: string, content: string | Buffer): Promise<void> {
     throw new Error("HttpFileSystem does not support writeFile");
+  }
+
+  async appendFile(p: string, content: string | Buffer): Promise<void> {
+    throw new Error("HttpFileSystem does not support appendFile");
   }
 
   async readdir(p: string): Promise<string[]> {

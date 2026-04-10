@@ -31,4 +31,18 @@ export const DATABASE_SCHEMA = `
     local_path TEXT,
     FOREIGN KEY(course_id) REFERENCES Courses(id)
   );
+
+  CREATE TABLE IF NOT EXISTS Scraper_Tasks (
+    id TEXT PRIMARY KEY,
+    type TEXT CHECK(type IN ('course', 'path')),
+    action TEXT CHECK(action IN ('SYNC_COURSE', 'SYNC_PATH', 'DOWNLOAD_COURSE', 'DOWNLOAD_PATH')),
+    target_id TEXT,
+    url TEXT,
+    status TEXT CHECK(status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED')) DEFAULT 'PENDING',
+    progress JSON,
+    error TEXT,
+    metadata JSON,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `;

@@ -1,18 +1,21 @@
 ---
 export const prerender = false;
 
-import { APP_ROUTES } from "@platform/router/routes";
-import { getLearningPathDetails } from "@features/learning-paths";
-import { getCourseProgress, getLearningPathProgress } from "@features/progress";
-import { getIsFavorite } from "@features/favorites";
-import Layout from "@layouts/Layout.astro";
-import CourseCard from "@components/CourseCard.astro";
-import EmptyState from "@components/EmptyState.astro";
-import { Icon } from "@components/Icon";
-import FavoriteButton from "@components/FavoriteButton.astro";
-import PageHeader from "@components/PageHeader.astro";
-import ProgressBar from "@components/ProgressBar.astro";
-import SectionHeader from "@components/SectionHeader.astro";
+import { APP_ROUTES } from "@web/platform/router/routes";
+import { getLearningPathDetails } from "@web/features/learning-paths";
+import {
+  getCourseProgress,
+  getLearningPathProgress,
+} from "@web/features/progress";
+import { getIsFavorite } from "@web/features/favorites";
+import Layout from "@web/layouts/Layout.astro";
+import CourseCard from "@web/components/CourseCard.astro";
+import EmptyState from "@web/components/EmptyState/EmptyState.astro";
+import { Icon } from "@web/components/Icon";
+import FavoriteButton from "@web/components/FavoriteButton.astro";
+import PageHeader from "@web/components/PageHeader.astro";
+import ProgressBar from "@web/components/ProgressBar.astro";
+import SectionHeader from "@web/components/SectionHeader.astro";
 
 interface PathPageProps {
   id?: string;
@@ -43,7 +46,7 @@ const courseData = await Promise.all(
       progress,
       isFavorite,
     };
-  })
+  }),
 );
 
 const progress = lpProgress.progress;

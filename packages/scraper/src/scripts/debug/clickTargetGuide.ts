@@ -3,8 +3,8 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import path from "path";
 import fs from "fs";
 
-import { env } from "@config/env";
-import { logger } from "@platform/logging";
+import { env } from "@scraper/config";
+import { logger } from "@scraper/platform/logging";
 
 chromium.use(stealth());
 
@@ -30,7 +30,7 @@ async function run() {
 
   const baseUrl = env.PLATFORM_BASE_URL;
   const courseUrl = new URL(`/ou/course/oracle-ai-database-deploy-patch-and-upgrade-workshop/146324`, baseUrl).href;
-  logger.info("Navigating to course page:", courseUrl);
+  logger.info(`Navigating to course page: ${courseUrl}`);
   await page.goto(courseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(8000);
 

@@ -1,5 +1,6 @@
 import path from "path";
-import { type IPath } from "./IPath";
+
+import type { IPath } from "./IPath";
 
 export class NodePath implements IPath {
   resolve(...paths: string[]): string {

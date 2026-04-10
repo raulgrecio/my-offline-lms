@@ -1,4 +1,4 @@
-import { Asset, Course } from '@my-offline-lms/core/models';
+import type { Asset, Course } from '@core/domain';
 
 export interface ICourseRepository {
   /** Save or update a Course */
@@ -7,5 +7,7 @@ export interface ICourseRepository {
   getCourseById(id: string): Course | null;
   /** Get all assets for a given course */
   getCourseAssets(courseId: string): Asset[];
+  /** Get all courses with detailed sync information for wizard display */
+  getCoursesWithSyncStatus(): any[];
 }
 

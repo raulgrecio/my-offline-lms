@@ -1,7 +1,7 @@
-import { Asset, AssetStatus, AssetType } from '@my-offline-lms/core/models';
-import { IDatabase } from '@my-offline-lms/core/database';
+import type { Asset, AssetStatus, AssetType } from '@core/domain';
+import { type IDatabase } from '@core/database';
 
-import { IAssetRepository } from '@features/asset-download/domain/ports/IAssetRepository';
+import { type IAssetRepository } from '../domain/ports/IAssetRepository';
 
 export class SQLiteAssetRepository implements IAssetRepository {
   constructor(private db: IDatabase) { }

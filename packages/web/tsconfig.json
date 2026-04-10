@@ -6,18 +6,12 @@
     "baseUrl": ".",
     "paths": {
       "@core/*": ["../core/src/*"],
-      "@config/*": ["src/config/*"],
-      "@components/*": ["src/components/*"],
-      "@features/*": ["src/features/*"],
-      "@layouts/*": ["src/layouts/*"],
-      "@lib/*": ["src/lib/*"],
-      "@pages/*": ["src/pages/*"],
-      "@platform/*": ["src/platform/*"],
-      "@/*": ["src/*"],
+      "@scraper/*": ["../scraper/src/*"],
+      "@web/*": ["src/*"],
     },
     "types": ["node", "@testing-library/jest-dom", "vitest/globals"],
     "skipLibCheck": true
   },
-  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./e2e/**/*"],
+  "include": [".astro/types.d.ts", "./src/**/*", "./tests/**/*", "./tests/e2e/**/*", "./tests/visual/**/*"],
   "exclude": ["node_modules", "dist"]
 }

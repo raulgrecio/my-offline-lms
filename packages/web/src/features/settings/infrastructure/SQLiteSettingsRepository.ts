@@ -1,4 +1,4 @@
-import type { IDatabase } from '@my-offline-lms/core/database';
+import type { IDatabase } from '@core/database';
 import type { ISettingsRepository } from "../domain/ports/ISettingsRepository";
 
 export class SQLiteSettingsRepository implements ISettingsRepository {

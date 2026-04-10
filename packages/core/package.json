@@ -13,17 +13,29 @@
   },
   "typesVersions": {
     "*": {
-      "database": ["src/database/index.ts"],
-      "filesystem": ["src/filesystem/index.ts"],
-      "logging": ["src/logging/index.ts"],
-      "models": ["src/domain/index.ts"],
-      "di": ["src/di/index.ts"]
+      "database": [
+        "src/database/index.ts"
+      ],
+      "filesystem": [
+        "src/filesystem/index.ts"
+      ],
+      "logging": [
+        "src/logging/index.ts"
+      ],
+      "models": [
+        "src/domain/index.ts"
+      ],
+      "di": [
+        "src/di/index.ts"
+      ]
     }
   },
   "private": true,
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
+    "test:unit": "vitest run test/unit --passWithNoTests",
+    "test:integration": "vitest run test/integration --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
@@ -32,8 +44,8 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.14.9",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.5.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }

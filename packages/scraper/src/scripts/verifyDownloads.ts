@@ -1,10 +1,10 @@
 import path from "path";
-import { getDb } from "@db/database";
+import { getDb } from "@scraper/platform/database";
 import { verifyAssetFiles } from "./helpers/verifyAssetFiles";
-import { getAssetsDir } from "@config/paths";
-import { SQLiteAssetRepository } from "@features/asset-download/infrastructure/AssetRepository";
-import { logger as baseLogger } from "@platform/logging";
-import { IDatabase } from "@my-offline-lms/core/database";
+import { getAssetsDir } from "@scraper/config";
+import { SQLiteAssetRepository } from "@scraper/features/asset-download";
+import { logger as baseLogger } from "@scraper/platform/logging";
+import { type IDatabase } from "@core/database";
 
 const logger = baseLogger.withContext("verifyDownloads");
 
