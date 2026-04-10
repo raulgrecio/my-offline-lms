@@ -118,4 +118,29 @@ describe('TaskOrchestrator', () => {
     expect(deps.updateTask.execute).not.toHaveBeenCalled();
     expect(work).toHaveBeenCalled();
   });
+
+  describe('Edge Cases (Merged)', () => {
+    it('should handle abort signal triggered during work completion', async () => {
+      const workWithAbort = async () => {
+         orchestrator.abortTask('1');
+      };
+
+      await orchestrator.run({ taskId: '1', mainStep: 'Test' }, workWithAbort);
+
+      expect(deps.updateTask.execute).toHaveBeenCalledWith(expect.objectContaining({
+        id: '1',
+        status: 'CANCELLED'
+      }));
+    });
+
+    it('should handle errors in updateTask when work also fails', async () => {
+      const work = vi.fn().mockRejectedValue(new Error("Work failed"));
+      deps.updateTask.execute.mockRejectedValue(new Error("Database down"));
+
+      await expect(orchestrator.run({ taskId: '1', mainStep: 'Test' }, work))
+        .rejects.toThrow("Database down");
+      
+      expect(deps.logger.error).toHaveBeenCalled();
+    });
+  });
 });

@@ -405,4 +405,40 @@ describe('SyncCourse Use Case', () => {
       await expect(useCase.execute({ courseInput: '123' })).rejects.toThrow('TASK_CANCELLED');
     });
   });
+
+  it('should cover persistEkits fallback branches', async () => {
+    const ekits = [
+      { id: '1', ekitId: 'uuid1', name: 'N' }, // All present
+      { ekitId: 'uuid2', name: 'N' },          // Missing id
+      { id: '3', name: 'N' },                 // Missing ekitId
+      { name: 'N' }                           // Missing both
+    ];
+
+    await (useCase as any).persistEkits('course-1', ekits, 'offer-1');
+
+    expect(mockAssetRepo.saveAsset).toHaveBeenCalledTimes(4);
+    
+    // Check missing id (uses ekitId)
+    expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'uuid2'
+    }));
+
+    // Check missing ekitId (uses id)
+    expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({
+      id: '3'
+    }));
+
+    // Check missing both (uses counter)
+    expect(mockAssetRepo.saveAsset).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'guide-3'
+    }));
+  });
+
+  it('should cover dynamic offeringId extraction when initial is null', () => {
+      const payloads = [
+          { url: 'https://platform.com/path?offeringId=999', data: { name: 'Name' } }
+      ];
+      const metadata = (useCase as any).extractCourseMetadata(payloads, undefined);
+      expect(metadata.offeringId).toBe('999');
+  });
 });

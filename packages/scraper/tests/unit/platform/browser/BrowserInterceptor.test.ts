@@ -58,6 +58,12 @@ describe('BrowserInterceptor', () => {
     expect(targetDir).toContain('/mock/intercepted');
   });
 
+  it('should skip mkdir if target directory already exists', async () => {
+    mockFs.exists.mockResolvedValue(true);
+    await interceptor.setup(mockPage);
+    expect(mockFs.mkdir).not.toHaveBeenCalled();
+  });
+
   it('should attach a response listener to the page', async () => {
     await interceptor.setup(mockPage);
     expect(mockPage.on).toHaveBeenCalledWith('response', expect.any(Function));
@@ -158,4 +164,3 @@ describe('BrowserInterceptor', () => {
     expect(filename).toContain('_api.json'); // Clean
   });
 });
-

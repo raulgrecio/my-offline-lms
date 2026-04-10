@@ -5,6 +5,7 @@ import EventEmitter from 'events';
 import { type ILogger } from '@core/logging';
 import { YtDlpVideoDownloader } from '@scraper/features/asset-download/infrastructure/YtDlpVideoDownloader';
 import { type IAuthSessionStorage } from '@scraper/features/auth-session/domain/ports/IAuthSessionStorage';
+import { AbortContext } from '@scraper/features/task-management';
 
 vi.mock('child_process');
 
@@ -39,6 +40,7 @@ describe('YtDlpVideoDownloader', () => {
     const mockProcess = new EventEmitter() as any;
     mockProcess.stdout = new EventEmitter();
     mockProcess.stderr = new EventEmitter();
+    mockProcess.kill = vi.fn();
     return mockProcess;
   }
 
@@ -195,5 +197,51 @@ describe('YtDlpVideoDownloader', () => {
 
     await expect(promise).rejects.toThrow(/después de 3 reintentos/);
     expect(spawn).toHaveBeenCalledTimes(4);
+  });
+
+  describe('Edge Cases (Merged)', () => {
+    it('should handle abort signal and kill process', async () => {
+      const mockProcess = createMockProcess();
+      vi.mocked(spawn).mockReturnValue(mockProcess);
+
+      const controller = new AbortController();
+      
+      let promise: Promise<void> | undefined;
+      await AbortContext.run(controller.signal, async () => {
+        promise = downloader.download('url', 'out');
+      });
+
+      await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 1);
+      controller.abort();
+
+      expect(mockProcess.kill).toHaveBeenCalledWith('SIGKILL');
+      await expect(promise).rejects.toThrow(/Operation cancelled/);
+    });
+
+    it('should handle signal already aborted before closing', async () => {
+      const mockProcess = createMockProcess();
+      vi.mocked(spawn).mockReturnValue(mockProcess);
+
+      const controller = new AbortController();
+      let promise: Promise<void> | undefined;
+
+      await AbortContext.run(controller.signal, async () => {
+        promise = downloader.download('url', 'out');
+      });
+
+      await vi.waitUntil(() => vi.mocked(spawn).mock.calls.length === 1);
+      controller.abort();
+      mockProcess.emit('close', 0);
+
+      await expect(promise).rejects.toThrow(/Operation cancelled/);
+    });
+
+    it('should handle already aborted signal at start of promise', async () => {
+        const controller = new AbortController();
+        controller.abort();
+  
+        await expect(AbortContext.run(controller.signal, () => downloader.download('url', 'out')))
+          .rejects.toThrow('TASK_CANCELLED');
+    });
   });
 });

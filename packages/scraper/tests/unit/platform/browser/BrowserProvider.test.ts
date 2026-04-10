@@ -17,6 +17,7 @@ vi.mock('puppeteer-extra-plugin-stealth', () => ({
 
 import { chromium } from "playwright-extra";
 import { BrowserProvider } from '@scraper/platform/browser/BrowserProvider';
+import { AbortContext } from '@scraper/features/task-management';
 
 describe('BrowserProvider (Multi-session Support)', () => {
   const mockLogger = {
@@ -264,6 +265,59 @@ describe('BrowserProvider (Multi-session Support)', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al cerrar el contexto: fail context'));
     });
 
+    it('should handle errors in disconnected listener', async () => {
+      const providerWithLogger = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+      const mockBrowserInstance = createMockBrowser();
+      let disconnectCb: any;
+      mockBrowserInstance.on.mockImplementation((event: string, cb: any) => {
+        if (event === 'disconnected') disconnectCb = cb;
+      });
+      (chromium.launch as any).mockResolvedValue(mockBrowserInstance);
+
+      const ctx = await providerWithLogger.getHeadfulContext();
+      // Force context browser() to throw to hit line 88
+      vi.spyOn(ctx, 'browser').mockImplementation(() => { throw new Error('Dead context'); });
+
+      if (disconnectCb) disconnectCb();
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Canal de comunicación'));
+    });
+
+    it('should respond to abort signal during context lifecycle', async () => {
+      const providerWithLogger = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+      const controller = new AbortController();
+      await AbortContext.run(controller.signal, async () => {
+          await providerWithLogger.getHeadfulContext();
+          controller.abort();
+          expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Señal de aborto recibida'));
+      });
+    });
+
+    it('should handle already aborted signal in getContext', async () => {
+      const providerWithLogger = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+      const abortedSignal = { aborted: true } as AbortSignal;
+      
+      await AbortContext.run(abortedSignal, async () => {
+          const ctx = await providerWithLogger.getHeadfulContext();
+          expect(ctx).toBeDefined();
+          // Since it's already aborted, the context should be closed immediately
+          // but there is no specific log for the immediate path in production code.
+      });
+    });
+
+    it('should handle and log browser close errors in closeContext', async () => {
+        const providerWithLogger = new BrowserProvider({ fs: mockFs, path: mockPath, config, logger: mockLogger });
+        const mockBrowserInstance = createMockBrowser();
+        (chromium.launch as any).mockResolvedValue(mockBrowserInstance);
+    
+        const ctx = await providerWithLogger.getHeadfulContext();
+    
+        // Force contexts().length === 0 in closeContext by mocking contexts()
+        vi.spyOn(mockBrowserInstance as any, 'contexts').mockReturnValue([]);
+        vi.spyOn(mockBrowserInstance as any, 'close').mockRejectedValue(new Error('Browser shutdown failed'));
+    
+        await providerWithLogger.closeContext(ctx);
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error al cerrar el navegador (headful): Browser shutdown failed'));
+      });
   });
 });
 
