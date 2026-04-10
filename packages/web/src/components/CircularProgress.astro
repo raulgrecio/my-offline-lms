@@ -84,18 +84,23 @@ const progressStyle = isHex ? { color } : {};
   <div
     class={cn(
       "absolute inset-0 flex items-center justify-center font-bold transition-colors",
-      textSizes[size],
-      isDone
-        ? "text-brand-500"
-        : "text-text-secondary group-hover:text-brand-400"
+      textSizes[size]
     )}
   >
-    {
-      isDone ? (
-        <Icon name="check" size={iconSizes[size]} className="text-brand-500" />
-      ) : (
-        <span>{label}</span>
-      )
-    }
+    <div
+      data-progress-label
+      class={cn(
+        isDone ? "hidden" : "block",
+        "text-text-secondary group-hover:text-brand-400"
+      )}
+    >
+      {label}
+    </div>
+    <div
+      data-progress-check
+      class={cn(isDone ? "block" : "hidden", "text-brand-500")}
+    >
+      <Icon name="check" size={iconSizes[size]} />
+    </div>
   </div>
 </div>

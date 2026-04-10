@@ -35,7 +35,7 @@ describe("CircularProgress.astro", () => {
     const html = await container.renderToString(CircularProgress, { props: { label: "5" } });
 
     // Use regex to ignore Astro source tracking data attributes
-    expect(html).toMatch(/>5<\/span>/);
+    expect(html).toMatch(/data-progress-label.*>\s*5\s*<\/div>/);
   });
 
   it("should apply custom color class", async () => {

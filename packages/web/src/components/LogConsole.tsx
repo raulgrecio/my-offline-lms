@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 import { Icon } from '@web/components/Icon';
+import { Toggle } from '@web/components/Toggle';
 import { API_ROUTES } from '@web/platform/api/routes';
 
 interface LogEntry {
@@ -68,18 +69,17 @@ export const LogConsole: React.FC = () => {
           <span className="text-2xs font-bold text-text-muted uppercase tracking-[0.2em] font-mono">Scraper_Terminal_v1.0</span>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setAutoScroll(!autoScroll)}
-            className={`text-2xs font-bold px-2 py-1 rounded border transition-all ${autoScroll ? 'bg-brand-600/20 border-brand-500/50 text-brand-400' : 'bg-surface-800 border-border-subtle text-text-muted hover:text-text-primary'}`}
-          >
-            {autoScroll ? 'AUTO-SCROLL ON' : 'AUTO-SCROLL OFF'}
-          </button>
+          <Toggle
+            label="Autoscroll"
+            checked={autoScroll}
+            onChange={setAutoScroll}
+          />
           <button
             onClick={() => setLogs([])}
             className="text-text-muted hover:text-status-failed transition-colors"
             title="Clear console"
           >
-            <Icon name="trash" size="xs" />
+            <Icon name="eraser" size="xs" />
           </button>
         </div>
       </div>

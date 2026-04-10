@@ -1,5 +1,6 @@
 ---
-import CircularProgress from "@web/components/CircularProgress.astro";
+import CircularProgress from "./CircularProgress.astro";
+import { Toggle } from "./Toggle";
 
 export interface VideoPlayVideo {
   id: string;
@@ -37,23 +38,7 @@ const formatTime = (sec: number) => {
       Contenido
     </div>
     <!-- Autoplay Toggle -->
-    <label class="flex items-center gap-2 cursor-pointer group">
-      <span
-        class="text-2xs font-bold text-text-muted group-hover:text-brand-500 transition-colors uppercase tracking-tight"
-        >Autoplay</span
-      >
-      <div class="relative inline-flex items-center">
-        <input type="checkbox" id="autoplay-toggle" class="sr-only peer" />
-        <div
-          class="w-7 h-4 bg-surface-600 rounded-full peer peer-checked:bg-brand-600 transition-colors"
-        >
-        </div>
-        <div
-          class="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-3"
-        >
-        </div>
-      </div>
-    </label>
+    <Toggle label="Autoplay" id="autoplay-toggle" />
   </div>
   <div class="overflow-y-auto flex-1 custom-scrollbar">
     {
@@ -126,13 +111,13 @@ const formatTime = (sec: number) => {
   // ─── Video playlist logic ────────────────────────────────────────────
   const setupPlaylists = () => {
     const playlists = document.querySelectorAll<HTMLElement>(
-      ".video-playlist-sidebar"
+      ".video-playlist-sidebar",
     );
 
     playlists.forEach((playlist) => {
       const items = playlist.querySelectorAll<HTMLButtonElement>(".video-item");
       const autoplayToggle = playlist.querySelector(
-        "#autoplay-toggle"
+        "#autoplay-toggle",
       ) as HTMLInputElement | null;
 
       // 1. Switch videos
@@ -152,7 +137,7 @@ const formatTime = (sec: number) => {
         autoplayToggle.addEventListener("change", () => {
           localStorage.setItem(
             "autoplayNext",
-            autoplayToggle.checked.toString()
+            autoplayToggle.checked.toString(),
           );
         });
       }
@@ -161,7 +146,7 @@ const formatTime = (sec: number) => {
       const onProgress = (e: any) => {
         const { assetId, position, completed } = e.detail;
         const btn = playlist.querySelector(
-          `.video-item[data-asset-id="${assetId}"]`
+          `.video-item[data-asset-id="${assetId}"]`,
         ) as HTMLElement;
         if (!btn) return;
 
@@ -169,12 +154,12 @@ const formatTime = (sec: number) => {
         if (duration > 0) {
           const progressPercent = Math.min(
             100,
-            Math.round((position / duration) * 100)
+            Math.round((position / duration) * 100),
           );
 
           // Update SVG progress ring (CircularProgress)
           const progressCircle = btn.querySelector(
-            "circle.stroke-current:last-child"
+            "circle.stroke-current:last-child",
           ) as SVGCircleElement;
           if (progressCircle) {
             progressCircle.style.strokeDashoffset = (
@@ -185,7 +170,7 @@ const formatTime = (sec: number) => {
           // Update percentage bar
           const bar = btn.querySelector(".bg-brand-600\\/50") as HTMLElement;
           const barText = btn.querySelector(
-            "span.text-brand-600\\/80"
+            "span.text-brand-600\\/80",
           ) as HTMLElement;
           if (bar) bar.style.width = `${progressPercent}%`;
           if (barText) barText.textContent = `${progressPercent}%`;
@@ -193,15 +178,13 @@ const formatTime = (sec: number) => {
 
         // Update icon if completed
         if (completed) {
-          const iconContainer = btn.querySelector(
-            ".absolute.inset-0.flex.items-center.justify-center"
-          ) as HTMLElement;
-          if (
-            iconContainer &&
-            !iconContainer.querySelector('svg[data-icon="check"]')
-          ) {
-            iconContainer.innerHTML =
-              '<svg class="w-3 h-3 text-brand-500" data-icon="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+          const label = btn.querySelector("[data-progress-label]");
+          const check = btn.querySelector("[data-progress-check]");
+          if (label && check) {
+            label.classList.add("hidden");
+            label.classList.remove("block");
+            check.classList.add("block");
+            check.classList.remove("hidden");
           }
         }
       };
@@ -211,12 +194,12 @@ const formatTime = (sec: number) => {
         if (!autoplayToggle?.checked) return;
 
         const currentBtn = playlist.querySelector(
-          `.video-item[data-asset-id="${assetId}"]`
+          `.video-item[data-asset-id="${assetId}"]`,
         );
         if (!currentBtn) return;
 
         const allBtns = Array.from(
-          playlist.querySelectorAll<HTMLButtonElement>(".video-item")
+          playlist.querySelectorAll<HTMLButtonElement>(".video-item"),
         );
         const currentIndex = allBtns.indexOf(currentBtn as HTMLButtonElement);
         const nextBtn = allBtns[currentIndex + 1];
