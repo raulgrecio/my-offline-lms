@@ -43,10 +43,12 @@ I would like to express my sincere gratitude to [**Oracle University**](https://
 
 **Key Features:**
 
-- **Clean Architecture**: Organized by Use Cases, Domain, and Infrastructure.
-- **Monorepo**: Clear separation between core logic, scraper, and web interface.
-- **Resilient**: Automatic resuming of downloads and advanced error handling.
-- **High-Quality PDFs**: Optimized PDF generation from interactive image-based viewers.
+- **Clean Architecture & Monorepo**: Solid separation of concerns using `pnpm workspaces`.
+- **Task-Based Orchestration**: Modern task lifecycle management (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`) with SQLite persistence.
+- **Web-Based Scraper Wizard**: A user-friendly GUI to authenticate, select content, and launch sync/download tasks.
+- **Resilient & Efficient**: Migration to standard `AbortSignal` for graceful cancellation and isolated Browser Contexts for resource-efficient background tasks.
+- **Real-Time Observability**: Internal `LogBroker` and `LogConsole` for live tracking of scraper progress.
+- **High-Quality PDFs**: Optimized generation from interactive viewers using `pdfkit` and `sharp`.
 
 ---
 
@@ -55,22 +57,22 @@ I would like to express my sincere gratitude to [**Oracle University**](https://
 The project is organized as a monorepo using `pnpm workspaces` to separate responsibilities:
 
 ### 1. [`packages/core`](./packages/core) (The Heart)
-Contains shared logic and fundamental abstractions. It does not depend on any other package.
-- **`filesystem/`**: Abstractions for file access (Local, S3, Blob). Implements the *Adapter* pattern for storage independence.
-- **`database/`**: Base SQLite configuration and common data types.
-- **`logging/`**: Logging interface for system-wide consistency.
+Contains shared logic and fundamental abstractions.
+- **`filesystem/`**: Adapter pattern for storage independence (Local, Http).
+- **`database/`**: Centralized SQLite configuration and shared schema.
+- **`logging/`**: Unified logging with `LogBroker` for cross-package observability.
 
-### 2. [`packages/scraper`](./packages/scraper) (The Data Factory)
-Responsible for platform interaction and resource gathering.
-- **`application/`**: Use cases (`SyncCourse`, `SyncLearningPath`, `DownloadVideos`).
-- **`infrastructure/`**: Browser automation (Playwright) and video download services (`yt-dlp`).
-- **`presentation/`**: CLI entry point (`cli.ts`).
+### 2. [`packages/scraper`](./packages/scraper) (The Engine)
+Handles platform interaction and heavy lifting.
+- **`features/`**: Domain-driven Use Cases (`SyncCourse`, `DownloadVideos`). Now uses a decentralized `AbortSignal` pattern for orchestration.
+- **`platform/browser/`**: Advanced `BrowserProvider` using isolated contexts for stability.
+- **`presentation/`**: CLI entry point and internal scripts.
 
-### 3. [`packages/web`](./packages/web) (The Consumer)
-An **Astro** application providing a modern offline viewer for the downloaded content.
-- **`features/`**: Organized by domain (Courses, Learning Paths, Progress).
-- **`platform/`**: Web-specific adapters and database access.
-- **`components/`**: Modern, reactive UI components.
+### 3. [`packages/web`](./packages/web) (The Command Center & Viewer)
+An **Astro** application with **React** integration for the management UI and content viewer.
+- **`pages/import/`**: The modern **Scraper Wizard** for wizard-based content ingestion.
+- **`api/scraper/`**: Endpoints to control and monitor background tasks.
+- **`components/`**: Premium, reactive components for the viewer and task console.
 
 ---
 
@@ -121,32 +123,35 @@ An **Astro** application providing a modern offline viewer for the downloaded co
 
 ---
 
-## Usage Guide (CLI)
+## Usage Guide (Scraper)
 
+You can interact with the scraper through the modern Web Wizard (recommended) or the classic CLI.
+
+### Option A: Web Scraper Wizard (Recommended)
+1. Go to the **Import** section in the web interface.
+2. Follow the step-by-step wizard:
+   - **Auth**: Ensure you are logged in (status is validated in real-time).
+   - **Selection**: Provide the Course or Learning Path URL/Slug.
+   - **Execution**: Monitor the task progress and logs in real-time via the built-in console.
+
+### Option B: Classic CLI (Direct Control)
 Perform actions via `pnpm cli` in the scraper package.
 
-### 1. Authentication
-Perform the login manually in the browser window that appears. **Keep the browser open** until you have authenticated (including 2FA).
+#### 1. Authentication
 ```bash
 pnpm cli login
 ```
-_**Important**: Press **ENTER** in the terminal to save the session once you are logged in. This saves cookies to `data/.auth/` for future use._
+_**Important**: Keep the browser open until you have authenticated. This saves session state to `data/.auth/`._
 
-### 2. Synchronization
-Load course or learning path metadata into the local database.
+#### 2. Synchronization & Download
 ```bash
-# Sync an individual course
+# Sync course or path
 pnpm cli sync-course <URL_OR_SLUG>
-
-# Sync a full Learning Path
 pnpm cli sync-path <URL_OR_ID>
-```
 
-### 3. Downloading
-Download assets (PDFs and Videos) after syncing.
-```bash
-# Download everything pending for a course
+# Download assets
 pnpm cli download-course <COURSE_ID>
+pnpm cli download-path <PATH_ID> [type]
 ```
 
 ---
