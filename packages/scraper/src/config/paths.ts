@@ -23,7 +23,17 @@ export const getAuthDir = async () => pathAdapter.join(await getDataDir(), ".aut
 export const getAuthState = async () => pathAdapter.join(await getAuthDir(), "state.json");
 export const getInterceptedDir = async () => pathAdapter.join(await getDataDir(), "intercepted");
 export const getLogsDir = async () => pathAdapter.join(await getMonorepoRoot(), "logs");
-export const getLogsFile = async () => pathAdapter.join(await getLogsDir(), "scraper.log");
+export const getLogsFile = async () => {
+  // Folder structure: logs/YYYY-MM-DD/
+  // Filename format: scraper_HH-mm-ss.log (UTC)
+  const now = new Date();
+  const dateFolder = now.toISOString().split('T')[0];
+  const timeStr = now.getUTCHours().toString().padStart(2, '0') + '-' +
+    now.getUTCMinutes().toString().padStart(2, '0') + '-' +
+    now.getUTCSeconds().toString().padStart(2, '0');
+
+  return pathAdapter.join(await getLogsDir(), dateFolder, `scraper_${timeStr}.log`);
+};
 
 /** Configuración de rutas de assets compartida */
 export const getAssetPathsConfig = async () => await resolver.getAssetConfigPath();
