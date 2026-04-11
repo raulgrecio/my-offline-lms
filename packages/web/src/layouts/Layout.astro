@@ -5,6 +5,7 @@ import Navigation from "@web/components/Navigation.astro";
 import { Icon } from "@web/components/Icon";
 import Button from "@web/components/Button.astro";
 import { APP_ROUTES } from "@web/platform/router/routes";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
   title: string;
@@ -47,13 +48,25 @@ const navLinks = [
 
         document.documentElement.setAttribute("data-theme", theme);
       })();
+
+      // Re-aplicar tema tras navegar (para ClientRouter)
+      document.addEventListener("astro:after-swap", () => {
+        const theme =
+          localStorage.getItem("theme") ||
+          (window.matchMedia("(prefers-color-scheme: light)").matches
+            ? "light"
+            : "dark");
+        document.documentElement.setAttribute("data-theme", theme);
+      });
     </script>
+    <ClientRouter />
   </head>
-  <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
+  <body class="h-screen flex flex-col w-full m-0 p-0 overflow-hidden">
     <!-- ─── Top Navigation ─────────────────────────────────────────── -->
     <header
       id="main-header"
-      class="sticky top-0 z-50 bg-surface-900 border-b border-border-subtle"
+      class="w-full sticky top-0 z-50 bg-surface-900 border-b border-border-subtle"
+      transition:name="main-header"
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
@@ -119,18 +132,20 @@ const navLinks = [
       </div>
     </header>
 
-    <!-- ─── Main Content ───────────────────────────────────────────── -->
-    <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-      <slot />
-    </main>
+    <div id="scroll-container" class="flex-1 overflow-y-auto">
+      <!-- ─── Main Content ───────────────────────────────────────────── -->
+      <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <slot />
+      </main>
 
-    <!-- ─── Footer ─────────────────────────────────────────────────── -->
-    <footer
-      class="mt-auto py-6 text-center text-xs text-text-muted border-t border-border-subtle"
-    >
-      Offline LMS — contenido descargado y exclusivo para fines educativos y
-      personales
-    </footer>
+      <!-- ─── Footer ─────────────────────────────────────────────────── -->
+      <footer
+        class="mt-auto py-6 text-center text-xs text-text-muted border-t border-border-subtle"
+      >
+        Offline LMS — contenido descargado y exclusivo para fines educativos y
+        personales
+      </footer>
+    </div>
 
     <!-- ─── Mobile Menu Script ─────────────────────────────────────── -->
     <script>
@@ -144,6 +159,12 @@ const navLinks = [
         menu?.classList.toggle("hidden", isOpen);
         iconMenu?.classList.toggle("hidden", !isOpen);
         iconClose?.classList.toggle("hidden", isOpen);
+      });
+
+      // Asegurar que el scroll vuelva arriba al navegar
+      document.addEventListener("astro:after-swap", () => {
+        const scroller = document.getElementById("scroll-container");
+        if (scroller) scroller.scrollTop = 0;
       });
     </script>
   </body>

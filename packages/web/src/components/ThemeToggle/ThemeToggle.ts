@@ -1,4 +1,11 @@
+export function applyTheme() {
+  const saved = localStorage.getItem("theme");
+  const theme = saved || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
 export function initThemeToggle() {
+  applyTheme();
   const btns = document.querySelectorAll("[data-theme-toggle]");
   const doc = document.documentElement;
 
