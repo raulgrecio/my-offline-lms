@@ -18,17 +18,17 @@ describe("ThemeToggle Logic", () => {
     initThemeToggle();
     const button = document.querySelector("[data-theme-toggle]") as HTMLElement;
 
-    // Default: no theme
-    expect(document.documentElement.getAttribute("data-theme")).toBeNull();
-
-    // Toggle to dark
-    button.click();
+    // Initial: defaults to dark
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
-    expect(localStorage.getItem("theme")).toBe("dark");
 
     // Toggle to light
     button.click();
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
     expect(localStorage.getItem("theme")).toBe("light");
+
+    // Toggle back to dark
+    button.click();
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+    expect(localStorage.getItem("theme")).toBe("dark");
   });
 });
