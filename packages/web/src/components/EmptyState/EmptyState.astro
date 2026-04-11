@@ -1,12 +1,13 @@
 ---
 import { EmptyState as ReactEmptyState } from "./EmptyState";
-import type { IconName } from "./Icon/icons";
+import type { IconName } from "../Icon/icons";
+import type { EmptyVariant } from "./EmptyVariant";
 
 interface EmptyStateProps {
   title?: string;
   message: string;
   icon?: IconName;
-  variant?: "empty" | "loading";
+  variant?: EmptyVariant;
 }
 
 const {

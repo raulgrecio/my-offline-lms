@@ -1,11 +1,13 @@
 import React from 'react';
+
 import { Icon, type IconName } from '../Icon';
+import type { EmptyVariant } from './EmptyVariant';
 
 interface EmptyStateProps {
   title?: string;
   message: string;
   icon?: IconName;
-  variant?: 'empty' | 'loading';
+  variant?: EmptyVariant;
   children?: React.ReactNode;
 }
 
