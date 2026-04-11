@@ -1,11 +1,12 @@
 import { NodeFileSystem, NodePath } from "@core/filesystem";
+import { logger } from "../logger";
 
 const PAGES_DIR = "src/pages";
 const fs = new NodeFileSystem();
 const path = new NodePath();
 
-export async function discoverRoutes(): Promise<string[]> {
-  const routes: string[] = [];
+export async function discoverRoutes(filters: string[] = []): Promise<string[]> {
+  const allRoutes: string[] = [];
 
   async function walk(dir: string) {
     const entries = await fs.readdir(dir);
@@ -44,7 +45,7 @@ export async function discoverRoutes(): Promise<string[]> {
         continue;
       }
 
-      routes.push(route);
+      allRoutes.push(route);
     }
   }
 
@@ -57,10 +58,32 @@ export async function discoverRoutes(): Promise<string[]> {
   ];
 
   for (const r of extraRoutes) {
-    if (!routes.includes(r)) {
-      routes.push(r);
+    if (!allRoutes.includes(r)) {
+      allRoutes.push(r);
     }
   }
 
-  return routes.sort();
+  // Apply filters if provided
+  if (filters.length > 0) {
+    const filtered = allRoutes.filter(route => {
+      return filters.some(filter => {
+        // Match by exact route
+        if (route === filter) return true;
+        // Match if filter is part of the route
+        if (route.includes(filter)) return true;
+        // Match by normalized file name (e.g. "button-showcase.astro" -> "/debug/components/button-showcase")
+        const normalizedFilter = filter
+          .replace("packages/web/", "")
+          .replace(PAGES_DIR, "")
+          .replace(/\.(astro|tsx|jsx|md)$/, "")
+          .replace(/index$/, "");
+        
+        return normalizedFilter !== "" && route.includes(normalizedFilter);
+      });
+    });
+    
+    return filtered.sort();
+  }
+
+  return allRoutes.sort();
 }

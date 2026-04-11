@@ -2,11 +2,12 @@ import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { NodeFileSystem, NodePath } from "@core/filesystem";
 import { logger } from "../logger";
+import { routeToFileName } from "../capture/captureRoutes";
 
 const fs = new NodeFileSystem();
 const path = new NodePath();
 
-export async function compareImages() {
+export async function compareImages(routes: string[] = []) {
   const baselineDir = "debug/baseline/pages";
   const currentDir = "debug/current/pages";
   const diffDir = "debug/diff/pages";
@@ -19,8 +20,15 @@ export async function compareImages() {
     await fs.mkdir(reportDir, { recursive: true });
   }
 
-  const files = await fs.readdir(baselineDir);
+  let files = await fs.readdir(baselineDir);
   const report = [];
+
+  // Filter files by routes if provided
+  if (routes.length > 0) {
+    const routeFiles = routes.map(r => routeToFileName(r));
+    files = files.filter(f => routeFiles.includes(f));
+    logger.info(`Comparison filtered to ${files.length} specific files.`);
+  }
 
   for (const file of files) {
     if (!file.endsWith(".png")) continue;
