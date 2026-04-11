@@ -1,6 +1,7 @@
 ---
 import { cn } from "@web/lib/cn";
-import Button from "../Button.astro";
+
+import Button from "../Button/Button.astro";
 import type { IconName } from "../Icon/icons";
 
 interface Props {
@@ -25,10 +26,7 @@ const {
   ...rest
 } = Astro.props;
 
-const finalClasses = cn(
-  variant === "zoom" && "!h-auto !w-auto",
-  className
-);
+const finalClasses = cn(variant === "zoom" && "!h-auto !w-auto", className);
 ---
 
 <Button

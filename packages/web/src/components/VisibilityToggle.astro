@@ -1,5 +1,5 @@
 ---
-import Button from "./Button.astro";
+import Button from "./Button/Button.astro";
 
 interface VisibilityToggleProps {
   showAll: boolean;
@@ -64,7 +64,7 @@ const targetIdsStr = Array.isArray(targetIds) ? targetIds.join(",") : targetIds;
 
           // Update the toggle itself
           const newToggle = doc.querySelector(
-            `[data-visibility-toggle][data-target-ids="${targetIds.join(",")}"]`
+            `[data-visibility-toggle][data-target-ids="${targetIds.join(",")}"]`,
           );
           if (newToggle instanceof HTMLElement) {
             newLink.setAttribute("href", newToggle.getAttribute("href") || "");

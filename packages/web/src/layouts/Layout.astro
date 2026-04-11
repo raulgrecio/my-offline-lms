@@ -1,11 +1,14 @@
 ---
-import "../styles/global.css";
-import ThemeToggle from "@web/components/ThemeToggle/ThemeToggle.astro";
-import Navigation from "@web/components/Navigation.astro";
-import { Icon } from "@web/components/Icon";
-import Button from "@web/components/Button.astro";
-import { APP_ROUTES } from "@web/platform/router/routes";
 import { ClientRouter } from "astro:transitions";
+
+import { APP_ROUTES } from "@web/platform/router/routes";
+
+import { Icon } from "@web/components/Icon";
+import Button from "@web/components/Button/Button.astro";
+import Navigation from "@web/components/Navigation.astro";
+import ThemeToggle from "@web/components/ThemeToggle/ThemeToggle.astro";
+
+import "../styles/global.css";
 
 interface Props {
   title: string;

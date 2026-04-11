@@ -1,11 +1,13 @@
 ---
+import { cn } from "@web/lib/cn";
+
 import { API_ROUTES } from "@web/platform/api/routes";
 import type { FavoriteType } from "@web/features/favorites/domain/ports/IFavoritesRepository";
+
 import Button, {
   type ButtonSize,
   type ButtonHoverEffect,
-} from "./Button.astro";
-import { cn } from "@web/lib/cn";
+} from "./Button/Button.astro";
 
 interface FavoriteButtonProps {
   id: string;
@@ -36,13 +38,13 @@ const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
   icon="heart"
   iconClass={cn(
     "transition-all duration-300",
-    "group-data-[is-favorite=true]/fav:fill-current group-data-[is-favorite=false]/fav:fill-none"
+    "group-data-[is-favorite=true]/fav:fill-current group-data-[is-favorite=false]/fav:fill-none",
   )}
   class={cn(
     "favorite-toggle group/fav shadow-elevation border transition-all duration-300",
     "data-[is-favorite=true]:text-brand-500 data-[is-favorite=true]:bg-brand-600/10 data-[is-favorite=true]:border-brand-500/20 data-[is-favorite=true]:shadow-brand/20",
     "data-[is-favorite=false]:bg-surface-800 data-[is-favorite=false]:border-border-subtle data-[is-favorite=false]:text-text-muted hover:data-[is-favorite=false]:text-brand-400 hover:data-[is-favorite=false]:bg-surface-700 hover:data-[is-favorite=false]:border-brand-500/30",
-    className
+    className,
   )}
   data-id={id}
   data-type={type}
@@ -69,7 +71,7 @@ const favoritesUrl = API_ROUTES.FAVORITES.TOGGLE;
   // Astro bundles this script once per page.
   document.addEventListener("click", async (event) => {
     const btn = (event.target as HTMLElement).closest(
-      ".favorite-toggle"
+      ".favorite-toggle",
     ) as HTMLButtonElement;
     if (!btn) return;
 
