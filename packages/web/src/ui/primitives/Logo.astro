@@ -1,0 +1,27 @@
+---
+interface Props {
+  size?: number | string;
+  className?: string;
+}
+
+const { size = 32, className = "" } = Astro.props;
+
+// determine dimensions based on size prop
+const width = typeof size === "number" ? size : undefined;
+const height = typeof size === "number" ? size : undefined;
+
+// if size is a string (e.g. tailwind class "w-8 h-8"), we apply it to the container
+const sizeClasses = typeof size === "string" ? size : "";
+---
+
+<div class:list={["inline-flex items-center justify-center shrink-0", sizeClasses, className]} style={width ? { width: `${width}px`, height: `${height}px` } : {}}>
+  <svg 
+    viewBox="0 0 32 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    class="w-full h-full"
+  >
+    <rect width="32" height="32" rx="8" fill="#f83b20"/>
+    <ellipse cx="16" cy="16" rx="10" ry="6" stroke="white" stroke-width="3.5" fill="none" />
+  </svg>
+</div>

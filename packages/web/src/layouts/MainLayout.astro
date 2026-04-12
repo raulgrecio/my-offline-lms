@@ -6,6 +6,7 @@ import Button from "@web/ui/components/Button/Button.astro";
 import Navigation from "@web/ui/patterns/layout/Navigation.astro";
 import ThemeToggle from "@web/ui/components/ThemeToggle/ThemeToggle.astro";
 import { Icon } from "@web/ui/primitives/Icon";
+import Logo from "@web/ui/primitives/Logo.astro";
 
 import "../styles/global.css";
 
@@ -39,6 +40,8 @@ const navLinks = [
     <meta name="description" content={description} />
     <title>{title} — Offline LMS</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script is:inline>
       (function () {
         const saved = localStorage.getItem("theme");
@@ -77,11 +80,7 @@ const navLinks = [
             href={APP_ROUTES.HOME}
             class="flex items-center gap-2 shrink-0 no-underline"
           >
-            <div
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm bg-brand-600"
-            >
-              <span class="rotate-90 inline-block">0</span>
-            </div>
+            <Logo size="w-8 h-8" />
             <span class="font-semibold hidden sm:block text-text-primary">
               Offline LMS
             </span>
