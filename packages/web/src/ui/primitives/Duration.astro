@@ -1,0 +1,26 @@
+---
+import { cn } from "@web/lib/cn";
+
+interface Props {
+  seconds?: number;
+  formattedTime?: string;
+  className?: string;
+}
+
+const { seconds, formattedTime, className } = Astro.props;
+
+const formatTime = (sec: number) => {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+};
+
+const displayTime = formattedTime || (seconds !== undefined ? formatTime(seconds) : "0:00");
+---
+
+<span class={cn(
+  "text-2xs font-mono text-text-muted shrink-0 bg-surface-900/50 px-1.5 py-0.5 rounded transition-all duration-300",
+  className
+)}>
+  {displayTime}
+</span>
