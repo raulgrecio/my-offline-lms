@@ -14,7 +14,7 @@ const { videos, activeVideoId } = Astro.props as Props;
 
 <div
   id="video-playlist-sidebar"
-  class="video-playlist-sidebar flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden transition-all duration-300 ease-in-out lg:w-80 xl:w-96"
+  class="video-playlist-sidebar flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden transition-all duration-300 ease-in-out lg:w-72 xl:w-72"
   data-collapsed="false"
 >
   <div
@@ -23,19 +23,19 @@ const { videos, activeVideoId } = Astro.props as Props;
     <div class="flex items-center gap-2 overflow-hidden w-full">
       <button
         id="playlist-collapse-toggle"
-        class="p-1.5 rounded-lg hover:bg-surface-700 text-text-muted hover:text-text-primary transition-colors shrink-0"
+        class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-surface-700 text-text-muted hover:text-text-primary transition-colors shrink-0"
         title="Contraer/Expandir playlist"
       >
-        <div class="collapse-icon transition-transform duration-300">
+        <div class="collapse-icon">
           <Icon name="sidebar" size="sm" className="sidebar-icon" />
         </div>
-      </button>
 
-      <div
-        class="text-2xs font-bold uppercase tracking-widest text-text-muted truncate playlist-header-text transition-all duration-300"
-      >
-        Contenido
-      </div>
+        <div
+          class="text-2xs font-bold uppercase tracking-widest text-text-muted truncate playlist-header-text"
+        >
+          Contenido
+        </div>
+      </button>
     </div>
 
     <!-- Autoplay Toggle -->
@@ -62,7 +62,7 @@ const { videos, activeVideoId } = Astro.props as Props;
   @reference "../../../styles/global.css";
 
   .video-playlist-sidebar[data-collapsed="true"] {
-    @apply lg:w-28 xl:w-28;
+    @apply lg:w-30 xl:w-30;
   }
 
   .video-playlist-sidebar[data-collapsed="true"] .collapse-icon {
@@ -70,7 +70,7 @@ const { videos, activeVideoId } = Astro.props as Props;
   }
 
   .video-playlist-sidebar[data-collapsed="true"] .playlist-header-text {
-    @apply opacity-0 w-0 pointer-events-none;
+    @apply hidden;
   }
 
   .video-playlist-sidebar[data-collapsed="true"]
@@ -197,7 +197,7 @@ const { videos, activeVideoId } = Astro.props as Props;
       // Autoplay Config
       if (autoplayToggle) {
         autoplayToggle.checked =
-          localStorage.getItem("autoplayNext") === "true";
+          localStorage.getItem("autoplayNext") !== "false";
         autoplayToggle.addEventListener("change", () => {
           localStorage.setItem(
             "autoplayNext",
@@ -279,7 +279,7 @@ const { videos, activeVideoId } = Astro.props as Props;
             scrollContainer.scrollTop.toString(),
           );
         }
-        navigate(nextBtn.getAttribute("href")!);
+        navigate(nextBtn.getAttribute("href")! + "&autoplay=true");
       }
     };
 

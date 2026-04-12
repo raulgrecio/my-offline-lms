@@ -26,6 +26,7 @@ export interface VideoPlayerProps {
   assetId: string;
   courseId: string;
   progressUrl: string;
+  autoPlay?: boolean;
 }
 
 export default function VideoPlayer({
@@ -36,12 +37,13 @@ export default function VideoPlayer({
   initialDuration = 0,
   assetId,
   courseId,
-  progressUrl
+  progressUrl,
+  autoPlay = false
 }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const initialTimeSet = useRef(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [currentTime, setCurrentTime] = useState(initialTime);
   const [duration, setDuration] = useState(initialDuration);
   const [volume, setVolume] = useState(1);
@@ -51,7 +53,7 @@ export default function VideoPlayer({
   const [showSettings, setShowSettings] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [subtitleOpacity, setSubtitleOpacity] = useState(0.6);
-  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const [hasStartedPlaying, setHasStartedPlaying] = useState(autoPlay);
   const [visitedSegments, setVisitedSegments] = useState<number[]>([]);
   const [playbackRate, setPlaybackRate] = useState(1);
 
@@ -139,6 +141,17 @@ export default function VideoPlayer({
     video.addEventListener('loadedmetadata', applyInitialTime);
     return () => video.removeEventListener('loadedmetadata', applyInitialTime);
   }, [assetId, applyInitialTime, playbackRate]);
+
+  // Autoplay Effect
+  useEffect(() => {
+    if (autoPlay && videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay might be blocked by browser policy if no user interaction
+        setIsPlaying(false);
+        setHasStartedPlaying(false);
+      });
+    }
+  }, [autoPlay, assetId]);
 
   // Save progress logic
   const saveProgress = useCallback(async (position: number, completed: boolean) => {

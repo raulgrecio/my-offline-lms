@@ -70,6 +70,7 @@ const guides = await Promise.all(
 
 // Find the active video
 const videoId = Astro.url.searchParams.get("v");
+const autoPlay = Astro.url.searchParams.get("autoplay") === "true";
 const activeVideo = videoId
   ? videos.find((v) => v.id === videoId) || videos[0]
   : videos[0];
@@ -174,6 +175,7 @@ const videosList = videos.map((v) => ({
                     initialTime={activeVideo.progress?.position ?? 0}
                     initialDuration={activeVideo.metadata?.duration ?? 0}
                     progressUrl={API_ROUTES.PROGRESS.VIDEO}
+                    autoPlay={autoPlay}
                   />
                 )}
               </div>
@@ -188,6 +190,7 @@ const videosList = videos.map((v) => ({
             <VideoPlaylist
               videos={videosList}
               activeVideoId={activeVideo?.id}
+              class="flex-2 lg:max-w-md shrink-0"
             />
           </div>
         </section>
