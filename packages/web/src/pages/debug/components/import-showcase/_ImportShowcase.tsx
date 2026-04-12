@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Icon } from '@web/components/Icon';
-import { GenericWizard, type WizardStepConfig } from '@web/components/Wizard';
+
+import { Icon } from '@web/ui/primitives/Icon';
+import { GenericWizard, type WizardStepConfig } from '@web/ui/modules/wizard';
 
 // Import existing steps
-import { SelectionStep } from '@web/pages/import/components/ScraperWizard/_SelectionStep';
-import { AssetSelectionStep } from '@web/pages/import/components/ScraperWizard/_AssetSelectionStep';
-import { SummaryStep } from '@web/pages/import/components/ScraperWizard/_SummaryStep';
+import { SelectionStep } from '@web/ui/patterns/import/ScraperWizard/SelectionStep';
+import { AssetSelectionStep } from '@web/ui/patterns/import/ScraperWizard/AssetSelectionStep';
+import { SummaryStep } from '@web/ui/patterns/import/ScraperWizard/SummaryStep';
 import { ScraperTaskCategory, type ScraperTaskCategoryType } from '@scraper/features/task-management/domain/models/ScraperTask';
-import type { ContentItem } from '@web/pages/import/components/_ContentItemCard';
+import type { ContentItem } from '@web/ui/patterns/import/ContentItemCard';
 
 const stepsConfig: WizardStepConfig[] = [
   { id: 'selection', label: 'Origen', icon: 'layers' },

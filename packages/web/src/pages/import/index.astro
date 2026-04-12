@@ -1,18 +1,16 @@
 ---
 export const prerender = false;
 
-import Layout from "@web/layouts/Layout.astro";
-import PageHeader from "@web/components/PageHeader.astro";
-import { Icon } from "@web/components/Icon";
-import { LogConsole } from "@web/components/LogConsole";
-import CollapsibleCard from "@web/components/CollapsibleCard.astro";
-
-import { ScraperWizard } from "./components/ScraperWizard/_ScraperWizard";
-import { TaskList } from "./components/_TaskList";
-import { SessionStatus } from "./components/_SessionStatus";
-import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
-import SectionHeader from "@web/components/SectionHeader.astro";
-import InfoCard from "@web/components/InfoCard.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import PageHeader from "@web/ui/components/PageHeader.astro";
+import CollapsibleCard from "@web/ui/components/CollapsibleCard.astro";
+import CollapsibleHeader from "@web/ui/components/CollapsibleHeader.astro";
+import InfoCard from "@web/ui/components/InfoCard.astro";
+import SectionHeader from "@web/ui/components/SectionHeader.astro";
+import { LogConsole } from "@web/ui/patterns/debug/LogConsole";
+import { ScraperWizard } from "@web/ui/patterns/import/ScraperWizard/ScraperWizard";
+import { TaskList } from "@web/ui/patterns/import/TaskList";
+import { SessionStatus } from "@web/ui/patterns/import/SessionStatus";
 ---
 
 <Layout title="Importar Contenido">

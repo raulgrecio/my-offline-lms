@@ -1,0 +1,23 @@
+---
+import { EmptyState as ReactEmptyState } from "./EmptyState";
+import type { IconName } from "@web/ui/primitives/Icon/icons";
+import type { EmptyVariant } from "./EmptyVariant";
+
+interface EmptyStateProps {
+  title?: string;
+  message: string;
+  icon?: IconName;
+  variant?: EmptyVariant;
+}
+
+const {
+  title,
+  message,
+  icon = "inbox",
+  variant = "empty",
+} = Astro.props as EmptyStateProps;
+---
+
+<ReactEmptyState title={title} message={message} icon={icon} variant={variant}>
+  <slot name="action" />
+</ReactEmptyState>

@@ -1,0 +1,107 @@
+---
+import { cn } from "@web/lib/cn";
+
+import { Icon, type IconSize } from "./Icon";
+
+interface Props {
+  progress?: number; // 0 to 100
+  isDone?: boolean;
+  label?: string | number;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  color?: string; // e.g., "text-status-completed" or "#ff0000"
+}
+
+const {
+  progress = 0,
+  isDone = false,
+  label,
+  size = "md",
+  className = "",
+  color,
+} = Astro.props;
+
+const sizes = {
+  sm: "w-7 h-7",
+  md: "w-9 h-9",
+  lg: "w-12 h-12",
+};
+
+const textSizes = {
+  sm: "text-2xs",
+  md: "text-2xs",
+  lg: "text-xs",
+};
+
+const iconSizes: Record<string, IconSize> = {
+  sm: "xs",
+  md: "xs",
+  lg: "sm",
+};
+
+const vProgressPercent = Math.min(100, Math.max(0, progress));
+
+// Determine the color class or style for the progress circle
+const isHex = color?.startsWith("#");
+const progressColor = color
+  ? isHex
+    ? ""
+    : color
+  : isDone
+    ? "text-brand-500"
+    : "text-brand-600";
+const progressStyle = isHex ? { color } : {};
+---
+
+<div
+  class={cn(
+    "relative shrink-0 flex items-center justify-center",
+    sizes[size],
+    className,
+  )}
+>
+  <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+    <!-- Background Circle -->
+    <circle
+      class="text-surface-600 stroke-current"
+      stroke-width="3"
+      fill="transparent"
+      r="16"
+      cx="18"
+      cy="18"></circle>
+    <!-- Progress Circle -->
+    <circle
+      class:list={["transition-all duration-500 stroke-current", progressColor]}
+      style={progressStyle}
+      stroke-width="3"
+      stroke-dasharray="100, 100"
+      stroke-dashoffset={100 - vProgressPercent}
+      stroke-linecap="round"
+      fill="transparent"
+      r="16"
+      cx="18"
+      cy="18"></circle>
+  </svg>
+  <div
+    class={cn(
+      "absolute inset-0 flex items-center justify-center font-bold transition-colors",
+      textSizes[size],
+    )}
+  >
+    <div
+      data-progress-label
+      class={cn(
+        isDone ? "hidden" : "block",
+        "text-text-secondary group-hover:text-brand-400",
+      )}
+    >
+      {label}
+    </div>
+    <div
+      data-progress-check
+      class={cn(isDone ? "block" : "hidden", "text-brand-500")}
+    >
+      <Icon name="check" size={iconSizes[size]} />
+    </div>
+  </div>
+</div>

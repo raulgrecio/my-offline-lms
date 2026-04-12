@@ -1,0 +1,76 @@
+---
+import { APP_ROUTES } from "@web/platform/router/routes";
+import ProgressBadge, { type ProgressStatus } from "@web/ui/components/ProgressBadge.astro";
+import { Icon } from "@web/ui/primitives/Icon";
+import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
+import OfflineBadge from "@web/ui/components/OfflineBadge.astro";
+
+interface CourseCardProps {
+  id: string;
+  title: string;
+  status?: ProgressStatus;
+  orderIndex?: number;
+  totalAssets?: number;
+  progress?: number;
+  isFavorite?: boolean;
+}
+
+const {
+  id,
+  title,
+  status = "not_started",
+  orderIndex,
+  totalAssets = 0,
+  progress = 0,
+  isFavorite = false,
+} = Astro.props as CourseCardProps;
+---
+
+<a
+  href={APP_ROUTES.COURSES.DETAIL(id)}
+  class="card flex items-center gap-4 p-4 group no-underline"
+>
+  <!-- Order number or icon -->
+  <div
+    class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-transform group-hover:scale-110 bg-surface-900 text-brand-600 border border-border-subtle"
+  >
+    {
+      orderIndex !== undefined ? (
+        orderIndex
+      ) : (
+        <Icon name="book-open" size="sm" />
+      )
+    }
+  </div>
+
+  <!-- Title + badge -->
+  <div class="flex-1 min-w-0">
+    <h3
+      class="font-bold text-sm leading-tight mb-1 line-clamp-2 transition-colors group-hover:text-brand-600 text-text-primary"
+    >
+      {title}
+    </h3>
+    <div class="flex items-center gap-2 flex-wrap">
+      <ProgressBadge status={status} />
+
+      <FavoriteButton id={id} type="course" size="xs" isFavorite={isFavorite} />
+
+      {
+        totalAssets > 0 && (
+          <span class="text-xs text-text-muted flex items-center gap-1.5">
+            <OfflineBadge />
+            <span>·</span>
+            {totalAssets} recursos · {progress}%
+          </span>
+        )
+      }
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div
+    class="shrink-0 transition-transform group-hover:translate-x-1 text-text-muted"
+  >
+    <Icon name="chevron-right" size="sm" />
+  </div>
+</a>

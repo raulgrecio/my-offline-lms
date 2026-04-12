@@ -1,0 +1,39 @@
+---
+import { Icon } from "@web/ui/primitives/Icon";
+import Button from "@web/ui/components/Button/Button.astro";
+---
+
+<Button
+  variant="none"
+  data-theme-toggle
+  class="p-2 rounded-xl border bg-surface-700 border-border-subtle text-text-primary w-10 h-10 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-custom focus-visible:ring-2 focus-visible:ring-brand-500!"
+  aria-label="Cambiar tema"
+>
+  <div class="icon-sun">
+    <Icon name="sun" size="sm" strokeWidth={2.5} />
+  </div>
+  <div class="icon-moon">
+    <Icon name="moon" size="sm" strokeWidth={2.5} />
+  </div>
+</Button>
+
+<style>
+  /* Visibilidad basada en el tema con CSS puro para evitar parpadeos */
+  .icon-sun,
+  .icon-moon {
+    display: none;
+  }
+  :global(html[data-theme="dark"]) .icon-sun {
+    display: block;
+  }
+  :global(html[data-theme="light"]) .icon-moon {
+    display: block;
+  }
+</style>
+
+<script>
+  import { initThemeToggle } from "./ThemeToggle.ts";
+
+  initThemeToggle();
+  document.addEventListener("astro:after-swap", initThemeToggle);
+</script>

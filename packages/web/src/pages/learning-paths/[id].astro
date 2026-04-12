@@ -8,14 +8,14 @@ import {
   getLearningPathProgress,
 } from "@web/features/progress";
 import { getIsFavorite } from "@web/features/favorites";
-import Layout from "@web/layouts/Layout.astro";
-import CourseCard from "@web/components/CourseCard.astro";
-import EmptyState from "@web/components/EmptyState/EmptyState.astro";
-import { Icon } from "@web/components/Icon";
-import FavoriteButton from "@web/components/FavoriteButton.astro";
-import PageHeader from "@web/components/PageHeader.astro";
-import ProgressBar from "@web/components/ProgressBar.astro";
-import SectionHeader from "@web/components/SectionHeader.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import { Icon } from "@web/ui/primitives/Icon";
+import ProgressBar from "@web/ui/primitives/ProgressBar.astro";
+import CourseCard from "@web/ui/components/CourseCard.astro";
+import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
+import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
+import PageHeader from "@web/ui/components/PageHeader.astro";
+import SectionHeader from "@web/ui/components/SectionHeader.astro";
 
 interface PathPageProps {
   id?: string;
