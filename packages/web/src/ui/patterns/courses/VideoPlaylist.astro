@@ -1,24 +1,11 @@
 ---
-import { cn } from "@web/lib/cn";
-import CircularProgress from "@web/ui/primitives/CircularProgress.astro";
-import Duration from "@web/ui/primitives/Duration.astro";
 import { Icon } from "@web/ui/primitives/Icon/Icon";
 import { Toggle } from "@web/ui/primitives/Toggle";
-
-export interface VideoPlayVideo {
-  id: string;
-  title: string;
-  src: string;
-  subtitleSrc?: string;
-  duration: number;
-  progress?: {
-    position: number;
-    completed: boolean;
-  } | null;
-}
+import VideoPlaylistItem from "./VideoPlaylistItem.astro";
+import type { IVideoPlayVideo } from "./IVideoPlayVideo";
 
 interface Props {
-  videos: VideoPlayVideo[];
+  videos: IVideoPlayVideo[];
   activeVideoId?: string;
 }
 
@@ -27,9 +14,8 @@ const { videos, activeVideoId } = Astro.props as Props;
 
 <div
   id="video-playlist-sidebar"
-  class={cn(
-    "video-playlist-sidebar flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden transition-all duration-300 ease-in-out lg:w-80 xl:w-96"
-  )}
+  class="video-playlist-sidebar flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden transition-all duration-300 ease-in-out lg:w-80 xl:w-96"
+  data-collapsed="false"
 >
   <div
     class="p-3 border-b flex items-center justify-between bg-surface-800/50 backdrop-blur-sm border-border-subtle shrink-0"
@@ -45,141 +31,80 @@ const { videos, activeVideoId } = Astro.props as Props;
         </div>
       </button>
 
-      <div class="text-2xs font-bold uppercase tracking-widest text-text-muted truncate playlist-header-text transition-all duration-300">
+      <div
+        class="text-2xs font-bold uppercase tracking-widest text-text-muted truncate playlist-header-text transition-all duration-300"
+      >
         Contenido
       </div>
     </div>
 
     <!-- Autoplay Toggle -->
-    <div class="transition-all duration-300 flex items-center autoplay-toggle-wrapper">
+    <div
+      class="transition-all duration-300 flex items-center autoplay-toggle-wrapper"
+    >
       <Toggle label="Autoplay" id="autoplay-toggle" />
     </div>
   </div>
   <div class="overflow-y-auto flex-1 custom-scrollbar">
     {
-      videos.map((v, i) => {
-        const vp = v.progress;
-        const isDone = vp?.completed;
-        const isActive = v.id === activeVideoId;
-
-        const vDuration = v.duration || 0;
-        const vPosition = vp?.position || 0;
-        const vProgressPercent = vDuration > 0
-            ? Math.min(100, Math.round((vPosition / vDuration) * 100))
-            : 0;
-
-        return (
-          <button
-            class={cn(
-              "video-item w-full text-left flex items-center gap-4 p-4 transition-all hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer group",
-              isActive ? "bg-surface-700/50" : "bg-transparent"
-            )}
-            data-asset-id={v.id}
-            data-title={v.title}
-            data-duration={vDuration}
-          >
-            <!-- Progress indicator -->
-            <div
-              class={`shrink-0 flex items-center justify-center ${isActive ? "-ml-1" : ""}`}
-            >
-              <CircularProgress
-                progress={vProgressPercent}
-                isDone={isDone}
-                label={i + 1}
-                size={isActive ? "md" : "sm"}
-                className="transition-transform duration-300 shrink-0"
-              />
-            </div>
-
-            <!-- Side-by-side Duration (Visible only when collapsed) -->
-            {vDuration > 0 && (
-              <Duration
-                seconds={vDuration}
-                className="collapsed-duration ml-auto self-center"
-              />
-            )}
-
-            <!-- Expanded-only Content -->
-            <div class="flex-1 min-w-0 playlist-item-content transition-all duration-300 overflow-hidden">
-              <div class="flex items-center justify-between gap-2 mb-0.5">
-                <p
-                  class={cn(
-                    "text-xs leading-tight line-clamp-1 transition-colors",
-                    isActive
-                      ? "text-text-primary font-bold"
-                      : "text-text-secondary font-medium group-hover:text-text-primary"
-                  )}
-                >
-                  {v.title}
-                </p>
-                {vDuration > 0 && (
-                  <Duration seconds={vDuration} />
-                )}
-              </div>
-              {vp && !vp.completed && vp.position > 2 && (
-                <div class="flex items-center gap-1.5">
-                  <div class="flex-1 h-1 bg-surface-900 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-brand-600/50"
-                      style={`width: ${vProgressPercent}%`}
-                    />
-                  </div>
-                  <span class="text-2xs font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
-                    {vProgressPercent}%
-                  </span>
-                </div>
-              )}
-            </div>
-          </button>
-        );
-      })
+      videos.map((v, i) => (
+        <VideoPlaylistItem
+          video={v}
+          index={i}
+          isActive={v.id === activeVideoId}
+        />
+      ))
     }
   </div>
 </div>
 
 <style>
-  @reference "tailwindcss";
+  @reference "../../../styles/global.css";
 
-  .video-playlist-sidebar.is-collapsed {
+  .video-playlist-sidebar[data-collapsed="true"] {
     @apply lg:w-28 xl:w-28;
   }
 
-  .video-playlist-sidebar.is-collapsed #playlist-collapse-toggle {
-    /*@apply mx-auto;*/
-  }
-
-  .video-playlist-sidebar.is-collapsed .collapse-icon {
+  .video-playlist-sidebar[data-collapsed="true"] .collapse-icon {
     @apply rotate-180;
   }
 
-  .video-playlist-sidebar.is-collapsed .playlist-header-text {
+  .video-playlist-sidebar[data-collapsed="true"] .playlist-header-text {
     @apply opacity-0 w-0 pointer-events-none;
   }
 
-  .video-playlist-sidebar.is-collapsed .autoplay-toggle-wrapper :global(label > span) {
+  .video-playlist-sidebar[data-collapsed="true"]
+    .autoplay-toggle-wrapper
+    :global(label > span) {
     @apply hidden;
   }
 
-  .video-playlist-sidebar.is-collapsed .video-item {
-    @apply gap-2 px-3;
+  /* Item Styles */
+  .video-item[data-active="true"] {
+    @apply bg-surface-600/50;
   }
 
-  .video-playlist-sidebar.is-collapsed .playlist-item-content {
-    @apply hidden;
-  }
-
-  .video-playlist-sidebar.is-collapsed .collapsed-duration {
-    @apply block;
-  }
-
-  /* Base states for elements that toggle */
-  .video-playlist-sidebar .collapsed-duration {
-    @apply hidden;
+  /* Collapsed states for items */
+  .video-playlist-sidebar[data-collapsed="true"] .video-item {
+    @apply px-2 justify-center;
   }
 </style>
 
+<script is:inline>
+  // Fix flash of uncollapsed sidebar - Moved to bottom of HTML to clean up template
+  (function () {
+    const isCollapsed = localStorage.getItem("playlistCollapsed") === "true";
+    if (isCollapsed) {
+      document
+        .getElementById("video-playlist-sidebar")
+        ?.setAttribute("data-collapsed", "true");
+    }
+  })();
+</script>
 
 <script>
+  import { navigate } from "astro:transitions/client";
+
   // ─── Video playlist logic ────────────────────────────────────────────
   const setupPlaylists = () => {
     const playlists = document.querySelectorAll<HTMLElement>(
@@ -187,41 +112,89 @@ const { videos, activeVideoId } = Astro.props as Props;
     );
 
     playlists.forEach((playlist) => {
-      const sidebar = playlist;
+      const scrollContainer = playlist.querySelector(
+        ".overflow-y-auto",
+      ) as HTMLElement;
       const collapseToggle = playlist.querySelector(
         "#playlist-collapse-toggle",
       );
-
-      // -- Collapse Logic --
-      const isCollapsed = localStorage.getItem("playlistCollapsed") === "true";
-      if (isCollapsed) {
-        sidebar.classList.add("is-collapsed");
-      }
-
-      collapseToggle?.addEventListener("click", () => {
-        const currentlyCollapsed = sidebar.classList.toggle("is-collapsed");
-        localStorage.setItem(
-          "playlistCollapsed",
-          currentlyCollapsed.toString(),
-        );
-      });
-
-      const items = playlist.querySelectorAll<HTMLButtonElement>(".video-item");
       const autoplayToggle = playlist.querySelector(
         "#autoplay-toggle",
       ) as HTMLInputElement | null;
 
-      // 1. Switch videos
-      items.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const assetId = btn.dataset.assetId!;
-          const url = new URL(window.location.href);
-          url.searchParams.set("v", assetId);
-          window.location.href = url.toString();
+      const courseId =
+        document.getElementById("course-page-context")?.dataset.courseId ||
+        "default";
+      const SCROLL_KEY = `playlist-scroll-${courseId}`;
+
+      // Scroll Restore (Immediate and exact)
+      const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+      if (scrollContainer && savedScroll) {
+        scrollContainer.scrollTop = parseInt(savedScroll, 10);
+      }
+
+      const updateUI = () => {
+        const url = new URL(window.location.href);
+        const activeId = url.searchParams.get("v");
+        const items = playlist.querySelectorAll<HTMLElement>(".video-item");
+
+        let activeItem: HTMLElement | null = null;
+
+        items.forEach((item, index) => {
+          const isActive =
+            item.dataset.assetId === activeId || (!activeId && index === 0);
+          item.dataset.active = isActive.toString();
+          if (isActive) activeItem = item;
         });
+
+        if (activeItem) {
+          const scrollIntoViewIfNeeded = () => {
+            const rect = activeItem!.getBoundingClientRect();
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const isVisible =
+              rect.top >= containerRect.top &&
+              rect.bottom <= containerRect.bottom;
+
+            if (!isVisible) {
+              activeItem!.scrollIntoView({
+                block: "nearest",
+                behavior: "auto",
+              });
+            }
+          };
+
+          scrollIntoViewIfNeeded();
+          setTimeout(scrollIntoViewIfNeeded, 100);
+        }
+      };
+
+      // Initial Sync
+      updateUI();
+
+      // Scroll Persistence
+      if (scrollContainer) {
+        scrollContainer.addEventListener(
+          "scroll",
+          () => {
+            sessionStorage.setItem(
+              SCROLL_KEY,
+              scrollContainer.scrollTop.toString(),
+            );
+          },
+          { passive: true },
+        );
+      }
+
+      // Collapse Toggle
+      collapseToggle?.addEventListener("click", () => {
+        const currentlyCollapsed =
+          playlist.getAttribute("data-collapsed") === "true";
+        const newState = !currentlyCollapsed;
+        playlist.setAttribute("data-collapsed", newState.toString());
+        localStorage.setItem("playlistCollapsed", newState.toString());
       });
 
-      // 2. Autoplay Setup
+      // Autoplay Config
       if (autoplayToggle) {
         autoplayToggle.checked =
           localStorage.getItem("autoplayNext") === "true";
@@ -232,23 +205,27 @@ const { videos, activeVideoId } = Astro.props as Props;
           );
         });
       }
+    });
 
-      // 3. Global listeners (scoped logic)
-      const onProgress = (e: any) => {
-        const { assetId, position, completed } = e.detail;
-        const btn = playlist.querySelector(
-          `.video-item[data-asset-id="${assetId}"]`,
-        ) as HTMLElement;
-        if (!btn) return;
+    // Global Listeners (Shared logic for all playlists)
+    const onProgress = (e: any) => {
+      const { assetId, position, completed } = e.detail;
+      document.querySelectorAll(".video-item").forEach((btn) => {
+        if ((btn as HTMLElement).dataset.assetId !== assetId) return;
 
-        const duration = parseInt(btn.dataset.duration || "0");
+        const duration = parseInt((btn as HTMLElement).dataset.duration || "0");
         if (duration > 0) {
           const progressPercent = Math.min(
             100,
             Math.round((position / duration) * 100),
           );
+          const bar = btn.querySelector(".bg-brand-600\\/50") as HTMLElement;
+          const barText = btn.querySelector(
+            "span.text-brand-600\\/80",
+          ) as HTMLElement;
+          if (bar) bar.style.width = `${progressPercent}%`;
+          if (barText) barText.textContent = `${progressPercent}%`;
 
-          // Update SVG progress ring (CircularProgress)
           const progressCircle = btn.querySelector(
             "circle.stroke-current:last-child",
           ) as SVGCircleElement;
@@ -257,56 +234,58 @@ const { videos, activeVideoId } = Astro.props as Props;
               100 - progressPercent
             ).toString();
           }
-
-          // Update percentage bar
-          const bar = btn.querySelector(".bg-brand-600\\/50") as HTMLElement;
-          const barText = btn.querySelector(
-            "span.text-brand-600\\/80",
-          ) as HTMLElement;
-          if (bar) bar.style.width = `${progressPercent}%`;
-          if (barText) barText.textContent = `${progressPercent}%`;
         }
 
-        // Update icon if completed
         if (completed) {
           const label = btn.querySelector("[data-progress-label]");
           const check = btn.querySelector("[data-progress-check]");
           if (label && check) {
             label.classList.add("hidden");
-            label.classList.remove("block");
-            check.classList.add("block");
             check.classList.remove("hidden");
           }
         }
-      };
+      });
+    };
 
-      const onEnded = (e: any) => {
-        const { assetId } = e.detail;
-        if (!autoplayToggle?.checked) return;
+    const onEnded = (e: any) => {
+      const autoplayToggle = document.querySelector(
+        "#autoplay-toggle",
+      ) as HTMLInputElement | null;
+      if (!autoplayToggle?.checked) return;
 
-        const currentBtn = playlist.querySelector(
-          `.video-item[data-asset-id="${assetId}"]`,
-        );
-        if (!currentBtn) return;
+      const { assetId } = e.detail;
+      const currentBtn = document.querySelector(
+        `.video-item[data-asset-id="${assetId}"]`,
+      ) as HTMLElement;
+      if (!currentBtn) return;
 
-        const allBtns = Array.from(
-          playlist.querySelectorAll<HTMLButtonElement>(".video-item"),
-        );
-        const currentIndex = allBtns.indexOf(currentBtn as HTMLButtonElement);
-        const nextBtn = allBtns[currentIndex + 1];
+      const items = Array.from(
+        document.querySelectorAll<HTMLElement>(".video-item"),
+      );
+      const currentIndex = items.indexOf(currentBtn);
+      const nextBtn = items[currentIndex + 1];
 
-        if (nextBtn) {
-          const nextAssetId = nextBtn.dataset.assetId!;
-          const url = new URL(window.location.href);
-          url.searchParams.set("v", nextAssetId);
-          window.location.href = url.toString();
+      if (nextBtn) {
+        // Save scroll of the parent container
+        const scrollContainer = currentBtn.closest(
+          ".overflow-y-auto",
+        ) as HTMLElement;
+        if (scrollContainer) {
+          const courseId =
+            document.getElementById("course-page-context")?.dataset.courseId ||
+            "default";
+          sessionStorage.setItem(
+            `playlist-scroll-${courseId}`,
+            scrollContainer.scrollTop.toString(),
+          );
         }
-      };
+        navigate(nextBtn.getAttribute("href")!);
+      }
+    };
 
-      window.addEventListener("video-progress", onProgress);
-      window.addEventListener("video-ended", onEnded);
-    });
+    window.addEventListener("video-progress", onProgress);
+    window.addEventListener("video-ended", onEnded);
   };
 
-  setupPlaylists();
+  document.addEventListener("astro:page-load", setupPlaylists);
 </script>
