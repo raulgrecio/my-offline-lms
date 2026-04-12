@@ -3,7 +3,7 @@
 import { APP_ROUTES } from "@web/platform/router/routes";
 import { getAssetProgress } from "@web/features/progress";
 import ViewerLayout from "@web/layouts/ViewerLayout.astro";
-import PDFViewer from "@web/components/PDFViewer/Viewer.astro";
+import PDFViewer from "@web/ui/modules/pdf-viewer/Viewer.astro";
 
 const assetId = Astro.url.searchParams.get('assetId');
 const courseId = Astro.url.searchParams.get('courseId');

@@ -1,0 +1,92 @@
+---
+import { cn } from "@web/lib/cn";
+import CircularProgress from "@web/ui/primitives/CircularProgress.astro";
+import Duration from "@web/ui/primitives/Duration.astro";
+import type { IVideoPlayVideo } from "./IVideoPlayVideo";
+
+interface Props {
+  video: IVideoPlayVideo;
+  index: number;
+  isActive: boolean;
+}
+
+const { video, index, isActive } = Astro.props as Props;
+
+const vp = video.progress;
+const isDone = vp?.completed;
+const vDuration = video.duration || 0;
+const vPosition = vp?.position || 0;
+const vProgressPercent =
+  vDuration > 0 ? Math.min(100, Math.round((vPosition / vDuration) * 100)) : 0;
+---
+
+<a
+  href={`?v=${video.id}`}
+  class="video-item group w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-surface-900 border-b border-border-subtle last:border-b-0 cursor-pointer no-underline h-18"
+  data-active={isActive.toString()}
+  data-asset-id={video.id}
+  data-title={video.title}
+  data-duration={vDuration}
+>
+  {/* Progress Circle - Fixed size to prevent layout shifts */}
+  <div
+    class="progress-wrapper w-10 h-10 shrink-0 flex items-center justify-center self-center"
+  >
+    <CircularProgress
+      progress={vProgressPercent}
+      isDone={isDone}
+      label={index + 1}
+      size={isActive ? "md" : "sm"}
+      color={isActive ? "text-brand-400" : undefined}
+      className={cn(
+        "transition-all duration-300",
+        isActive ? "text-brand-400 opacity-100" : "opacity-80",
+      )}
+    />
+  </div>
+
+  {/* Video Info - Hidden in-parts when collapsed */}
+  <div
+    class="flex-1 flex items-center justify-between min-w-0 transition-all duration-300 group-data-[collapsed=true]:gap-1"
+  >
+    {/* Title and Progress Bar (Expanded only) */}
+    <div class="flex flex-col min-w-0 group-data-[collapsed=true]:hidden">
+      <p
+        class={cn(
+          "text-xs leading-tight line-clamp-2 transition-colors",
+          isActive
+            ? "text-text-primary font-bold"
+            : "text-text-secondary font-medium group-hover:text-text-primary",
+        )}
+      >
+        {video.title}
+      </p>
+
+      {
+        vp && !vp.completed && vp.position > 2 && (
+          <div class="flex items-center gap-1.5 mt-1">
+            <div class="flex-1 h-1 bg-surface-900 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-brand-600/50"
+                style={`width: ${vProgressPercent}%`}
+              />
+            </div>
+            <span class="text-[10px] font-bold text-brand-600/80 uppercase tracking-tighter shrink-0">
+              {vProgressPercent}%
+            </span>
+          </div>
+        )
+      }
+    </div>
+
+    {/* Duration - Universal (visible in both states) */}
+    {
+      vDuration > 0 && (
+        <Duration
+          seconds={vDuration}
+          className="shrink-0 group-data-[collapsed=true]:ml-0 group-data-[collapsed=true]:text-[10px]"
+        />
+      )
+    }
+  </div>
+</a>

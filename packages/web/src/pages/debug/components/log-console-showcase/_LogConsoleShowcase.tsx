@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogConsole } from '@web/components/LogConsole';
+import { LogConsole } from '@web/ui/patterns/debug/LogConsole';
 
 export const LogConsoleShowcase: React.FC = () => {
   return (

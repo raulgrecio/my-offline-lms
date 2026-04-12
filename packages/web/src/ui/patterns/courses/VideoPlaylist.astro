@@ -1,0 +1,291 @@
+---
+import { Icon } from "@web/ui/primitives/Icon/Icon";
+import { Toggle } from "@web/ui/primitives/Toggle";
+import VideoPlaylistItem from "./VideoPlaylistItem.astro";
+import type { IVideoPlayVideo } from "./IVideoPlayVideo";
+
+interface Props {
+  videos: IVideoPlayVideo[];
+  activeVideoId?: string;
+}
+
+const { videos, activeVideoId } = Astro.props as Props;
+---
+
+<div
+  id="video-playlist-sidebar"
+  class="video-playlist-sidebar flex flex-col rounded-xl bg-surface-800 border border-border-subtle shadow-custom max-h-[500px] overflow-hidden transition-all duration-300 ease-in-out lg:w-72 xl:w-72"
+  data-collapsed="false"
+>
+  <div
+    class="p-3 border-b flex items-center justify-between bg-surface-800/50 backdrop-blur-sm border-border-subtle shrink-0"
+  >
+    <div class="flex items-center gap-2 overflow-hidden w-full">
+      <button
+        id="playlist-collapse-toggle"
+        class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-surface-700 text-text-muted hover:text-text-primary transition-colors shrink-0"
+        title="Contraer/Expandir playlist"
+      >
+        <div class="collapse-icon">
+          <Icon name="sidebar" size="sm" className="sidebar-icon" />
+        </div>
+
+        <div
+          class="text-2xs font-bold uppercase tracking-widest text-text-muted truncate playlist-header-text"
+        >
+          Contenido
+        </div>
+      </button>
+    </div>
+
+    <!-- Autoplay Toggle -->
+    <div
+      class="transition-all duration-300 flex items-center autoplay-toggle-wrapper"
+    >
+      <Toggle label="Autoplay" id="autoplay-toggle" />
+    </div>
+  </div>
+  <div class="overflow-y-auto flex-1 custom-scrollbar">
+    {
+      videos.map((v, i) => (
+        <VideoPlaylistItem
+          video={v}
+          index={i}
+          isActive={v.id === activeVideoId}
+        />
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  @reference "../../../styles/global.css";
+
+  .video-playlist-sidebar[data-collapsed="true"] {
+    @apply lg:w-30 xl:w-30;
+  }
+
+  .video-playlist-sidebar[data-collapsed="true"] .collapse-icon {
+    @apply rotate-180;
+  }
+
+  .video-playlist-sidebar[data-collapsed="true"] .playlist-header-text {
+    @apply hidden;
+  }
+
+  .video-playlist-sidebar[data-collapsed="true"]
+    .autoplay-toggle-wrapper
+    :global(label > span) {
+    @apply hidden;
+  }
+
+  /* Item Styles */
+  .video-item[data-active="true"] {
+    @apply bg-surface-600/50;
+  }
+
+  /* Collapsed states for items */
+  .video-playlist-sidebar[data-collapsed="true"] .video-item {
+    @apply px-2 justify-center;
+  }
+</style>
+
+<script is:inline>
+  // Fix flash of uncollapsed sidebar - Moved to bottom of HTML to clean up template
+  (function () {
+    const isCollapsed = localStorage.getItem("playlistCollapsed") === "true";
+    if (isCollapsed) {
+      document
+        .getElementById("video-playlist-sidebar")
+        ?.setAttribute("data-collapsed", "true");
+    }
+  })();
+</script>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+
+  // ─── Video playlist logic ────────────────────────────────────────────
+  const setupPlaylists = () => {
+    const playlists = document.querySelectorAll<HTMLElement>(
+      ".video-playlist-sidebar",
+    );
+
+    playlists.forEach((playlist) => {
+      const scrollContainer = playlist.querySelector(
+        ".overflow-y-auto",
+      ) as HTMLElement;
+      const collapseToggle = playlist.querySelector(
+        "#playlist-collapse-toggle",
+      );
+      const autoplayToggle = playlist.querySelector(
+        "#autoplay-toggle",
+      ) as HTMLInputElement | null;
+
+      const courseId =
+        document.getElementById("course-page-context")?.dataset.courseId ||
+        "default";
+      const SCROLL_KEY = `playlist-scroll-${courseId}`;
+
+      // Scroll Restore (Immediate and exact)
+      const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+      if (scrollContainer && savedScroll) {
+        scrollContainer.scrollTop = parseInt(savedScroll, 10);
+      }
+
+      const updateUI = () => {
+        const url = new URL(window.location.href);
+        const activeId = url.searchParams.get("v");
+        const items = playlist.querySelectorAll<HTMLElement>(".video-item");
+
+        let activeItem: HTMLElement | null = null;
+
+        items.forEach((item, index) => {
+          const isActive =
+            item.dataset.assetId === activeId || (!activeId && index === 0);
+          item.dataset.active = isActive.toString();
+          if (isActive) activeItem = item;
+        });
+
+        if (activeItem) {
+          const scrollIntoViewIfNeeded = () => {
+            const rect = activeItem!.getBoundingClientRect();
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const isVisible =
+              rect.top >= containerRect.top &&
+              rect.bottom <= containerRect.bottom;
+
+            if (!isVisible) {
+              activeItem!.scrollIntoView({
+                block: "nearest",
+                behavior: "auto",
+              });
+            }
+          };
+
+          scrollIntoViewIfNeeded();
+          setTimeout(scrollIntoViewIfNeeded, 100);
+        }
+      };
+
+      // Initial Sync
+      updateUI();
+
+      // Scroll Persistence
+      if (scrollContainer) {
+        scrollContainer.addEventListener(
+          "scroll",
+          () => {
+            sessionStorage.setItem(
+              SCROLL_KEY,
+              scrollContainer.scrollTop.toString(),
+            );
+          },
+          { passive: true },
+        );
+      }
+
+      // Collapse Toggle
+      collapseToggle?.addEventListener("click", () => {
+        const currentlyCollapsed =
+          playlist.getAttribute("data-collapsed") === "true";
+        const newState = !currentlyCollapsed;
+        playlist.setAttribute("data-collapsed", newState.toString());
+        localStorage.setItem("playlistCollapsed", newState.toString());
+      });
+
+      // Autoplay Config
+      if (autoplayToggle) {
+        autoplayToggle.checked =
+          localStorage.getItem("autoplayNext") !== "false";
+        autoplayToggle.addEventListener("change", () => {
+          localStorage.setItem(
+            "autoplayNext",
+            autoplayToggle.checked.toString(),
+          );
+        });
+      }
+    });
+
+    // Global Listeners (Shared logic for all playlists)
+    const onProgress = (e: any) => {
+      const { assetId, position, completed } = e.detail;
+      document.querySelectorAll(".video-item").forEach((btn) => {
+        if ((btn as HTMLElement).dataset.assetId !== assetId) return;
+
+        const duration = parseInt((btn as HTMLElement).dataset.duration || "0");
+        if (duration > 0) {
+          const progressPercent = Math.min(
+            100,
+            Math.round((position / duration) * 100),
+          );
+          const bar = btn.querySelector(".bg-brand-600\\/50") as HTMLElement;
+          const barText = btn.querySelector(
+            "span.text-brand-600\\/80",
+          ) as HTMLElement;
+          if (bar) bar.style.width = `${progressPercent}%`;
+          if (barText) barText.textContent = `${progressPercent}%`;
+
+          const progressCircle = btn.querySelector(
+            "circle.stroke-current:last-child",
+          ) as SVGCircleElement;
+          if (progressCircle) {
+            progressCircle.style.strokeDashoffset = (
+              100 - progressPercent
+            ).toString();
+          }
+        }
+
+        if (completed) {
+          const label = btn.querySelector("[data-progress-label]");
+          const check = btn.querySelector("[data-progress-check]");
+          if (label && check) {
+            label.classList.add("hidden");
+            check.classList.remove("hidden");
+          }
+        }
+      });
+    };
+
+    const onEnded = (e: any) => {
+      const autoplayToggle = document.querySelector(
+        "#autoplay-toggle",
+      ) as HTMLInputElement | null;
+      if (!autoplayToggle?.checked) return;
+
+      const { assetId } = e.detail;
+      const currentBtn = document.querySelector(
+        `.video-item[data-asset-id="${assetId}"]`,
+      ) as HTMLElement;
+      if (!currentBtn) return;
+
+      const items = Array.from(
+        document.querySelectorAll<HTMLElement>(".video-item"),
+      );
+      const currentIndex = items.indexOf(currentBtn);
+      const nextBtn = items[currentIndex + 1];
+
+      if (nextBtn) {
+        // Save scroll of the parent container
+        const scrollContainer = currentBtn.closest(
+          ".overflow-y-auto",
+        ) as HTMLElement;
+        if (scrollContainer) {
+          const courseId =
+            document.getElementById("course-page-context")?.dataset.courseId ||
+            "default";
+          sessionStorage.setItem(
+            `playlist-scroll-${courseId}`,
+            scrollContainer.scrollTop.toString(),
+          );
+        }
+        navigate(nextBtn.getAttribute("href")! + "&autoplay=true");
+      }
+    };
+
+    window.addEventListener("video-progress", onProgress);
+    window.addEventListener("video-ended", onEnded);
+  };
+
+  document.addEventListener("astro:page-load", setupPlaylists);
+</script>

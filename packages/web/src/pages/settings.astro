@@ -6,15 +6,15 @@ import { AssetPathResolver, NodeFileSystem, NodePath } from "@core/filesystem";
 import { getAssetConfigPath, getMonorepoRoot } from "@web/config/paths";
 import { API_ROUTES } from "@web/platform/api/routes";
 import { logger } from "@web/platform/logging";
-import Layout from "@web/layouts/Layout.astro";
-import { Icon } from "@web/components/Icon";
-import AssetBadge from "@web/components/AssetBadge.astro";
-import PageHeader from "@web/components/PageHeader.astro";
-import EmptyState from "@web/components/EmptyState/EmptyState.astro";
-import CollapsibleCard from "@web/components/CollapsibleCard.astro";
-import Button from "@web/components/Button.astro";
-import CollapsibleHeader from "@web/components/CollapsibleHeader.astro";
-import SectionHeader from "@web/components/SectionHeader.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import { Icon } from "@web/ui/primitives/Icon";
+import AssetBadge from "@web/ui/components/AssetBadge.astro";
+import Button from "@web/ui/components/Button/Button.astro";
+import CollapsibleCard from "@web/ui/components/CollapsibleCard.astro";
+import CollapsibleHeader from "@web/ui/components/CollapsibleHeader.astro";
+import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
+import PageHeader from "@web/ui/components/PageHeader.astro";
+import SectionHeader from "@web/ui/components/SectionHeader.astro";
 
 const assetPathsUrl = API_ROUTES.SETTINGS.ASSET_PATHS;
 

@@ -44,7 +44,34 @@ export async function captureScreenshots(
     logger.info(`capturing ${mode}: ${route}`);
 
     try {
-      await page.goto(url, { waitUntil: "networkidle" });
+      // Log Console showcase and Import page use SSE/Polling, which never reaches 'networkidle'
+      const waitStrategy = (route.includes("log-console-showcase") || route === "/import/")
+        ? "load"
+        : "networkidle";
+
+      await page.goto(url, { waitUntil: waitStrategy });
+
+      // Inject full-page screenshot overrides after load
+      await page.addStyleTag({
+        content: `
+          /* App-style layout overrides for full-page capture */
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+          }
+          #scroll-container {
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+          header#main-header {
+            position: relative !important; /* Avoid sticky header overlapping everything in full-page */
+          }
+        `,
+      });
+
+      // Wait a moment for layout reflow
+      await page.waitForTimeout(200);
 
       const fileName = routeToFileName(route);
       const outputPath = path.join(
@@ -78,11 +105,12 @@ export async function captureScreenshots(
   await browser.close();
 }
 
-function routeToFileName(route: string) {
+export function routeToFileName(route: string) {
   if (route === "/") return "home.png";
 
+  const normalized = route.replace(/\/$/, "");
   return (
-    route
+    normalized
       .replace(/\//g, "-")
       .replace(/^-/, "") + ".png"
   );

@@ -8,14 +8,14 @@ import {
   getLearningPathProgress,
 } from "@web/features/progress";
 import { getIsFavorite } from "@web/features/favorites";
-import Layout from "@web/layouts/Layout.astro";
-import CourseCard from "@web/components/CourseCard.astro";
-import EmptyState from "@web/components/EmptyState/EmptyState.astro";
-import { Icon } from "@web/components/Icon";
-import FavoriteButton from "@web/components/FavoriteButton.astro";
-import PageHeader from "@web/components/PageHeader.astro";
-import ProgressBar from "@web/components/ProgressBar.astro";
-import SectionHeader from "@web/components/SectionHeader.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import ProgressBar from "@web/ui/primitives/ProgressBar.astro";
+import Breadcrumbs from "@web/ui/components/Breadcrumbs.astro";
+import CourseCard from "@web/ui/components/CourseCard.astro";
+import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
+import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
+import PageHeader from "@web/ui/components/PageHeader.astro";
+import SectionHeader from "@web/ui/components/SectionHeader.astro";
 
 interface PathPageProps {
   id?: string;
@@ -58,19 +58,14 @@ const hasContent = courseData.length > 0;
 
 <Layout title={path.title} description={path.description}>
   <!-- Breadcrumb -->
-  <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a
-      href={APP_ROUTES.HOME}
-      class="text-text-muted no-underline hover:underline">Inicio</a
-    >
-    <Icon name="chevron-right" size="xs" />
-    <a
-      href={APP_ROUTES.LEARNING_PATHS.INDEX}
-      class="text-text-muted no-underline hover:underline">Learning Paths</a
-    >
-    <Icon name="chevron-right" size="xs" />
-    <span class="text-text-secondary">{path.title}</span>
-  </nav>
+  <Breadcrumbs
+    items={[
+      { label: "Inicio", href: APP_ROUTES.HOME },
+      { label: "Learning Paths", href: APP_ROUTES.LEARNING_PATHS.INDEX },
+      { label: path.title },
+    ]}
+    class="mb-6"
+  />
 
   <!-- Header -->
   <PageHeader

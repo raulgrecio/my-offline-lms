@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { GenericWizard, WizardActionButtons, type WizardStepConfig } from '@web/components/Wizard';
+import { GenericWizard, WizardActionButtons, type WizardStepConfig } from '@web/ui/modules/wizard';
 
 const showcaseSteps: WizardStepConfig[] = [
   { id: "start", label: "User Details", icon: "book-open" },

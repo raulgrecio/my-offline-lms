@@ -1,0 +1,50 @@
+---
+import { getButtonClasses, getSpinnerClasses } from "./button.styles";
+import type { ButtonStyleProps, ButtonType } from "./button.types";
+
+interface Props extends ButtonStyleProps {
+  type?: ButtonType;
+  href?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  type = "button",
+  href,
+  loading = false,
+  disabled = false,
+  class: className = "",
+  ...rest
+} = Astro.props as Props;
+
+const classes = getButtonClasses({
+  ...rest,
+  loading,
+  className,
+});
+
+const Tag = href ? "a" : "button";
+const isButton = !href;
+---
+
+<Tag
+  class={classes}
+  href={href}
+  type={isButton ? type : undefined}
+  disabled={isButton ? disabled || loading : undefined}
+  aria-busy={loading}
+  {...rest}
+>
+  {
+    loading && (
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class={getSpinnerClasses(rest.size)} />
+      </div>
+    )
+  }
+
+  <span class={loading ? "invisible" : "contents"}>
+    <slot />
+  </span>
+</Tag>

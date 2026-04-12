@@ -1,9 +1,9 @@
 ---
-import Layout from "@web/layouts/Layout.astro";
-import Button from "@web/components/Button.astro";
-import ViewerButton from "@web/components/PDFViewer/ViewerButton.astro";
-import ViewerFitControl from "@web/components/PDFViewer/ViewerFitControl.astro";
-import FavoriteButton from "@web/components/FavoriteButton.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import Button from "@web/ui/components/Button/Button.astro";
+import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
+import ViewerButton from "@web/ui/modules/pdf-viewer/ViewerButton.astro";
+import ViewerFitControl from "@web/ui/modules/pdf-viewer/ViewerFitControl.astro";
 ---
 
 <Layout title="Button Showcase">
@@ -42,7 +42,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                   variant="{v}"
                 </span>
               </div>
-            )
+            ),
           )
         }
       </div>
@@ -91,9 +91,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
               ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
                 <div class="flex flex-col items-center gap-2">
                   <Button square size={s} icon="plus" />
-                  <span class="text-2xs font-mono text-text-muted">
-                    sq-{s}
-                  </span>
+                  <span class="text-2xs font-mono text-text-muted">sq-{s}</span>
                 </div>
               ))
             }
@@ -146,9 +144,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           </h4>
           <div class="flex flex-col gap-4 items-start">
             <div class="space-y-2 w-full">
-              <p class="text-2xs text-text-muted">
-                Dual Icons (Left & Right):
-              </p>
+              <p class="text-2xs text-text-muted">Dual Icons (Left & Right):</p>
               <div class="flex flex-wrap gap-2">
                 {
                   (["primary", "secondary", "outline", "danger"] as const).map(
@@ -161,7 +157,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
                       >
                         {v}
                       </Button>
-                    )
+                    ),
                   )
                 }
               </div>
@@ -196,16 +192,23 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
             Feedback & Disabled
           </h4>
           <div class="flex flex-col gap-3 items-start">
-            <div class="space-y-2 w-full">
-              <p class="text-2xs text-text-muted">
-                Loading States (All Variants):
+            <div class="space-y-4 w-full">
+              <p class="text-2xs text-text-muted uppercase tracking-wider">
+                Scaled Loading States (Self-centering):
               </p>
-              <div class="grid grid-cols-2 gap-2">
-                <Button loading size="sm">Primary</Button>
-                <Button variant="secondary" loading size="sm">Secondary</Button>
-                <Button variant="outline" loading size="sm">Outline</Button>
-                <Button variant="ghost" loading size="sm">Ghost</Button>
-                <Button variant="danger" loading size="sm">Danger</Button>
+              <div class="flex flex-wrap items-end gap-x-8 gap-y-6 pb-2">
+                {
+                  ["xs", "sm", "md", "lg", "xl"].map((s: any) => (
+                    <div class="flex flex-col items-center gap-2">
+                      <Button loading size={s} variant="secondary">
+                        {s}
+                      </Button>
+                      <span class="text-[10px] font-mono text-text-muted">
+                        {s}
+                      </span>
+                    </div>
+                  ))
+                }
               </div>
             </div>
             <div class="space-y-2 w-full pt-2">
@@ -251,6 +254,62 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
       </div>
     </section>
 
+    <!-- ─── POLYMORPHISM ────────────────────────────────────────── -->
+    <section class="space-y-8">
+      <div class="border-b border-border-default pb-4">
+        <h2
+          class="text-2xl font-bold text-text-primary flex items-center gap-3"
+        >
+          <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
+          4. Polymorphism (Link vs Button)
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          class="p-6 bg-surface-900 rounded-2xl border border-border-subtle space-y-4"
+        >
+          <h4 class="text-xs font-bold text-text-muted uppercase">
+            Automatic Link Detection
+          </h4>
+          <p class="text-xs text-text-secondary">
+            Components with an <code>href</code> prop automatically render as an <code
+              >&lt;a&gt;</code
+            > tag and strip button-only attributes.
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <Button href="#" variant="primary">Standard Link</Button>
+            <Button href="#" variant="outline" icon="external-link"
+              >External</Button
+            >
+            <Button href="#" variant="ghost" icon="layers" square />
+          </div>
+          <p
+            class="text-[10px] text-text-muted italic bg-surface-950 p-2 rounded border border-border-subtle/50"
+          >
+            Rendered: <code>&lt;a class="..." href="#"&gt;...&lt;/a&gt;</code>
+          </p>
+        </div>
+
+        <h4 class="text-xs font-bold text-text-muted uppercase">
+          Explicit Polymorphism (as prop)
+        </h4>
+        <p class="text-xs text-text-secondary">
+          Use the <code>as</code> prop to force a specific HTML tag regardless of
+          other props.
+        </p>
+        <div class="flex flex-wrap gap-3 pt-2">
+          <Button as="a" variant="secondary">An "a" tag without href</Button>
+          <Button as="button" variant="outline">Explicit button</Button>
+        </div>
+        <p
+          class="text-[10px] text-text-muted italic bg-surface-950 p-2 rounded border border-border-subtle/50"
+        >
+          Rendered: <code>&lt;a class="..."&gt;...&lt;/a&gt;</code>
+        </p>
+      </div>
+    </section>
+
     <!-- ─── HOVER EFFECTS ──────────────────────────────────────── -->
     <section class="space-y-8">
       <div class="border-b border-border-default pb-4">
@@ -258,7 +317,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           class="text-2xl font-bold text-text-primary flex items-center gap-3"
         >
           <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
-          4. Hover Effects (Opt-in)
+          5. Hover Effects (Opt-in)
         </h2>
       </div>
 
@@ -290,7 +349,7 @@ import FavoriteButton from "@web/components/FavoriteButton.astro";
           class="text-2xl font-bold text-text-primary flex items-center gap-3"
         >
           <div class="w-1.5 h-6 bg-brand-500 rounded-full"></div>
-          5. Specialized Integration
+          6. Specialized Integration
         </h2>
       </div>
 

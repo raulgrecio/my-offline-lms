@@ -1,0 +1,139 @@
+---
+import { Icon } from "@web/ui/primitives/Icon";
+import Button from "@web/ui/components/Button/Button.astro";
+---
+
+<main
+  id="pdf-container"
+  class="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col items-center gap-12 custom-scrollbar bg-surface-950 relative"
+>
+  <div
+    id="loading"
+    class="flex flex-col items-center gap-4 py-20 pointer-events-none sticky top-1/2 -translate-y-1/2"
+  >
+    <div
+      class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"
+    >
+    </div>
+    <p class="text-sm text-text-muted">Preparando documento...</p>
+  </div>
+</main>
+
+<!-- ─── Templates ────────────────────────────────────────────────────────── -->
+<template id="page-template">
+  <div
+    data-page-row
+    class="page-wrapper relative bg-surface-900 shadow-deep opacity-30"
+  >
+    <div
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-2 border-brand-600/30 border-t-brand-600 rounded-full animate-spin"
+    >
+    </div>
+  </div>
+</template>
+
+<template id="error-template">
+  <div class="p-12 text-center max-w-md mx-auto">
+    <div class="flex justify-center mb-4 text-status-failed/50">
+      <Icon name="alert-circle" size="xl" />
+    </div>
+    <h3 class="text-lg font-bold text-text-primary mb-2">
+      Error al cargar el documento
+    </h3>
+    <p data-error-message class="text-sm text-text-secondary leading-relaxed">
+    </p>
+    <Button
+      onclick="location.reload()"
+      variant="ghost"
+      size="sm"
+      class="mt-6 border border-border-subtle"
+    >
+      Reintentar carga
+    </Button>
+  </div>
+</template>
+
+<template id="help-template">
+  <div
+    id="help-modal"
+    class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-surface-950/80 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-none"
+  >
+    <div
+      data-modal-content
+      class="bg-surface-900 border border-border-subtle rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
+    >
+      <div
+        class="flex items-center justify-between p-4 border-b border-border-subtle bg-surface-950/50"
+      >
+        <h3 class="font-bold flex items-center gap-2">
+          <Icon name="help-box" size="sm" className="text-brand-400" />
+          Atajos de Teclado
+        </h3>
+        <Button variant="ghost" size="xs" square icon="x" data-close-help />
+      </div>
+      <div class="p-6 space-y-4 text-sm">
+        <div class="grid grid-cols-2 gap-y-3">
+          <div class="text-text-muted">Desplazar</div>
+          <div class="flex gap-1 justify-end">
+            <kbd
+              class="px-1.5 py-0.5 rounded bg-surface-800 border border-border-subtle font-mono text-2xs"
+              >↑</kbd
+            >
+            <kbd
+              class="px-1.5 py-0.5 rounded bg-surface-800 border border-border-subtle font-mono text-2xs"
+              >↓</kbd
+            >
+          </div>
+
+          <div class="text-text-muted">Avanzar página</div>
+          <div class="flex gap-1 justify-end">
+            <kbd
+              class="px-1.5 py-0.5 rounded bg-surface-800 border border-border-subtle font-mono text-2xs"
+              >Espacio</kbd
+            >
+            <kbd
+              class="px-1.5 py-0.5 rounded bg-surface-800 border border-border-subtle font-mono text-2xs"
+              >PgDown</kbd
+            >
+          </div>
+
+          <div class="text-text-muted">Retroceder página</div>
+          <div class="flex gap-1 justify-end">
+            <kbd
+              class="px-1.5 py-0.5 rounded bg-surface-800 border border-border-subtle font-mono text-2xs"
+              >PgUp</kbd
+            >
+          </div>
+
+          <div class="text-text-muted">Rotar</div>
+          <div class="text-right font-mono font-bold text-brand-400 uppercase">
+            R
+          </div>
+
+          <div class="text-text-muted">Ajustar ancho</div>
+          <div class="text-right font-mono font-bold text-brand-400 uppercase">
+            F
+          </div>
+
+          <div class="text-text-muted">Ajustar alto</div>
+          <div class="text-right font-mono font-bold text-brand-400 uppercase">
+            H
+          </div>
+        </div>
+      </div>
+      <div
+        class="p-4 bg-surface-950/30 text-center border-t border-border-subtle/50"
+      >
+        <p class="text-2xs text-text-muted italic">
+          Pulsa cualquier tecla para cerrar
+        </p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .page-wrapper {
+    transition: opacity 0.3s ease;
+  }
+</style>

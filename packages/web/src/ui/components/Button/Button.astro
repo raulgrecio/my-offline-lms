@@ -1,0 +1,75 @@
+---
+import { cn } from "@web/lib/cn";
+import UIButton from "@web/ui/primitives/button/Button.astro";
+import type {
+  ButtonVariant,
+  ButtonSize,
+  ButtonType,
+  ButtonHoverEffect,
+  ButtonStyleProps,
+} from "@web/ui/primitives/button/button.types";
+import { Icon, type IconName } from "@web/ui/primitives/Icon";
+
+export type { ButtonVariant, ButtonSize, ButtonType, ButtonHoverEffect };
+
+export interface Props extends ButtonStyleProps {
+  icon?: IconName;
+  iconRight?: IconName;
+  iconClass?: string;
+  iconRightClass?: string;
+  [key: string]: any;
+}
+
+const {
+  size = "md",
+  square = false,
+  icon,
+  iconRight,
+  iconClass = "",
+  iconRightClass = "",
+  ...rest
+} = Astro.props as Props;
+
+const iconSizes: Record<string, any> = {
+  xs: "xs",
+  sm: "sm",
+  md: square ? "md" : "sm",
+  lg: square ? "lg" : "md",
+  xl: square ? "xl" : "md",
+};
+
+const hasSlotContent = Astro.slots.has("default");
+const iconBaseStyles = "shrink-0 transition-all duration-200";
+---
+
+<UIButton size={size} square={square} {...rest}>
+  {
+    icon && (
+      <Icon
+        name={icon}
+        size={iconSizes[size]}
+        className={cn(
+          iconBaseStyles,
+          (hasSlotContent || !!iconRight) && "-ml-1",
+          iconClass,
+        )}
+      />
+    )
+  }
+
+  <slot />
+
+  {
+    iconRight && (
+      <Icon
+        name={iconRight}
+        size={iconSizes[size]}
+        className={cn(
+          iconBaseStyles,
+          (hasSlotContent || !!icon) && "-mr-1",
+          iconRightClass,
+        )}
+      />
+    )
+  }
+</UIButton>

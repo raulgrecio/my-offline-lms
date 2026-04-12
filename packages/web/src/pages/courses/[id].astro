@@ -9,16 +9,16 @@ import { APP_ROUTES } from "@web/platform/router/routes";
 import { getCourseById, getAssetsByCourseId } from "@web/features/courses";
 import { getIsFavorite } from "@web/features/favorites";
 import { getCourseProgress, getAssetProgress } from "@web/features/progress";
-import Layout from "@web/layouts/Layout.astro";
-import FavoriteButton from "@web/components/FavoriteButton.astro";
-import Button from "@web/components/Button.astro";
-import EmptyState from "@web/components/EmptyState/EmptyState.astro";
-import { Icon } from "@web/components/Icon";
-import GuideCard from "@web/components/GuideCard.astro";
-import PageHeader from "@web/components/PageHeader.astro";
-import SectionHeader from "@web/components/SectionHeader.astro";
-import VideoPlayer from "@web/components/VideoPlayer";
-import VideoPlaylist from "@web/components/VideoPlaylist.astro";
+import Layout from "@web/layouts/MainLayout.astro";
+import Button from "@web/ui/components/Button/Button.astro";
+import Breadcrumbs from "@web/ui/components/Breadcrumbs.astro";
+import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
+import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
+import GuideCard from "@web/ui/components/GuideCard.astro";
+import PageHeader from "@web/ui/components/PageHeader.astro";
+import SectionHeader from "@web/ui/components/SectionHeader.astro";
+import VideoPlayer from "@web/ui/modules/video-player";
+import VideoPlaylist from "@web/ui/patterns/courses/VideoPlaylist.astro";
 
 interface CoursePageProps {
   id?: string;
@@ -70,6 +70,7 @@ const guides = await Promise.all(
 
 // Find the active video
 const videoId = Astro.url.searchParams.get("v");
+const autoPlay = Astro.url.searchParams.get("autoplay") === "true";
 const activeVideo = videoId
   ? videos.find((v) => v.id === videoId) || videos[0]
   : videos[0];
@@ -107,19 +108,14 @@ const videosList = videos.map((v) => ({
     data-metadata-url={API_ROUTES.ASSETS.METADATA()}
   >
     <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-      <a
-        href={APP_ROUTES.HOME}
-        class="text-text-muted no-underline hover:underline">Inicio</a
-      >
-      <Icon name="chevron-right" size="xs" />
-      <a
-        href={APP_ROUTES.COURSES.INDEX}
-        class="text-text-muted no-underline hover:underline">Cursos</a
-      >
-      <Icon name="chevron-right" size="xs" />
-      <span class="text-text-secondary">{course.title}</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { label: "Inicio", href: APP_ROUTES.HOME },
+        { label: "Cursos", href: APP_ROUTES.COURSES.INDEX },
+        { label: course.title },
+      ]}
+      class="mb-6"
+    />
 
     <!-- Header -->
     <PageHeader
@@ -179,6 +175,7 @@ const videosList = videos.map((v) => ({
                     initialTime={activeVideo.progress?.position ?? 0}
                     initialDuration={activeVideo.metadata?.duration ?? 0}
                     progressUrl={API_ROUTES.PROGRESS.VIDEO}
+                    autoPlay={autoPlay}
                   />
                 )}
               </div>
@@ -193,6 +190,7 @@ const videosList = videos.map((v) => ({
             <VideoPlaylist
               videos={videosList}
               activeVideoId={activeVideo?.id}
+              class="flex-2 lg:max-w-md shrink-0"
             />
           </div>
         </section>
