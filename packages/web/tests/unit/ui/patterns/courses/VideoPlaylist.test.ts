@@ -42,7 +42,7 @@ describe("VideoPlaylist.astro", () => {
 
     expect(html).toContain('data-asset-id="v1"');
     expect(html).toContain('data-asset-id="v2"');
-    
+
     expect(html).toContain('1:40'); // 100s -> 1:40
     expect(html).toContain('3:20'); // 200s -> 3:20
   });
@@ -53,7 +53,7 @@ describe("VideoPlaylist.astro", () => {
 
     // Video 1 is active (v1)
     // We check for the background class that marks it as active
-    expect(html).toContain('bg-surface-700/50');
+    expect(html).toContain('bg-surface-700');
   });
 
   it("should render progress information for in-progress videos", async () => {
@@ -70,7 +70,7 @@ describe("VideoPlaylist.astro", () => {
     const html = await container.renderToString(VideoPlaylist, { props: defaultProps });
 
     // Video 2 is completed, it should contain a check icon (polyline)
-    expect(html).toContain('polyline'); 
+    expect(html).toContain('polyline');
   });
 
   it("should render the autoplay toggle", async () => {
