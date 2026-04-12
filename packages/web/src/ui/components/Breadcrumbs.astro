@@ -1,0 +1,61 @@
+---
+import { Icon } from "@web/ui/primitives/Icon";
+import type { IconName } from "@web/ui/primitives/Icon/icons";
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  icon?: IconName;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  class?: string;
+}
+
+const { items, class: className = "" } = Astro.props;
+---
+
+<nav
+  class:list={["flex items-center gap-2 text-xs text-text-muted", className]}
+  aria-label="Breadcrumb"
+>
+  {
+    items.map((item, index) => {
+      const isLast = index === items.length - 1;
+
+      return (
+        <>
+          {index > 0 && (
+            <Icon
+              name="chevron-right"
+              size="xs"
+              className="text-text-muted/50 shrink-0"
+            />
+          )}
+          <div class="flex items-center gap-1.5 min-w-0">
+            {item.icon && (
+              <Icon
+                name={item.icon}
+                size="xs"
+                className="shrink-0 text-text-muted/70"
+              />
+            )}
+            {item.href && !isLast ? (
+              <a
+                href={item.href}
+                class="text-text-muted no-underline hover:underline transition-colors truncate"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <span class="text-text-secondary font-medium truncate">
+                {item.label}
+              </span>
+            )}
+          </div>
+        </>
+      );
+    })
+  }
+</nav>

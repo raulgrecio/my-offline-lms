@@ -9,8 +9,8 @@ import {
 } from "@web/features/progress";
 import { getIsFavorite } from "@web/features/favorites";
 import Layout from "@web/layouts/MainLayout.astro";
-import { Icon } from "@web/ui/primitives/Icon";
 import ProgressBar from "@web/ui/primitives/ProgressBar.astro";
+import Breadcrumbs from "@web/ui/components/Breadcrumbs.astro";
 import CourseCard from "@web/ui/components/CourseCard.astro";
 import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
 import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
@@ -58,19 +58,14 @@ const hasContent = courseData.length > 0;
 
 <Layout title={path.title} description={path.description}>
   <!-- Breadcrumb -->
-  <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-    <a
-      href={APP_ROUTES.HOME}
-      class="text-text-muted no-underline hover:underline">Inicio</a
-    >
-    <Icon name="chevron-right" size="xs" />
-    <a
-      href={APP_ROUTES.LEARNING_PATHS.INDEX}
-      class="text-text-muted no-underline hover:underline">Learning Paths</a
-    >
-    <Icon name="chevron-right" size="xs" />
-    <span class="text-text-secondary">{path.title}</span>
-  </nav>
+  <Breadcrumbs
+    items={[
+      { label: "Inicio", href: APP_ROUTES.HOME },
+      { label: "Learning Paths", href: APP_ROUTES.LEARNING_PATHS.INDEX },
+      { label: path.title },
+    ]}
+    class="mb-6"
+  />
 
   <!-- Header -->
   <PageHeader

@@ -11,10 +11,10 @@ import { getIsFavorite } from "@web/features/favorites";
 import { getCourseProgress, getAssetProgress } from "@web/features/progress";
 import Layout from "@web/layouts/MainLayout.astro";
 import Button from "@web/ui/components/Button/Button.astro";
+import Breadcrumbs from "@web/ui/components/Breadcrumbs.astro";
 import EmptyState from "@web/ui/components/EmptyState/EmptyState.astro";
 import FavoriteButton from "@web/ui/components/FavoriteButton.astro";
 import GuideCard from "@web/ui/components/GuideCard.astro";
-import { Icon } from "@web/ui/primitives/Icon";
 import PageHeader from "@web/ui/components/PageHeader.astro";
 import SectionHeader from "@web/ui/components/SectionHeader.astro";
 import VideoPlayer from "@web/ui/modules/video-player";
@@ -107,19 +107,14 @@ const videosList = videos.map((v) => ({
     data-metadata-url={API_ROUTES.ASSETS.METADATA()}
   >
     <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs mb-6 text-text-muted">
-      <a
-        href={APP_ROUTES.HOME}
-        class="text-text-muted no-underline hover:underline">Inicio</a
-      >
-      <Icon name="chevron-right" size="xs" />
-      <a
-        href={APP_ROUTES.COURSES.INDEX}
-        class="text-text-muted no-underline hover:underline">Cursos</a
-      >
-      <Icon name="chevron-right" size="xs" />
-      <span class="text-text-secondary">{course.title}</span>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { label: "Inicio", href: APP_ROUTES.HOME },
+        { label: "Cursos", href: APP_ROUTES.COURSES.INDEX },
+        { label: course.title },
+      ]}
+      class="mb-6"
+    />
 
     <!-- Header -->
     <PageHeader
