@@ -11,6 +11,7 @@ import { type IAssetRepository } from "../domain/ports/IAssetRepository";
 import { type IAssetStorage } from "../domain/ports/IAssetStorage";
 import { type INamingService } from "../domain/ports/INamingService";
 import { type IVideoDownloader } from "../domain/ports/IVideoDownloader";
+import { type IAuthValidator } from "@scraper/features/auth-session";
 
 export interface DownloadVideosConfig {
   selectors: {
@@ -33,6 +34,7 @@ export interface DownloadVideosOptions {
   assetStorage: IAssetStorage;
   videoDownloader: IVideoDownloader;
   namingService: INamingService;
+  validator: IAuthValidator;
   logger: ILogger;
   config: DownloadVideosConfig;
 }
@@ -44,6 +46,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
   private assetStorage: IAssetStorage;
   private videoDownloader: IVideoDownloader;
   private namingService: INamingService;
+  private validator: IAuthValidator;
   private logger: ILogger;
   private config: DownloadVideosConfig;
 
@@ -54,6 +57,7 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
     this.assetStorage = options.assetStorage;
     this.videoDownloader = options.videoDownloader;
     this.namingService = options.namingService;
+    this.validator = options.validator;
     this.logger = options.logger.withContext("DownloadVideos");
     this.config = options.config;
   }
@@ -129,44 +133,64 @@ export class DownloadVideos implements IUseCase<DownloadVideosInput, void> {
       const cleanUrl = this.namingService.cleanUrl(asset.url);
       const res = await page.goto(cleanUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
 
-      // Detección de redirección a login
+      // Detección de redirección a login (URL, Título o Contenido) usando el validador
       const currentUrl = page.url();
-      const isLoginPage = currentUrl.includes("identity.oraclecloud.com") ||
-        currentUrl.includes("login") ||
-        (await page.title()).toLowerCase().includes("oracle identity cloud service");
+      const pageTitle = await page.title();
+      const hasSignText = await page.locator("text=Sign In").isVisible();
+
+      const isLoginPage = this.validator.isLoginPage({
+        url: currentUrl,
+        title: pageTitle,
+        hasLoginText: hasSignText
+      });
 
       if (isLoginPage) {
         throw new Error("Página redirigida a login. La sesión ha expirado o no es válida. Ejecuta 'pnpm cli login'.");
       }
 
-      await page.waitForTimeout(18000);
+      // Esperar a que el reproductor o contenido cargue
+      await page.waitForTimeout(10000);
 
       const videoId = asset.url.split('/').pop();
       if (videoId) {
         try {
-          const startLearningBtn = page.locator(this.config.selectors.video.startBtn).first();
-          await startLearningBtn.waitFor({ state: 'visible', timeout: 5000 });
-          await startLearningBtn.click({ force: true });
-          await page.waitForTimeout(2000);
-        } catch (e) {
-          this.logger.debug?.(`Botón 'Start Learning' no encontrado o no necesario para el vídeo ${assetId}`);
-        }
+          // Intentar encontrar el botón de Play o Start Learning si el vídeo no arranca solo
+          const selectors = [
+            this.config.selectors.video.startBtn,
+            this.config.selectors.video.playBtn,
+            "button[aria-label='Play Video']",
+            ".vjs-play-control"
+          ];
 
-        try {
-          const playButton = page.locator(this.config.selectors.video.playBtn).first();
-          await playButton.waitFor({ state: 'visible', timeout: 4000 });
-          await playButton.click({ force: true });
-        } catch (e) {
-          this.logger.debug?.(`Botón 'Play' no encontrado para el vídeo ${assetId}`);
+          for (const selector of selectors) {
+            const btn = page.locator(selector).first();
+            if (await btn.isVisible()) {
+              this.logger.debug?.(`Clic en control de vídeo: ${selector}`);
+              await btn.click({ force: true });
+              await page.waitForTimeout(2000);
+            }
+          }
+        } catch (e: any) {
+          this.logger.debug?.(`Interacción de vídeo omitida o fallida para ${assetId}: ${e.message}`);
         }
       }
 
+      // Tiempo de espera final para captura de red (el stream suele saltar tras el primer play)
       await page.waitForTimeout(15000);
 
       if (!m3u8Url) {
-        this.logger.warn(`⚠️ No se detectó stream de vídeo (.m3u8). Esto suele ocurrir por falta de login.`);
+        // Intento final: buscar en el DOM si hay algún elemento vídeo con src (menos común en Oracle pero posible)
+        const videoSrc = await page.locator('video source').first().getAttribute('src').catch(() => null);
+        if (videoSrc && (videoSrc.includes('.m3u8') || videoSrc.includes('.mp4'))) {
+          m3u8Url = videoSrc;
+        }
       }
-      const targetDownloadUrl = m3u8Url || cleanUrl;
+
+      if (!m3u8Url) {
+        throw new Error("No se pudo detectar el stream de vídeo (.m3u8). La página cargó pero el reproductor no inició el stream.");
+      }
+      
+      const targetDownloadUrl = m3u8Url;
 
       this.assetRepo.updateAssetStatus(assetId, 'DOWNLOADING');
       await page.close(); // Liberar memoria de playwright antes de yt-dlp

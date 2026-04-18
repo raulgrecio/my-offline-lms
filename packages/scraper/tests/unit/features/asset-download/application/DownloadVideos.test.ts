@@ -75,9 +75,10 @@ describe('DownloadVideos Use Case', () => {
       locator: vi.fn().mockReturnValue({
         first: vi.fn().mockReturnThis(),
         getAttribute: vi.fn().mockResolvedValue('mock-attr'),
-        isVisible: vi.fn().mockResolvedValue(true),
+        isVisible: vi.fn().mockResolvedValue(false), // Changed to false by default
         waitFor: vi.fn().mockResolvedValue(undefined),
-        click: vi.fn().mockResolvedValue(undefined)
+        click: vi.fn().mockResolvedValue(undefined),
+        text: vi.fn().mockReturnThis()
       })
     };
 
@@ -99,6 +100,7 @@ describe('DownloadVideos Use Case', () => {
       assetStorage: mockAssetStorage,
       videoDownloader: mockVideoDownloader,
       namingService: new AssetNamingService(),
+      validator: { isLoginPage: vi.fn().mockReturnValue(false) } as any,
       logger: mockRootLogger,
       config: {
         selectors: {
@@ -138,6 +140,15 @@ describe('DownloadVideos Use Case', () => {
 
     mockAssetStorage.verifyVideoIntegrity.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://stream.m3u8' });
+      return undefined;
+    });
+
     await useCase.execute({ courseId: '123' });
 
     expect(callCount).toBeGreaterThan(0);
@@ -176,6 +187,15 @@ describe('DownloadVideos Use Case', () => {
     mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
     mockAssetStorage.verifyVideoIntegrity.mockReturnValue(false);
 
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://stream.m3u8' });
+      return undefined;
+    });
+
     mockVideoDownloader.download.mockRejectedValue(new Error('Downloader failed'));
 
     await useCase.execute({ courseId: '123' });
@@ -192,10 +212,19 @@ describe('DownloadVideos Use Case', () => {
 
     mockAssetStorage.verifyVideoIntegrity.mockImplementation(() => false);
 
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://fail.m3u8' });
+      return undefined;
+    });
+
     await useCase.execute({ courseId: '123' });
 
     expect(mockAssetRepo.updateAssetStatus).toHaveBeenCalledWith('v1', 'FAILED');
-    expect(mockContextLogger.warn).toHaveBeenCalled();
+    expect(mockContextLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Vídeo descargado pero falló el check de integridad"));
   });
 
   it('should close resources properly', async () => {
@@ -204,7 +233,15 @@ describe('DownloadVideos Use Case', () => {
     mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
     mockAssetStorage.verifyVideoIntegrity.mockReturnValue(false);
 
-    // Test with sharedContext
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://close.m3u8' });
+      return undefined;
+    });
+
     await useCase.downloadSingleVideo('v1', '123', mockContext);
     expect(mockPage.close).toHaveBeenCalled();
 
@@ -252,15 +289,18 @@ describe('DownloadVideos Use Case', () => {
     mockAssetStorage.verifyVideoIntegrity.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
     // Mock locator to fail for buttons
-    mockPage.locator.mockReturnValue({
+    mockPage.locator.mockImplementation((id: string) => ({
       first: vi.fn().mockReturnThis(),
-      waitFor: vi.fn().mockRejectedValue(new Error('not found')),
-    });
+      isVisible: vi.fn().mockResolvedValue(false),
+      waitFor: vi.fn(),
+      getAttribute: vi.fn(),
+      click: vi.fn()
+    }));
 
     await useCase.downloadSingleVideo('v1', '123');
 
-    expect(mockContextLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Botón 'Start Learning' no encontrado"));
-    expect(mockContextLogger.debug).toHaveBeenCalledWith(expect.stringContaining("Botón 'Play' no encontrado"));
+    expect(mockAssetRepo.updateAssetStatus).toHaveBeenCalledWith('v1', 'FAILED');
+    expect(mockContextLogger.debug).not.toHaveBeenCalledWith(expect.stringContaining("Clic en control de vídeo: .start"));
   });
 
   it('should handle page close failure in finally block', async () => {
@@ -268,6 +308,15 @@ describe('DownloadVideos Use Case', () => {
     mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
     mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
     mockAssetStorage.verifyVideoIntegrity.mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://ok.m3u8' });
+      return undefined;
+    });
 
     mockPage.close.mockRejectedValue(new Error('close failed'));
 
@@ -335,6 +384,15 @@ describe('DownloadVideos Use Case', () => {
     mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
     mockAssetStorage.verifyVideoIntegrity.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
+    let requestListener: any = null;
+    mockPage.on.mockImplementation((event: string, listener: any) => {
+      if (event === 'request') requestListener = listener;
+    });
+    mockPage.goto.mockImplementation(async () => {
+      if (requestListener) requestListener({ url: () => 'http://unusual.m3u8' });
+      return undefined;
+    });
+
     await useCase.downloadSingleVideo('v1', '123');
     expect(mockPage.locator).toHaveBeenCalled(); // still tries to process
   });
@@ -342,10 +400,11 @@ describe('DownloadVideos Use Case', () => {
   it('should handle empty videoId from URL gracefully', async () => {
     const mockAsset = { id: 'v1', url: 'http://my-offline-lms/', type: 'video', metadata: { title: "V1" }, courseId: '123' };
     mockAssetRepo.getAssetById.mockReturnValue(mockAsset);
-    
-    // Line 139: if (videoId) { should be false
+    mockBrowserProvider.getAuthenticatedContext.mockResolvedValue(mockContext);
     await useCase.downloadSingleVideo('v1', '123');
-    expect(mockPage.locator).not.toHaveBeenCalled();
+    
+    expect(mockAssetRepo.updateAssetStatus).toHaveBeenCalledWith('v1', 'FAILED');
+    expect(mockContextLogger.error).toHaveBeenCalled();
   });
 
   it('should handle abortion in the main videos loop', async () => {

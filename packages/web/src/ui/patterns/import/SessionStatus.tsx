@@ -24,29 +24,34 @@ export const SessionStatus: React.FC = () => {
         flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-500
         ${authStatus.isAuthenticated
           ? 'bg-status-completed/5 border-status-completed/20 hover:bg-status-completed/10'
-          : 'bg-status-failed/5 border-status-failed/20 hover:bg-status-failed/10 shadow-lg shadow-status-failed/5'}
+          : authStatus.isLoginDetected
+            ? 'bg-status-warning/5 border-status-warning/20 hover:bg-status-warning/10 shadow-lg shadow-status-warning/5'
+            : 'bg-status-failed/5 border-status-failed/20 hover:bg-status-failed/10 shadow-lg shadow-status-failed/5'}
       `}
     >
       <div className={`relative flex items-center justify-center`}>
-        <div className={`w-2.5 h-2.5 rounded-full ${authStatus.isAuthenticated ? 'bg-status-completed' : 'bg-status-failed'} ${isLoading ? 'animate-pulse' : ''}`} />
+        <div className={`w-2.5 h-2.5 rounded-full ${authStatus.isAuthenticated ? 'bg-status-completed' : (authStatus.isLoginDetected ? 'bg-status-warning' : 'bg-status-failed')} ${isLoading || authStatus.isLoginDetected ? 'animate-pulse' : ''}`} />
         {authStatus.isAuthenticated && (
           <div className="absolute inset-0 rounded-full bg-status-completed animate-ping opacity-20" />
+        )}
+        {!authStatus.isAuthenticated && authStatus.isLoginDetected && (
+          <div className="absolute inset-0 rounded-full bg-status-warning animate-ping opacity-20" />
         )}
       </div>
 
       <div className="flex flex-col">
-        <div className={`text-2xs font-black uppercase tracking-widest ${authStatus.isAuthenticated ? 'text-status-completed/80' : 'text-status-failed/80'}`}>
+        <div className={`text-2xs font-black uppercase tracking-widest ${authStatus.isAuthenticated ? 'text-status-completed/80' : (authStatus.isLoginDetected ? 'text-status-warning/80' : 'text-status-failed/80')}`}>
           Plataforma
         </div>
         <div className="text-xs font-bold text-text-primary whitespace-nowrap">
-          {authStatus.isAuthenticated ? 'Sesión Activa' : 'Iniciar Sesión'}
+          {authStatus.isAuthenticated ? 'Sesión Activa' : (authStatus.isLoginDetected ? 'Sesión Detectada' : 'Iniciar Sesión')}
         </div>
       </div>
 
       <Icon
-        name={authStatus.isAuthenticated ? "check-circle" : "chevron-right"}
+        name={authStatus.isAuthenticated ? "check-circle" : (authStatus.isLoginDetected ? "clock" : "chevron-right")}
         size="xs"
-        className={authStatus.isAuthenticated ? "text-status-completed" : "text-status-failed group-hover:translate-x-1 transition-transform"}
+        className={authStatus.isAuthenticated ? "text-status-completed" : (authStatus.isLoginDetected ? "text-status-warning animate-spin-slow" : "text-status-failed group-hover:translate-x-1 transition-transform")}
       />
     </Button>
   );

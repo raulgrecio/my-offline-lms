@@ -23,10 +23,12 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLaunchingLogin, setIsLaunchingLogin] = useState(false);
 
-  const checkAuth = useCallback(async (silent = false) => {
+  const checkAuth = useCallback(async (options: { silent?: boolean; forceDeep?: boolean } = {}) => {
+    const { silent = false, forceDeep = false } = options;
     if (!silent) setIsLoading(true);
     try {
-      const data = await apiClient.get<any>(API_ROUTES.SCRAPER.AUTH_STATUS);
+      const url = forceDeep ? `${API_ROUTES.SCRAPER.AUTH_STATUS}?deep=true` : API_ROUTES.SCRAPER.AUTH_STATUS;
+      const data = await apiClient.get<any>(url);
       const status = {
         isAuthenticated: data.isAuthenticated,
         isLoggingIn: data.isLoggingIn,
@@ -55,7 +57,7 @@ export function useAuth() {
     setIsLaunchingLogin(true);
     try {
       await apiClient.post(API_ROUTES.SCRAPER.LOGIN);
-      await checkAuth();
+      await checkAuth({ forceDeep: true });
     } catch (err: any) {
       logger.error('Failed to launch login:', err);
     } finally {
@@ -68,7 +70,7 @@ export function useAuth() {
     try {
       const data = await apiClient.post<any>(API_ROUTES.SCRAPER.SAVE_SESSION);
       if (data.success) {
-        await checkAuth();
+        await checkAuth({ forceDeep: true });
         return true;
       } else {
         throw new Error(data.error || 'Error al guardar la sesión');
@@ -83,12 +85,14 @@ export function useAuth() {
 
   // Initial check and auto-polling during login
   useEffect(() => {
-    checkAuth();
+    // Initial deep check to ensure status is real
+    checkAuth({ forceDeep: true });
+    
     let interval: NodeJS.Timeout | null = null;
 
     if (authStatus.isLoggingIn || isLaunchingLogin) {
       interval = setInterval(() => {
-        checkAuth(true); // silent polling
+        checkAuth({ silent: true }); // silent polling
       }, 2000);
     }
 
@@ -97,12 +101,12 @@ export function useAuth() {
     };
   }, [authStatus.isLoggingIn, isLaunchingLogin, checkAuth]);
 
-  /*// Reactive updates when window regains focus
+  // Reactive updates when window regains focus
   useEffect(() => {
-    const onFocus = () => checkAuth(true);
+    const onFocus = () => checkAuth({ silent: true, forceDeep: true });
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [checkAuth]);*/
+  }, [checkAuth]);
 
   return {
     authStatus,

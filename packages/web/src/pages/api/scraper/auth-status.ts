@@ -1,18 +1,25 @@
 import type { APIRoute } from 'astro';
 
 import { ScraperService } from '@scraper/ScraperService';
+import { logger } from '@web/platform/logging';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     const scraper = await ScraperService.create();
-    // The ScraperService.init() method will trigger the validation check if we wrap it
-    // Or we can just use the internal authSession directly.
-    // Let's create a dedicated method in ScraperService for this.
+    const url = new URL(request.url);
+    const force = url.searchParams.get('deep') === 'true' || url.searchParams.get('force') === 'true';
 
-    const isAuthenticated = await scraper.validateAuth();
+    const isAuthenticated = await scraper.validateAuth({ force });
     const isLoggingIn = scraper.isLoggingIn;
     const isLoginDetected = scraper.isLoginDetected;
-    const expiresAt = isAuthenticated ? await scraper.getSessionExpiry() : null;
+    const sessionExpiry = await scraper.getSessionExpiry();
+    const expiresAt = isAuthenticated ? sessionExpiry : null;
+
+    // logger.debug(`[API/AuthStatus] isAuthenticated: ${isAuthenticated}`);
+    // logger.debug(`[API/AuthStatus] isLoggingIn: ${isLoggingIn}`);
+    // logger.debug(`[API/AuthStatus] isLoginDetected: ${isLoginDetected}`);
+    // logger.debug(`[API/AuthStatus] sessionExpiry: ${sessionExpiry}`);
+    // logger.debug(`[API/AuthStatus] expiresAt: ${expiresAt}`);
 
     return new Response(JSON.stringify({
       isAuthenticated,

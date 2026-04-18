@@ -1,3 +1,4 @@
+import { PLATFORM } from "@scraper/config";
 import type { IAuthValidator } from "../domain/ports/IAuthValidator";
 
 export class OracleAuthValidator implements IAuthValidator {
@@ -25,6 +26,12 @@ export class OracleAuthValidator implements IAuthValidator {
         if (payload.email === 'my.learn.guest@oracle.com' || payload.firstName === 'Guest') {
           return false;
         }
+
+        // 1.1 Si el token está expirado por más de 1 hora, consideramos que la sesión estática no es fiable
+        const jwtExp = payload.exp;
+        if (jwtExp && (now - jwtExp) > 3600) {
+          return false;
+        }
       }
     } catch {
       // Ignoramos errores de parseo por resiliencia
@@ -39,9 +46,44 @@ export class OracleAuthValidator implements IAuthValidator {
     );
 
     // Consideramos la sesión válida si tiene el token y alguna cookie de sesión activa.
-    // Ignoramos la expiración interna del JWT para el retorno de isValid, ya que puede 
-    // ser un falso negativo (el navegador a veces funciona con tokens "expirados" que se refrescan).
     return hasActiveSessionCookie;
+  }
+
+  async validate(cookies: any[]): Promise<boolean> {
+    if (!this.isValid(cookies)) return false;
+
+    const cookieHeader = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    
+    try {
+      // Intentamos acceder a la home de la plataforma. 
+      // Si nos redirige a /login o /idp, la sesión es inválida.
+      const response = await fetch(PLATFORM.BASE_URL, {
+        headers: {
+          'Cookie': cookieHeader,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        redirect: 'manual'
+      });
+
+      // Redirección manual: comprobamos el Location
+      if (response.status === 302 || response.status === 301) {
+        const location = response.headers.get('location');
+        if (location && (location.includes('/login') || location.includes('/idp/') || location.includes('sign-in'))) {
+          return false;
+        }
+      }
+
+      // Si es un 401 o 403, definitivamente no es válida
+      if (response.status === 401 || response.status === 403) {
+        return false;
+      }
+
+      // Si llegamos aquí y es 200, la sesión es muy probablemente válida
+      return response.ok;
+    } catch (err) {
+      // En caso de error de red, asumimos la validez estática para no bloquear al usuario injustificadamente
+      return true;
+    }
   }
 
   getExpiry(cookies: any[]): number | null {
@@ -81,5 +123,21 @@ export class OracleAuthValidator implements IAuthValidator {
     } catch {
       return null;
     }
+  }
+
+  isLoginPage(params: { url: string; title?: string; hasLoginText?: boolean }): boolean {
+    const { url, title, hasLoginText } = params;
+
+    const lowerTitle = title?.toLowerCase() || '';
+
+    return (
+      url.includes('identity.oraclecloud.com') ||
+      url.includes('/login') ||
+      url.includes('/idp/') ||
+      url.includes('error=unauthorized') ||
+      lowerTitle.includes('oracle identity cloud service') ||
+      lowerTitle.includes('sign in') ||
+      !!hasLoginText
+    );
   }
 }

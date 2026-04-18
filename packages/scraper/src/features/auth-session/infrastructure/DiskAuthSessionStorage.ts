@@ -80,13 +80,32 @@ export class DiskAuthSessionStorage implements IAuthSessionStorage {
     // 2. Guardar en formato Netscape (cookies.txt) para compatibilidad
     const cookiesStr = cookies
       .map((c: any) => {
-        const includeSubdomains = c.domain.startsWith('.') ? "TRUE" : "FALSE";
+        // Formato Netscape: si incluye subdominios, el dominio debe empezar con punto
+        let domain = c.domain;
+        const includeSubdomains = domain.startsWith('.') || (domain.split('.').length > 1);
+        const includeSubdomainsStr = includeSubdomains ? "TRUE" : "FALSE";
+        
+        if (includeSubdomains && !domain.startsWith('.')) {
+          domain = '.' + domain;
+        }
+
         const expires = (c.expires && c.expires > 0) ? Math.round(c.expires) : 0;
-        return `${c.domain}\t${includeSubdomains}\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${expires}\t${c.name}\t${c.value}`;
+        return `${domain}\t${includeSubdomainsStr}\t${c.path}\t${c.secure ? "TRUE" : "FALSE"}\t${expires}\t${c.name}\t${c.value}`;
       })
       .join("\n");
 
     const header = "# Netscape HTTP Cookie File\n# http://curl.haxx.se/rfc/cookie_spec.html\n# This is a generated file!  Do not edit.\n\n";
     await this.fs.writeFile(this.cookiesFile!, header + cookiesStr + "\n");
+  }
+
+  async getStorageVersion(): Promise<number> {
+    await this.ensureInitialized();
+    try {
+      const stats = await this.fs.stat(this.authFile!);
+      // @ts-ignore
+      return stats.mtime?.getTime() || 0;
+    } catch {
+      return 0;
+    }
   }
 }

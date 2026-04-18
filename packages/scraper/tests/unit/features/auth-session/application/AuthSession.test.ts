@@ -32,6 +32,7 @@ describe('AuthSession Use Case', () => {
   const mockValidator = {
     isValid: vi.fn().mockReturnValue(false),
     getExpiry: vi.fn().mockReturnValue(null),
+    isLoginPage: vi.fn().mockReturnValue(false),
   } as any;
 
   const mockLogger: ILogger = {
@@ -76,6 +77,7 @@ describe('AuthSession Use Case', () => {
     } as any;
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn().mockResolvedValue(undefined),
       storageState: vi.fn().mockResolvedValue({}),
       cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
@@ -110,6 +112,7 @@ describe('AuthSession Use Case', () => {
     };
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn(),
       exposeFunction: vi.fn().mockResolvedValue(undefined),
       on: vi.fn().mockResolvedValue(undefined),
@@ -135,6 +138,7 @@ describe('AuthSession Use Case', () => {
     };
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn(),
       storageState: vi.fn().mockRejectedValue(new Error('save failed')),
       cookies: vi.fn().mockResolvedValue([]),
@@ -168,6 +172,7 @@ describe('AuthSession Use Case', () => {
     };
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn(),
       exposeFunction: vi.fn().mockResolvedValue(undefined),
       on: vi.fn().mockResolvedValue(undefined),
@@ -195,6 +200,7 @@ describe('AuthSession Use Case', () => {
     };
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn(),
       storageState: vi.fn().mockResolvedValue({}),
       cookies: vi.fn().mockResolvedValue([]),
@@ -225,6 +231,7 @@ describe('AuthSession Use Case', () => {
     };
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       close: vi.fn(),
       exposeFunction: vi.fn().mockResolvedValue(undefined),
       on: vi.fn().mockResolvedValue(undefined),
@@ -257,6 +264,7 @@ describe('AuthSession Use Case', () => {
     } as any;
     const mockContext = {
       newPage: vi.fn().mockResolvedValue(mockPage),
+      pages: vi.fn().mockResolvedValue([mockPage]),
       storageState: vi.fn().mockResolvedValue({}),
       cookies: vi.fn().mockResolvedValue([{ name: 'c1', value: 'v1' }]),
       exposeFunction: vi.fn().mockResolvedValue(undefined),
@@ -312,6 +320,7 @@ describe('AuthSession Use Case', () => {
       } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -357,6 +366,7 @@ describe('AuthSession Use Case', () => {
       } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -404,6 +414,7 @@ describe('AuthSession Use Case', () => {
       } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -419,6 +430,7 @@ describe('AuthSession Use Case', () => {
       await vi.waitUntil(() => pageEvents['framenavigated']);
 
       // Simulate navigation to login
+      mockValidator.isLoginPage.mockReturnValue(true);
       await pageEvents['framenavigated'](mockPage.mainFrame());
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('pérdida de sesión detectada'));
 
@@ -432,6 +444,7 @@ describe('AuthSession Use Case', () => {
       const mockPage = { goto: vi.fn().mockResolvedValue(undefined), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), close: vi.fn().mockResolvedValue(undefined) } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -465,9 +478,10 @@ describe('AuthSession Use Case', () => {
     });
 
     it('should handle frameattached event for debugging', async () => {
-      const mockPage = { goto: vi.fn(), on: vi.fn() } as any;
+      const mockPage = { goto: vi.fn(), on: vi.fn(), url: vi.fn().mockReturnValue('http://page-url') } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -483,7 +497,7 @@ describe('AuthSession Use Case', () => {
       await vi.waitUntil(() => pageEvents['frameattached']);
 
       pageEvents['frameattached']({ url: () => 'http://iframe' });
-      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Nuevo Frame detectado: http://iframe'));
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('[Navigation] Nuevo Frame detectado en http://page-url: http://iframe'));
 
       if (pageEvents['close']) await pageEvents['close']();
       await promise;
@@ -493,6 +507,7 @@ describe('AuthSession Use Case', () => {
       const mockPage = { goto: vi.fn(), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), close: vi.fn().mockResolvedValue(undefined) } as any;
       const mockContext = {
         newPage: vi.fn().mockResolvedValue(mockPage),
+        pages: vi.fn().mockResolvedValue([mockPage]),
         on: vi.fn(),
         exposeFunction: vi.fn().mockResolvedValue(undefined),
         close: vi.fn().mockResolvedValue(undefined)
@@ -517,7 +532,7 @@ describe('AuthSession Use Case', () => {
     it('should cover edge cases in monitoring (empty frame url, subframe navigation)', async () => {
       const mockPage = { goto: vi.fn(), on: vi.fn(), url: vi.fn().mockReturnValue('http://platform.com'), mainFrame: vi.fn(), close: vi.fn() } as any;
       mockPage.mainFrame.mockReturnValue('MAIN');
-      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), on: vi.fn(), exposeFunction: vi.fn().mockResolvedValue(undefined), close: vi.fn() } as any;
+      const mockContext = { newPage: vi.fn().mockResolvedValue(mockPage), pages: vi.fn().mockResolvedValue([mockPage]), on: vi.fn(), exposeFunction: vi.fn().mockResolvedValue(undefined), close: vi.fn() } as any;
       mockBrowserProvider.getHeadfulContext.mockResolvedValue(mockContext);
 
       const pageEvents: Record<string, any> = {};
@@ -544,5 +559,3 @@ describe('AuthSession Use Case', () => {
     });
   });
 });
-
-

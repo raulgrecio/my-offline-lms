@@ -85,7 +85,7 @@ describe('DiskAuthSessionStorage', () => {
     expect(cookiesCall).toBeDefined();
     const savedContent = cookiesCall![1] as string;
     expect(savedContent).toContain('.example.com\tTRUE\t/\tTRUE\t1690000000\tsession\t123');
-    expect(savedContent).toContain('api.example.com\tFALSE\t/api\tFALSE\t0\ttrack\tabc');
+    expect(savedContent).toContain('.api.example.com\tTRUE\t/api\tFALSE\t0\ttrack\tabc');
   });
 
   it('should initialize using getAuthDir if no baseDir provided', async () => {
@@ -111,7 +111,7 @@ describe('DiskAuthSessionStorage', () => {
     const cookiesCall = vi.mocked(mockFs.writeFile).mock.calls.find((c: string[]) => c[0] === '/mock/base/dir/cookies.txt');
     expect(cookiesCall).toBeDefined();
     const content = cookiesCall![1] as string;
-    expect(content).toContain('a.com\tFALSE\t/\tTRUE\t0\tn\tv');
+    expect(content).toContain('.a.com\tTRUE\t/\tTRUE\t0\tn\tv');
   });
 
   describe('getCookies', () => {
@@ -167,6 +167,25 @@ describe('DiskAuthSessionStorage', () => {
        await storage.saveCookies([]);
        // Should still succeed and write a fresh state
        expect(mockFs.writeFile).toHaveBeenCalled();
+    });
+  });
+
+  describe('getStorageVersion', () => {
+    it('should return mtime as timestamp on success', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+      const mtime = new Date();
+      mockFs.stat = vi.fn().mockResolvedValue({ mtime });
+
+      const version = await storage.getStorageVersion();
+      expect(version).toBe(mtime.getTime());
+    });
+
+    it('should return 0 on failure', async () => {
+      const storage = new DiskAuthSessionStorage({ fs: mockFs, path: mockPath, getAuthDir: async () => '/dir' });
+      mockFs.stat = vi.fn().mockRejectedValue(new Error('File not found'));
+
+      const version = await storage.getStorageVersion();
+      expect(version).toBe(0);
     });
   });
 });

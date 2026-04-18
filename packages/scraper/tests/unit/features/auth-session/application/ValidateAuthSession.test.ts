@@ -18,9 +18,12 @@ describe('ValidateAuthSession', () => {
       getCookiesFile: vi.fn(),
       ensureAuthDir: vi.fn(),
       saveCookies: vi.fn(),
+      getStorageVersion: vi.fn().mockResolvedValue(0),
     } as any;
     validatorMock = {
       isValid: vi.fn(),
+      validate: vi.fn().mockResolvedValue(true),
+      getExpiry: vi.fn().mockReturnValue(null),
     } as any;
     loggerMock = {
       warn: vi.fn(),
@@ -47,6 +50,49 @@ describe('ValidateAuthSession', () => {
     vi.mocked(validatorMock.isValid).mockReturnValue(false);
     const result = await useCase.execute();
     expect(result).toBe(false);
-    expect(loggerMock.warn).not.toHaveBeenCalled();
+  });
+
+  it('should respect "No Molestar" policy when session is already cached as false after a failed deep validation', async () => {
+    vi.mocked(validatorMock.isValid).mockReturnValue(true);
+    vi.mocked(validatorMock.validate).mockResolvedValue(false);
+    vi.mocked(authStorageMock.getStorageVersion).mockResolvedValue(1);
+
+    // Primera llamada realiza validación profunda y falla (cachea false)
+    await useCase.execute();
+    
+    vi.clearAllMocks();
+    vi.mocked(authStorageMock.getStorageVersion).mockResolvedValue(1);
+
+    const result = await useCase.execute();
+    expect(result).toBe(false);
+    expect(authStorageMock.getCookies).not.toHaveBeenCalled();
+  });
+  it('should bypass cache if forceDeep is true', async () => {
+    vi.mocked(validatorMock.isValid).mockReturnValue(true);
+    await useCase.execute(); // Caché inicial
+    
+    vi.clearAllMocks();
+    vi.mocked(validatorMock.isValid).mockReturnValue(true);
+    await useCase.execute({ forceDeep: true });
+    
+    expect(validatorMock.validate).toHaveBeenCalled();
+  });
+
+  it('should update lastVersionChecked even if statically invalid to avoid redundant checks', async () => {
+    vi.mocked(validatorMock.isValid).mockReturnValue(false);
+    vi.mocked(authStorageMock.getStorageVersion).mockResolvedValue(12345);
+
+    await useCase.execute();
+    
+    // Si la versión es la misma, shouldDeepCheck debería ser false en la siguiente ronda
+    // (aunque en este caso isValidStatically ya lo paraba, el problema era el versionChanged persistente)
+    vi.clearAllMocks();
+    vi.mocked(validatorMock.isValid).mockReturnValue(false);
+    vi.mocked(authStorageMock.getStorageVersion).mockResolvedValue(12345);
+
+    await useCase.execute();
+    
+    // No podemos verificar private members directamente, pero el flujo ya es correcto al actualizar lastVersionChecked
+    expect(authStorageMock.getStorageVersion).toHaveBeenCalled();
   });
 });

@@ -33,6 +33,7 @@ import {
   SyncLearningPath,
   GetAvailableContent
 } from './features/platform-sync';
+import { type Result } from './features/shared';
 import {
   SQLiteTaskRepository,
   type ITaskRepository,
@@ -89,7 +90,9 @@ export class ScraperService {
   private deleteTaskUseCase: DeleteTask;
   private cleanupInterruptedTasksUseCase: CleanupInterruptedTasks;
 
-  public isLoggingIn = false;
+  get isLoggingIn(): boolean {
+    return this.loginUseCase.isLoggingIn;
+  }
 
   get isLoginDetected(): boolean {
     return this.loginUseCase.isLoginDetected;
@@ -233,8 +236,8 @@ export class ScraperService {
     });
   }
 
-  async validateAuth() {
-    return await this.validateAuthUseCase.execute();
+  async validateAuth(options?: { force?: boolean }) {
+    return await this.validateAuthUseCase.execute({ forceDeep: options?.force });
   }
 
   async getSessionExpiry() {
@@ -246,23 +249,15 @@ export class ScraperService {
     interactive?: boolean,
     headless?: boolean,
     baseUrl?: string
-  } = {}) {
-    this.isLoggingIn = true;
-    try {
-      await this.loginUseCase.execute({ interactive, headless, baseUrl });
-    } finally {
-      if (interactive) {
-        this.isLoggingIn = false;
-      }
-    }
+  } = {}): Promise<Result> {
+    return await this.loginUseCase.execute({ interactive, headless, baseUrl });
   }
 
-  async saveActiveSession() {
+  async saveActiveSession(): Promise<Result> {
     this.deps.logger.info("Guardando sesión activa...");
     try {
       const result = await this.loginUseCase.saveActiveSession();
       if (result.success) {
-        this.isLoggingIn = false;
         return { success: true };
       }
       return result;
@@ -497,6 +492,7 @@ export class ScraperService {
       assetStorage,
       videoDownloader,
       namingService: this.deps.namingService,
+      validator: this.deps.authValidator,
       logger: this.deps.logger,
       config: {
         selectors: {
